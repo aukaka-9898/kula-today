@@ -178,6 +178,29 @@ def outlook() -> pd.DataFrame:
     return cv.soaring()
 
 
+def base_by_hour() -> dict:
+    """Forecast cloudbase at fixed hours, 11:00 and 14:00, by day, adjusted.
+
+    soaring() reports the base at each day's strongest hour, which moved
+    between 11:00 and 14:00 across one week -- not comparable day to day,
+    and it hid afternoon drops of up to 1,500 ft. 11:00 is about when
+    Kula's base peaks; 14:00 shows how far it comes down.
+    """
+    out = {}
+    for day, part in cv.slope_parcel().groupby("day"):
+        got = th.assess(part, RELEASE_FT)
+        out[day] = tuple(round(got.loc[h, "lcl_ft"] + FORECAST_BASE_LOW_FT, -2)
+                         if h in got.index else None for h in (11, 14))
+    return out
+
+
+def am_pm(pair) -> str:
+    if not pair or pair[0] is None:
+        return "--"
+    am, pm = pair
+    return ft(am) if pm is None or pm == am else f"{ft(am)} → {ft(pm)}"
+
+
 def inversion_on(day, path):
     found = []
     for h in ("11:00", "14:00"):
@@ -228,6 +251,7 @@ def build() -> str:
     pos, lad = pos_lad if pos_lad else (None, pd.DataFrame())
     inv_today = inversion_on(now.date(), gfs) if gfs else [None, None]
     week = safely(outlook)
+    hours = safely(base_by_hour) or {}
 
     ka_sun = next((s for n, e, s in ladder if n == "Kula Ag"), None)
     latest = None if therm is None else therm.iloc[-1]
@@ -314,8 +338,6 @@ def build() -> str:
     if week is not None and tom in week.index:
         r = week.loc[tom]
         inv_t = next((i for i in (inversion_on(tom, gfs) if gfs else []) if i), None)
-        raw = r["cloudbase_ft"]
-        adj = None if pd.isna(raw) else raw + FORECAST_BASE_LOW_FT
         line_t = r["shear_location"]
         line_t = "No trade line (trades absent)" if line_t is None or pd.isna(line_t) else f"Near {line_t}"
         wind_t = "--" if pd.isna(r["dir_deg"]) else f"{cv.compass(r['dir_deg'])} ({r['dir_deg']:03.0f}°)"
@@ -324,7 +346,7 @@ def build() -> str:
         tom_chip = day_chip(r["thermal"], r["sun"])
         t_html = f"""<dl>
         <dt>Thermals</dt><dd>{esc(str(r['thermal']))}<div class="sub">From forecast surface air, which runs a few degrees cool</div></dd>
-        <dt>Cloudbase</dt><dd>About <span class="num">{ft(round(adj, -2)) if adj else '--'} ft</span><div class="sub">Model {ft(raw)} ft; it has run about {FORECAST_BASE_LOW_FT} ft low at Kula</div></dd>
+        <dt>Cloudbase</dt><dd><span class="num">{am_pm(hours.get(tom))} ft</span><div class="sub">11:00 → 14:00, including the model's usual {FORECAST_BASE_LOW_FT} ft low miss at Kula</div></dd>
         <dt>Sun</dt><dd><span class="num">{pct(r['sun'])}</span> of clear sky, 10:00–14:00 (GFS)<div class="sub">Good Kula days have measured about 80%; overcast 20–48%</div></dd>
         <dt>Shear line</dt><dd>{esc(line_t)}<div class="sub">Trades {esc(wind_t)}</div></dd>
         <dt>Ceiling</dt><dd>{esc(cap_t)}</dd>
@@ -335,7 +357,7 @@ def build() -> str:
             lt = w["shear_location"]
             lt = "--" if lt is None or pd.isna(lt) else esc(lt)
             rows_html += (f"<tr><td>{day:%a %d}</td><td class=\"n\">{pct(w['sun'])}</td>"
-                          f"<td class=\"n\">{ft(round(w['cloudbase_ft'] + FORECAST_BASE_LOW_FT, -2) if not pd.isna(w['cloudbase_ft']) else None)}</td>"
+                          f"<td class=\"n\">{am_pm(hours.get(day))}</td>"
                           f"<td>{esc(str(w['thermal']))}</td><td>{lt}</td></tr>")
 
     ladder_html = ""
