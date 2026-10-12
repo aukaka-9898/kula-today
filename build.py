@@ -12,6 +12,7 @@ Every section is built on its own: a source that fails shows as
 from __future__ import annotations
 
 import html
+import json
 import os
 import sys
 import time
@@ -24,8 +25,11 @@ from zoneinfo import ZoneInfo
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, os.environ.get("KULAMODEL", str(HERE / "KulaModel")))
 
+import functools                        # noqa: E402
+
 import numpy as np                      # noqa: E402
 import pandas as pd                     # noqa: E402
+import requests                         # noqa: E402
 
 import convergence as cv                # noqa: E402
 import mesonet                          # noqa: E402
@@ -33,6 +37,27 @@ import sampler                          # noqa: E402
 import sounding as sd                   # noqa: E402
 import thermal as th                    # noqa: E402
 from kula import OFF_SLOPE_STATIONS     # noqa: E402
+
+def _retrying(fn, tries: int = 3):
+    """Retry a forecast fetch that times out; Open-Meteo sometimes hangs a request."""
+    @functools.wraps(fn)
+    def run(*a, **k):
+        for i in range(tries):
+            try:
+                return fn(*a, **k)
+            except requests.RequestException:
+                if i == tries - 1:
+                    raise
+                time.sleep(5 * (i + 1))
+    return run
+
+
+# One fetch of the surface forecast per build, shared by soaring() and
+# base_by_hour(). Two fetches doubled the chance of a timeout, and on
+# 2026-10-12 13:31 the second one hung and blanked every forecast cloudbase.
+cv.slope_parcel = functools.lru_cache(maxsize=4)(_retrying(cv.slope_parcel))
+cv.sun_forecast = _retrying(cv.sun_forecast)
+cv.trade_direction = _retrying(cv.trade_direction)
 
 HST = ZoneInfo("Pacific/Honolulu")
 RELEASE_FT = 3162                       # Kula Ag
@@ -219,10 +244,65 @@ def inversion_on(day, path):
     found = []
     for h in ("11:00", "14:00"):
         try:
-            found.append(sd.inversion(sd.at(pd.Timestamp(f"{day} {h}"), path=path)))
+            inv = sd.inversion(sd.at(pd.Timestamp(f"{day} {h}"), path=path))
+            found.append(None if inv is None else {k: float(v) for k, v in inv.items()})
         except Exception:
             found.append(None)
     return found
+
+
+# The forecasts change on model cycles a few times a day, not every 15
+# minutes. Refetching them each build only added chances for a timeout, and
+# one blanked every forecast cloudbase at 13:31 on 2026-10-12. So they are
+# refreshed hourly, saved beside the page, and reused when a fetch fails.
+FORECAST_FILE = HERE / "docs" / "forecast.json"
+FORECAST_MAX_AGE = timedelta(minutes=60)
+
+
+def fresh_forecast(now: datetime, gfs) -> dict:
+    week = outlook()
+    hours = base_by_hour()
+    days = [now.date(), now.date() + timedelta(days=1)]
+    return {
+        "made": now.isoformat(),
+        "week": [{"day": str(d), "dir_deg": None if pd.isna(r["dir_deg"]) else float(r["dir_deg"]),
+                  "thermal": str(r["thermal"]),
+                  "sun": None if pd.isna(r["sun"]) else float(r["sun"]),
+                  "line": None if r["shear_location"] is None or pd.isna(r["shear_location"])
+                  else str(r["shear_location"])}
+                 for d, r in week.iterrows()],
+        "hours": {str(d): list(v) for d, v in hours.items()},
+        "inversions": {str(d): inversion_on(d, gfs) if gfs else [None, None] for d in days},
+    }
+
+
+def forecast(now: datetime, gfs) -> dict | None:
+    """Last saved forecast if under an hour old, else a fresh one, else the saved one."""
+    saved = None
+    try:
+        saved = json.loads(FORECAST_FILE.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        pass
+    if saved and now - datetime.fromisoformat(saved["made"]) < FORECAST_MAX_AGE:
+        return saved
+    got = safely(fresh_forecast, now, gfs)
+    if got and got["week"] and any(v[0] is not None for v in got["hours"].values()):
+        FORECAST_FILE.write_text(json.dumps(got), encoding="utf-8")
+        return got
+    return saved
+
+
+def unpack(fc: dict | None, now: datetime):
+    """Saved forecast back into the shapes the page code uses."""
+    if not fc:
+        return None, {}, [None, None], [None, None], None
+    week = pd.DataFrame([{**w, "shear_location": w["line"]} for w in fc["week"]])
+    week.index = pd.to_datetime(week.pop("day")).dt.date
+    hours = {datetime.fromisoformat(d).date(): tuple(v) for d, v in fc["hours"].items()}
+    inv = fc.get("inversions", {})
+    return (week, hours, inv.get(str(now.date()), [None, None]),
+            inv.get(str(now.date() + timedelta(days=1)), [None, None]),
+            datetime.fromisoformat(fc["made"]))
 
 
 # -- page ------------------------------------------------------------------------
@@ -263,9 +343,7 @@ def build() -> str:
     ladder, sun_hour = ladder_start if ladder_start else ([], None)
     pos_lad = safely(line_now)
     pos, lad = pos_lad if pos_lad else (None, pd.DataFrame())
-    inv_today = inversion_on(now.date(), gfs) if gfs else [None, None]
-    week = safely(outlook)
-    hours = safely(base_by_hour) or {}
+    week, hours, inv_today, inv_tom, fc_made = unpack(forecast(now, gfs), now)
 
     ka_sun = next((s for n, e, s in ladder if n == "Kula Ag"), None)
     latest = None if therm is None else therm.iloc[-1]
@@ -353,7 +431,7 @@ def build() -> str:
     tom_chip = ""
     if week is not None and tom in week.index:
         r = week.loc[tom]
-        inv_t = next((i for i in (inversion_on(tom, gfs) if gfs else []) if i), None)
+        inv_t = next((i for i in inv_tom if i), None)
         line_t = r["shear_location"]
         line_t = "No trade line (trades absent)" if line_t is None or pd.isna(line_t) else f"Near {line_t}"
         wind_t = "--" if pd.isna(r["dir_deg"]) else f"{cv.compass(r['dir_deg'])} ({r['dir_deg']:03.0f}°)"
@@ -362,11 +440,12 @@ def build() -> str:
         tom_chip = day_chip(r["thermal"], r["sun"])
         t_html = f"""<dl>
         <dt>Thermals</dt><dd>{esc(str(r['thermal']))}<div class="sub">From forecast surface air, which runs a few degrees cool</div></dd>
-        <dt>Cloudbase</dt><dd><span class="num">{am_pm(hours.get(tom))} ft</span><div class="sub">11:00 → 14:00, including the model's usual {FORECAST_BASE_LOW_FT} ft low miss at Kula</div></dd>
+        <dt>Cloudbase</dt><dd><span class="num">{am_pm(hours.get(tom))} ft</span><div class="sub">11:00 → 14:00</div></dd>
         <dt>Sun</dt><dd><span class="num">{pct(r['sun'])}</span> of clear sky, 10:00–14:00 (GFS)<div class="sub">Good Kula days have measured about 80%; overcast 20–48%</div></dd>
         <dt>Shear line</dt><dd>{esc(line_t)}<div class="sub">Trades {esc(wind_t)}</div></dd>
         <dt>Ceiling</dt><dd>{esc(cap_t)}</dd>
-      </dl>"""
+      </dl>
+      <div class="sub">Forecast as of {fc_made.astimezone(HST):%H:%M} HST</div>"""
         for day, w in week.iterrows():
             if day < tom:
                 continue
