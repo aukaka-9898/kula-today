@@ -75,14 +75,39 @@ def observations(now: datetime) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
-def cloudbase_now(obs: pd.DataFrame) -> dict:
-    """Highest trustworthy moist-layer station first, as thermal.py advises."""
-    out = {}
-    for sid in ("052HE", "006HE", "001HI"):
-        s = obs[(obs.station_id == sid) & (obs.suspect == "")].sort_values("observed").tail(3)
-        if len(s) and s.observed.max() >= obs.observed.max() - STALE:
-            out[sid] = (s.lcl_ft.mean(), s.observed.max())
-    return out
+def cloudbase_now(obs: pd.DataFrame) -> dict | None:
+    """Middle of the slope stations' latest condensation levels, with their range.
+
+    Not the highest station alone: on 2026-10-12 that matched the webcam at
+    10:45 (6,000 ft) but read 6,100 at 12:45 when Sam saw 4,900 -- the low
+    slope had moistened under it and Crater Rd sat above the new moist air.
+    The middle of the group was about 4,600.
+    """
+    fresh_after = obs.observed.max() - STALE
+    core = obs[~obs.station_id.isin(OFF_SLOPE_STATIONS | {"TT925"}) & (obs.elev_ft <= 4400)
+               & (obs.suspect == "") & (obs.observed >= fresh_after)]
+    latest = core.sort_values("observed").groupby("station_id").tail(1)
+    if len(latest) < 3:
+        return None
+    return {"mid": float(latest.lcl_ft.median()), "lo": float(latest.lcl_ft.min()),
+            "hi": float(latest.lcl_ft.max()), "n": len(latest),
+            "at": latest.observed.max()}
+
+
+def west_intrusion(obs: pd.DataFrame) -> str | None:
+    """Pulehu leaving the upslope sector: trade air coming round the low west slope.
+
+    The ladder runs down the middle of the slope and misses this route. On
+    2026-10-12 Pulehu turned N at 6-8 mph while the ladder still read upslope
+    and Sam saw the shear move far south; on 9/26, 10/4 and 10/5 it read NE.
+    """
+    p = obs[(obs.station_id == "042HI") & obs.wind_dir.notna()].sort_values("observed").tail(2)
+    if p.empty or p.observed.max() < obs.observed.max() - STALE:
+        return None
+    d, mph = cv.mean_direction(p.wind_dir), p.wind_mph.mean()
+    if cv._side(d) == "upslope" or mph < 5:
+        return None
+    return f"Trade air reaching the lower west slope: Pulehu {cv.compass(d)} at {mph:.0f} mph"
 
 
 def thermal_today(obs: pd.DataFrame, now: datetime):
@@ -208,13 +233,17 @@ def build() -> str:
     latest = None if therm is None else therm.iloc[-1]
     verdict_now = None if latest is None else latest["verdict"]
 
-    # cloudbase text
+    # cloudbase text -- an estimate from ground stations, never stated as seen
     if base:
-        best_sid = next(iter(base))
-        lo, hi = min(v for v, _ in base.values()), max(v for v, _ in base.values())
-        base_html = (f'<span class="num">About {ft(round(base[best_sid][0], -2))} ft</span>'
-                     f'<div class="sub">Slope stations {ft(lo)}–{ft(hi)} ft '
-                     f'at {max(t for _, t in base.values()):%H:%M}</div>')
+        mid = round(base["mid"], -2)
+        if base["hi"] - base["lo"] > 1000:
+            base_html = (f'<span class="num">{ft(round(base["lo"], -2))}–{ft(round(base["hi"], -2))} ft</span>'
+                         f'<div class="sub">Stations disagree; middle about {ft(mid)} ft '
+                         f'({base["n"]} stations, {base["at"]:%H:%M})</div>')
+        else:
+            base_html = (f'<span class="num">About {ft(mid)} ft</span>'
+                         f'<div class="sub">Station estimate, {ft(round(base["lo"], -2))}–'
+                         f'{ft(round(base["hi"], -2))} ft ({base["n"]} stations, {base["at"]:%H:%M})</div>')
     else:
         base_html = "Unavailable"
 
@@ -225,7 +254,7 @@ def build() -> str:
     elif inv is None:
         ceil_html = "No cap in the model<div class=\"sub\">No inversion over Kahului today</div>"
     else:
-        kb = base[next(iter(base))][0] if base else None
+        kb = base["mid"] if base else None
         rng = f"{ft(inv['base_ft'])}–{ft(inv['top_ft'])} ft"
         if kb is not None and inv["base_ft"] < kb - 300:
             ceil_html = (f"Probably no cap<div class=\"sub\">Kahului inversion {rng}, "
@@ -259,6 +288,9 @@ def build() -> str:
         line_html = f"Not found<div class=\"sub\">{esc(pos.get('why', ''))}</div>"
     else:
         line_html = "Unavailable"
+    west = safely(west_intrusion, obs) if len(obs) else None
+    if west:
+        line_html += f'<div class="alert">{esc(west)}; the line may be further south than shown</div>'
 
     # thermals text
     if latest is not None:
@@ -291,9 +323,9 @@ def build() -> str:
                  f"Kahului inversion {ft(inv_t['base_ft'])}–{ft(inv_t['top_ft'])} ft")
         tom_chip = day_chip(r["thermal"], r["sun"])
         t_html = f"""<dl>
-        <dt>Sun</dt><dd><span class="num">{pct(r['sun'])}</span> of clear sky, 10:00–14:00 (GFS)<div class="sub">Good Kula days have measured about 80%; overcast 20–48%</div></dd>
-        <dt>Cloudbase</dt><dd>About <span class="num">{ft(round(adj, -2)) if adj else '--'} ft</span><div class="sub">Model {ft(raw)} ft; it has run about {FORECAST_BASE_LOW_FT} ft low at Kula</div></dd>
         <dt>Thermals</dt><dd>{esc(str(r['thermal']))}<div class="sub">From forecast surface air, which runs a few degrees cool</div></dd>
+        <dt>Cloudbase</dt><dd>About <span class="num">{ft(round(adj, -2)) if adj else '--'} ft</span><div class="sub">Model {ft(raw)} ft; it has run about {FORECAST_BASE_LOW_FT} ft low at Kula</div></dd>
+        <dt>Sun</dt><dd><span class="num">{pct(r['sun'])}</span> of clear sky, 10:00–14:00 (GFS)<div class="sub">Good Kula days have measured about 80%; overcast 20–48%</div></dd>
         <dt>Shear line</dt><dd>{esc(line_t)}<div class="sub">Trades {esc(wind_t)}</div></dd>
         <dt>Ceiling</dt><dd>{esc(cap_t)}</dd>
       </dl>"""
@@ -316,7 +348,7 @@ def build() -> str:
                         f'<div class="bar {cls}"><span style="width:{w:.0f}%"></span></div>'
                         f'<span class="pct">{pct(shown)}</span></div>')
     if base and ladder:
-        b = round(base[next(iter(base))][0], -2)
+        b = round(base["mid"], -2)
         rows = ladder_html.split('<div class="row">')
         out, placed = "", False
         for chunk in rows[1:]:
