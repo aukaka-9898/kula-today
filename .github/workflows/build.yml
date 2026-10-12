@@ -2,8 +2,8 @@ name: Build Kula Today
 
 on:
   schedule:
-    # Every 30 minutes, 06:00-18:30 HST (UTC-10, no daylight saving).
-    - cron: "*/30 16-23,0-4 * * *"
+    # Every 15 minutes, 06:00-18:45 HST (UTC-10, no daylight saving).
+    - cron: "*/15 16-23,0-4 * * *"
   workflow_dispatch:
   push:
     branches: [main]
