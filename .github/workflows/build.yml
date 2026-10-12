@@ -47,5 +47,11 @@ jobs:
           git config user.name "kula-today bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add docs/index.html
-          git diff --cached --quiet || git commit -m "Update page"
-          git push
+          git diff --cached --quiet && exit 0
+          git commit -m "Update page"
+          # A code push can land while this build runs; take it, then push.
+          for i in 1 2 3; do
+            git pull --rebase -q && git push && exit 0
+            sleep 5
+          done
+          exit 1

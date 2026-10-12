@@ -14,6 +14,7 @@ from __future__ import annotations
 import html
 import os
 import sys
+import time
 import traceback
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -47,11 +48,17 @@ GOOD_VERDICTS = {"Moderate", "Strong", "Boom!"}
 esc = html.escape
 
 
+# What went wrong in this build, written into the page as an HTML comment.
+# Actions logs need a GitHub sign-in to read; the page does not.
+PROBLEMS: list[str] = []
+
+
 def safely(fn, *a):
     try:
         return fn(*a)
-    except Exception:
+    except Exception as e:
         traceback.print_exc()
+        PROBLEMS.append(f"{fn.__name__}: {type(e).__name__}: {e}")
         return None
 
 
@@ -61,9 +68,16 @@ def observations(now: datetime) -> pd.DataFrame:
     start = now.replace(hour=0, minute=0, second=0, microsecond=0).astimezone(timezone.utc)
     rows = []
     for st in sampler.STATIONS:
-        try:
-            got, _ = sampler.read_nws(st, start)
-        except Exception:
+        got = None
+        for attempt in range(3):           # api.weather.gov drops single requests
+            try:
+                got, _ = sampler.read_nws(st, start)
+                break
+            except Exception as e:
+                fault = f"{type(e).__name__}: {e}"
+                time.sleep(2 * (attempt + 1))
+        if got is None:
+            PROBLEMS.append(f"no observations for {st.id} ({fault})")
             continue
         for r in got:
             rows.append({"station_id": st.id, "name": st.name, "elev_ft": st.elev_ft,
@@ -321,8 +335,10 @@ def build() -> str:
         therm_html = (f"<strong>{esc(verdict_now)}</strong> at {int(therm.index[-1]):02d}:00"
                       f"<div class=\"sub\">Lift to about {ft(latest['usable_top_ft'])} ft, "
                       f"from Kula Ag's measured air (thermal.py)</div>")
-    else:
+    elif now.hour < 9:
         therm_html = "Not yet<div class=\"sub\">Rated from 09:00</div>"
+    else:
+        therm_html = "Unavailable<div class=\"sub\">Kula Ag's readings did not come through this update</div>"
 
     sun_html = (f'<span class="num">{pct(ka_sun)}</span> of clear sky at Kula Ag'
                 f'<div class="sub">{sun_hour:%H:%M}–{sun_hour + timedelta(hours=1):%H:%M}</div>'
@@ -388,7 +404,8 @@ def build() -> str:
         ceil=ceil_html, tom_title=f"{tom:%a %d %b}", tom_chip=tom_chip, tomorrow=t_html,
         rows=rows_html, ladder=ladder_html or "<p>Unavailable.</p>",
         ladder_hour=(f"{sun_hour:%H:%M}–{sun_hour + timedelta(hours=1):%H:%M}" if sun_hour else ""),
-        webcam=WEBCAM)
+        webcam=WEBCAM,
+        diag=("; ".join(PROBLEMS) or "none").replace("--", "-").replace(">", ")"))
 
 
 PAGE = Template((HERE / "template.html").read_text(encoding="utf-8"))
