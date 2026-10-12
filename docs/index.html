@@ -52,6 +52,7 @@ dt { font: 600 .74rem var(--display); letter-spacing: .1em; text-transform: uppe
 dd { margin: 0; min-width: 0; }
 .num { font: 500 1rem var(--mono); font-variant-numeric: tabular-nums; }
 .sub { color: var(--muted); font-size: .86rem; }
+.alert { color: var(--warn); font-size: .86rem; font-weight: 600; margin-top: 2px; }
 .block { background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 18px; display: grid; gap: 12px; min-width: 0; }
 .block p { margin: 0; max-width: 68ch; color: var(--muted); font-size: .92rem; }
 .rows { display: grid; gap: 6px; }
@@ -80,7 +81,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><div class="tag">Kula soaring briefing</div><h1>Kula Today</h1></div>
-    <div class="date">Updated Mon 12 Oct 2026 · 12:32 HST</div>
+    <div class="date">Updated Mon 12 Oct 2026 · 12:43 HST</div>
   </header>
 
   <div>
@@ -94,20 +95,20 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
       <div class="head"><h2 id="t-today">Today</h2><span class="chip fair">Fair</span></div>
       <dl>
         <dt>Thermals</dt><dd><strong>Light</strong> at 12:00<div class="sub">Lift to about 4,862 ft, from Kula Ag's measured air (thermal.py)</div></dd>
-        <dt>Cloudbase</dt><dd><span class="num">About 6,100 ft</span><div class="sub">Slope stations 5,409–6,087 ft at 12:10</div></dd>
-        <dt>Sun</dt><dd><span class="num">57%</span> of clear sky at Kula Ag<div class="sub">11:00–12:00</div></dd>
-        <dt>Upslope</dt><dd>On since about <span class="num">08:15</span><div class="sub">Drainage ended about 07:45</div></dd>
-        <dt>Shear line</dt><dd>Between <strong>Piiholo</strong> and <strong>Waihou Springs</strong><div class="sub">Covers Piiholo, Pukalani, Omaopio, Waihou Springs</div><div class="sub">Trades at the coast: Paia 073° at 19 mph</div></dd>
+        <dt>Cloudbase</dt><dd><span class="num">3,800–6,200 ft</span><div class="sub">Stations disagree; middle about 4,600 ft (11 stations, 12:20)</div></dd>
+        <dt>Sun</dt><dd>Unavailable</dd>
+        <dt>Shear line</dt><dd>Between <strong>Piiholo</strong> and <strong>Waihou Springs</strong><div class="sub">Covers Piiholo, Pukalani, Omaopio, Waihou Springs</div><div class="sub">Trades at the coast: Paia 075° at 19 mph</div><div class="alert">Trade air reaching the lower west slope: Pulehu N at 7 mph; the line may be further south than shown</div></dd>
         <dt>Ceiling</dt><dd>Probably no cap<div class="sub">Kahului inversion 4,263–4,901 ft, below Kula's base</div></dd>
+        <dt>Upslope</dt><dd>On since about <span class="num">08:15</span><div class="sub">Drainage ended about 07:45</div></dd>
       </dl>
     </section>
     <section class="panel tomorrow" aria-labelledby="t-tomorrow">
       <div class="kind">Forecast</div>
       <div class="head"><h2 id="t-tomorrow">Tomorrow · Tue 13 Oct</h2><span class="chip warn">Shaded</span></div>
       <dl>
-        <dt>Sun</dt><dd><span class="num">42%</span> of clear sky, 10:00–14:00 (GFS)<div class="sub">Good Kula days have measured about 80%; overcast 20–48%</div></dd>
-        <dt>Cloudbase</dt><dd>About <span class="num">4,900 ft</span><div class="sub">Model 4,262 ft; it has run about 650 ft low at Kula</div></dd>
         <dt>Thermals</dt><dd>Light<div class="sub">From forecast surface air, which runs a few degrees cool</div></dd>
+        <dt>Cloudbase</dt><dd>About <span class="num">4,900 ft</span><div class="sub">Model 4,262 ft; it has run about 650 ft low at Kula</div></dd>
+        <dt>Sun</dt><dd><span class="num">42%</span> of clear sky, 10:00–14:00 (GFS)<div class="sub">Good Kula days have measured about 80%; overcast 20–48%</div></dd>
         <dt>Shear line</dt><dd>Near Piiholo<div class="sub">Trades E (083°)</div></dd>
         <dt>Ceiling</dt><dd>Kahului inversion 3,696–4,913 ft</dd>
       </dl>
@@ -115,9 +116,9 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
   </div>
 
   <section class="block" aria-labelledby="t-ladder">
-    <h2 id="t-ladder">Sunlight up the slope, 11:00–12:00</h2>
+    <h2 id="t-ladder">Sunlight up the slope, </h2>
     <p>Share of clear-sky sunlight measured at each station over the last full hour. Stations under cloud read low; stations above its top read full sun.</p>
-    <div class="rows"><div class="row"><span>Summit</span><span class="elev">9,776</span><div class="bar "><span style="width:100%"></span></div><span class="pct">100%</span></div><div class="row"><span>Nene Nest</span><span class="elev">8,500</span><div class="bar "><span style="width:100%"></span></div><span class="pct">100%</span></div><div class="row"><span>Park HQ</span><span class="elev">6,926</span><div class="bar "><span style="width:83%"></span></div><span class="pct">83%</span></div><div class="row"><span>Kamehamenui 1</span><span class="elev">6,601</span><div class="bar shaded"><span style="width:45%"></span></div><span class="pct">45%</span></div><div class="row"><span>Kula 1</span><span class="elev">6,554</span><div class="bar "><span style="width:56%"></span></div><span class="pct">56%</span></div><div class="base"><span class="lbl">Cloudbase now</span><span class="elev">6,100</span><div class="line"></div><span></span></div><div class="row"><span>Kula Ag</span><span class="elev">3,162</span><div class="bar "><span style="width:57%"></span></div><span class="pct">57%</span></div><div class="row"><span>Keokea</span><span class="elev">2,849</span><div class="bar shaded"><span style="width:54%"></span></div><span class="pct">54%</span></div><div class="row"><span>Piiholo</span><span class="elev">2,090</span><div class="bar shaded"><span style="width:34%"></span></div><span class="pct">34%</span></div><div class="row"><span>Pulehu</span><span class="elev">1,402</span><div class="bar "><span style="width:60%"></span></div><span class="pct">60%</span></div></div>
+    <div class="rows"><p>Unavailable.</p></div>
   </section>
 
   <section class="block" aria-labelledby="t-week">
