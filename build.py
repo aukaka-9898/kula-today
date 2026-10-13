@@ -411,8 +411,7 @@ def build() -> str:
     # thermals text
     if latest is not None:
         therm_html = (f"<strong>{esc(verdict_now)}</strong> at {int(therm.index[-1]):02d}:00"
-                      f"<div class=\"sub\">Lift to about {ft(latest['usable_top_ft'])} ft, "
-                      f"from Kula Ag's measured air (thermal.py)</div>")
+                      f"<div class=\"sub\">From Kula Ag's measured air (thermal.py)</div>")
     elif now.hour < 9:
         therm_html = "Not yet<div class=\"sub\">Rated from 09:00</div>"
     else:
