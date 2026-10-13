@@ -598,6 +598,11 @@ def build() -> str:
         ceil=ceil_html, tom_title=f"{'Tomorrow' if tom > now.date() else 'Today'} · {tom:%a %d %b}", tom_chip=tom_chip, tomorrow=t_html,
         rows=rows_html, ladder=ladder_html or "<p>Unavailable.</p>",
         ladder_hour=(f"{sun_hour:%H:%M}–{sun_hour + timedelta(hours=1):%H:%M}" if sun_hour else ""),
+        # From 15:00 the sun is 40 deg up in the WSW and its path crosses a
+        # 4,500 ft base 0.4 mi or more downslope -- usually the deck's edge.
+        ladder_note=(" Late in the day the sun is low in the west, so a station under the deck "
+                     "can read full sun coming in under the deck's edge."
+                     if sun_hour and sun_hour.hour >= 15 else ""),
         webcam=WEBCAM,
         diag=("; ".join(PROBLEMS) or "none").replace("--", "-").replace(">", ")"))
 
