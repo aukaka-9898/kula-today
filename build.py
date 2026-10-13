@@ -80,6 +80,32 @@ def rating(verdict) -> str:
     return RATING.get(str(verdict), "--")
 
 
+# Thermals are rated on the energy reaching the slope, not thermal.py's
+# parcel. Kula Ag's midday net radiation split Sam's calls cleanly (good
+# days >= 490 W/m2, capped/overcast/weak/socked <= 360) and tracks its share
+# of clear-sky sunlight at r 0.98; the share corrects for time of day, so it
+# carries the rating. Good days measured 79-81%, the rest 20-51%. GFS's sun
+# forecast lands in the same class 71% of days one day ahead (61% at two),
+# against 7% for the old forecast rating from model air temperature.
+def sun_rating(share) -> str:
+    if share is None or pd.isna(share):
+        return "--"
+    return "Good" if share >= 0.75 else "OK" if share >= 0.55 else "Nope"
+
+
+def window_sun(now: datetime) -> float | None:
+    """Kula Ag's share of clear-sky sun over the rating window, 09:00-15:00."""
+    day = now.replace(tzinfo=None, hour=0, minute=0, second=0, microsecond=0)
+    start, end = day + timedelta(hours=9), min(day + timedelta(hours=15), now.replace(tzinfo=None))
+    rows = [(t, w) for t, st, w in _retrying(sampler.read_mesonet_sun)(start, end)
+            if st.name == "Kula Ag" and start <= t < end]
+    if not rows:
+        return None
+    ts = pd.DatetimeIndex([t for t, _ in rows]).tz_localize(HST)
+    clear = mesonet.clear_sky(ts).sum()
+    return sum(w for _, w in rows) / clear if clear > 50 else None
+
+
 # The day is rated from upslope (about 08:15) to 15:00 (Sam), not 09:00-16:00.
 _assess = th.assess
 
@@ -344,7 +370,7 @@ def _base_at(core: pd.DataFrame, t) -> float | None:
 
 
 def summary(obs: pd.DataFrame, ladder, up, verdict, pos, west, now: datetime,
-            sun_change: float | None = None) -> str:
+            sun_change: float | None = None, evening=None) -> str:
     """A few plain sentences on how the day is going, from rules, not a model.
 
     No cloudbase figures: an estimate from ground stations is not good to
@@ -417,13 +443,15 @@ def summary(obs: pd.DataFrame, ladder, up, verdict, pos, west, now: datetime,
                 text += "; cloud reaches all the way to the Summit"
             out.append(text + ".")
 
-    evening = evening_flow(obs) if up is not None else None
-    if evening:
+    if evening and up is not None:
         kind, since = evening
-        out.append(f"Drainage has set in since about {since:%H:%M}; the upslope is over for the day."
-                   if kind == "drain" else
-                   f"The upslope is ending: the slope wind has been swinging through the cusp "
-                   f"since about {since:%H:%M}, ahead of drainage.")
+        out.append({
+            "drain": f"Drainage has set in since about {since:%H:%M}; the upslope is over for the day.",
+            "over": f"The slope has been losing heat since about {since:%H:%M}, so the upslope is "
+                    f"over; drainage usually follows within about two hours.",
+            "ending": f"The upslope is ending: the slope has nearly stopped gaining heat since "
+                      f"about {since:%H:%M}.",
+        }[kind])
     elif up is not None:
         w = core[core.observed >= obs.observed.max() - pd.Timedelta("30min")].wind_mph.dropna()
         if len(w):
@@ -432,7 +460,7 @@ def summary(obs: pd.DataFrame, ladder, up, verdict, pos, west, now: datetime,
             line = f"Upslope has run since about {up:%H:%M} at {word} {mph:.0f} mph"
         else:
             line = f"Upslope has run since about {up:%H:%M}"
-        out.append(line + (f", and thermals rate {rating(verdict)}." if verdict else "."))
+        out.append(line + (f", and thermals rate {verdict}." if verdict and verdict != "--" else "."))
     elif now.hour < 11:
         out.append("Upslope has not set in yet.")
 
@@ -481,8 +509,8 @@ def forecast_summary(r, pair, today_pair, inv, today_word: str) -> str:
         out.append(f"{sky}.")
     elif bits:
         out.append(f"Expect {' '.join(bits)}.")
-    if r["thermal"] and str(r["thermal"]) != "unknown":
-        out.append(f"Thermals look {rating(r['thermal'])}.")
+    if sun_rating(sun) != "--":
+        out.append(f"Thermals look {sun_rating(sun)}.")
     if inv and am is not None:
         out.append("The Kahului inversion sits at or above the expected base, so it may cap the tops."
                    if inv["base_ft"] >= am - 300 else
@@ -530,6 +558,58 @@ def upslope_since(obs: pd.DataFrame):
     return None, last_drain
 
 
+def net_radiation(now: datetime) -> pd.Series:
+    """Kula Ag's net radiation (W/m2) since noon, quarter-hour means, from HCDP.
+
+    The energy the slope surface is banking: positive heats it and drives
+    the upslope, negative cools it and builds the drainage.
+    """
+    noon = now.replace(hour=12, minute=0, second=0, microsecond=0)
+    rows = _retrying(mesonet.get)("/mesonet/db/measurements", location="hawaii",
+                                  station_ids="0119", var_ids="Rnet_1_Avg",
+                                  start_date=noon.strftime("%Y-%m-%dT%H:%M:%S-10:00"),
+                                  row_mode="json", limit=100000)
+    s = pd.Series({pd.Timestamp(r["timestamp"]).tz_convert(HST).tz_localize(None): float(r["value"])
+                   for r in rows if r.get("value") is not None}, dtype=float).sort_index()
+    return s.resample("15min").mean().dropna() if len(s) else s
+
+
+def _first_two(s: pd.Series):
+    for a, b in zip(s.index[:-1], s.index[1:]):
+        if s[a] and s[b]:
+            return a
+    return None
+
+
+def evening_state(obs: pd.DataFrame, rnet: pd.Series | None):
+    """("ending" | "over" | "drain", since) once the slope stops heating.
+
+    Net radiation is the signal (29 days, 9/14-10/12): it falls below
+    50 W/m2 about 17:15, within 15 minutes of the upslope weakening, and
+    turns negative about 17:45 every day, +-15 min; drainage follows about
+    1 h 45 min later and varies far more. From 15:00 only, so a thick deck
+    at midday is not read as the evening. Drainage itself, and the old
+    wind rule when net radiation is missing, come from evening_flow().
+    """
+    wind = evening_flow(obs)
+    if wind and wind[0] == "drain":
+        return wind
+    if rnet is None or rnet.empty:
+        return ("ending", wind[1]) if wind else None
+    # Half-hour means (Sam), stamped at the half hour's start. Back-tested on
+    # Oct 2025 - Oct 2026: below 100 W/m2 the wind weakened a median 45 min
+    # later; the upslope ran on for an hour after only 5% of the time.
+    r = rnet.rolling(2).mean().shift(-1).dropna()
+    r = r[r.index.hour >= 15]
+    over = r.index[(r < 0).values]
+    if len(over):
+        return "over", over[0]
+    ending = r.index[(r < 100).values]
+    if len(ending):
+        return "ending", ending[0]
+    return None
+
+
 def evening_flow(obs: pd.DataFrame):
     """After 14:00: ("cusp", since) or ("drain", since) once the upslope gives way.
 
@@ -550,18 +630,30 @@ def evening_flow(obs: pd.DataFrame):
     ka["u"], ka["v"] = ka.wind_mph * np.sin(r), ka.wind_mph * np.cos(r)
     g = ka.groupby("t").agg(u=("u", "mean"), v=("v", "mean"), mph=("wind_mph", "mean"))
     g["d"] = np.degrees(np.arctan2(g.u, g.v)) % 360
-    phase = g.apply(lambda x: "drain" if 70 <= x.d <= 160 else
-                    "up" if 200 <= x.d <= 320 and x.mph > 2.5 else "mix", axis=1)
+    # The same weak wind means more as the day runs down (Sam: include time
+    # of day): a lull at 14:00, the end of the upslope by 17:00.
+    def floor_mph(t):
+        return 2.5 if t.hour < 16 else 3.5 if t.hour < 17 else 4.5
+
+    phase = pd.Series({t: "drain" if 70 <= x.d <= 160 else
+                       "up" if 185 <= x.d <= 320 and x.mph > floor_mph(t) else "mix"
+                       for t, x in g.iterrows()})
     if len(phase) < 2 or phase.index[-1].hour < 14 or "up" not in phase.values:
         return None
-    if phase.iloc[-1] == "up" or phase.iloc[-2] == "up":
+    # From 16:00, the first two quarter hours in a row out of the upslope end
+    # it for the day; a later gust does not bring it back (it flickered back
+    # on 10-11 and 10-12). Before 16:00 a weak spell is only a lull.
+    since = None
+    for a, b in zip(phase.index[:-1], phase.index[1:]):
+        if a.hour >= 16 and phase[a] != "up" and phase[b] != "up" and (phase[:a] == "up").any():
+            since = a
+            break
+    if since is None:
         return None
-    last_up = phase[phase == "up"].index[-1]
-    after = phase[phase.index > last_up]
-    drains = after[after == "drain"]
+    drains = phase[(phase.index >= since) & (phase == "drain")]
     if phase.iloc[-1] == "drain" and len(drains):
         return "drain", drains.index[0]
-    return "cusp", after.index[0]
+    return "cusp", since
 
 
 def sun_ladder(now: datetime) -> list[tuple[str, int, float | None]]:
@@ -792,6 +884,11 @@ def chip(kind: str, text: str) -> str:
     return f'<span class="chip {kind}">{esc(text)}</span>'
 
 
+def rating_chip(word):
+    return {"Good": chip("good", "Good"), "OK": chip("fair", "OK"),
+            "Nope": chip("warn", "Nope")}.get(word, "")
+
+
 def day_chip(verdict, sun):
     if sun is not None and not pd.isna(sun) and sun < 0.55:
         return chip("warn", "Shaded")
@@ -812,6 +909,8 @@ def build() -> str:
     base = safely(cloudbase_now, obs) if len(obs) else None
     therm = safely(thermal_today, obs, now) if len(obs) else None
     up, last_drain = safely(upslope_since, obs) or (None, None) if len(obs) else (None, None)
+    evening = (safely(evening_state, obs, safely(net_radiation, now) if now.hour >= 15 else None)
+               if up is not None and len(obs) else None)
     ladder_start = ladder_or_last(now)
     ladder, sun_hour = ladder_start if ladder_start else ([], None)
     pos_lad = safely(line_now, obs, now)
@@ -853,13 +952,16 @@ def build() -> str:
                          f"{rng}</div>")
 
     # upslope text
-    evening = safely(evening_flow, obs) if up is not None else None
-    if evening:
+    if evening and up is not None:
         kind, since = evening
-        up_html = (f'Over<div class="sub">Drainage since about {since:%H:%M}; '
-                   f'upslope began about {up:%H:%M}</div>' if kind == "drain" else
-                   f'Ending<div class="sub">Swinging through the cusp since about {since:%H:%M}; '
-                   f'upslope began about {up:%H:%M}</div>')
+        up_html = {
+            "drain": f'Over<div class="sub">Drainage since about {since:%H:%M}; '
+                     f'upslope began about {up:%H:%M}</div>',
+            "over": f'Over<div class="sub">Slope losing heat since about {since:%H:%M}; '
+                    f'upslope began about {up:%H:%M}</div>',
+            "ending": f'Ending<div class="sub">Slope heating nearly stopped about {since:%H:%M}; '
+                      f'upslope began about {up:%H:%M}</div>',
+        }[kind]
     elif up is not None:
         up_html = f'On since about <span class="num">{up:%H:%M}</span>'
         if last_drain is not None:
@@ -890,11 +992,19 @@ def build() -> str:
         line_html += f'<div class="alert">{esc(west)}; the line may be further south than shown</div>'
 
     # thermals text
-    if latest is not None:
-        therm_html = (f"<strong>{esc(rating(verdict_now))}</strong> at {int(therm.index[-1]):02d}:00"
-                      f"<div class=\"sub\">From Kula Ag's measured air (thermal.py)</div>")
-    elif now.hour < 9:
-        therm_html = "Not yet<div class=\"sub\">Rated from 09:00</div>"
+    thermal_word = None
+    if sun_hour is not None and 9 <= sun_hour.hour < 15 and ka_sun is not None:
+        thermal_word = sun_rating(ka_sun)
+        therm_html = (f"<strong>{thermal_word}</strong> {sun_hour:%H:%M}–{sun_hour + timedelta(hours=1):%H:%M}"
+                      f"<div class=\"sub\">From the sunlight reaching Kula Ag: {pct(min(ka_sun, 1))} of "
+                      f"clear sky. Good days measure about 80%.</div>")
+    elif now.hour >= 15 and (day_sun := safely(window_sun, now)) is not None:
+        thermal_word = sun_rating(day_sun)
+        therm_html = (f"<strong>{thermal_word}</strong> for the day, 09:00–15:00"
+                      f"<div class=\"sub\">Kula Ag averaged {pct(min(day_sun, 1))} of clear-sky "
+                      f"sunlight. Good days measure about 80%.</div>")
+    elif now.hour < 10:
+        therm_html = "Not yet<div class=\"sub\">First rating just after 10:00, for 09:00–10:00</div>"
     else:
         therm_html = "Unavailable<div class=\"sub\">Kula Ag's readings did not come through this update</div>"
 
@@ -902,9 +1012,9 @@ def build() -> str:
                 f'<div class="sub">{sun_hour:%H:%M}–{sun_hour + timedelta(hours=1):%H:%M}</div>'
                 if ka_sun is not None else "Unavailable")
 
-    today_chip = day_chip(verdict_now, ka_sun)
-    said = safely(summary, obs, ladder, up, verdict_now, pos, west, now,
-                  safely(sun_trend, now)) if len(obs) else None
+    today_chip = rating_chip(thermal_word)
+    said = safely(summary, obs, ladder, up, thermal_word, pos, west, now,
+                  safely(sun_trend, now), evening) if len(obs) else None
     summary_html = f'<p class="summary">{esc(said)}</p>' if said else ""
 
     # tomorrow + outlook
@@ -925,12 +1035,12 @@ def build() -> str:
         wind_t = "--" if pd.isna(r["dir_deg"]) else f"{cv.compass(r['dir_deg'])} ({r['dir_deg']:03.0f}°)"
         cap_t = ("No inversion in the model" if inv_t is None else
                  f"Kahului inversion {ft(inv_t['base_ft'])}–{ft(inv_t['top_ft'])} ft")
-        tom_chip = day_chip(r["thermal"], r["sun"])
+        tom_chip = rating_chip(sun_rating(r["sun"]))
         prev = tom - timedelta(days=1)
         said_t = safely(forecast_summary, r, hours.get(tom), hours.get(prev), inv_t,
                         "today" if prev == now.date() else "yesterday")
         t_html = (f'<p class="summary">{esc(said_t)}</p>' if said_t else "") + f"""<dl>
-        <dt>Thermals</dt><dd>{esc(rating(r['thermal']))}<div class="sub">From forecast surface air, which runs a few degrees cool</div></dd>
+        <dt>Thermals</dt><dd>{esc(sun_rating(r['sun']))}<div class="sub">From the GFS sunlight forecast; right class about 7 days in 10</div></dd>
         <dt>Cloudbase</dt><dd><span class="num">{am_pm(hours.get(tom))} ft</span><div class="sub">11:00 → 14:00</div></dd>
         <dt>Sun</dt><dd><span class="num">{pct(r['sun'])}</span> of clear sky, 10:00–14:00 (GFS)<div class="sub">Sun share on past days: good flying days about 80%, overcast about 50%, socked in 20%</div></dd>
         <dt>Shear line</dt><dd>{esc(line_t)}<div class="sub">Trades {esc(wind_t)}</div>{line_alert}</dd>
@@ -944,7 +1054,7 @@ def build() -> str:
             lt = "--" if lt is None or pd.isna(lt) else esc(line_short(lt))
             rows_html += (f"<tr><td>{day:%a %d}</td><td class=\"n\">{pct(w['sun'])}</td>"
                           f"<td class=\"n\">{am_pm(hours.get(day))}</td>"
-                          f"<td>{esc(rating(w['thermal']))}</td><td>{lt}</td></tr>")
+                          f"<td>{esc(sun_rating(w['sun']))}</td><td>{lt}</td></tr>")
 
     ladder_html = ""
     for name, elev, share in ladder:
