@@ -417,7 +417,14 @@ def summary(obs: pd.DataFrame, ladder, up, verdict, pos, west, now: datetime,
                 text += "; cloud reaches all the way to the Summit"
             out.append(text + ".")
 
-    if up is not None:
+    evening = evening_flow(obs) if up is not None else None
+    if evening:
+        kind, since = evening
+        out.append(f"Drainage has set in since about {since:%H:%M}; the upslope is over for the day."
+                   if kind == "drain" else
+                   f"The upslope is ending: the slope wind has been swinging through the cusp "
+                   f"since about {since:%H:%M}, ahead of drainage.")
+    elif up is not None:
         w = core[core.observed >= obs.observed.max() - pd.Timedelta("30min")].wind_mph.dropna()
         if len(w):
             mph = w.mean()
@@ -521,6 +528,40 @@ def upslope_since(obs: pd.DataFrame):
         if all(phase[ts[i + k]] == "up" for k in range(3)):
             return ts[i], last_drain
     return None, last_drain
+
+
+def evening_flow(obs: pd.DataFrame):
+    """After 14:00: ("cusp", since) or ("drain", since) once the upslope gives way.
+
+    The evening mirror of upslope_since, at Kula Ag, where Sam watches it.
+    Kula Ag's afternoon upslope is itself SSW (203-217 deg at 3-6 mph on
+    10-03, 10-05, 10-11), so direction alone cannot see the end. The cusp
+    is the wind dying to about 2 mph and backing below 200 deg (17:30-18:30
+    on those days); drainage from the east follows within half an hour.
+    Needs two quarter hours in a row out of the upslope, so one lull does
+    not end the day.
+    """
+    ka = obs[(obs.station_id == "001HI")].dropna(subset=["wind_dir", "wind_mph"]).copy()
+    ka = ka[ka.observed.dt.hour >= 12]
+    if ka.empty:
+        return None
+    ka["t"] = ka.observed.dt.floor("15min")
+    r = np.radians(ka.wind_dir)
+    ka["u"], ka["v"] = ka.wind_mph * np.sin(r), ka.wind_mph * np.cos(r)
+    g = ka.groupby("t").agg(u=("u", "mean"), v=("v", "mean"), mph=("wind_mph", "mean"))
+    g["d"] = np.degrees(np.arctan2(g.u, g.v)) % 360
+    phase = g.apply(lambda x: "drain" if 70 <= x.d <= 160 else
+                    "up" if 200 <= x.d <= 320 and x.mph > 2.5 else "mix", axis=1)
+    if len(phase) < 2 or phase.index[-1].hour < 14 or "up" not in phase.values:
+        return None
+    if phase.iloc[-1] == "up" or phase.iloc[-2] == "up":
+        return None
+    last_up = phase[phase == "up"].index[-1]
+    after = phase[phase.index > last_up]
+    drains = after[after == "drain"]
+    if phase.iloc[-1] == "drain" and len(drains):
+        return "drain", drains.index[0]
+    return "cusp", after.index[0]
 
 
 def sun_ladder(now: datetime) -> list[tuple[str, int, float | None]]:
@@ -812,7 +853,14 @@ def build() -> str:
                          f"{rng}</div>")
 
     # upslope text
-    if up is not None:
+    evening = safely(evening_flow, obs) if up is not None else None
+    if evening:
+        kind, since = evening
+        up_html = (f'Over<div class="sub">Drainage since about {since:%H:%M}; '
+                   f'upslope began about {up:%H:%M}</div>' if kind == "drain" else
+                   f'Ending<div class="sub">Swinging through the cusp since about {since:%H:%M}; '
+                   f'upslope began about {up:%H:%M}</div>')
+    elif up is not None:
         up_html = f'On since about <span class="num">{up:%H:%M}</span>'
         if last_drain is not None:
             up_html += f'<div class="sub">Drainage ended about {last_drain:%H:%M}</div>'
