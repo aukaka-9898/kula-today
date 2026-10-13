@@ -1,6 +1,6 @@
 """Build the Kula Today page: measured conditions now, and the outlook.
 
-Runs on GitHub Actions every 30 minutes in daylight and writes
+Runs on GitHub Actions every 15 minutes in daylight, hourly overnight, and writes
 docs/index.html, which GitHub Pages serves. All the meteorology comes from
 the KulaModel repository (checked out beside this one, or wherever
 $KULAMODEL points), so there is one copy of the forecast code, not two.
@@ -89,12 +89,64 @@ def safely(fn, *a):
 
 # -- today, measured ---------------------------------------------------------
 
+# The Mesonet's own server has its stations about 15 minutes behind;
+# api.weather.gov about 50. These four match api.weather.gov's values to
+# rounding (Kula Ag, Keokea, Pulehu, 2026-10-12: T and Td within 0.03 F,
+# direction exact), so they are the same sensors, just sooner.
+HCDP_VARS = "Tair_1_Avg,RH_1_Avg,WS_1_Avg,WDrs_1_Avg"
+
+
+def dewpoint_c(t_c: float, rh: float) -> float:
+    a, b = 17.625, 243.04
+    g = np.log(rh / 100) + a * t_c / (b + t_c)
+    return b * g / (a - g)
+
+
+def read_hcdp(start: datetime) -> dict[str, list]:
+    """Today's Mesonet readings by station, oldest first, as sampler Readings."""
+    by_hcdp = {s.hcdp: s for s in sampler.STATIONS if s.hcdp}
+    rows = mesonet.get("/mesonet/db/measurements", location="hawaii",
+                       station_ids=",".join(by_hcdp), var_ids=HCDP_VARS,
+                       start_date=start.strftime("%Y-%m-%dT%H:%M:%S-10:00"),
+                       row_mode="json", limit=100000)
+    vals: dict[tuple, dict] = {}
+    for r in rows:
+        if r.get("value") is None or r["station_id"] not in by_hcdp:
+            continue
+        t = (datetime.fromisoformat(r["timestamp"].replace("Z", "+00:00"))
+             .astimezone(HST).replace(tzinfo=None, second=0, microsecond=0))
+        vals.setdefault((r["station_id"], t), {})[r["variable"]] = float(r["value"])
+    out: dict[str, list] = {}
+    for (hid, t), v in sorted(vals.items(), key=lambda x: x[0][1]):
+        if "Tair_1_Avg" not in v or not 0 < v.get("RH_1_Avg", 0) <= 100:
+            continue
+        st = by_hcdp[hid]
+        t_c = v["Tair_1_Avg"]
+        rd = sampler.Reading(st, t, sampler.f32(sampler.net_round(t_c * 9 / 5 + 32, 1)),
+                             sampler.f32(sampler.net_round(
+                                 dewpoint_c(t_c, v["RH_1_Avg"]) * 9 / 5 + 32, 1)))
+        if "WS_1_Avg" in v:
+            rd.wind_mph = sampler.f32(round(v["WS_1_Avg"] * 2.23694))
+            if "WDrs_1_Avg" in v:
+                rd.wind_dir = sampler.f32(v["WDrs_1_Avg"] % 360)
+        out.setdefault(st.id, []).append(rd)
+    return out
+
+
 def observations(now: datetime) -> pd.DataFrame:
-    start = now.replace(hour=0, minute=0, second=0, microsecond=0).astimezone(timezone.utc)
+    """Today's readings: Mesonet stations from HCDP, the rest and any HCDP gap
+    from api.weather.gov."""
+    midnight = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    start = midnight.astimezone(timezone.utc)
+    try:
+        hcdp = _retrying(read_hcdp)(midnight)
+    except Exception as e:
+        hcdp = {}
+        PROBLEMS.append(f"HCDP observations, using api.weather.gov: {type(e).__name__}: {e}")
     rows = []
     for st in sampler.STATIONS:
-        got = None
-        for attempt in range(3):           # api.weather.gov drops single requests
+        got = hcdp.get(st.id)
+        for attempt in range(0 if got else 3):   # api.weather.gov drops single requests
             try:
                 got, _ = sampler.read_nws(st, start)
                 break
@@ -238,8 +290,33 @@ def ladder_or_last(now: datetime):
     return [tuple(r) for r in saved["ladder"]], start
 
 
-def line_now():
-    lad = cv.observed()
+def fresher_ladder(lad: pd.DataFrame, obs: pd.DataFrame) -> pd.DataFrame:
+    """The ladder's Mesonet stations from today's readings when those are newer.
+
+    convergence.observed() reads api.weather.gov, about 50 minutes behind
+    for Piiholo, Kula Ag and Keokea; the page's own readings come from HCDP.
+    """
+    if obs.empty:
+        return lad
+    rows = lad.to_dict("records")
+    for sid, name, lat, elev in cv.LADDER:
+        o = obs[(obs.station_id == sid) & obs.wind_dir.notna()]
+        if o.empty:
+            continue
+        r = o.loc[o.observed.idxmax()]
+        new = {"station": sid, "name": name, "lat": lat, "elev_ft": elev,
+               "observed_local": pd.Timestamp(r.observed), "wind_dir": r.wind_dir,
+               "wind_mph": r.wind_mph, "side": cv._side(r.wind_dir)}
+        old = next((x for x in rows if x["station"] == sid), None)
+        if old is None:
+            rows.append(new)
+        elif new["observed_local"] > old["observed_local"]:
+            old.update(new)
+    return pd.DataFrame(rows)
+
+
+def line_now(obs: pd.DataFrame):
+    lad = fresher_ladder(cv.observed(), obs)
     if lad.empty:
         return None, lad
     lad = lad[lad.observed_local >= lad.observed_local.max() - STALE]
@@ -376,7 +453,7 @@ def build() -> str:
     up, last_drain = safely(upslope_since, obs) or (None, None) if len(obs) else (None, None)
     ladder_start = ladder_or_last(now)
     ladder, sun_hour = ladder_start if ladder_start else ([], None)
-    pos_lad = safely(line_now)
+    pos_lad = safely(line_now, obs)
     pos, lad = pos_lad if pos_lad else (None, pd.DataFrame())
     week, hours, inv_today, inv_tom, fc_made = unpack(forecast(now, gfs), now)
 
