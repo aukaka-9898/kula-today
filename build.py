@@ -512,7 +512,8 @@ def build() -> str:
         ladder_html = out
 
     return PAGE.substitute(
-        updated=f"{now:%a %d %b %Y · %H:%M} HST", today_chip=today_chip,
+        updated=f"{now:%a %d %b %Y · %H:%M} HST", updated_time=f"{now:%H:%M}",
+        today_chip=today_chip,
         therm=therm_html, base=base_html, sun=sun_html, up=up_html, line=line_html,
         ceil=ceil_html, tom_title=f"{tom:%a %d %b}", tom_chip=tom_chip, tomorrow=t_html,
         rows=rows_html, ladder=ladder_html or "<p>Unavailable.</p>",
