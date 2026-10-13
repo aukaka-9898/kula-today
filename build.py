@@ -509,8 +509,10 @@ def forecast_summary(r, pair, today_pair, inv, today_word: str) -> str:
         out.append(f"{sky}.")
     elif bits:
         out.append(f"Expect {' '.join(bits)}.")
-    if sun_rating(sun) != "--":
-        out.append(f"Thermals look {sun_rating(sun)}.")
+    word = sun_rating(sun)
+    if word != "--":
+        out.append({"Good": "Thermals look good.", "OK": "Thermals look OK.",
+                    "Nope": "Thermals: Nope."}[word])
     if inv and am is not None:
         out.append("The Kahului inversion sits at or above the expected base, so it may cap the tops."
                    if inv["base_ft"] >= am - 300 else
