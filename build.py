@@ -201,6 +201,77 @@ def west_intrusion(obs: pd.DataFrame) -> str | None:
     return f"Trade air reaching the lower west slope: Pulehu {cv.compass(d)} at {mph:.0f} mph"
 
 
+# The line is read by where it crosses the road up the slope -- Makawao
+# Avenue from Makawao to Pukalani, then Kula Highway south -- and, north of
+# Makawao, by where it reaches the shore (Sam, 2026-10-12). By latitude,
+# like convergence.LANDMARKS, which these come from.
+# "Kula" alone was too vague to place on the road (Sam). Kamehameha Schools
+# (OSM 20.8216) and the middle junction of Lower Kula Road with the highway
+# (OSM 20.767-20.774) are Sam's picks to fill the gaps.
+ROAD = sorted([(n, lat) for n, lat in cv.LANDMARKS
+               if n in ("Makawao", "Pukalani", "Omaopio", "Waiakoa", "Keokea", "Ulupalakua")]
+              + [("Kamehameha Schools", 20.8216),
+                 ("the middle Lower Kula Road junction", 20.7707)], key=lambda m: -m[1])
+SHORE = [(n, lat) for n, lat in cv.LANDMARKS if n in ("Paia", "Hookipa")]
+NORTH_OF_ROAD = 20.866          # past Makawao, about halfway to Haliimaile
+
+
+# Sam: "if the shear is there it's not flyable" -- the line at Naalae Road
+# (MECO Naalaea Rd, 20.767) or further south puts Kula in the trades.
+# Measured: trades already at MECO Kula (20.771) or south of it.
+NOT_FLYABLE_LAT = 20.775
+NOT_FLYABLE = "The line is at Naalae Road or further south, where Kula is usually not flyable."
+
+
+def _place(lat: float) -> tuple[str, str]:
+    marks = SHORE if lat > NORTH_OF_ROAD else ROAD
+    return ("shore" if lat > NORTH_OF_ROAD else "road",
+            min(marks, key=lambda m: abs(m[1] - lat))[0])
+
+
+def line_at(lat: float) -> str:
+    """Where a forecast line crosses the road, lower case, for a sentence."""
+    kind, name = _place(lat)
+    if kind == "shore":
+        return f"north of Makawao, reaching the shore near {name}"
+    if name == "Makawao":
+        return "on Makawao Avenue near Makawao"
+    if name == "Pukalani":
+        return "at Pukalani"
+    if name.startswith("the "):
+        return f"crossing Kula Highway at {name}"
+    return f"crossing Kula Highway near {name}"
+
+
+def line_between(north_lat: float, south_lat: float) -> str:
+    """The same for a measured bracket between two ladder stations."""
+    (nk, nn), (sk, sn) = _place(north_lat), _place(south_lat)
+    if (nk, nn) == (sk, sn):
+        return line_at(north_lat)
+    if nk == "shore" and sk == "shore":
+        return f"north of Makawao, reaching the shore between {sn} and {nn}"
+    if nk == "shore":
+        return f"between the shore near {nn} and {sn}"
+    road = ("Makawao Avenue" if sn in ("Makawao", "Pukalani") else
+            "Kula Highway" if nn != "Makawao" else "the road")
+    return f"crossing {road} between {nn} and {sn}"
+
+
+def line_short(name) -> str:
+    """A forecast landmark as the week table shows it."""
+    lat = dict(cv.LANDMARKS).get(name)
+    if lat is None:
+        return str(name)
+    kind, place = _place(lat)
+    if kind == "shore":
+        return f"{place} shore"
+    return "Lower Kula Rd (middle)" if place.startswith("the middle") else place
+
+
+def _cap(s: str) -> str:
+    return s[:1].upper() + s[1:]
+
+
 def _core(obs: pd.DataFrame) -> pd.DataFrame:
     return obs[~obs.station_id.isin(OFF_SLOPE_STATIONS | {"TT925"}) & (obs.elev_ft <= 4400)
                & (obs.suspect == "")]
@@ -211,35 +282,104 @@ def _sun_words(f: float) -> str:
             "about half sun" if f >= 0.4 else "mostly shade" if f >= 0.15 else "deep shade")
 
 
-def summary(obs: pd.DataFrame, ladder, up, verdict, pos, west, now: datetime) -> str:
+# Off the Kula side: shaded by trade cloud to the north and west, not by the
+# Kula deck. With them in, the 11:30 replay of 2026-10-12 said the cloud
+# "tops out between Piiholo and Keokea".
+OFF_DECK = {"Piiholo", "Pulehu"}
+
+# The sun trend averages these. Kula Ag alone flipped fading / returning /
+# fading at 11:30, 12:30 and 13:30 on 2026-10-12 as gaps in broken cloud passed.
+SUN_TREND_STATIONS = {"Kula Ag", "Keokea", "Park HQ"}
+
+
+def sun_trend(now: datetime) -> float | None:
+    """Share of clear-sky sun over the last 30 min minus the 30 min an hour earlier."""
+    end = now.replace(tzinfo=None, second=0, microsecond=0)
+    rows = [(t, w) for t, st, w in _retrying(sampler.read_mesonet_sun)(end - timedelta(minutes=90), end)
+            if st.name in SUN_TREND_STATIONS]
+    if not rows:
+        return None
+    s = pd.Series([w for _, w in rows], index=pd.DatetimeIndex([t for t, _ in rows]))
+    clear = pd.Series(mesonet.clear_sky(s.index.tz_localize(HST)), index=s.index)
+
+    def share(a, b):
+        m = (s.index > a) & (s.index <= b)
+        return s[m].sum() / clear[m].sum() if clear[m].sum() > 100 else None
+
+    late = share(end - timedelta(minutes=30), end)
+    early = share(end - timedelta(minutes=90), end - timedelta(minutes=60))
+    return None if late is None or early is None else late - early
+
+
+def _base_at(core: pd.DataFrame, t) -> float | None:
+    """Median of each core station's latest LCL at t, readings up to 20 min old.
+
+    Per station, not per clock slot: the MECO stations report every 10
+    minutes and the rest every 5, so slot medians jumped between station sets.
+    """
+    c = core[(core.observed <= t) & (core.observed > t - pd.Timedelta("20min"))]
+    latest = c.sort_values("observed").groupby("station_id").tail(1)
+    return float(latest.lcl_ft.median()) if len(latest) >= 3 else None
+
+
+def summary(obs: pd.DataFrame, ladder, up, verdict, pos, west, now: datetime,
+            sun_change: float | None = None) -> str:
     """A few plain sentences on how the day is going, from rules, not a model.
 
     No cloudbase figures: an estimate from ground stations is not good to
     the foot, and the Cloudbase line already gives its range (Sam,
     2026-10-12). The base is told by its trend, the deck by the stations
-    it lies between.
+    it lies between. When two of base, sun and upslope move the same way
+    over the last hour and none the other, it opens by saying so.
     """
-    out = []
+    out, worse, better = [], [], []
 
-    core = _core(obs).copy()
+    core = _core(obs)
     if not core.empty:
-        core["slot"] = core.observed.dt.floor("30min")
-        base = core.groupby("slot").lcl_ft.median()
-        base = base[base.index.hour >= 9]
-        if len(base) >= 3 and base.index[-1] >= obs.observed.max() - STALE:
-            cur, ago = base.iloc[-1], base.iloc[-3]
+        t = core.observed.max()
+        cur, ago = _base_at(core, t), _base_at(core, t - pd.Timedelta("60min"))
+        if cur is not None and ago is not None and t >= obs.observed.max() - STALE:
             d = cur - ago
             trend = ("rising" if d >= 300 else "edging up" if d >= 150 else
                      "lowering" if d <= -300 else "edging down" if d <= -150 else "steady")
-            morning = base[(base.index.hour >= 10) & (base.index.hour < 12)]
-            if now.hour >= 12 and len(morning) and morning.max() - cur >= 700:
+            if d <= -300:
+                worse.append("base lowering")
+            elif d >= 300:
+                better.append("base rising")
+            day = t.normalize()
+            morning = [x for x in (_base_at(core, day + pd.Timedelta(minutes=m))
+                                   for m in range(600, 721, 30)) if x is not None]
+            if t.hour >= 12 and morning and max(morning) - cur >= 700:
                 out.append(f"Cloudbase has come down from its late-morning high and is {trend} now.")
-            elif len(base) >= 4 and cur >= base.max() - 200 and trend in ("rising", "edging up"):
+            elif t.hour < 12 and morning and cur >= max(morning) - 200 and d >= 150:
                 out.append(f"Cloudbase is at its highest of the day and still {trend}.")
             else:
                 out.append(f"Cloudbase is {trend}.")
 
-    lit = [(n, s) for n, _, s in ladder if s is not None]          # top down
+    if sun_change is not None:
+        if sun_change <= -0.2:
+            worse.append("sun fading")
+        elif sun_change >= 0.2:
+            better.append("sun returning")
+
+    if up is not None and now.hour >= 10:
+        w = core.dropna(subset=["wind_mph"])
+        t = obs.observed.max()
+        w_now = w[w.observed > t - pd.Timedelta("30min")].wind_mph.mean()
+        w_then = w[(w.observed > t - pd.Timedelta("90min"))
+                   & (w.observed <= t - pd.Timedelta("60min"))].wind_mph.mean()
+        if pd.notna(w_now) and pd.notna(w_then):
+            if w_now - w_then <= -2:
+                worse.append("upslope fading")
+            elif w_now - w_then >= 2:
+                better.append("upslope building")
+
+    if len(worse) >= 2 and not better:
+        out.insert(0, f"Conditions are going downhill: {' and '.join(worse)}.")
+    elif len(better) >= 2 and not worse:
+        out.insert(0, f"Conditions are improving: {' and '.join(better)}.")
+
+    lit = [(n, s) for n, _, s in ladder if s is not None and n not in OFF_DECK]  # top down
     ka = next((s for n, s in lit if n == "Kula Ag"), None)
     if ka is not None:
         if all(s >= 0.75 for _, s in lit):
@@ -257,8 +397,7 @@ def summary(obs: pd.DataFrame, ladder, up, verdict, pos, west, now: datetime) ->
             out.append(text + ".")
 
     if up is not None:
-        w = _core(obs)
-        w = w[w.observed >= obs.observed.max() - pd.Timedelta("30min")].wind_mph.dropna()
+        w = core[core.observed >= obs.observed.max() - pd.Timedelta("30min")].wind_mph.dropna()
         if len(w):
             mph = w.mean()
             word = "a light" if mph < 6 else "a moderate" if mph < 10 else "a brisk"
@@ -272,8 +411,10 @@ def summary(obs: pd.DataFrame, ladder, up, verdict, pos, west, now: datetime) ->
     if pos and pos.get("found"):
         tail = ("with trade air reaching the lower west slope at Pulehu" if west
                 else "with no trade air on the lower west slope")
-        out.append(f"Trades are holding the shear line between {pos['north_of']} "
-                   f"and {pos['south_of']}, {tail}.")
+        out.append(f"Trades are holding the shear line "
+                   f"{line_between(pos['north_lat'], pos['south_lat'])}, {tail}.")
+        if pos["north_lat"] <= NOT_FLYABLE_LAT:
+            out.append(NOT_FLYABLE)
     elif west:
         out.append("Trade air is reaching the lower west slope at Pulehu.")
 
@@ -322,7 +463,11 @@ def forecast_summary(r, pair, today_pair, inv, today_word: str) -> str:
     if line is None or pd.isna(line):
         out.append("No trade line is expected.")
     elif not pd.isna(r["dir_deg"]):
-        out.append(f"Trades from the {cv.compass(r['dir_deg'])} should put the shear line near {line}.")
+        where = (line_at(dict(cv.LANDMARKS)[line]) if line in dict(cv.LANDMARKS)
+                 else f"near {line}")
+        out.append(f"Trades from the {cv.compass(r['dir_deg'])} should put the shear line {where}.")
+        if dict(cv.LANDMARKS).get(line, 99) <= NOT_FLYABLE_LAT:
+            out.append(NOT_FLYABLE)
     return " ".join(out)
 
 
@@ -630,10 +775,11 @@ def build() -> str:
 
     # line text
     if pos and pos.get("found"):
-        marks = ", ".join(pos["landmarks"]) or "no named place"
-        line_html = (f"Between <strong>{esc(pos['north_of'])}</strong> and "
-                     f"<strong>{esc(pos['south_of'])}</strong>"
-                     f"<div class=\"sub\">Covers {esc(marks)}</div>")
+        line_html = (f"{esc(_cap(line_between(pos['north_lat'], pos['south_lat'])))}"
+                     f"<div class=\"sub\">Trades at {esc(pos['north_of'])}, "
+                     f"upslope at {esc(pos['south_of'])}</div>")
+        if pos["north_lat"] <= NOT_FLYABLE_LAT:
+            line_html += f'<div class="alert">{esc(NOT_FLYABLE)}</div>'
         paia = lad[lad.name == "Paia"]
         if len(paia):
             p = paia.iloc[0]
@@ -661,7 +807,8 @@ def build() -> str:
                 if ka_sun is not None else "Unavailable")
 
     today_chip = day_chip(verdict_now, ka_sun)
-    said = safely(summary, obs, ladder, up, verdict_now, pos, west, now) if len(obs) else None
+    said = safely(summary, obs, ladder, up, verdict_now, pos, west, now,
+                  safely(sun_trend, now)) if len(obs) else None
     summary_html = f'<p class="summary">{esc(said)}</p>' if said else ""
 
     # tomorrow + outlook
@@ -674,7 +821,11 @@ def build() -> str:
         r = week.loc[tom]
         inv_t = next((i for i in (inv_tom if tom > now.date() else inv_today) if i), None)
         line_t = r["shear_location"]
-        line_t = "No trade line (trades absent)" if line_t is None or pd.isna(line_t) else f"Near {line_t}"
+        line_t = ("No trade line (trades absent)" if line_t is None or pd.isna(line_t) else
+                  _cap(line_at(dict(cv.LANDMARKS)[line_t])) if line_t in dict(cv.LANDMARKS)
+                  else f"Near {line_t}")
+        line_alert = (f'<div class="alert">{esc(NOT_FLYABLE)}</div>'
+                      if dict(cv.LANDMARKS).get(r["shear_location"], 99) <= NOT_FLYABLE_LAT else "")
         wind_t = "--" if pd.isna(r["dir_deg"]) else f"{cv.compass(r['dir_deg'])} ({r['dir_deg']:03.0f}°)"
         cap_t = ("No inversion in the model" if inv_t is None else
                  f"Kahului inversion {ft(inv_t['base_ft'])}–{ft(inv_t['top_ft'])} ft")
@@ -686,7 +837,7 @@ def build() -> str:
         <dt>Thermals</dt><dd>{esc(str(r['thermal']))}<div class="sub">From forecast surface air, which runs a few degrees cool</div></dd>
         <dt>Cloudbase</dt><dd><span class="num">{am_pm(hours.get(tom))} ft</span><div class="sub">11:00 → 14:00</div></dd>
         <dt>Sun</dt><dd><span class="num">{pct(r['sun'])}</span> of clear sky, 10:00–14:00 (GFS)<div class="sub">Sun share on past days: good flying days about 80%, overcast about 50%, socked in 20%</div></dd>
-        <dt>Shear line</dt><dd>{esc(line_t)}<div class="sub">Trades {esc(wind_t)}</div></dd>
+        <dt>Shear line</dt><dd>{esc(line_t)}<div class="sub">Trades {esc(wind_t)}</div>{line_alert}</dd>
         <dt>Ceiling</dt><dd>{esc(cap_t)}</dd>
       </dl>
       <div class="sub">Forecast as of {fc_made.astimezone(HST):%H:%M} HST</div>"""
@@ -694,7 +845,7 @@ def build() -> str:
             if day < tom:
                 continue
             lt = w["shear_location"]
-            lt = "--" if lt is None or pd.isna(lt) else esc(lt)
+            lt = "--" if lt is None or pd.isna(lt) else esc(line_short(lt))
             rows_html += (f"<tr><td>{day:%a %d}</td><td class=\"n\">{pct(w['sun'])}</td>"
                           f"<td class=\"n\">{am_pm(hours.get(day))}</td>"
                           f"<td>{esc(str(w['thermal']))}</td><td>{lt}</td></tr>")
