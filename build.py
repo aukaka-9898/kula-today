@@ -275,7 +275,9 @@ LADDER_MAX_AGE = timedelta(hours=2)
 
 def ladder_or_last(now: datetime):
     got = safely(sun_ladder, now)
-    if got and got[0]:
+    # Good only with Kula Ag in it: RAWS alone answering made a two-station
+    # ladder that replaced the full one at 14:54 on 2026-10-12.
+    if got and any(name == "Kula Ag" and s is not None for name, _, s in got[0]):
         LADDER_FILE.write_text(json.dumps({"start": got[1].isoformat(), "ladder": got[0]}),
                                encoding="utf-8")
         return got
