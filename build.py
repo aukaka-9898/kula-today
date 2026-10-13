@@ -181,15 +181,27 @@ def upslope_since(obs: pd.DataFrame):
 
 
 def sun_ladder(now: datetime) -> list[tuple[str, int, float | None]]:
-    """Share of clear-sky sun over the last full hour, per station, top down."""
+    """Share of clear-sky sun over the last full hour, per station, top down.
+
+    Mesonet and RAWS each fail on their own; a HCDP connect timeout at
+    14:23 on 2026-10-12 used to blank the whole ladder, RAWS included.
+    """
     end = now.replace(minute=0, second=0, microsecond=0).replace(tzinfo=None)
     start = end - timedelta(hours=1)
     rows: dict[str, list] = {}
-    for obs_t, st, w in sampler.read_mesonet_sun(start, end):
-        if start <= obs_t < end:
-            rows.setdefault(st.id, []).append((obs_t, w))
+    try:
+        for obs_t, st, w in _retrying(sampler.read_mesonet_sun)(start, end):
+            if start <= obs_t < end:
+                rows.setdefault(st.id, []).append((obs_t, w))
+    except Exception as e:
+        PROBLEMS.append(f"Mesonet sun: {type(e).__name__}: {e}")
     for st in (s for s in sampler.STATIONS if s.raws):
-        for t, w in sampler.read_raws_sun(st.raws, end.date(), end.date()):
+        try:
+            got = _retrying(sampler.read_raws_sun)(st.raws, end.date(), end.date())
+        except Exception as e:
+            PROBLEMS.append(f"RAWS sun {st.raws}: {type(e).__name__}: {e}")
+            continue
+        for t, w in got:
             if t == end:                                  # hour-ending stamp
                 rows.setdefault(st.id, []).append((t - timedelta(minutes=30), w))
     ladder = []
@@ -201,6 +213,29 @@ def sun_ladder(now: datetime) -> list[tuple[str, int, float | None]]:
         share = sum(w for _, w in rows[st.id]) / clear if clear > 50 else None
         ladder.append((st.name, int(st.elev_ft), share))
     return sorted(ladder, key=lambda x: -x[1]), start
+
+
+# The last good ladder, reused for up to two hours when both sources fail.
+# The heading names the hour it covers, so an old one shows as old.
+LADDER_FILE = HERE / "docs" / "ladder.json"
+LADDER_MAX_AGE = timedelta(hours=2)
+
+
+def ladder_or_last(now: datetime):
+    got = safely(sun_ladder, now)
+    if got and got[0]:
+        LADDER_FILE.write_text(json.dumps({"start": got[1].isoformat(), "ladder": got[0]}),
+                               encoding="utf-8")
+        return got
+    try:
+        saved = json.loads(LADDER_FILE.read_text(encoding="utf-8"))
+        start = datetime.fromisoformat(saved["start"])
+    except (OSError, ValueError, KeyError):
+        return got
+    if now.replace(tzinfo=None) - start > LADDER_MAX_AGE:
+        return got
+    PROBLEMS.append(f"sun ladder from {start:%H:%M} reused")
+    return [tuple(r) for r in saved["ladder"]], start
 
 
 def line_now():
@@ -339,7 +374,7 @@ def build() -> str:
     base = safely(cloudbase_now, obs) if len(obs) else None
     therm = safely(thermal_today, obs, now) if len(obs) else None
     up, last_drain = safely(upslope_since, obs) or (None, None) if len(obs) else (None, None)
-    ladder_start = safely(sun_ladder, now)
+    ladder_start = ladder_or_last(now)
     ladder, sun_hour = ladder_start if ladder_start else ([], None)
     pos_lad = safely(line_now)
     pos, lad = pos_lad if pos_lad else (None, pd.DataFrame())
