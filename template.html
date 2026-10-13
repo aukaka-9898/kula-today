@@ -52,6 +52,7 @@ dt { font: 600 .74rem var(--display); letter-spacing: .1em; text-transform: uppe
 dd { margin: 0; min-width: 0; }
 .num { font: 500 1rem var(--mono); font-variant-numeric: tabular-nums; }
 .sub { color: var(--muted); font-size: .86rem; }
+.summary { margin: 0; font-size: .92rem; line-height: 1.5; }
 .alert { color: var(--warn); font-size: .86rem; font-weight: 600; margin-top: 2px; }
 .block { background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 18px; display: grid; gap: 12px; min-width: 0; }
 .block p { margin: 0; max-width: 68ch; color: var(--muted); font-size: .92rem; }
@@ -93,6 +94,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
     <section class="panel today" aria-labelledby="t-today">
       <div class="kind">Measured today · $updated_time HST</div>
       <div class="head"><h2 id="t-today">Today</h2>$today_chip</div>
+      $summary
       <dl>
         <dt>Thermals</dt><dd>$therm</dd>
         <dt>Cloudbase</dt><dd>$base</dd>

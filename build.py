@@ -201,6 +201,85 @@ def west_intrusion(obs: pd.DataFrame) -> str | None:
     return f"Trade air reaching the lower west slope: Pulehu {cv.compass(d)} at {mph:.0f} mph"
 
 
+def _core(obs: pd.DataFrame) -> pd.DataFrame:
+    return obs[~obs.station_id.isin(OFF_SLOPE_STATIONS | {"TT925"}) & (obs.elev_ft <= 4400)
+               & (obs.suspect == "")]
+
+
+def _sun_words(f: float) -> str:
+    return ("full sun" if f >= 0.9 else "mostly sun" if f >= 0.65 else
+            "about half sun" if f >= 0.4 else "mostly shade" if f >= 0.15 else "deep shade")
+
+
+def summary(obs: pd.DataFrame, ladder, up, verdict, pos, west, now: datetime) -> str:
+    """A few plain sentences on how the day is going, from rules, not a model.
+
+    No cloudbase figures: an estimate from ground stations is not good to
+    the foot, and the Cloudbase line already gives its range (Sam,
+    2026-10-12). The base is told by its trend, the deck by the stations
+    it lies between.
+    """
+    out = []
+
+    core = _core(obs).copy()
+    if not core.empty:
+        core["slot"] = core.observed.dt.floor("30min")
+        base = core.groupby("slot").lcl_ft.median()
+        base = base[base.index.hour >= 9]
+        if len(base) >= 3 and base.index[-1] >= obs.observed.max() - STALE:
+            cur, ago = base.iloc[-1], base.iloc[-3]
+            d = cur - ago
+            trend = ("rising" if d >= 300 else "edging up" if d >= 150 else
+                     "lowering" if d <= -300 else "edging down" if d <= -150 else "steady")
+            morning = base[(base.index.hour >= 10) & (base.index.hour < 12)]
+            if now.hour >= 12 and len(morning) and morning.max() - cur >= 700:
+                out.append(f"Cloudbase has come down from its late-morning high and is {trend} now.")
+            elif len(base) >= 4 and cur >= base.max() - 200 and trend in ("rising", "edging up"):
+                out.append(f"Cloudbase is at its highest of the day and still {trend}.")
+            else:
+                out.append(f"Cloudbase is {trend}.")
+
+    lit = [(n, s) for n, _, s in ladder if s is not None]          # top down
+    ka = next((s for n, s in lit if n == "Kula Ag"), None)
+    if ka is not None:
+        if all(s >= 0.75 for _, s in lit):
+            out.append("The whole slope is in sun.")
+        else:
+            text = f"Kula Ag had {_sun_words(ka)} over the last hour"
+            shaded = [i for i, (_, s) in enumerate(lit) if s < 0.5]
+            top = shaded[0] if shaded else None
+            above = [n for n, s in lit[:top] if s >= 0.75] if top else []
+            if top is not None and above:
+                text += (f"; the cloud tops out between {lit[top][0]} and {above[-1]}, "
+                         "with sun above it")
+            elif top == 0:
+                text += "; cloud reaches all the way to the Summit"
+            out.append(text + ".")
+
+    if up is not None:
+        w = _core(obs)
+        w = w[w.observed >= obs.observed.max() - pd.Timedelta("30min")].wind_mph.dropna()
+        if len(w):
+            mph = w.mean()
+            word = "a light" if mph < 6 else "a moderate" if mph < 10 else "a brisk"
+            line = f"Upslope has run since about {up:%H:%M} at {word} {mph:.0f} mph"
+        else:
+            line = f"Upslope has run since about {up:%H:%M}"
+        out.append(line + (f", and thermals rate {verdict}." if verdict else "."))
+    elif now.hour < 11:
+        out.append("Upslope has not set in yet.")
+
+    if pos and pos.get("found"):
+        tail = ("with trade air reaching the lower west slope at Pulehu" if west
+                else "with no trade air on the lower west slope")
+        out.append(f"Trades are holding the shear line between {pos['north_of']} "
+                   f"and {pos['south_of']}, {tail}.")
+    elif west:
+        out.append("Trade air is reaching the lower west slope at Pulehu.")
+
+    return " ".join(out)
+
+
 def thermal_today(obs: pd.DataFrame, now: datetime):
     ka = obs[obs.station_id == "001HI"].copy()
     ka["hour"] = ka.observed.dt.hour
@@ -536,6 +615,8 @@ def build() -> str:
                 if ka_sun is not None else "Unavailable")
 
     today_chip = day_chip(verdict_now, ka_sun)
+    said = safely(summary, obs, ladder, up, verdict_now, pos, west, now) if len(obs) else None
+    summary_html = f'<p class="summary">{esc(said)}</p>' if said else ""
 
     # tomorrow + outlook
     # Before 06:00 the next flying day is today, so the forecast panel shows it.
@@ -593,7 +674,7 @@ def build() -> str:
 
     return PAGE.substitute(
         updated=f"{now:%a %d %b %Y · %H:%M} HST", updated_time=f"{now:%H:%M}",
-        today_chip=today_chip,
+        today_chip=today_chip, summary=summary_html,
         therm=therm_html, base=base_html, sun=sun_html, up=up_html, line=line_html,
         ceil=ceil_html, tom_title=f"{'Tomorrow' if tom > now.date() else 'Today'} · {tom:%a %d %b}", tom_chip=tom_chip, tomorrow=t_html,
         rows=rows_html, ladder=ladder_html or "<p>Unavailable.</p>",
