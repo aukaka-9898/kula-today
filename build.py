@@ -459,13 +459,14 @@ def build() -> str:
     today_chip = day_chip(verdict_now, ka_sun)
 
     # tomorrow + outlook
-    tom = now.date() + timedelta(days=1)
+    # Before 06:00 the next flying day is today, so the forecast panel shows it.
+    tom = now.date() + timedelta(days=0 if now.hour < 6 else 1)
     t_html = "<p>Forecast unavailable.</p>"
     rows_html = ""
     tom_chip = ""
     if week is not None and tom in week.index:
         r = week.loc[tom]
-        inv_t = next((i for i in inv_tom if i), None)
+        inv_t = next((i for i in (inv_tom if tom > now.date() else inv_today) if i), None)
         line_t = r["shear_location"]
         line_t = "No trade line (trades absent)" if line_t is None or pd.isna(line_t) else f"Near {line_t}"
         wind_t = "--" if pd.isna(r["dir_deg"]) else f"{cv.compass(r['dir_deg'])} ({r['dir_deg']:03.0f}°)"
@@ -515,7 +516,7 @@ def build() -> str:
         updated=f"{now:%a %d %b %Y · %H:%M} HST", updated_time=f"{now:%H:%M}",
         today_chip=today_chip,
         therm=therm_html, base=base_html, sun=sun_html, up=up_html, line=line_html,
-        ceil=ceil_html, tom_title=f"{tom:%a %d %b}", tom_chip=tom_chip, tomorrow=t_html,
+        ceil=ceil_html, tom_title=f"{'Tomorrow' if tom > now.date() else 'Today'} · {tom:%a %d %b}", tom_chip=tom_chip, tomorrow=t_html,
         rows=rows_html, ladder=ladder_html or "<p>Unavailable.</p>",
         ladder_hour=(f"{sun_hour:%H:%M}–{sun_hour + timedelta(hours=1):%H:%M}" if sun_hour else ""),
         webcam=WEBCAM,
