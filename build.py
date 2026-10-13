@@ -280,6 +280,52 @@ def summary(obs: pd.DataFrame, ladder, up, verdict, pos, west, now: datetime) ->
     return " ".join(out)
 
 
+def forecast_summary(r, pair, today_pair, inv, today_word: str) -> str:
+    """The forecast panel's few sentences, in the same style as summary().
+
+    Base by comparison only -- with the other day and through the day --
+    never as a figure.
+    """
+    out = []
+    sun = r["sun"]
+    if sun is not None and not pd.isna(sun):
+        sky = ("Sunny" if sun >= 0.8 else "Mostly sunny" if sun >= 0.6 else
+               "Partly cloudy" if sun >= 0.4 else "Mostly cloudy")
+    else:
+        sky = None
+    am, pm = pair if pair else (None, None)
+    bits = []
+    if am is not None and today_pair and today_pair[0] is not None:
+        d = am - today_pair[0]
+        if d >= 500:
+            bits.append(f"a higher base than {today_word}")
+        elif d <= -500:
+            bits.append(f"a lower base than {today_word}")
+    if am is not None and pm is not None:
+        d = pm - am
+        drift = ("rising through the afternoon" if d >= 300 else
+                 "lowering after midday" if d <= -300 else "holding through the day")
+        bits.append(f"{'that is ' if bits else 'a base '}{drift}")
+    if sky and bits:
+        out.append(f"{sky}, with {' '.join(bits)}.")
+    elif sky:
+        out.append(f"{sky}.")
+    elif bits:
+        out.append(f"Expect {' '.join(bits)}.")
+    if r["thermal"] and str(r["thermal"]) != "unknown":
+        out.append(f"Thermals look {r['thermal']}.")
+    if inv and am is not None:
+        out.append("The Kahului inversion sits at or above the expected base, so it may cap the tops."
+                   if inv["base_ft"] >= am - 300 else
+                   "The Kahului inversion is below the expected base, so probably no cap.")
+    line = r["shear_location"]
+    if line is None or pd.isna(line):
+        out.append("No trade line is expected.")
+    elif not pd.isna(r["dir_deg"]):
+        out.append(f"Trades from the {cv.compass(r['dir_deg'])} should put the shear line near {line}.")
+    return " ".join(out)
+
+
 def thermal_today(obs: pd.DataFrame, now: datetime):
     ka = obs[obs.station_id == "001HI"].copy()
     ka["hour"] = ka.observed.dt.hour
@@ -633,7 +679,10 @@ def build() -> str:
         cap_t = ("No inversion in the model" if inv_t is None else
                  f"Kahului inversion {ft(inv_t['base_ft'])}–{ft(inv_t['top_ft'])} ft")
         tom_chip = day_chip(r["thermal"], r["sun"])
-        t_html = f"""<dl>
+        prev = tom - timedelta(days=1)
+        said_t = safely(forecast_summary, r, hours.get(tom), hours.get(prev), inv_t,
+                        "today" if prev == now.date() else "yesterday")
+        t_html = (f'<p class="summary">{esc(said_t)}</p>' if said_t else "") + f"""<dl>
         <dt>Thermals</dt><dd>{esc(str(r['thermal']))}<div class="sub">From forecast surface air, which runs a few degrees cool</div></dd>
         <dt>Cloudbase</dt><dd><span class="num">{am_pm(hours.get(tom))} ft</span><div class="sub">11:00 → 14:00</div></dd>
         <dt>Sun</dt><dd><span class="num">{pct(r['sun'])}</span> of clear sky, 10:00–14:00 (GFS)<div class="sub">Sun share on past days: good flying days about 80%, overcast about 50%, socked in 20%</div></dd>
