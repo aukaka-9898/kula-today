@@ -70,6 +70,27 @@ WEBCAM = ("https://weathercams.faa.gov/map/-128.93458,33.06367,-103.99562,49.851
 STALE = pd.Timedelta("75min")
 GOOD_VERDICTS = {"Moderate", "Strong", "Boom!"}
 
+# What the page says for thermal.py's words. Strength is climb rate, which
+# cannot be predicted (Sam), and the top of thermal.py's scale gave "Boom!"
+# too easily; three plain words say only as much as is known.
+RATING = {"Flat": "Nope", "Light": "OK", "Moderate": "Good", "Strong": "Good", "Boom!": "Good"}
+
+
+def rating(verdict) -> str:
+    return RATING.get(str(verdict), "--")
+
+
+# The day is rated from upslope (about 08:15) to 15:00 (Sam), not 09:00-16:00.
+_assess = th.assess
+
+
+@functools.wraps(_assess)
+def _assess_in_window(surface, release_ft, lift_ft=0.0, window=(9, 15), path=None):
+    return _assess(surface, release_ft, lift_ft, window, path)
+
+
+th.assess = _assess_in_window
+
 esc = html.escape
 
 
@@ -404,7 +425,7 @@ def summary(obs: pd.DataFrame, ladder, up, verdict, pos, west, now: datetime,
             line = f"Upslope has run since about {up:%H:%M} at {word} {mph:.0f} mph"
         else:
             line = f"Upslope has run since about {up:%H:%M}"
-        out.append(line + (f", and thermals rate {verdict}." if verdict else "."))
+        out.append(line + (f", and thermals rate {rating(verdict)}." if verdict else "."))
     elif now.hour < 11:
         out.append("Upslope has not set in yet.")
 
@@ -454,7 +475,7 @@ def forecast_summary(r, pair, today_pair, inv, today_word: str) -> str:
     elif bits:
         out.append(f"Expect {' '.join(bits)}.")
     if r["thermal"] and str(r["thermal"]) != "unknown":
-        out.append(f"Thermals look {r['thermal']}.")
+        out.append(f"Thermals look {rating(r['thermal'])}.")
     if inv and am is not None:
         out.append("The Kahului inversion sits at or above the expected base, so it may cap the tops."
                    if inv["base_ft"] >= am - 300 else
@@ -562,36 +583,63 @@ def ladder_or_last(now: datetime):
     return [tuple(r) for r in saved["ladder"]], start
 
 
-def fresher_ladder(lad: pd.DataFrame, obs: pd.DataFrame) -> pd.DataFrame:
-    """The ladder's Mesonet stations from today's readings when those are newer.
+# The line "flaps like a flag on the micro level" (Sam): one reading per
+# station moved the bracket around from build to build. Each station's
+# wind is averaged over its last hour instead.
+LINE_SMOOTH = pd.Timedelta("60min")
 
-    convergence.observed() reads api.weather.gov, about 50 minutes behind
-    for Piiholo, Kula Ag and Keokea; the page's own readings come from HCDP.
-    """
-    if obs.empty:
-        return lad
-    rows = lad.to_dict("records")
-    for sid, name, lat, elev in cv.LADDER:
-        o = obs[(obs.station_id == sid) & obs.wind_dir.notna()]
-        if o.empty:
+
+def _ladder_readings(sid: str, since: datetime) -> pd.DataFrame:
+    """One ladder station's wind since a time, from api.weather.gov."""
+    r = requests.get(f"https://api.weather.gov/stations/{sid}/observations",
+                     params={"start": since.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")},
+                     headers=cv.HEAD, timeout=45)
+    r.raise_for_status()
+    rows = []
+    for f in r.json().get("features", []):
+        p = f["properties"]
+        d, s = p["windDirection"]["value"], p["windSpeed"]["value"]
+        if d is None:
             continue
-        r = o.loc[o.observed.idxmax()]
-        new = {"station": sid, "name": name, "lat": lat, "elev_ft": elev,
-               "observed_local": pd.Timestamp(r.observed), "wind_dir": r.wind_dir,
-               "wind_mph": r.wind_mph, "side": cv._side(r.wind_dir)}
-        old = next((x for x in rows if x["station"] == sid), None)
-        if old is None:
-            rows.append(new)
-        elif new["observed_local"] > old["observed_local"]:
-            old.update(new)
+        rows.append({"observed": pd.Timestamp(p["timestamp"]).tz_convert(HST).tz_localize(None),
+                     "wind_dir": float(d), "wind_mph": (s or 0) * 0.621371})
     return pd.DataFrame(rows)
 
 
-def line_now(obs: pd.DataFrame):
-    lad = fresher_ladder(cv.observed(), obs)
+def smoothed_ladder(obs: pd.DataFrame, now: datetime) -> pd.DataFrame:
+    """Each ladder station's vector-mean wind over the last hour.
+
+    The page's own readings (HCDP and api.weather.gov, already fetched) for
+    the stations it has; api.weather.gov for the coastal three it does not.
+    """
+    since = now - LINE_SMOOTH
+    cut = since.replace(tzinfo=None)
+    rows = []
+    for sid, name, lat, elev in cv.LADDER:
+        have = (obs[(obs.station_id == sid) & obs.wind_dir.notna()]
+                [["observed", "wind_dir", "wind_mph"]] if len(obs) else pd.DataFrame())
+        if have.empty:
+            try:
+                have = _retrying(_ladder_readings)(sid, since)
+            except Exception:
+                continue
+        if have.empty:
+            continue
+        have = have[have.observed >= cut]
+        if have.empty:
+            continue
+        d = cv.mean_direction(have.wind_dir)
+        rows.append({"station": sid, "name": name, "lat": lat, "elev_ft": elev,
+                     "observed_local": have.observed.max(), "wind_dir": d,
+                     "wind_mph": float(have.wind_mph.mean()), "side": cv._side(d),
+                     "n": len(have)})
+    return pd.DataFrame(rows)
+
+
+def line_now(obs: pd.DataFrame, now: datetime):
+    lad = smoothed_ladder(obs, now)
     if lad.empty:
         return None, lad
-    lad = lad[lad.observed_local >= lad.observed_local.max() - STALE]
     return cv.position(lad), lad
 
 
@@ -725,7 +773,7 @@ def build() -> str:
     up, last_drain = safely(upslope_since, obs) or (None, None) if len(obs) else (None, None)
     ladder_start = ladder_or_last(now)
     ladder, sun_hour = ladder_start if ladder_start else ([], None)
-    pos_lad = safely(line_now, obs)
+    pos_lad = safely(line_now, obs, now)
     pos, lad = pos_lad if pos_lad else (None, pd.DataFrame())
     week, hours, inv_today, inv_tom, fc_made = unpack(forecast(now, gfs), now)
 
@@ -776,7 +824,7 @@ def build() -> str:
     # line text
     if pos and pos.get("found"):
         line_html = (f"{esc(_cap(line_between(pos['north_lat'], pos['south_lat'])))}"
-                     f"<div class=\"sub\">Trades at {esc(pos['north_of'])}, "
+                     f"<div class=\"sub\">Last hour: trades at {esc(pos['north_of'])}, "
                      f"upslope at {esc(pos['south_of'])}</div>")
         if pos["north_lat"] <= NOT_FLYABLE_LAT:
             line_html += f'<div class="alert">{esc(NOT_FLYABLE)}</div>'
@@ -795,7 +843,7 @@ def build() -> str:
 
     # thermals text
     if latest is not None:
-        therm_html = (f"<strong>{esc(verdict_now)}</strong> at {int(therm.index[-1]):02d}:00"
+        therm_html = (f"<strong>{esc(rating(verdict_now))}</strong> at {int(therm.index[-1]):02d}:00"
                       f"<div class=\"sub\">From Kula Ag's measured air (thermal.py)</div>")
     elif now.hour < 9:
         therm_html = "Not yet<div class=\"sub\">Rated from 09:00</div>"
@@ -834,7 +882,7 @@ def build() -> str:
         said_t = safely(forecast_summary, r, hours.get(tom), hours.get(prev), inv_t,
                         "today" if prev == now.date() else "yesterday")
         t_html = (f'<p class="summary">{esc(said_t)}</p>' if said_t else "") + f"""<dl>
-        <dt>Thermals</dt><dd>{esc(str(r['thermal']))}<div class="sub">From forecast surface air, which runs a few degrees cool</div></dd>
+        <dt>Thermals</dt><dd>{esc(rating(r['thermal']))}<div class="sub">From forecast surface air, which runs a few degrees cool</div></dd>
         <dt>Cloudbase</dt><dd><span class="num">{am_pm(hours.get(tom))} ft</span><div class="sub">11:00 → 14:00</div></dd>
         <dt>Sun</dt><dd><span class="num">{pct(r['sun'])}</span> of clear sky, 10:00–14:00 (GFS)<div class="sub">Sun share on past days: good flying days about 80%, overcast about 50%, socked in 20%</div></dd>
         <dt>Shear line</dt><dd>{esc(line_t)}<div class="sub">Trades {esc(wind_t)}</div>{line_alert}</dd>
@@ -848,7 +896,7 @@ def build() -> str:
             lt = "--" if lt is None or pd.isna(lt) else esc(line_short(lt))
             rows_html += (f"<tr><td>{day:%a %d}</td><td class=\"n\">{pct(w['sun'])}</td>"
                           f"<td class=\"n\">{am_pm(hours.get(day))}</td>"
-                          f"<td>{esc(str(w['thermal']))}</td><td>{lt}</td></tr>")
+                          f"<td>{esc(rating(w['thermal']))}</td><td>{lt}</td></tr>")
 
     ladder_html = ""
     for name, elev, share in ladder:
