@@ -2,10 +2,12 @@ name: Build Kula Today
 
 on:
   schedule:
-    # Every 15 minutes, 06:00-18:45 HST (UTC-10, no daylight saving).
-    - cron: "*/15 16-23,0-4 * * *"
-    # Hourly overnight, 19:00-05:00 HST, to keep the forecast current.
-    - cron: "0 5-15 * * *"
+    # Every 15 minutes, 06:07-18:52 HST (UTC-10, no daylight saving).
+    # Off the quarter hours: GitHub delays or drops scheduled runs at busy
+    # times, and on the quarter hours none ran at all on 2026-10-12.
+    - cron: "7,22,37,52 16-23,0-4 * * *"
+    # Hourly overnight, 19:07-05:07 HST, to keep the forecast current.
+    - cron: "7 5-15 * * *"
   workflow_dispatch:
   push:
     branches: [main]
