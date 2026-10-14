@@ -478,7 +478,9 @@ def summary(obs: pd.DataFrame, ladder, up, verdict, pos, west, now: datetime,
             shaded = [i for i, (_, s) in enumerate(lit) if s < 0.5]
             top = shaded[0] if shaded else None
             above = [n for n, s in lit[:top] if s >= 0.75] if top else []
-            if top is not None and above:
+            if cu_clear:
+                pass        # no cumulus: a low reading is terrain shadow or haze, not a deck
+            elif top is not None and above:
                 text += (f"; the cloud tops out between {lit[top][0]} and {above[-1]}, "
                          "with sun above it")
             elif top == 0:
