@@ -1089,6 +1089,35 @@ def day_chip(verdict, sun):
     return chip("fair", "Fair")
 
 
+# The station map (Sam, 2026-10-14: "for identification of stations referenced
+# in the report(s)"). Each build writes every station's position and latest
+# wind; the page draws them over Esri's topographic basemap with Leaflet.
+COAST_POS = {"Paia": (20.9380, -156.3478), "Hamakuapoko Rd": (20.9200, -156.3410),
+             "Peahi Rd": (20.9076, -156.2896)}
+STATIONS_FILE = HERE / "docs" / "stations.json"
+
+
+def write_station_map(obs: pd.DataFrame, lad: pd.DataFrame, now: datetime) -> None:
+    rows = []
+    fresh = obs.observed.max() - pd.Timedelta("90min") if len(obs) else None
+    for st in sampler.STATIONS:
+        o = obs[(obs.station_id == st.id)] if len(obs) else obs
+        o = o[o.observed >= fresh].dropna(subset=["wind_mph"]) if len(o) else o
+        last = o.loc[o.observed.idxmax()] if len(o) else None
+        rows.append({"name": st.name, "lat": st.lat, "lon": st.lon, "elev_ft": int(st.elev_ft),
+                     "dir": None if last is None or pd.isna(last.wind_dir) else round(float(last.wind_dir)),
+                     "mph": None if last is None else round(float(last.wind_mph)),
+                     "at": None if last is None else f"{last.observed:%H:%M}"})
+    for name, (lat, lon) in COAST_POS.items():
+        r = lad[lad.name == name] if len(lad) else lad
+        last = r.iloc[0] if len(r) else None
+        rows.append({"name": name, "lat": lat, "lon": lon, "elev_ft": None,
+                     "dir": None if last is None else round(float(last.wind_dir)),
+                     "mph": None if last is None else round(float(last.wind_mph)),
+                     "at": None if last is None else f"{last.observed_local:%H:%M}"})
+    STATIONS_FILE.write_text(json.dumps({"made": f"{now:%H:%M}", "stations": rows}), encoding="utf-8")
+
+
 def build() -> str:
     now = datetime.now(HST)
     obs = safely(observations, now)
@@ -1316,6 +1345,8 @@ def build() -> str:
         if ahead:
             said = f"Today's forecast: {ahead}" + (f" {said}" if said else "")
     summary_html = f'<p class="summary">{esc(said)}</p>' if said else ""
+
+    safely(write_station_map, obs, lad if isinstance(lad, pd.DataFrame) else pd.DataFrame(), now)
 
     # tomorrow + outlook
     # Before 06:00 the next flying day is today, so the forecast panel shows it.

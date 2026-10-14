@@ -127,12 +127,51 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
     <p>Sun is the GFS forecast for 10:00–14:00. The model can't see the slope's own cumulus, so its high numbers run about 10 points above what Kula measures.</p>
   </section>
 
+  <details class="block" id="stationmap">
+    <summary><h2 style="display:inline">Station map</h2></summary>
+    <p>Every station the page reports on. Arrows fly with the wind, coloured by where it comes from: <span style="color:#d35400">upslope (SW–NW)</span>, <span style="color:#1f6fb2">trades, or drainage at night (NE–SE)</span>, <span style="color:#7d8c98">other</span>. Tap a station for its latest reading.</p>
+    <div id="map" style="height:460px;border-radius:8px;border:1px solid var(--rule)"></div>
+  </details>
+
   <div class="notes">
     <p><strong>Where the numbers come from.</strong> Station readings: UH Hawaiʻi Mesonet, MECO and RAWS stations on the slope, via api.weather.gov, the Hawaiʻi Climate Data Portal and WRCC. Sunlight is measured and compared with a clear-sky estimate. The shear line comes from the wind at stations from Paia up to Keokea. Forecasts: GFS sunlight, Open-Meteo surface air and Kahului forecast soundings (BUFKIT).</p>
     <p><strong>A hobby project.</strong> Updated about every 15 minutes from 06:00 to 18:45 HST, and hourly overnight for the forecast. Flight logs (IGC files) from Kula would make it better.</p>
     <p><strong>Notice.</strong> Information only, provided as is, with no guarantee of accuracy or availability. This is not an official forecast. Every pilot is responsible for their own decision to fly.</p>
   </div>
 </div>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+(function () {
+  var box = document.getElementById("stationmap"), done = false;
+  function colour(d) {
+    if (d === null) return "#7d8c98";
+    if (d >= 185 && d <= 320) return "#d35400";
+    if (d >= 20 && d <= 160) return "#1f6fb2";
+    return "#7d8c98";
+  }
+  function draw() {
+    if (done || !window.L) return; done = true;
+    var map = L.map("map", {scrollWheelZoom: false}).setView([20.80, -156.32], 11);
+    L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}", {
+      maxZoom: 16, attribution: "Tiles &copy; Esri &mdash; Esri, HERE, Garmin, USGS, NGA, EPA, USDA, NPS"}).addTo(map);
+    fetch("stations.json?" + Date.now()).then(function (r) { return r.json(); }).then(function (d) {
+      d.stations.forEach(function (s) {
+        var c = colour(s.dir), rot = s.dir === null ? 0 : (s.dir + 180) % 360;
+        var arrow = (s.dir === null || !s.mph)
+          ? '<div style="width:10px;height:10px;border-radius:50%;background:' + c + ';border:2px solid #fff"></div>'
+          : '<div style="transform:rotate(' + rot + 'deg);color:' + c + ';font:700 22px/22px sans-serif;text-shadow:0 0 3px #fff">&#8593;</div>';
+        var m = L.marker([s.lat, s.lon], {icon: L.divIcon({className: "", html: arrow, iconSize: [22, 22], iconAnchor: [11, 11]})}).addTo(map);
+        m.bindTooltip(s.name, {permanent: true, direction: "right", offset: [8, 0], className: "stn"});
+        m.bindPopup("<b>" + s.name + "</b>" + (s.elev_ft ? " · " + s.elev_ft.toLocaleString() + " ft" : "") + "<br>" +
+          (s.dir === null ? "no wind reading" : "from " + s.dir + "° at " + s.mph + " mph, " + s.at));
+      });
+    }).catch(function () {});
+  }
+  box.addEventListener("toggle", function () { if (box.open) { draw(); } });
+})();
+</script>
+<style>.stn{font:600 11px/1.2 var(--body);padding:1px 4px;background:rgba(255,255,255,.85);border:0;box-shadow:none;color:#17242f}.stn:before{display:none}</style>
 <!-- build problems: $diag -->
 </body>
 </html>
