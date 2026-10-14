@@ -112,6 +112,17 @@ def window_sun(now: datetime) -> float | None:
 
 # Typical upslope start at Kula Ag by month (median, Oct 2025-Oct 2026,
 # 346 days; July interpolated): it follows the sun clearing Haleakala.
+# When direct sun clears Haleakala onto Kula Ag, by month (median, same year).
+# The first sunlight reading shown is the first full hour after it.
+SUN_ON = {1: "08:45", 2: "08:30", 3: "08:15", 4: "07:15", 5: "07:30", 6: "07:15",
+          7: "07:20", 8: "07:30", 9: "08:00", 10: "08:00", 11: "08:15", 12: "08:45"}
+
+
+def first_sun_hour(month: int) -> int:
+    h, m = map(int, SUN_ON[month].split(":"))
+    return h if m == 0 else h + 1
+
+
 UPSLOPE_TYPICAL = {1: "09:15", 2: "08:50", 3: "08:30", 4: "08:30", 5: "08:00", 6: "08:00",
                    7: "08:00", 8: "08:00", 9: "08:20", 10: "08:30", 11: "08:45", 12: "09:15"}
 
@@ -957,10 +968,11 @@ def build() -> str:
                if up is not None and len(obs) else None)
     ladder_start = ladder_or_last(now)
     ladder, sun_hour = ladder_start if ladder_start else ([], None)
-    # Haleakala's shadow: direct sun reaches Kula Ag about 08:00 (Keokea 08:25),
-    # so before the 08:00-09:00 hour the stations get only skylight and read as
+    # Haleakala's shadow: direct sun reaches Kula Ag 07:15-08:45 by season (SUN_ON),
+    # so before the first full sunlit hour the stations get only skylight and read as
     # if under cloud -- 26% at Kula Ag with a clear sky on 2026-10-14 (Sam).
-    in_shadow = sun_hour is None or sun_hour.hour < 8
+    sun_on, first_hr = SUN_ON[now.month], first_sun_hour(now.month)
+    in_shadow = sun_hour is None or sun_hour.hour < first_hr
     if in_shadow:
         ladder = []
     pos_lad = safely(line_now, obs, now)
@@ -1103,11 +1115,11 @@ def build() -> str:
 
     fc_sun = fc_today["sun"] if fc_today is not None else None
     sun_html = ((f'<span class="num">{pct(fc_sun)}</span> of clear sky forecast, 10:00–14:00 (GFS)'
-                 "<div class=\"sub\">Measured from just after 09:00; Kula is in Haleakala's "
-                 "shadow until about 08:00</div>")
+                 f"<div class=\"sub\">Measured from just after {first_hr + 1:02d}:00; Kula is in "
+                 f"Haleakala's shadow until about {sun_on}</div>")
                 if in_shadow and fc_sun is not None and not pd.isna(fc_sun) else
-                "Not yet<div class=\"sub\">Kula is in Haleakala's shadow until about 08:00; "
-                "first reading just after 09:00</div>" if in_shadow else
+                f"Not yet<div class=\"sub\">Kula is in Haleakala's shadow until about {sun_on}; "
+                f"first reading just after {first_hr + 1:02d}:00</div>" if in_shadow else
                 f'<span class="num">{pct(ka_sun)}</span> of clear sky at Kula Ag'
                 f'<div class="sub">{sun_hour:%H:%M}–{sun_hour + timedelta(hours=1):%H:%M}</div>'
                 if ka_sun is not None else "Unavailable")
@@ -1115,7 +1127,7 @@ def build() -> str:
     today_chip = rating_chip(thermal_word or (sun_rating(fc_today["sun"])
                                               if fc_today is not None and now.hour < 10 else None))
     said = safely(summary, obs, ladder, up, thermal_word, pos, west, now,
-                  None if now.hour < 9 else safely(sun_trend, now), evening) if len(obs) else None
+                  None if now.hour < first_hr + 1 else safely(sun_trend, now), evening) if len(obs) else None
     if up is None and now.hour < 12 and fc_today is not None:
         ahead = safely(forecast_summary, fc_today, fc_pair, hours.get(now.date() - timedelta(days=1)),
                        next((i for i in inv_today if i), None), "yesterday")
@@ -1190,8 +1202,8 @@ def build() -> str:
         therm=therm_html, base=base_html, sun=sun_html, up=up_html, line=line_html,
         ceil_row=(f"<dt>Ceiling</dt><dd>{ceil_html}</dd>" if ceil_html else ""),
         tom_title=f"{'Tomorrow' if tom > now.date() else 'Today'} · {tom:%a %d %b}", tom_chip=tom_chip, tomorrow=t_html,
-        rows=rows_html, ladder=ladder_html or ("<p>Not yet: the slope is in Haleakala's shadow until "
-                                               "about 08:00. First reading just after 09:00.</p>"
+        rows=rows_html, ladder=ladder_html or (f"<p>Not yet: the slope is in Haleakala's shadow until "
+                                               f"about {sun_on}. First reading just after {first_hr + 1:02d}:00.</p>"
                                                if in_shadow else "<p>Unavailable.</p>"),
         ladder_hour=(f"{sun_hour:%H:%M}–{sun_hour + timedelta(hours=1):%H:%M}"
                      if sun_hour and not in_shadow else "not yet"),
