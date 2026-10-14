@@ -656,6 +656,7 @@ def upslope_since(obs: pd.DataFrame):
 # 75%, or Kula Ag's sky radiating warm (emissivity over 0.85; clear ~0.75-0.8).
 # The radiometer version was checked against Sam's days (first cu 09:00-13:20).
 CU_STATIONS = {"0119": "Kula Ag", "0116": "Keokea", "0151": "Park HQ"}
+KULA_SIDE = {"Keokea", "Kula Ag", "Kula 1", "Kamehamenui 1", "Park HQ"}
 
 
 def first_cumulus(now: datetime):
@@ -1118,6 +1119,13 @@ def build() -> str:
     fc_pair = hours.get(now.date()) if hours else None
 
     ka_sun = next((s for n, e, s in ladder if n == "Kula Ag"), None)
+    # The Kula side of the slope, Keokea to Park HQ (Sam, 2026-10-14): Kula Ag
+    # alone sat in a gap at 83% while the side averaged 56%. Each station is
+    # capped at 100% so cumulus-edge spikes don't lift the average. Pulehu and
+    # Piiholo (trade air) and Nene/Summit (above the cumulus) stay out.
+    side = [min(s, 1.0) for n, e, s in ladder if n in KULA_SIDE and s is not None]
+    side_sun = sum(side) / len(side) if len(side) >= 3 else None
+    side_best = max(side) if side else None
     latest = None if therm is None else therm.iloc[-1]
     verdict_now = None if latest is None else latest["verdict"]
 
@@ -1251,7 +1259,7 @@ def build() -> str:
         mid = rated[(rated.index >= 10) & (rated.index <= 14)]
         thermal_word = strength_word(th.describe(mid.ti_c.mean())) if len(mid) else None
         day_sun = safely(window_sun, now)
-        if day_sun is not None and day_sun < 0.55:
+        if day_sun is not None and day_sun < 0.40:      # broad overcast all day
             thermal_word = "Flat"
         if thermal_word:
             therm_html = (f"<strong>{thermal_word}</strong> for the day, 10:00–14:00"
@@ -1261,12 +1269,15 @@ def build() -> str:
     elif rated is not None and len(rated):
         hour = int(rated.index[-1])
         thermal_word = strength_word(rated.iloc[-1]["verdict"])
-        shaded = ka_sun is not None and not in_shadow and ka_sun < 0.55
+        # Flat only when NO part of the Kula side is in sun: under broken cloud,
+        # differential heating still makes thermals where the sun hits (Sam).
+        shaded = side_best is not None and not in_shadow and side_best < 0.55
         if shaded:
             thermal_word = "Flat"
         therm_html = (f"<strong>{thermal_word}</strong> at {hour:02d}:00"
                       f"<div class=\"sub\">Kula Ag's measured air through the {model} sounding (thermal.py)"
-                      + (f"; shaded, {pct(ka_sun)} of clear-sky sun" if shaded else "") + "</div>")
+                      + (f"; no sun anywhere on the Kula side (best {pct(side_best)})" if shaded else "")
+                      + "</div>")
     if thermal_word:
         pass
     elif now.hour < 10:
@@ -1285,6 +1296,11 @@ def build() -> str:
                 if in_shadow and fc_sun is not None and not pd.isna(fc_sun) else
                 f"Not yet<div class=\"sub\">Kula is in Haleakala's shadow until about {sun_on}; "
                 f"first reading just after {first_hr + 1:02d}:00</div>" if in_shadow else
+                f'<span class="num">{pct(side_sun)}</span> of clear sky, Kula side'
+                f'<div class="sub">{sun_hour:%H:%M}–{sun_hour + timedelta(hours=1):%H:%M}, average of '
+                f'{len(side)} stations, Keokea to Park HQ'
+                + (f'; Kula Ag {pct(min(ka_sun, 1))}' if ka_sun is not None else "") + '</div>'
+                if side_sun is not None else
                 f'<span class="num">{pct(ka_sun)}</span> of clear sky at Kula Ag'
                 f'<div class="sub">{sun_hour:%H:%M}–{sun_hour + timedelta(hours=1):%H:%M}</div>'
                 if ka_sun is not None else "Unavailable")
