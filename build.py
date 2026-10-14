@@ -604,6 +604,52 @@ def upslope_since(obs: pd.DataFrame):
     return None, last_drain
 
 
+# Whether cumulus have formed over the slope yet today, from sunlight. The
+# derived cloudbase is a condensation level -- where cumulus WOULD form -- and
+# on a clear morning it read as cloud that wasn't there (Sam, 2026-10-14).
+# A station sees cloud between itself and the sun: share of clear-sky under
+# 75%, or Kula Ag's sky radiating warm (emissivity over 0.85; clear ~0.75-0.8).
+# The radiometer version was checked against Sam's days (first cu 09:00-13:20).
+CU_STATIONS = {"0119": "Kula Ag", "0116": "Keokea", "0151": "Park HQ"}
+
+
+def first_cumulus(now: datetime):
+    """("clear", None) if no cumulus yet since the sun cleared Haleakala,
+    ("cumulus", time) once seen, or None if there is too little data."""
+    day = now.replace(tzinfo=None, hour=0, minute=0, second=0, microsecond=0)
+    h, m = map(int, SUN_ON[now.month].split(":"))
+    start = day + timedelta(hours=h, minutes=m) - timedelta(minutes=30)
+    end = now.replace(tzinfo=None)
+    if end - start < timedelta(minutes=50):
+        return None
+    rows = _retrying(mesonet.get)("/mesonet/db/measurements", location="hawaii",
+                                  station_ids=",".join(CU_STATIONS),
+                                  var_ids="SWin_1_Avg,LWin_1_Avg,Tair_1_Avg",
+                                  start_date=start.strftime("%Y-%m-%dT%H:%M:%S-10:00"),
+                                  end_date=end.strftime("%Y-%m-%dT%H:%M:%S-10:00"),
+                                  row_mode="json", limit=100000)
+    if not rows:
+        return None
+    x = pd.DataFrame(rows)
+    x["t"] = pd.to_datetime(x.timestamp).dt.tz_convert(HST)
+    x["value"] = pd.to_numeric(x.value, errors="coerce")
+    p = x.pivot_table(index=["t", "station_id"], columns="variable", values="value").reset_index()
+    p["clear"] = mesonet.clear_sky(pd.DatetimeIndex(p.t))
+    p["share"] = p.SWin_1_Avg / p.clear.where(p.clear > 50)
+    p["slot"] = p.t.dt.floor("15min")
+    g = p.groupby(["slot", "station_id"]).share.mean().unstack()
+    # Each station counts only after its own sunrise over Haleakala: Keokea
+    # sat in shadow until 08:50 on 2026-10-14, Kula Ag lit at 08:05.
+    lit = g.ge(0.85).cummax()
+    shaded = (g.lt(0.75) & lit).any(axis=1)
+    ka = p[p.station_id == "0119"].copy()
+    if "LWin_1_Avg" in ka:
+        ka["emis"] = ka.LWin_1_Avg / (5.67e-8 * (ka.Tair_1_Avg + 273.15) ** 4)
+        shaded = shaded | ka.groupby("slot").emis.mean().gt(0.85).reindex(shaded.index, fill_value=False)
+    seen = shaded[shaded & shaded.shift(-1, fill_value=False)]       # two quarter hours in a row
+    return ("cumulus", seen.index[0].tz_localize(None)) if len(seen) else ("clear", None)
+
+
 def net_radiation(now: datetime) -> pd.Series:
     """Kula Ag's net radiation (W/m2) since noon, quarter-hour means, from HCDP.
 
@@ -1013,6 +1059,10 @@ def build() -> str:
                      if fc_pair and fc_pair[0] is not None else
                      'Not yet<div class="sub">Derived once the upslope sets in, '
                      f'usually about {UPSLOPE_TYPICAL[now.month]}</div>')
+    elif base and (cu := safely(first_cumulus, now)) and cu[0] == "clear":
+        base_html = (f'No cumulus yet<div class="sub">They would form near about '
+                     f'{ft(round(base["mid"], -2))} ft, the condensation level derived from '
+                     f'the stations; no cloud over the slope in the sunlight readings</div>')
     elif evening and evening[0] in ("over", "drain"):
         # Same for the evening: once the slope is losing heat the stations
         # read the drainage layer, not a cloudbase (Sam: gate the evening).
