@@ -577,13 +577,13 @@ def forecast_summary(r, pair, today_pair, inv, today_word: str) -> str:
     return " ".join(out)
 
 
-def thermal_today(obs: pd.DataFrame, now: datetime):
+def thermal_today(obs: pd.DataFrame, now: datetime, path=None):
     ka = obs[obs.station_id == "001HI"].copy()
     ka["hour"] = ka.observed.dt.hour
     surf = ka.groupby("hour").agg(temp_f=("temp_f", "mean"),
                                   dewpoint_f=("dew_f", "mean")).reset_index()
     surf["day"] = now.date()
-    got = th.assess(surf, RELEASE_FT)
+    got = th.assess(surf, RELEASE_FT, path=path)
     return None if got.empty else got
 
 
@@ -992,8 +992,19 @@ def chip(kind: str, text: str) -> str:
 
 
 def rating_chip(word):
-    return {"Good": chip("good", "Good"), "OK": chip("fair", "OK"),
-            "Nope": chip("warn", "Nope")}.get(word, "")
+    return {"Good": chip("good", "Good"), "OK": chip("fair", "OK"), "Nope": chip("warn", "Nope"),
+            "Strong": chip("good", "Strong"), "Moderate": chip("good", "Moderate"),
+            "Light": chip("fair", "Light"), "Flat": chip("warn", "Flat")}.get(word, "")
+
+
+# Today's rating is thermal.py again (Sam, 2026-10-14: sunlight alone "too
+# simplistic"): Kula Ag's measured air through the NAM / RRFS Kahului
+# sounding -- the model Weather Guesser now uses -- in its words, with
+# "Boom!" folded into Strong (it came too easily). Sunlight is the check
+# that thermal.py lacks: under 55% of clear sky the slope isn't heating
+# whatever the air says (9/30: overcast, warm air, thermal.py said Light).
+def strength_word(verdict) -> str:
+    return "Strong" if verdict == "Boom!" else str(verdict)
 
 
 def day_chip(verdict, sun):
@@ -1014,7 +1025,7 @@ def build() -> str:
 
     # today
     base = safely(cloudbase_now, obs) if len(obs) else None
-    therm = safely(thermal_today, obs, now) if len(obs) else None
+    therm = safely(thermal_today, obs, now, cap) if len(obs) else None
     up, last_drain = safely(upslope_since, obs) or (None, None) if len(obs) else (None, None)
     evening = (safely(evening_state, obs, safely(net_radiation, now) if now.hour >= 15 else None)
                if up is not None and len(obs) else None)
@@ -1153,16 +1164,30 @@ def build() -> str:
 
     # thermals text
     thermal_word = None
-    if sun_hour is not None and 9 <= sun_hour.hour < 15 and ka_sun is not None:
-        thermal_word = sun_rating(ka_sun)
-        therm_html = (f"<strong>{thermal_word}</strong> {sun_hour:%H:%M}–{sun_hour + timedelta(hours=1):%H:%M}"
-                      f"<div class=\"sub\">From the sunlight reaching Kula Ag: {pct(min(ka_sun, 1))} of "
-                      f"clear sky. Good days measure about 80%.</div>")
-    elif now.hour >= 15 and (day_sun := safely(window_sun, now)) is not None:
-        thermal_word = sun_rating(day_sun)
-        therm_html = (f"<strong>{thermal_word}</strong> for the day, 09:00–15:00"
-                      f"<div class=\"sub\">Kula Ag averaged {pct(min(day_sun, 1))} of clear-sky "
-                      f"sunlight. Good days measure about 80%.</div>")
+    rated = therm[therm.index >= 10] if therm is not None else None
+    model = cap_model(now)
+    if rated is not None and len(rated) and now.hour >= 15:
+        mid = rated[(rated.index >= 10) & (rated.index <= 14)]
+        thermal_word = strength_word(th.describe(mid.ti_c.mean())) if len(mid) else None
+        day_sun = safely(window_sun, now)
+        if day_sun is not None and day_sun < 0.55:
+            thermal_word = "Flat"
+        if thermal_word:
+            therm_html = (f"<strong>{thermal_word}</strong> for the day, 10:00–14:00"
+                          f"<div class=\"sub\">Kula Ag's measured air through the {model} sounding "
+                          f"(thermal.py)" + (f"; {pct(min(day_sun, 1))} of clear-sky sun" if day_sun is not None else "")
+                          + "</div>")
+    elif rated is not None and len(rated):
+        hour = int(rated.index[-1])
+        thermal_word = strength_word(rated.iloc[-1]["verdict"])
+        shaded = ka_sun is not None and not in_shadow and ka_sun < 0.55
+        if shaded:
+            thermal_word = "Flat"
+        therm_html = (f"<strong>{thermal_word}</strong> at {hour:02d}:00"
+                      f"<div class=\"sub\">Kula Ag's measured air through the {model} sounding (thermal.py)"
+                      + (f"; shaded, {pct(ka_sun)} of clear-sky sun" if shaded else "") + "</div>")
+    if thermal_word:
+        pass
     elif now.hour < 10:
         word = sun_rating(fc_today["sun"]) if fc_today is not None else "--"
         therm_html = (f"<strong>{word}</strong> forecast<div class=\"sub\">From the GFS sunlight "
