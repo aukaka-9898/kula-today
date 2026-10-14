@@ -250,8 +250,14 @@ def cloudbase_now(obs: pd.DataFrame) -> dict | None:
     latest = core.sort_values("observed").groupby("station_id").tail(1)
     if len(latest) < 3:
         return None
-    return {"mid": float(latest.lcl_ft.median()), "lo": float(latest.lcl_ft.min()),
-            "hi": float(latest.lcl_ft.max()), "n": len(latest),
+    # The range drops the single lowest and highest station when 7+ report
+    # (Sam, 2026-10-14). The usual odd ones out are Pulehu in a trade-air pulse
+    # (4,160 ft at 12:00 that day) and Crater Rd, the top station; the middle
+    # is unchanged and "Stations disagree" stops firing on one outlier.
+    v = latest.lcl_ft.sort_values()
+    span = v.iloc[1:-1] if len(v) >= 7 else v
+    return {"mid": float(v.median()), "lo": float(span.min()),
+            "hi": float(span.max()), "n": len(latest),
             "at": latest.observed.max()}
 
 
