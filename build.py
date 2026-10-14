@@ -160,7 +160,7 @@ def safely(fn, *a):
 # api.weather.gov about 50. These four match api.weather.gov's values to
 # rounding (Kula Ag, Keokea, Pulehu, 2026-10-12: T and Td within 0.03 F,
 # direction exact), so they are the same sensors, just sooner.
-HCDP_VARS = "Tair_1_Avg,RH_1_Avg,WS_1_Avg,WDrs_1_Avg"
+HCDP_VARS = "Tair_1_Avg,RH_1_Avg,WS_1_Avg,WDrs_1_Avg,WS_1_Max"
 
 
 def dewpoint_c(t_c: float, rh: float) -> float:
@@ -192,6 +192,8 @@ def read_hcdp(start: datetime) -> dict[str, list]:
         rd = sampler.Reading(st, t, sampler.f32(sampler.net_round(t_c * 9 / 5 + 32, 1)),
                              sampler.f32(sampler.net_round(
                                  dewpoint_c(t_c, v["RH_1_Avg"]) * 9 / 5 + 32, 1)))
+        if "WS_1_Max" in v:
+            rd.gust_mph = sampler.f32(round(v["WS_1_Max"] * 2.23694))
         if "WS_1_Avg" in v:
             rd.wind_mph = sampler.f32(round(v["WS_1_Avg"] * 2.23694))
             if "WDrs_1_Avg" in v:
@@ -229,6 +231,7 @@ def observations(now: datetime) -> pd.DataFrame:
                          "dew_f": float(r.dew_f), "lcl_ft": float(r.lcl_ft),
                          "wind_dir": None if r.wind_dir is None else float(r.wind_dir),
                          "wind_mph": None if r.wind_mph is None else float(r.wind_mph),
+                         "gust_mph": None if r.gust_mph is None else float(r.gust_mph),
                          "suspect": r.suspect})
     return pd.DataFrame(rows)
 
@@ -335,7 +338,11 @@ def line_between(north_lat: float, south_lat: float,
         return f"north of Makawao, reaching the coast between {sn} and {nn}"
     if nk == "shore":
         # Not "running from" the road: the line is anchored to the north (Sam).
-        return f"north of {sn}, reaching the coast near {nn}"
+        # Name the coast only when the south end is at Pukalani or north of
+        # it; a bracket from Omaopio to the Haiku coast is a gap, not a line.
+        if south_lat >= dict(ROAD)["Pukalani"] - 0.003:
+            return f"north of {sn}, reaching the coast near {nn}"
+        return f"north of {sn}"
     road = ("Makawao Avenue" if sn in ("Makawao", "Pukalani") else
             "Kula Highway" if nn != "Makawao" else "the road")
     return f"crossing {road} between {nn} and {sn}"
@@ -584,6 +591,33 @@ def thermal_today(obs: pd.DataFrame, now: datetime, path=None):
     surf["day"] = now.date()
     got = th.assess(surf, RELEASE_FT, path=path)
     return None if got.empty else got
+
+
+# Gustiness on the lower slope (Sam: "indications of relatively gusty
+# conditions may be useful"). Kula's midday wind is light but its gusts run
+# well above it: over a year at Kula Ag and Keokea, 10:00-15:00, the typical
+# gust (90th percentile) ran ~6.5 mph above the average, and 7.3-7.4 mph or
+# more on the gustiest quarter of days. Stations below 3,600 ft on the core
+# slope -- Mesonet, MECO, Kaonoulu -- over the last hour.
+GUSTY_EXCESS_MPH = 7.5
+
+
+def lower_wind(obs: pd.DataFrame):
+    w = _core(obs)
+    w = w[(w.elev_ft <= 3600) & (w.observed >= obs.observed.max() - pd.Timedelta("60min"))]
+    w = w.dropna(subset=["wind_mph"])
+    if w.station_id.nunique() < 3:
+        return None
+    gusts = w.gust_mph.dropna() if "gust_mph" in w else pd.Series(dtype=float)
+    avg = float(w.wind_mph.mean())
+    typ = float(gusts.quantile(0.9)) if len(gusts) >= 5 else None
+    # The flag is judged at Kula Ag and Keokea only, where the threshold was
+    # measured; MECO's gusts are reported differently and may always run high.
+    ref = w[w.station_id.isin(["001HI", "016HI"])].dropna(subset=["gust_mph"])
+    gusty = (len(ref) >= 6 and
+             ref.gust_mph.quantile(0.9) - ref.wind_mph.mean() >= GUSTY_EXCESS_MPH)
+    return {"avg": avg, "gust": typ, "max": float(gusts.max()) if len(gusts) else None,
+            "n": int(w.station_id.nunique()), "gusty": bool(gusty)}
 
 
 def upslope_since(obs: pd.DataFrame):
@@ -855,7 +889,13 @@ def smoothed_ladder(obs: pd.DataFrame, now: datetime) -> pd.DataFrame:
                 continue
         if have.empty:
             continue
-        have = have[have.observed >= cut]
+        recent = have[have.observed >= cut]
+        if recent.empty:
+            # No reading in the hour: use up to three hours rather than drop
+            # the rung. Piiholo missing once let the bracket jump from the
+            # Haiku coast to Omaopio (12:00 on 2026-10-14).
+            recent = have[have.observed >= cut - timedelta(hours=2)]
+        have = recent
         if have.empty:
             continue
         d = cv.mean_direction(have.wind_dir)
@@ -1187,6 +1227,16 @@ def build() -> str:
                 if lat and lat <= NOT_FLYABLE_LAT:
                     line_html += f'<div class="alert">{esc(NOT_FLYABLE)}</div>'
 
+    # lower-slope wind and gusts
+    lw = safely(lower_wind, obs) if len(obs) else None
+    if lw:
+        wind_html = (f'<span class="num">{lw["avg"]:.0f} mph</span>'
+                     + (f', gusts to {lw["gust"]:.0f}' if lw["gust"] is not None else "")
+                     + f'<div class="sub">Lower elevations, {lw["n"]} stations, last hour</div>'
+                     + ('<div class="alert">Gustier than usual</div>' if lw["gusty"] else ""))
+    else:
+        wind_html = "Unavailable"
+
     # thermals text
     thermal_word = None
     rated = therm[therm.index >= 10] if therm is not None else None
@@ -1310,6 +1360,7 @@ def build() -> str:
         updated=f"{now:%a %d %b %Y · %H:%M} HST", updated_time=f"{now:%H:%M}",
         today_chip=today_chip, summary=summary_html, base_label=base_label,
         therm=therm_html, base=base_html, sun=sun_html, up=up_html, line=line_html,
+        wind=wind_html,
         ceil_row=(f"<dt>Ceiling</dt><dd>{ceil_html}</dd>" if ceil_html else ""),
         tom_title=f"{'Tomorrow' if tom > now.date() else 'Today'} · {tom:%a %d %b}", tom_chip=tom_chip, tomorrow=t_html,
         rows=rows_html, ladder=ladder_html or (f"<p>Not yet: the slope is in Haleakala's shadow until "
