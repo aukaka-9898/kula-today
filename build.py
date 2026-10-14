@@ -580,8 +580,10 @@ def upslope_since(obs: pd.DataFrame):
     drains = [t for t, p in phase.items() if p == "drain"]
     last_drain = drains[-1] if drains else None
     ts = [t for t in phase.index if last_drain is None or t > last_drain]
-    for i in range(len(ts) - 2):
-        if all(phase[ts[i + k]] == "up" for k in range(3)):
+    # Two quarter hours (30 min) of upslope confirm it (Sam, 2026-10-14);
+    # three made the page trail Weather Guesser's cusp by ~45-60 min.
+    for i in range(len(ts) - 1):
+        if all(phase[ts[i + k]] == "up" for k in range(2)):
             return ts[i], last_drain
     return None, last_drain
 
