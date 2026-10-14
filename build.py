@@ -61,10 +61,14 @@ cv.trade_direction = _retrying(cv.trade_direction)
 
 HST = ZoneInfo("Pacific/Honolulu")
 RELEASE_FT = 3162                       # Kula Ag
-# Open-Meteo's default model has put Kula Ag's midday cloudbase about this
-# far too low (28 days, Sept-Oct 2026). A month's average, not a fitted
-# correction -- shown beside the raw number, never instead of it.
-FORECAST_BASE_LOW_FT = 650
+# Added to the forecast cloudbase: Open-Meteo's air runs cool at Kula Ag,
+# putting the base low. Over Oct 2025 - Oct 2026 the monthly median miss
+# was +150 to +740 ft except March and April (-540, -320: forecast too
+# high). +650, from Sept-Oct alone, would put spring ~1,000 ft high; a
+# monthly table was tried and judged not worth its upkeep (Sam,
+# 2026-10-13). A flat +400 is within ~150 ft most of the year and ~450 ft
+# high in spring. Revisit occasionally (scratchpad method: seasonal_poc.py).
+FORECAST_BASE_LOW_FT = 400
 WEBCAM = ("https://weathercams.faa.gov/map/-128.93458,33.06367,-103.99562,49.85195"
           "/cameraSite/931/details/camera/13415/full")
 STALE = pd.Timedelta("75min")
