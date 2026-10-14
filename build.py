@@ -486,8 +486,14 @@ def forecast_summary(r, pair, today_pair, inv, today_word: str) -> str:
     out = []
     sun = r["sun"]
     if sun is not None and not pd.isna(sun):
-        sky = ("Sunny" if sun >= 0.8 else "Mostly sunny" if sun >= 0.6 else
-               "Partly cloudy" if sun >= 0.4 else "Mostly cloudy")
+        # Qualified (Sam): GFS cannot see the slope's own cumulus. On the 7
+        # days it gave 90%+ in Sept-Oct 2026, Kula Ag measured a median 81%.
+        sky = ("The model sees little cloud over Kula; the slope's own cumulus are too "
+               "small for it to show, so expect some" if sun >= 0.8 else
+               "The model sees some cloud over Kula, on top of the slope's own cumulus"
+               if sun >= 0.6 else
+               "The model sees a partly cloudy sky over Kula" if sun >= 0.4 else
+               "The model sees mostly cloudy skies over Kula")
     else:
         sky = None
     am, pm = pair if pair else (None, None)
@@ -502,13 +508,11 @@ def forecast_summary(r, pair, today_pair, inv, today_word: str) -> str:
         d = pm - am
         drift = ("rising through the afternoon" if d >= 300 else
                  "lowering after midday" if d <= -300 else "holding through the day")
-        bits.append(f"{'that is ' if bits else 'a base '}{drift}")
-    if sky and bits:
-        out.append(f"{sky}, with {' '.join(bits)}.")
-    elif sky:
+        bits.append(drift if bits else f"a base {drift}")
+    if sky:
         out.append(f"{sky}.")
-    elif bits:
-        out.append(f"Expect {' '.join(bits)}.")
+    if bits:
+        out.append(_cap(", ".join(bits)) + ".")
     word = sun_rating(sun)
     if word != "--":
         out.append({"Good": "Thermals look good.", "OK": "Thermals look OK.",
@@ -1044,7 +1048,7 @@ def build() -> str:
         t_html = (f'<p class="summary">{esc(said_t)}</p>' if said_t else "") + f"""<dl>
         <dt>Thermals</dt><dd>{esc(sun_rating(r['sun']))}<div class="sub">From the GFS sunlight forecast; right class about 7 days in 10</div></dd>
         <dt>Cloudbase</dt><dd><span class="num">{am_pm(hours.get(tom))} ft</span><div class="sub">11:00 → 14:00</div></dd>
-        <dt>Sun</dt><dd><span class="num">{pct(r['sun'])}</span> of clear sky, 10:00–14:00 (GFS)<div class="sub">Sun share on past days: good flying days about 80%, overcast about 50%, socked in 20%</div></dd>
+        <dt>Sun</dt><dd><span class="num">{pct(r['sun'])}</span> of clear sky, 10:00–14:00 (GFS)<div class="sub">The model can't see the slope's own cumulus: when it says 90% or more, Kula has measured about 80%. Good flying days measure about 80%, overcast about 50%, socked in 20%.</div></dd>
         <dt>Shear line</dt><dd>{esc(line_t)}<div class="sub">Trades {esc(wind_t)}</div>{line_alert}</dd>
         <dt>Ceiling</dt><dd>{esc(cap_t)}</dd>
       </dl>
