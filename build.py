@@ -264,10 +264,12 @@ ROAD = sorted([(n, lat) for n, lat in cv.LANDMARKS
               + [("Kamehameha Schools", 20.8216),
                  ("the middle Lower Kula Road junction", 20.7707)], key=lambda m: -m[1])
 # North of Makawao the line is named by the coast (Sam: "It just keeps moving
-# north until it goes away"), in the order it reaches them: Paia, Kuau,
-# Hookipa, Haiku. Positions are steps along that progression for the
-# latitude-only forecast, not true latitudes -- the coast runs east-west.
-SHORE = [("Paia", 20.9033), ("Kuau", 20.918), ("Hookipa", 20.9344), ("Haiku", 20.950)]
+# north until it goes away"; his order Paia, Kuau, Hookipa, Haiku runs EAST
+# along the shore). The forecast only gives a latitude, and even at 132 deg,
+# near the edge of the trade sector, it reaches only Paia's -- so a forecast
+# line north of Makawao is "near Paia". Kuau/Hookipa/Haiku come only from the
+# measured coastal stations below (map drawn 2026-10-14).
+SHORE = [("Paia", 20.9033)]
 # The ladder's coastal stations, by where they actually sit. "Paia" (GW5395,
 # 20.938 -156.348) is out by Hookipa; Hamakuapoko Rd and Peahi Rd are on the
 # Haiku side.
@@ -401,7 +403,8 @@ def summary(obs: pd.DataFrame, ladder, up, verdict, pos, west, now: datetime,
     out, worse, better = [], [], []
 
     core = _core(obs)
-    if not core.empty:
+    upslope_on = up is not None and not (evening and evening[0] in ("over", "drain"))
+    if not core.empty and upslope_on:              # no base talk outside the upslope
         t = core.observed.max()
         cur, ago = _base_at(core, t), _base_at(core, t - pd.Timedelta("60min"))
         if cur is not None and ago is not None and t >= obs.observed.max() - STALE:
@@ -968,6 +971,17 @@ def build() -> str:
                          f'{ft(round(base["hi"], -2))} ft ({base["n"]} stations, {base["at"]:%H:%M})</div>')
     else:
         base_html = "Unavailable"
+    # Before the upslope the slope's air is the night's drainage layer and the
+    # stations disagree wildly (3,000-7,900 ft at 07:17 on 2026-10-14); Sam:
+    # "absurd". The derived base starts once the upslope sets in.
+    if up is None and now.hour < 12:
+        base_html = ('Not yet<div class="sub">Derived once the upslope sets in, '
+                     'usually about 08:15</div>')
+    elif evening and evening[0] in ("over", "drain"):
+        # Same for the evening: once the slope is losing heat the stations
+        # read the drainage layer, not a cloudbase (Sam: gate the evening).
+        base_html = ('Done for the day<div class="sub">The upslope is over; the derived '
+                     "base returns with tomorrow's upslope</div>")
 
     # ceiling text -- shown only when the model has a lid in reach (Sam,
     # 2026-10-14): "none" is the usual case, and NAM/RRFS miss about half
