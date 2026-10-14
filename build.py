@@ -984,7 +984,10 @@ def build() -> str:
     # Before the upslope the slope's air is the night's drainage layer and the
     # stations disagree wildly (3,000-7,900 ft at 07:17 on 2026-10-14); Sam:
     # "absurd". The derived base starts once the upslope sets in.
+    base_label = "Derived<br>Cloudbase"
     if up is None and now.hour < 12:
+        if fc_pair and fc_pair[0] is not None:
+            base_label = "Forecast<br>Cloudbase"      # not derived until the upslope
         base_html = (f'<span class="num">{am_pm(fc_pair)} ft</span> forecast'
                      '<div class="sub">11:00 → 14:00. Derived from the stations once the '
                      'upslope sets in, usually about 08:15</div>'
@@ -1176,7 +1179,7 @@ def build() -> str:
 
     return PAGE.substitute(
         updated=f"{now:%a %d %b %Y · %H:%M} HST", updated_time=f"{now:%H:%M}",
-        today_chip=today_chip, summary=summary_html,
+        today_chip=today_chip, summary=summary_html, base_label=base_label,
         therm=therm_html, base=base_html, sun=sun_html, up=up_html, line=line_html,
         ceil_row=(f"<dt>Ceiling</dt><dd>{ceil_html}</dd>" if ceil_html else ""),
         tom_title=f"{'Tomorrow' if tom > now.date() else 'Today'} · {tom:%a %d %b}", tom_chip=tom_chip, tomorrow=t_html,
