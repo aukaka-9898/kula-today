@@ -959,6 +959,10 @@ def build() -> str:
     pos_lad = safely(line_now, obs, now)
     pos, lad = pos_lad if pos_lad else (None, pd.DataFrame())
     week, hours, inv_today, inv_tom, fc_made = unpack(forecast(now, cap), now)
+    # Today's forecast, shown in place of each measured item until its gate
+    # opens (Sam: "I'm drinking my coffee and thinking about going flying").
+    fc_today = week.loc[now.date()] if week is not None and now.date() in week.index else None
+    fc_pair = hours.get(now.date()) if hours else None
 
     ka_sun = next((s for n, e, s in ladder if n == "Kula Ag"), None)
     latest = None if therm is None else therm.iloc[-1]
@@ -981,7 +985,11 @@ def build() -> str:
     # stations disagree wildly (3,000-7,900 ft at 07:17 on 2026-10-14); Sam:
     # "absurd". The derived base starts once the upslope sets in.
     if up is None and now.hour < 12:
-        base_html = ('Not yet<div class="sub">Derived once the upslope sets in, '
+        base_html = (f'<span class="num">{am_pm(fc_pair)} ft</span> forecast'
+                     '<div class="sub">11:00 → 14:00. Derived from the stations once the '
+                     'upslope sets in, usually about 08:15</div>'
+                     if fc_pair and fc_pair[0] is not None else
+                     'Not yet<div class="sub">Derived once the upslope sets in, '
                      'usually about 08:15</div>')
     elif evening and evening[0] in ("over", "drain"):
         # Same for the evening: once the slope is losing heat the stations
@@ -1049,9 +1057,19 @@ def build() -> str:
     line_on = up is not None and not (evening and evening[0] in ("over", "drain"))
     if not line_on:
         pos, west = None, None
-        line_html = ('Not yet<div class="sub">Located once the upslope sets in</div>'
-                     if up is None else
-                     'Done for the day<div class="sub">The upslope is over</div>')
+        line_html = 'Done for the day<div class="sub">The upslope is over</div>'
+        if up is None:
+            line_html = 'Not yet<div class="sub">Located once the upslope sets in</div>'
+            if fc_today is not None:
+                name = fc_today["shear_location"]
+                lat = dict(cv.LANDMARKS).get(name) if isinstance(name, str) else None
+                where = _cap(line_at(lat)) if lat else "No trade line (trades absent)"
+                trades = ("" if pd.isna(fc_today["dir_deg"]) else
+                          f"Trades {cv.compass(fc_today['dir_deg'])} ({fc_today['dir_deg']:03.0f}°). ")
+                line_html = (f"{esc(where)} (forecast)<div class=\"sub\">{trades}"
+                             "Measured once the upslope sets in</div>")
+                if lat and lat <= NOT_FLYABLE_LAT:
+                    line_html += f'<div class="alert">{esc(NOT_FLYABLE)}</div>'
 
     # thermals text
     thermal_word = None
@@ -1066,19 +1084,33 @@ def build() -> str:
                       f"<div class=\"sub\">Kula Ag averaged {pct(min(day_sun, 1))} of clear-sky "
                       f"sunlight. Good days measure about 80%.</div>")
     elif now.hour < 10:
-        therm_html = "Not yet<div class=\"sub\">First rating just after 10:00, for 09:00–10:00</div>"
+        word = sun_rating(fc_today["sun"]) if fc_today is not None else "--"
+        therm_html = (f"<strong>{word}</strong> forecast<div class=\"sub\">From the GFS sunlight "
+                      "forecast; measured rating just after 10:00</div>" if word != "--" else
+                      "Not yet<div class=\"sub\">First rating just after 10:00, for 09:00–10:00</div>")
     else:
         therm_html = "Unavailable<div class=\"sub\">Kula Ag's readings did not come through this update</div>"
 
-    sun_html = ("Not yet<div class=\"sub\">Kula is in Haleakala's shadow until about 08:00; "
+    fc_sun = fc_today["sun"] if fc_today is not None else None
+    sun_html = ((f'<span class="num">{pct(fc_sun)}</span> of clear sky forecast, 10:00–14:00 (GFS)'
+                 "<div class=\"sub\">Measured from just after 09:00; Kula is in Haleakala's "
+                 "shadow until about 08:00</div>")
+                if in_shadow and fc_sun is not None and not pd.isna(fc_sun) else
+                "Not yet<div class=\"sub\">Kula is in Haleakala's shadow until about 08:00; "
                 "first reading just after 09:00</div>" if in_shadow else
                 f'<span class="num">{pct(ka_sun)}</span> of clear sky at Kula Ag'
                 f'<div class="sub">{sun_hour:%H:%M}–{sun_hour + timedelta(hours=1):%H:%M}</div>'
                 if ka_sun is not None else "Unavailable")
 
-    today_chip = rating_chip(thermal_word)
+    today_chip = rating_chip(thermal_word or (sun_rating(fc_today["sun"])
+                                              if fc_today is not None and now.hour < 10 else None))
     said = safely(summary, obs, ladder, up, thermal_word, pos, west, now,
                   None if now.hour < 9 else safely(sun_trend, now), evening) if len(obs) else None
+    if up is None and now.hour < 12 and fc_today is not None:
+        ahead = safely(forecast_summary, fc_today, fc_pair, hours.get(now.date() - timedelta(days=1)),
+                       next((i for i in inv_today if i), None), "yesterday")
+        if ahead:
+            said = f"Today's forecast: {ahead}" + (f" {said}" if said else "")
     summary_html = f'<p class="summary">{esc(said)}</p>' if said else ""
 
     # tomorrow + outlook
