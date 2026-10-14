@@ -110,7 +110,12 @@ def window_sun(now: datetime) -> float | None:
     return sum(w for _, w in rows) / clear if clear > 50 else None
 
 
-# The day is rated from upslope (about 08:15) to 15:00 (Sam), not 09:00-16:00.
+# Typical upslope start at Kula Ag by month (median, Oct 2025-Oct 2026,
+# 346 days; July interpolated): it follows the sun clearing Haleakala.
+UPSLOPE_TYPICAL = {1: "09:15", 2: "08:50", 3: "08:30", 4: "08:30", 5: "08:00", 6: "08:00",
+                   7: "08:00", 8: "08:00", 9: "08:20", 10: "08:30", 11: "08:45", 12: "09:15"}
+
+# The day is rated from upslope (about 08:00-09:15 by season) to 15:00 (Sam), not 09:00-16:00.
 _assess = th.assess
 
 
@@ -992,10 +997,10 @@ def build() -> str:
             base_label = "Forecast<br>Cloudbase"      # not derived until the upslope
         base_html = (f'<span class="num">{am_pm(fc_pair)} ft</span> forecast'
                      '<div class="sub">11:00 → 14:00. Derived from the stations once the '
-                     'upslope sets in, usually about 08:15</div>'
+                     f'upslope sets in, usually about {UPSLOPE_TYPICAL[now.month]}</div>'
                      if fc_pair and fc_pair[0] is not None else
                      'Not yet<div class="sub">Derived once the upslope sets in, '
-                     'usually about 08:15</div>')
+                     f'usually about {UPSLOPE_TYPICAL[now.month]}</div>')
     elif evening and evening[0] in ("over", "drain"):
         # Same for the evening: once the slope is losing heat the stations
         # read the drainage layer, not a cloudbase (Sam: gate the evening).
@@ -1033,7 +1038,7 @@ def build() -> str:
         if last_drain is not None:
             up_html += f'<div class="sub">Drainage ended about {last_drain:%H:%M}</div>'
     elif now.hour < 9:
-        up_html = "Not yet<div class=\"sub\">Usually starts around 08:15</div>"
+        up_html = f"Not yet<div class=\"sub\">Usually starts around {UPSLOPE_TYPICAL[now.month]}</div>"
     else:
         up_html = "No clear upslope today"
 
