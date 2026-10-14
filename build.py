@@ -407,7 +407,7 @@ def _base_at(core: pd.DataFrame, t) -> float | None:
 
 
 def summary(obs: pd.DataFrame, ladder, up, verdict, pos, west, now: datetime,
-            sun_change: float | None = None, evening=None) -> str:
+            sun_change: float | None = None, evening=None, cu_clear: bool = False) -> str:
     """A few plain sentences on how the day is going, from rules, not a model.
 
     No cloudbase figures: an estimate from ground stations is not good to
@@ -420,7 +420,11 @@ def summary(obs: pd.DataFrame, ladder, up, verdict, pos, west, now: datetime,
 
     core = _core(obs)
     upslope_on = up is not None and not (evening and evening[0] in ("over", "drain"))
-    if not core.empty and upslope_on:              # no base talk outside the upslope
+    if upslope_on and cu_clear:
+        # No cloud yet: a "cloudbase rising/falling" sentence would describe
+        # cloud that isn't there (Sam, 2026-10-14).
+        out.append("No cumulus over the slope yet.")
+    elif not core.empty and upslope_on:            # no base talk outside the upslope
         t = core.observed.max()
         cur, ago = _base_at(core, t), _base_at(core, t - pd.Timedelta("60min"))
         if cur is not None and ago is not None and t >= obs.observed.max() - STALE:
@@ -1050,6 +1054,8 @@ def build() -> str:
     # stations disagree wildly (3,000-7,900 ft at 07:17 on 2026-10-14); Sam:
     # "absurd". The derived base starts once the upslope sets in.
     base_label = "Derived<br>Cloudbase"
+    cu = safely(first_cumulus, now) if up is not None else None
+    cu_clear = bool(cu) and cu[0] == "clear"
     if up is None and now.hour < 12:
         if fc_pair and fc_pair[0] is not None:
             base_label = "Forecast<br>Cloudbase"      # not derived until the upslope
@@ -1059,7 +1065,7 @@ def build() -> str:
                      if fc_pair and fc_pair[0] is not None else
                      'Not yet<div class="sub">Derived once the upslope sets in, '
                      f'usually about {UPSLOPE_TYPICAL[now.month]}</div>')
-    elif base and (cu := safely(first_cumulus, now)) and cu[0] == "clear":
+    elif base and cu_clear:
         base_html = (f'No cumulus yet<div class="sub">They would form near about '
                      f'{ft(round(base["mid"], -2))} ft, the condensation level derived from '
                      f'the stations; no cloud over the slope in the sunlight readings</div>')
@@ -1177,7 +1183,8 @@ def build() -> str:
     today_chip = rating_chip(thermal_word or (sun_rating(fc_today["sun"])
                                               if fc_today is not None and now.hour < 10 else None))
     said = safely(summary, obs, ladder, up, thermal_word, pos, west, now,
-                  None if now.hour < first_hr + 1 else safely(sun_trend, now), evening) if len(obs) else None
+                  None if now.hour < first_hr + 1 else safely(sun_trend, now), evening,
+                  cu_clear) if len(obs) else None
     if up is None and now.hour < 12 and fc_today is not None:
         ahead = safely(forecast_summary, fc_today, fc_pair, hours.get(now.date() - timedelta(days=1)),
                        next((i for i in inv_today if i), None), "yesterday")
