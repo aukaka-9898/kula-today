@@ -950,6 +950,12 @@ def build() -> str:
                if up is not None and len(obs) else None)
     ladder_start = ladder_or_last(now)
     ladder, sun_hour = ladder_start if ladder_start else ([], None)
+    # Haleakala's shadow: direct sun reaches Kula Ag about 08:00 (Keokea 08:25),
+    # so before the 08:00-09:00 hour the stations get only skylight and read as
+    # if under cloud -- 26% at Kula Ag with a clear sky on 2026-10-14 (Sam).
+    in_shadow = sun_hour is None or sun_hour.hour < 8
+    if in_shadow:
+        ladder = []
     pos_lad = safely(line_now, obs, now)
     pos, lad = pos_lad if pos_lad else (None, pd.DataFrame())
     week, hours, inv_today, inv_tom, fc_made = unpack(forecast(now, cap), now)
@@ -1064,13 +1070,15 @@ def build() -> str:
     else:
         therm_html = "Unavailable<div class=\"sub\">Kula Ag's readings did not come through this update</div>"
 
-    sun_html = (f'<span class="num">{pct(ka_sun)}</span> of clear sky at Kula Ag'
+    sun_html = ("Not yet<div class=\"sub\">Kula is in Haleakala's shadow until about 08:00; "
+                "first reading just after 09:00</div>" if in_shadow else
+                f'<span class="num">{pct(ka_sun)}</span> of clear sky at Kula Ag'
                 f'<div class="sub">{sun_hour:%H:%M}–{sun_hour + timedelta(hours=1):%H:%M}</div>'
                 if ka_sun is not None else "Unavailable")
 
     today_chip = rating_chip(thermal_word)
     said = safely(summary, obs, ladder, up, thermal_word, pos, west, now,
-                  safely(sun_trend, now), evening) if len(obs) else None
+                  None if now.hour < 9 else safely(sun_trend, now), evening) if len(obs) else None
     summary_html = f'<p class="summary">{esc(said)}</p>' if said else ""
 
     # tomorrow + outlook
@@ -1140,8 +1148,11 @@ def build() -> str:
         therm=therm_html, base=base_html, sun=sun_html, up=up_html, line=line_html,
         ceil_row=(f"<dt>Ceiling</dt><dd>{ceil_html}</dd>" if ceil_html else ""),
         tom_title=f"{'Tomorrow' if tom > now.date() else 'Today'} · {tom:%a %d %b}", tom_chip=tom_chip, tomorrow=t_html,
-        rows=rows_html, ladder=ladder_html or "<p>Unavailable.</p>",
-        ladder_hour=(f"{sun_hour:%H:%M}–{sun_hour + timedelta(hours=1):%H:%M}" if sun_hour else ""),
+        rows=rows_html, ladder=ladder_html or ("<p>Not yet: the slope is in Haleakala's shadow until "
+                                               "about 08:00. First reading just after 09:00.</p>"
+                                               if in_shadow else "<p>Unavailable.</p>"),
+        ladder_hour=(f"{sun_hour:%H:%M}–{sun_hour + timedelta(hours=1):%H:%M}"
+                     if sun_hour and not in_shadow else "not yet"),
         # From 15:00 the sun is 40 deg up in the WSW and its path crosses a
         # 4,500 ft base 0.4 mi or more downslope -- usually the deck's edge.
         ladder_note=(" Late in the day the sun is low in the west, so a station under the deck "
