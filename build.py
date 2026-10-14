@@ -969,13 +969,12 @@ def build() -> str:
     else:
         base_html = "Unavailable"
 
-    # ceiling text
+    # ceiling text -- shown only when the model has a lid in reach (Sam,
+    # 2026-10-14): "none" is the usual case, and NAM/RRFS miss about half
+    # the real ones anyway, so a standing "no lid" line said little.
     inv = next((i for i in inv_today if i), None)
-    if cap is None:
-        ceil_html = "Unavailable"
-    elif inv is None:
-        ceil_html = ("No lid within reach in the model<div class=\"sub\">No inversion over Kahului between 4,000 ft and crater height</div>")
-    else:
+    ceil_html = ""
+    if inv is not None:
         kb = base["mid"] if base else None
         rng = f"{ft(inv['base_ft'])}–{ft(inv['top_ft'])} ft"
         if kb is not None and inv["base_ft"] < kb - 300:
@@ -1067,8 +1066,8 @@ def build() -> str:
         line_alert = (f'<div class="alert">{esc(NOT_FLYABLE)}</div>'
                       if dict(cv.LANDMARKS).get(r["shear_location"], 99) <= NOT_FLYABLE_LAT else "")
         wind_t = "--" if pd.isna(r["dir_deg"]) else f"{cv.compass(r['dir_deg'])} ({r['dir_deg']:03.0f}°)"
-        cap_t = ("No lid within reach in the model (4,000 ft to crater height)" if inv_t is None else
-                 f"Kahului inversion {ft(inv_t['base_ft'])}–{ft(inv_t['top_ft'])} ft")
+        cap_t = (f"Kahului inversion {ft(inv_t['base_ft'])}–{ft(inv_t['top_ft'])} ft"
+                 if inv_t else "")
         tom_chip = rating_chip(sun_rating(r["sun"]))
         prev = tom - timedelta(days=1)
         said_t = safely(forecast_summary, r, hours.get(tom), hours.get(prev), inv_t,
@@ -1078,7 +1077,7 @@ def build() -> str:
         <dt>Cloudbase</dt><dd><span class="num">{am_pm(hours.get(tom))} ft</span><div class="sub">11:00 → 14:00</div></dd>
         <dt>Sun</dt><dd><span class="num">{pct(r['sun'])}</span> of clear sky, 10:00–14:00 (GFS)<div class="sub">The model can't see the slope's own cumulus: when it says 90% or more, Kula has measured about 80%. Good flying days measure about 80%, overcast about 50%, socked in 20%.</div></dd>
         <dt>Shear line</dt><dd>{esc(line_t)}<div class="sub">Trades {esc(wind_t)}</div>{line_alert}</dd>
-        <dt>Ceiling</dt><dd>{esc(cap_t)}</dd>
+        {f"<dt>Ceiling</dt><dd>{esc(cap_t)}</dd>" if inv_t else ""}
       </dl>
       <div class="sub">Forecast as of {fc_made.astimezone(HST):%H:%M} HST</div>"""
         for day, w in week.iterrows():
@@ -1116,7 +1115,8 @@ def build() -> str:
         updated=f"{now:%a %d %b %Y · %H:%M} HST", updated_time=f"{now:%H:%M}",
         today_chip=today_chip, summary=summary_html,
         therm=therm_html, base=base_html, sun=sun_html, up=up_html, line=line_html,
-        ceil=ceil_html, tom_title=f"{'Tomorrow' if tom > now.date() else 'Today'} · {tom:%a %d %b}", tom_chip=tom_chip, tomorrow=t_html,
+        ceil_row=(f"<dt>Ceiling</dt><dd>{ceil_html}</dd>" if ceil_html else ""),
+        tom_title=f"{'Tomorrow' if tom > now.date() else 'Today'} · {tom:%a %d %b}", tom_chip=tom_chip, tomorrow=t_html,
         rows=rows_html, ladder=ladder_html or "<p>Unavailable.</p>",
         ladder_hour=(f"{sun_hour:%H:%M}–{sun_hour + timedelta(hours=1):%H:%M}" if sun_hour else ""),
         # From 15:00 the sun is 40 deg up in the WSW and its path crosses a
