@@ -1037,6 +1037,15 @@ def build() -> str:
     west = safely(west_intrusion, obs) if len(obs) else None
     if west:
         line_html += f'<div class="alert">{esc(west)}; the line may be further south than shown</div>'
+    # Like the base, the line only means something while the upslope runs:
+    # before it the slope stations read the night's drainage, which the ladder
+    # took for trades (07:55 on 2026-10-14 put the line "north of Pukalani").
+    line_on = up is not None and not (evening and evening[0] in ("over", "drain"))
+    if not line_on:
+        pos, west = None, None
+        line_html = ('Not yet<div class="sub">Located once the upslope sets in</div>'
+                     if up is None else
+                     'Done for the day<div class="sub">The upslope is over</div>')
 
     # thermals text
     thermal_word = None
