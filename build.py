@@ -263,7 +263,15 @@ ROAD = sorted([(n, lat) for n, lat in cv.LANDMARKS
                if n in ("Makawao", "Pukalani", "Omaopio", "Waiakoa", "Keokea", "Ulupalakua")]
               + [("Kamehameha Schools", 20.8216),
                  ("the middle Lower Kula Road junction", 20.7707)], key=lambda m: -m[1])
-SHORE = [(n, lat) for n, lat in cv.LANDMARKS if n in ("Paia", "Hookipa")]
+# North of Makawao the line is named by the coast (Sam: "It just keeps moving
+# north until it goes away"), in the order it reaches them: Paia, Kuau,
+# Hookipa, Haiku. Positions are steps along that progression for the
+# latitude-only forecast, not true latitudes -- the coast runs east-west.
+SHORE = [("Paia", 20.9033), ("Kuau", 20.918), ("Hookipa", 20.9344), ("Haiku", 20.950)]
+# The ladder's coastal stations, by where they actually sit. "Paia" (GW5395,
+# 20.938 -156.348) is out by Hookipa; Hamakuapoko Rd and Peahi Rd are on the
+# Haiku side.
+COAST_STATION = {"Paia": "Hookipa", "Hamakuapoko Rd": "Haiku", "Peahi Rd": "Haiku"}
 NORTH_OF_ROAD = 20.866          # past Makawao, about halfway to Haliimaile
 
 
@@ -284,7 +292,7 @@ def line_at(lat: float) -> str:
     """Where a forecast line crosses the road, lower case, for a sentence."""
     kind, name = _place(lat)
     if kind == "shore":
-        return f"north of Makawao, reaching the shore near {name}"
+        return f"north of Makawao, reaching the coast near {name}"
     if name == "Makawao":
         return "on Makawao Avenue near Makawao"
     if name == "Pukalani":
@@ -294,15 +302,22 @@ def line_at(lat: float) -> str:
     return f"crossing Kula Highway near {name}"
 
 
-def line_between(north_lat: float, south_lat: float) -> str:
+def line_between(north_lat: float, south_lat: float,
+                 north_name: str | None = None, south_name: str | None = None) -> str:
     """The same for a measured bracket between two ladder stations."""
     (nk, nn), (sk, sn) = _place(north_lat), _place(south_lat)
+    if north_name in COAST_STATION:
+        nk, nn = "shore", COAST_STATION[north_name]
+    if south_name in COAST_STATION:
+        sk, sn = "shore", COAST_STATION[south_name]
     if (nk, nn) == (sk, sn):
-        return line_at(north_lat)
+        return (f"north of Makawao, reaching the coast near {nn}" if nk == "shore"
+                else line_at(north_lat))
     if nk == "shore" and sk == "shore":
-        return f"north of Makawao, reaching the shore between {sn} and {nn}"
+        return f"north of Makawao, reaching the coast between {sn} and {nn}"
     if nk == "shore":
-        return f"between the shore near {nn} and {sn}"
+        # Not "running from" the road: the line is anchored to the north (Sam).
+        return f"north of {sn}, reaching the coast near {nn}"
     road = ("Makawao Avenue" if sn in ("Makawao", "Pukalani") else
             "Kula Highway" if nn != "Makawao" else "the road")
     return f"crossing {road} between {nn} and {sn}"
@@ -315,7 +330,7 @@ def line_short(name) -> str:
         return str(name)
     kind, place = _place(lat)
     if kind == "shore":
-        return f"{place} shore"
+        return f"{place} (coast)"
     return "Lower Kula Rd (middle)" if place.startswith("the middle") else place
 
 
@@ -472,7 +487,7 @@ def summary(obs: pd.DataFrame, ladder, up, verdict, pos, west, now: datetime,
         tail = ("with trade air reaching the lower west slope at Pulehu" if west
                 else "with no trade air on the lower west slope")
         out.append(f"Trades are holding the shear line "
-                   f"{line_between(pos['north_lat'], pos['south_lat'])}, {tail}.")
+                   f"{line_between(pos['north_lat'], pos['south_lat'], pos['north_of'], pos['south_of'])}, {tail}.")
         if pos["north_lat"] <= NOT_FLYABLE_LAT:
             out.append(NOT_FLYABLE)
     elif west:
@@ -992,7 +1007,7 @@ def build() -> str:
 
     # line text
     if pos and pos.get("found"):
-        line_html = (f"{esc(_cap(line_between(pos['north_lat'], pos['south_lat'])))}"
+        line_html = (f"{esc(_cap(line_between(pos['north_lat'], pos['south_lat'], pos['north_of'], pos['south_of'])))}"
                      f"<div class=\"sub\">Last hour: trades at {esc(pos['north_of'])}, "
                      f"upslope at {esc(pos['south_of'])}</div>")
         if pos["north_lat"] <= NOT_FLYABLE_LAT:
