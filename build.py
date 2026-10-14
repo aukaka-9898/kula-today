@@ -815,11 +815,20 @@ def am_pm(pair) -> str:
     return ft(am) if pm is None or pm == am else f"{ft(am)} → {ft(pm)}"
 
 
-def inversion_on(day, path):
+# The Ceiling line's sounding: NAM, then RRFS once NAM retires (check.py does
+# the same). Against Hilo and Lihue balloons (Jan-Oct 2026, 14:00 HST) NAM put
+# the trade inversion within ~75-280 ft and RRFS ~200-315 ft (20 afternoons),
+# where GFS was 560-1,700 ft too low and often missed it; GFS stays for sun.
+def cap_model(now: datetime) -> str:
+    utc = now.astimezone(timezone.utc).replace(tzinfo=None)
+    return "NAM" if utc < sd.RETIRED["NAM"] else "RRFS"
+
+
+def inversion_on(day, path, model):
     found = []
     for h in ("11:00", "14:00"):
         try:
-            inv = sd.inversion(sd.at(pd.Timestamp(f"{day} {h}"), path=path))
+            inv = sd.inversion(sd.at(pd.Timestamp(f"{day} {h}"), path=path, model=model), floor_ft=4000)
             found.append(None if inv is None else {k: float(v) for k, v in inv.items()})
         except Exception:
             found.append(None)
@@ -834,7 +843,7 @@ FORECAST_FILE = HERE / "docs" / "forecast.json"
 FORECAST_MAX_AGE = timedelta(minutes=60)
 
 
-def fresh_forecast(now: datetime, gfs) -> dict:
+def fresh_forecast(now: datetime, cap) -> dict:
     week = outlook()
     hours = base_by_hour()
     days = [now.date(), now.date() + timedelta(days=1)]
@@ -847,11 +856,11 @@ def fresh_forecast(now: datetime, gfs) -> dict:
                   else str(r["shear_location"])}
                  for d, r in week.iterrows()],
         "hours": {str(d): list(v) for d, v in hours.items()},
-        "inversions": {str(d): inversion_on(d, gfs) if gfs else [None, None] for d in days},
+        "inversions": {str(d): inversion_on(d, cap, cap_model(now)) if cap else [None, None] for d in days},
     }
 
 
-def forecast(now: datetime, gfs) -> dict | None:
+def forecast(now: datetime, cap) -> dict | None:
     """Last saved forecast if under an hour old, else a fresh one, else the saved one."""
     saved = None
     try:
@@ -860,7 +869,7 @@ def forecast(now: datetime, gfs) -> dict | None:
         pass
     if saved and now - datetime.fromisoformat(saved["made"]) < FORECAST_MAX_AGE:
         return saved
-    got = safely(fresh_forecast, now, gfs)
+    got = safely(fresh_forecast, now, cap)
     if got and got["week"] and any(v[0] is not None for v in got["hours"].values()):
         FORECAST_FILE.write_text(json.dumps(got), encoding="utf-8")
         return got
@@ -913,7 +922,7 @@ def build() -> str:
     now = datetime.now(HST)
     obs = safely(observations, now)
     obs = obs if obs is not None else pd.DataFrame()
-    gfs = safely(sd.fetch, "GFS")
+    cap = safely(sd.fetch, cap_model(now))
 
     # today
     base = safely(cloudbase_now, obs) if len(obs) else None
@@ -925,7 +934,7 @@ def build() -> str:
     ladder, sun_hour = ladder_start if ladder_start else ([], None)
     pos_lad = safely(line_now, obs, now)
     pos, lad = pos_lad if pos_lad else (None, pd.DataFrame())
-    week, hours, inv_today, inv_tom, fc_made = unpack(forecast(now, gfs), now)
+    week, hours, inv_today, inv_tom, fc_made = unpack(forecast(now, cap), now)
 
     ka_sun = next((s for n, e, s in ladder if n == "Kula Ag"), None)
     latest = None if therm is None else therm.iloc[-1]
@@ -947,10 +956,10 @@ def build() -> str:
 
     # ceiling text
     inv = next((i for i in inv_today if i), None)
-    if gfs is None:
+    if cap is None:
         ceil_html = "Unavailable"
     elif inv is None:
-        ceil_html = "No cap in the model<div class=\"sub\">No inversion over Kahului today</div>"
+        ceil_html = ("No lid within reach in the model<div class=\"sub\">No inversion over Kahului between 4,000 ft and crater height</div>")
     else:
         kb = base["mid"] if base else None
         rng = f"{ft(inv['base_ft'])}–{ft(inv['top_ft'])} ft"
@@ -1043,7 +1052,7 @@ def build() -> str:
         line_alert = (f'<div class="alert">{esc(NOT_FLYABLE)}</div>'
                       if dict(cv.LANDMARKS).get(r["shear_location"], 99) <= NOT_FLYABLE_LAT else "")
         wind_t = "--" if pd.isna(r["dir_deg"]) else f"{cv.compass(r['dir_deg'])} ({r['dir_deg']:03.0f}°)"
-        cap_t = ("No inversion in the model" if inv_t is None else
+        cap_t = ("No lid within reach in the model (4,000 ft to crater height)" if inv_t is None else
                  f"Kahului inversion {ft(inv_t['base_ft'])}–{ft(inv_t['top_ft'])} ft")
         tom_chip = rating_chip(sun_rating(r["sun"]))
         prev = tom - timedelta(days=1)
