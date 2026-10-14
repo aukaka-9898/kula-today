@@ -557,10 +557,9 @@ def forecast_summary(r, pair, today_pair, inv, today_word: str) -> str:
         out.append(f"{sky}.")
     if bits:
         out.append(_cap(", ".join(bits)) + ".")
-    word = sun_rating(sun)
-    if word != "--":
-        out.append({"Good": "Thermals look good.", "OK": "Thermals look OK.",
-                    "Nope": "Thermals: Nope."}[word])
+    word = str(r["thermal"])
+    if word in ("Flat", "Light", "Moderate", "Strong"):
+        out.append(f"Thermals look {word.lower()}.")
     if inv and am is not None:
         out.append("The Kahului inversion sits at or above the expected base, so it may cap the tops."
                    if inv["base_ft"] >= am - 300 else
@@ -931,8 +930,34 @@ FORECAST_FILE = HERE / "docs" / "forecast.json"
 FORECAST_MAX_AGE = timedelta(minutes=60)
 
 
+# The forecast thermal word, like Today's: thermal.py on Open-Meteo's
+# forecast air for Kula Ag, warmed 3 F (it runs cool), through the NAM/RRFS
+# sounding where its run reaches (~3.5 days) and GFS beyond. Tested 30 days
+# (9/14-10/13) against the measured-air word through NAM: same word 47%,
+# within one category every day, no lean; raw air leaned 0.7 category weak.
+FORECAST_AIR_WARM_F = 3.0
+
+
+def forecast_words(cap) -> dict:
+    parcel = cv.slope_parcel()
+    gfs = safely(sd.fetch, "GFS")
+    out = {}
+    for day, part in parcel.groupby("day"):
+        part = part.assign(temp_f=part.temp_f + FORECAST_AIR_WARM_F)
+        for path in (cap, gfs):
+            if path is None:
+                continue
+            got = th.assess(part, RELEASE_FT, window=(10, 14), path=path)
+            if not got.empty:
+                out[day] = strength_word(th.describe(got.ti_c.mean()))
+                break
+    return out
+
+
 def fresh_forecast(now: datetime, cap) -> dict:
     week = outlook()
+    words = safely(forecast_words, cap) or {}
+    week["thermal"] = [words.get(d, "--") for d in week.index]
     hours = base_by_hour()
     days = [now.date(), now.date() + timedelta(days=1)]
     return {
@@ -1189,9 +1214,10 @@ def build() -> str:
     if thermal_word:
         pass
     elif now.hour < 10:
-        word = sun_rating(fc_today["sun"]) if fc_today is not None else "--"
-        therm_html = (f"<strong>{word}</strong> forecast<div class=\"sub\">From the GFS sunlight "
-                      "forecast; measured rating just after 10:00</div>" if word != "--" else
+        word = str(fc_today["thermal"]) if fc_today is not None else "--"
+        therm_html = (f"<strong>{word}</strong> forecast<div class=\"sub\">thermal.py on the forecast "
+                      "air; measured rating just after 10:00</div>"
+                      if word in ("Flat", "Light", "Moderate", "Strong") else
                       "Not yet<div class=\"sub\">First rating just after 10:00, for 09:00–10:00</div>")
     else:
         therm_html = "Unavailable<div class=\"sub\">Kula Ag's readings did not come through this update</div>"
@@ -1207,7 +1233,7 @@ def build() -> str:
                 f'<div class="sub">{sun_hour:%H:%M}–{sun_hour + timedelta(hours=1):%H:%M}</div>'
                 if ka_sun is not None else "Unavailable")
 
-    today_chip = rating_chip(thermal_word or (sun_rating(fc_today["sun"])
+    today_chip = rating_chip(thermal_word or (str(fc_today["thermal"])
                                               if fc_today is not None and now.hour < 10 else None))
     said = safely(summary, obs, ladder, up, thermal_word, pos, west, now,
                   None if now.hour < first_hr + 1 else safely(sun_trend, now), evening,
@@ -1237,12 +1263,12 @@ def build() -> str:
         wind_t = "--" if pd.isna(r["dir_deg"]) else f"{cv.compass(r['dir_deg'])} ({r['dir_deg']:03.0f}°)"
         cap_t = (f"Kahului inversion {ft(inv_t['base_ft'])}–{ft(inv_t['top_ft'])} ft"
                  if inv_t else "")
-        tom_chip = rating_chip(sun_rating(r["sun"]))
+        tom_chip = rating_chip(str(r["thermal"]))
         prev = tom - timedelta(days=1)
         said_t = safely(forecast_summary, r, hours.get(tom), hours.get(prev), inv_t,
                         "today" if prev == now.date() else "yesterday")
         t_html = (f'<p class="summary">{esc(said_t)}</p>' if said_t else "") + f"""<dl>
-        <dt>Thermals</dt><dd>{esc(sun_rating(r['sun']))}<div class="sub">From the GFS sunlight forecast; right class about 7 days in 10</div></dd>
+        <dt>Thermals</dt><dd>{esc(str(r['thermal']))}<div class="sub">thermal.py on the forecast air (+3 F, it runs cool); within one category of the measured rating on every test day</div></dd>
         <dt>Cloudbase</dt><dd><span class="num">{am_pm(hours.get(tom))} ft</span><div class="sub">11:00 → 14:00</div></dd>
         <dt>Sun</dt><dd><span class="num">{pct(r['sun'])}</span> of clear sky, 10:00–14:00 (GFS)<div class="sub">The model can't see the slope's own cumulus: when it says 90% or more, Kula has measured about 80%. Good flying days measure about 80%, overcast about 50%, socked in 20%.</div></dd>
         <dt>Shear line</dt><dd>{esc(line_t)}<div class="sub">Trades {esc(wind_t)}</div>{line_alert}</dd>
@@ -1256,7 +1282,7 @@ def build() -> str:
             lt = "--" if lt is None or pd.isna(lt) else esc(line_short(lt))
             rows_html += (f"<tr><td>{day:%a %d}</td><td class=\"n\">{pct(w['sun'])}</td>"
                           f"<td class=\"n\">{am_pm(hours.get(day))}</td>"
-                          f"<td>{esc(sun_rating(w['sun']))}</td><td>{lt}</td></tr>")
+                          f"<td>{esc(str(w['thermal']))}</td><td>{lt}</td></tr>")
 
     ladder_html = ""
     for name, elev, share in ladder:
