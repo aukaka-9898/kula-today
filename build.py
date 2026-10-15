@@ -1203,7 +1203,7 @@ def write_station_map(obs: pd.DataFrame, lad: pd.DataFrame, now: datetime, pos=N
                 "west_lat": None}
         if west:
             west_end = line["mid"] - 0.006          # the template's plain west end
-            line["west_lat"] = min(20.7953 - 0.010, west_end - 0.010)
+            line["west_lat"] = min(20.7953 - 0.005, west_end - 0.005)   # Sam: less bend
     STATIONS_FILE.write_text(json.dumps({"made": f"{now:%H:%M}", "stations": rows, "line": line}),
                              encoding="utf-8")
 

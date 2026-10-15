@@ -152,7 +152,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
   }
   function draw() {
     if (done || !window.L) return; done = true;
-    var map = L.map("map", {scrollWheelZoom: false}).setView([20.80, -156.32], 11);
+    var map = L.map("map", {scrollWheelZoom: false}).setView([20.785, -156.33], 13);
     L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}", {
       maxZoom: 16, attribution: "Tiles &copy; Esri &mdash; Esri, HERE, Garmin, USGS, NGA, EPA, USDA, NPS"}).addTo(map);
     fetch("stations.json?" + Date.now()).then(function (r) { return r.json(); }).then(function (d) {
@@ -160,9 +160,9 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
         var pts = [];
         for (var i = 0; i <= 24; i++) {
           var f = i / 24, lat = d.line.mid - 0.006 + 0.010 * f + 0.0025 * Math.sin(f * Math.PI);
-          if (d.line.west_lat !== null && d.line.west_lat !== undefined && f < 0.5) {
+          if (d.line.west_lat !== null && d.line.west_lat !== undefined && f < 0.4) {
             // west of Pukalani the line swings south below Pulehu
-            var w = Math.pow(1 - f / 0.5, 1.6);
+            var w = Math.pow(1 - f / 0.4, 2);   // western 40%, steepening into the valley venturi (Sam)
             lat = lat * (1 - w) + d.line.west_lat * w;
           }
           pts.push([lat, -156.395 + i * (0.135 / 24)]);
