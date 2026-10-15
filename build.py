@@ -913,11 +913,40 @@ def smoothed_ladder(obs: pd.DataFrame, now: datetime) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+def best_split(lad: pd.DataFrame) -> dict:
+    """The line where the most ladder stations agree: trades north of it,
+    upslope south of it. Shear readings count for neither side.
+
+    convergence.position() stops at the first non-trade station walking
+    south, so one coastal station on a local southwest wind (Hamakuapoko Rd,
+    afternoon of 2026-10-14) put the line "north of Makawao" while the trades
+    reached Piiholo and Pulehu (Sam: "Contradiction").
+    """
+    f = lad.sort_values("lat", ascending=False).reset_index(drop=True)
+    if len(f) < 2:
+        return {"found": False, "why": "too few ladder stations reporting"}
+    side = f.side.tolist()
+    best, k_best = -1, None
+    for k in range(1, len(f)):
+        score = side[:k].count("trades") + side[k:].count("upslope")
+        if score > best:
+            best, k_best = score, k
+    if "trades" not in side[:k_best] or "upslope" not in side[k_best:]:
+        return {"found": False, "why": f"no transition in the ladder; all stations read {sorted(set(side))}"}
+    north, south = f.loc[k_best - 1], f.loc[k_best]
+    return {"found": True, "north_lat": north.lat, "south_lat": south.lat,
+            "north_of": north["name"], "south_of": south["name"],
+            "landmarks": [m for m, lat in cv.LANDMARKS if south.lat <= lat <= north.lat],
+            "in_shear": south.side == "shear",
+            "span_miles": abs(north.lat - south.lat) * cv.MILES_PER_DEG,
+            "as_of": f.observed_local.max()}
+
+
 def line_now(obs: pd.DataFrame, now: datetime):
     lad = smoothed_ladder(obs, now)
     if lad.empty:
         return None, lad
-    return cv.position(lad), lad
+    return best_split(lad), lad
 
 
 # -- forecast ------------------------------------------------------------------
