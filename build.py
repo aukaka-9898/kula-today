@@ -608,9 +608,12 @@ def thermal_today(obs: pd.DataFrame, now: datetime, path=None):
 GUSTY_EXCESS_MPH = 7.5
 
 
-def lower_wind(obs: pd.DataFrame):
+def lower_wind(obs: pd.DataFrame, since=None, until=None):
+    """Lower-slope wind over the last hour, or over [since, until] for the day review."""
     w = _core(obs)
-    w = w[(w.elev_ft <= 3600) & (w.observed >= obs.observed.max() - pd.Timedelta("60min"))]
+    since = obs.observed.max() - pd.Timedelta("60min") if since is None else since
+    until = obs.observed.max() if until is None else until
+    w = w[(w.elev_ft <= 3600) & (w.observed >= since) & (w.observed <= until)]
     w = w.dropna(subset=["wind_mph"])
     if w.station_id.nunique() < 3:
         return None
@@ -1208,6 +1211,132 @@ def write_station_map(obs: pd.DataFrame, lad: pd.DataFrame, now: datetime, pos=N
                              encoding="utf-8")
 
 
+# -- the day in review -----------------------------------------------------------
+# Once the upslope is over the live rows describe the drainage, not the flying
+# day, so the Today panel shows the whole day instead and keeps it through the
+# night until the next upslope begins; the Forecast panel has the new day by
+# then (Sam, 2026-10-15).
+
+REVIEW_FILE = HERE / "docs" / "review.json"
+LINE_LOG = HERE / "docs" / "line_log.json"
+
+
+def log_line(now: datetime, pos) -> list:
+    """Add this update's shear-line bracket to today's log; return today's entries."""
+    today = f"{now:%Y-%m-%d}"
+    try:
+        log = json.loads(LINE_LOG.read_text(encoding="utf-8"))
+    except Exception:
+        log = {}
+    entries = log.get("entries", []) if log.get("date") == today else []
+    if pos and pos.get("found"):
+        entries.append({"t": f"{now:%H:%M}", "north_lat": float(pos["north_lat"]),
+                        "south_lat": float(pos["south_lat"]), "north_of": str(pos["north_of"]),
+                        "south_of": str(pos["south_of"])})
+    LINE_LOG.write_text(json.dumps({"date": today, "entries": entries}), encoding="utf-8")
+    return entries
+
+
+def upslope_end(rnet, evening):
+    """When the day's upslope ended: the start of the last net-radiation dip
+    under 100 W/m2 before it turned negative; else the evening state's time."""
+    if rnet is not None and len(rnet):
+        r = rnet.rolling(2).mean().shift(-1).dropna()
+        r = r[r.index.hour >= 15]
+        neg = r.index[(r < 0).values]
+        if len(neg):
+            r = r[r.index < neg[0]]
+            above = r.index[(r >= 100).values]
+            low = r[r.index > above[-1]] if len(above) else r
+            return low.index[0] if len(low) else neg[0]
+    return evening[1] if evening else None
+
+
+def line_day(entries: list):
+    """(where it sat most of the day, the furthest south and when) from the log."""
+    if not entries:
+        return None
+    texts = [line_between(e["north_lat"], e["south_lat"], e["north_of"], e["south_of"]) for e in entries]
+    common = max(dict.fromkeys(texts), key=texts.count)
+    far = min(entries, key=lambda e: e["south_lat"])
+    far_text = line_between(far["north_lat"], far["south_lat"], far["north_of"], far["south_of"])
+    return common, (None if far_text == common else (far_text, far["t"]))
+
+
+def day_review(obs, now, up, evening, rnet, word, model, fc_today, fc_pair, entries) -> dict:
+    """The whole flying day, for the Today panel after the upslope ends."""
+    day = now.replace(tzinfo=None, hour=0, minute=0, second=0, microsecond=0)
+    end = upslope_end(rnet, evening) if up is not None else None
+    fc_word = strength_word(fc_today["thermal"]) if fc_today is not None else None
+    day_sun = safely(window_sun, now)
+    said = []
+
+    therm = "Unavailable"
+    if word:
+        therm = (f"<strong>{word}</strong> for the day, 10:00–14:00<div class=\"sub\">Kula Ag's measured "
+                 f"air through the {model} sounding (thermal.py)"
+                 + (f"; forecast was {fc_word}" if fc_word else "") + "</div>")
+        said.append(f"A {word.lower()} day" + (f" (forecast {fc_word.lower()})" if fc_word else "") + ".")
+
+    if up is not None:
+        up_html = (f'<span class="num">{up:%H:%M}</span> to about <span class="num">{end:%H:%M}</span>'
+                   if end is not None else f'From about <span class="num">{up:%H:%M}</span>')
+        if evening and evening[0] == "drain":
+            up_html += f'<div class="sub">Drainage from about {evening[1]:%H:%M}</div>'
+        said.append(f"The upslope ran from about {up:%H:%M}"
+                    + (f" to about {end:%H:%M}." if end is not None else "."))
+    else:
+        up_html = "No clear upslope today"
+        said.append("No clear upslope today.")
+
+    base_html = "Not derived<div class=\"sub\">No upslope, so no slope air to derive it from</div>"
+    if up is not None:
+        core = _core(obs)
+        b11, b14 = (_base_at(core, day + timedelta(hours=h)) for h in (11, 14))
+        b11 = b11 if up <= day + timedelta(hours=11) else None
+        if b11 is not None or b14 is not None:
+            pair = (None if b11 is None else round(b11, -2), None if b14 is None else round(b14, -2))
+            shown = am_pm(pair) if pair[0] is not None else ft(pair[1])
+            base_html = (f'<span class="num">{shown} ft</span><div class="sub">'
+                         + ("11:00 → 14:00" if pair[0] is not None else "14:00")
+                         + ", derived from the stations"
+                         + (f"; forecast {am_pm(fc_pair)} ft" if fc_pair and fc_pair[0] is not None else "")
+                         + "</div>")
+            said.append(f"Cloudbase about {shown} ft"
+                        + (" from 11:00 to 14:00." if pair[0] is not None else " at 14:00."))
+        else:
+            base_html = "Unavailable"
+
+    fc_sun = fc_today["sun"] if fc_today is not None else None
+    sun_html = "Unavailable"
+    if day_sun is not None:
+        sun_html = (f'<span class="num">{pct(min(day_sun, 1))}</span> of clear sky at Kula Ag, 09:00–15:00'
+                    + (f'<div class="sub">GFS forecast {pct(fc_sun)} for 10:00–14:00</div>'
+                       if fc_sun is not None and not pd.isna(fc_sun) else ""))
+        said.append(f"Kula Ag had {pct(min(day_sun, 1))} of clear-sky sun from 09:00 to 15:00.")
+
+    ld = line_day(entries)
+    if ld:
+        common, far = ld
+        line_html = (f"{esc(_cap(common))}<div class=\"sub\">Most of the day, {len(entries)} updates"
+                     + (f". Furthest south about {far[1]}: {esc(_cap(far[0]))}" if far else "") + "</div>")
+        said.append(f"Most of the day the shear line was {common}"
+                    + (f"; about {far[1]} it was {far[0]}." if far else "."))
+    else:
+        line_html = "Not located<div class=\"sub\">No readings logged during the upslope</div>"
+
+    lw = (safely(lower_wind, obs, up, end if end is not None else obs.observed.max())
+          if up is not None and len(obs) else None)
+    wind_html = ((f'<span class="num">{lw["avg"]:.0f} mph</span>'
+                  + (f', gusts to {lw["gust"]:.0f}' if lw["gust"] is not None else "")
+                  + '<div class="sub">Lower elevations, during the upslope</div>')
+                 if lw else "Unavailable")
+
+    return {"date": f"{now:%Y-%m-%d}", "word": word, "summary": " ".join(said),
+            "therm": therm, "base": base_html, "sun": sun_html, "line": line_html,
+            "up": up_html, "wind": wind_html}
+
+
 def build() -> str:
     now = datetime.now(HST)
     obs = safely(observations, now)
@@ -1218,8 +1347,14 @@ def build() -> str:
     base = safely(cloudbase_now, obs) if len(obs) else None
     therm = safely(thermal_today, obs, now, cap) if len(obs) else None
     up, last_drain = safely(upslope_since, obs) or (None, None) if len(obs) else (None, None)
-    evening = (safely(evening_state, obs, safely(net_radiation, now) if now.hour >= 15 else None)
-               if up is not None and len(obs) else None)
+    rnet = safely(net_radiation, now) if now.hour >= 15 and up is not None and len(obs) else None
+    evening = safely(evening_state, obs, rnet) if up is not None and len(obs) else None
+    # Night (Sam: the page should know): from the end of the upslope -- or 18:00
+    # on a day without one -- until the next upslope, the Today panel shows the
+    # day in review and the Forecast panel the next flying day.
+    day_over = ((up is not None and evening is not None and evening[0] in ("over", "drain"))
+                or (up is None and now.hour >= 18))
+    before_up = up is None and now.hour < 12
     ladder_start = ladder_or_last(now)
     ladder, sun_hour = ladder_start if ladder_start else ([], None)
     # Haleakala's shadow: direct sun reaches Kula Ag 07:15-08:45 by season (SUN_ON),
@@ -1228,6 +1363,9 @@ def build() -> str:
     sun_on, first_hr = SUN_ON[now.month], first_sun_hour(now.month)
     in_shadow = sun_hour is None or sun_hour.hour < first_hr
     if in_shadow:
+        ladder = []
+    night = now.hour >= 19                       # sun down: no sunlight ladder
+    if night:
         ladder = []
     pos_lad = safely(line_now, obs, now)
     pos, lad = pos_lad if pos_lad else (None, pd.DataFrame())
@@ -1454,9 +1592,33 @@ def build() -> str:
 
     safely(write_station_map, obs, lad if isinstance(lad, pd.DataFrame) else pd.DataFrame(), now, pos, west)
 
+    entries = safely(log_line, now, pos) or []
+    review, today_kind, today_title = None, f"Measured today · {now:%H:%M} HST", "Today"
+    if day_over:
+        review = safely(day_review, obs, now, up, evening, rnet, thermal_word, model,
+                        fc_today, fc_pair, entries)
+        if review:
+            safely(REVIEW_FILE.write_text, json.dumps(review), "utf-8")
+    elif before_up:
+        try:
+            saved = json.loads(REVIEW_FILE.read_text(encoding="utf-8"))
+            if saved.get("date") == f"{now.date() - timedelta(days=1):%Y-%m-%d}":
+                review = saved
+        except Exception:
+            pass
+    if review:
+        rd = datetime.strptime(review["date"], "%Y-%m-%d").date()
+        today_kind = "The day in review"
+        today_title = f"{'Today' if rd == now.date() else 'Yesterday'} · {rd:%a %d %b}"
+        today_chip = rating_chip(review["word"])
+        summary_html = f'<p class="summary">{esc(review["summary"])}</p>'
+        therm_html, base_html, sun_html = review["therm"], review["base"], review["sun"]
+        line_html, up_html, wind_html = review["line"], review["up"], review["wind"]
+        base_label, ceil_html = "Cloudbase", ""
+
     # tomorrow + outlook
-    # Before 06:00 the next flying day is today, so the forecast panel shows it.
-    tom = now.date() + timedelta(days=0 if now.hour < 6 else 1)
+    # The next flying day: today until its upslope begins, then tomorrow.
+    tom = now.date() + timedelta(days=0 if before_up else 1)
     t_html = "<p>Forecast unavailable.</p>"
     rows_html = ""
     tom_chip = ""
@@ -1516,17 +1678,19 @@ def build() -> str:
         ladder_html = out
 
     return PAGE.substitute(
-        updated=f"{now:%a %d %b %Y · %H:%M} HST", updated_time=f"{now:%H:%M}",
+        updated=f"{now:%a %d %b %Y · %H:%M} HST", today_kind=today_kind, today_title=today_title,
         today_chip=today_chip, summary=summary_html, base_label=base_label,
         therm=therm_html, base=base_html, sun=sun_html, up=up_html, line=line_html,
         wind=wind_html,
         ceil_row=(f"<dt>Ceiling</dt><dd>{ceil_html}</dd>" if ceil_html else ""),
         tom_title=f"{'Tomorrow' if tom > now.date() else 'Today'} · {tom:%a %d %b}", tom_chip=tom_chip, tomorrow=t_html,
-        rows=rows_html, ladder=ladder_html or (f"<p>Not yet: the slope is in Haleakala's shadow until "
+        rows=rows_html, ladder=ladder_html or (f"<p>Night. First reading tomorrow just after {first_hr + 1:02d}:00.</p>"
+                                               if night else
+                                               f"<p>Not yet: the slope is in Haleakala's shadow until "
                                                f"about {sun_on}. First reading just after {first_hr + 1:02d}:00.</p>"
                                                if in_shadow else "<p>Unavailable.</p>"),
         ladder_hour=(f"{sun_hour:%H:%M}–{sun_hour + timedelta(hours=1):%H:%M}"
-                     if sun_hour and not in_shadow else "not yet"),
+                     if sun_hour and not in_shadow and not night else "not yet"),
         # From 15:00 the sun is 40 deg up in the WSW and its path crosses a
         # 4,500 ft base 0.4 mi or more downslope -- usually the deck's edge.
         ladder_note=(" Late in the day the sun is low in the west, so a station under the deck "
