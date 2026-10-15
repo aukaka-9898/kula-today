@@ -1153,8 +1153,23 @@ def build() -> str:
     # capped at 100% so cumulus-edge spikes don't lift the average. Pulehu and
     # Piiholo (trade air) and Nene/Summit (above the cumulus) stay out.
     side = [min(s, 1.0) for n, e, s in ladder if n in KULA_SIDE and s is not None]
-    side_sun = sum(side) / len(side) if len(side) >= 3 else None
-    side_best = max(side) if side else None
+    side_best = max(side) if side else None              # for the Flat check
+    # The Sun row averages the Kula-side stations BELOW the cloudbase -- Kula
+    # Ag and Keokea (Sam, 2026-10-14): the upper ones (Kula 1, Kamehamenui,
+    # Park HQ, 6,550-6,930 ft) sit up among the cumulus, and their shade is
+    # not the ground pilots thermal from.
+    # Pulehu joins when its wind was upslope through that hour (Sam): it is
+    # Kula-side terrain below the base, but trade air pulses round it.
+    sun_names, pulehu_out = ["Kula Ag", "Keokea"], False
+    if sun_hour is not None and len(obs):
+        pu = obs[(obs.station_id == "042HI") & obs.wind_dir.notna()
+                 & obs.observed.between(sun_hour, sun_hour + timedelta(hours=1))]
+        if len(pu) >= 3 and 185 <= cv.mean_direction(pu.wind_dir) <= 320:
+            sun_names.append("Pulehu")
+        elif len(pu) >= 3:
+            pulehu_out = True
+    low_sun = [(n, min(s, 1.0)) for n, e, s in ladder if n in sun_names and s is not None]
+    side_sun = sum(v for _, v in low_sun) / len(low_sun) if low_sun else None
     latest = None if therm is None else therm.iloc[-1]
     verdict_now = None if latest is None else latest["verdict"]
 
@@ -1325,10 +1340,11 @@ def build() -> str:
                 if in_shadow and fc_sun is not None and not pd.isna(fc_sun) else
                 f"Not yet<div class=\"sub\">Kula is in Haleakala's shadow until about {sun_on}; "
                 f"first reading just after {first_hr + 1:02d}:00</div>" if in_shadow else
-                f'<span class="num">{pct(side_sun)}</span> of clear sky, Kula side'
+                f'<span class="num">{pct(side_sun)}</span> of clear sky, lower Kula slope'
                 f'<div class="sub">{sun_hour:%H:%M}–{sun_hour + timedelta(hours=1):%H:%M}, average of '
-                f'{len(side)} stations, Keokea to Park HQ'
-                + (f'; Kula Ag {pct(min(ka_sun, 1))}' if ka_sun is not None else "") + '</div>'
+                + ", ".join(f"{n} {pct(v)}" for n, v in low_sun)
+                + ("; Pulehu left out, in trade air" if pulehu_out else "")
+                + '</div>'
                 if side_sun is not None else
                 f'<span class="num">{pct(ka_sun)}</span> of clear sky at Kula Ag'
                 f'<div class="sub">{sun_hour:%H:%M}–{sun_hour + timedelta(hours=1):%H:%M}</div>'
