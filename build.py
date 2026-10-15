@@ -742,9 +742,14 @@ def evening_state(obs: pd.DataFrame, rnet: pd.Series | None):
     over = r.index[(r < 0).values]
     if len(over):
         return "over", over[0]
-    ending = r.index[(r < 100).values]
-    if len(ending):
-        return "ending", ending[0]
+    # A cloud can do the same for half an hour and the sun bring the upslope
+    # back (2026-10-14: 15:00-15:45 under 100, calm at Kula Ag, then 210 W/m2
+    # and SSW 5 mph by 16:15), so "ending" holds only while it stays low and
+    # dates from the last time it was still above.
+    if len(r) and r.iloc[-1] < 100:
+        above = r.index[(r >= 100).values]
+        low = r[r.index > above[-1]] if len(above) else r
+        return "ending", low.index[0]
     return None
 
 
