@@ -82,7 +82,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><div class="tag">Kula soaring briefing</div><h1>Kula Today</h1></div>
-    <div class="date">Updated Wed 14 Oct 2026 · 16:49 HST</div>
+    <div class="date">Updated Wed 14 Oct 2026 · 16:51 HST</div>
   </header>
 
   <div>
@@ -92,7 +92,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 
   <div class="cols">
     <section class="panel today" aria-labelledby="t-today">
-      <div class="kind">Measured today · 16:49 HST</div>
+      <div class="kind">Measured today · 16:51 HST</div>
       <div class="head"><h2 id="t-today">Today</h2><span class="chip fair">Light</span></div>
       <p class="summary">Cloudbase has come down from its late-morning high and is lowering now. Kula Ag had mostly shade over the last hour. Upslope has run since about 08:15 at a light 5 mph, and thermals rate Light. Trades are holding the shear line crossing Kula Highway between Omaopio and the middle Lower Kula Road junction, with trade air reaching the lower west slope at Pulehu.</p>
       <dl>
@@ -174,10 +174,15 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
           }
           pts.push([lat, -156.395 + i * (0.135 / 24)]);
         }
-        L.polyline(pts, {color: "#e74c3c", weight: 30, opacity: 0.16, lineCap: "round", interactive: false}).addTo(map);
+        // The glow is 500 yards wide on the ground (Sam), so it scales with the zoom.
+        var glow = L.polyline(pts, {color: "#e74c3c", opacity: 0.16, lineCap: "round", interactive: false}).addTo(map);
+        function glowWidth() {
+          var mPerPx = 40075016.686 * Math.cos(d.line.mid * Math.PI / 180) / Math.pow(2, map.getZoom() + 8);
+          glow.setStyle({weight: Math.max(3, 457 / mPerPx)});
+        }
+        glowWidth();
+        map.on("zoomend", glowWidth);
         L.polyline(pts, {color: "#c0392b", weight: 3, opacity: 0.9, dashArray: "8 6", lineCap: "round", interactive: false}).addTo(map);
-        L.marker(pts[1], {interactive: false, icon: L.divIcon({className: "", iconSize: [220, 20], iconAnchor: [0, 28],
-          html: '<div class="shear">' + d.line.label + '</div>'})}).addTo(map);
       }
       d.stations.forEach(function (s) {
         var c = colour(s.dir), rot = s.dir === null ? 0 : (s.dir + 180) % 360;
@@ -194,7 +199,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
   box.addEventListener("toggle", function () { if (box.open) { draw(); } });
 })();
 </script>
-<style>.shear{font:600 11px/1.3 var(--body);color:#7a1f1f;background:rgba(255,255,255,.85);padding:1px 7px;border-radius:10px;white-space:nowrap;display:inline-block}.stn{font:600 11px/1.2 var(--body);padding:1px 4px;background:rgba(255,255,255,.85);border:0;box-shadow:none;color:#17242f}.stn:before{display:none}</style>
+<style>.stn{font:600 11px/1.2 var(--body);padding:1px 4px;background:rgba(255,255,255,.85);border:0;box-shadow:none;color:#17242f}.stn:before{display:none}</style>
 <!-- build problems: none -->
 </body>
 </html>
