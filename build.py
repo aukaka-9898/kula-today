@@ -866,7 +866,7 @@ LINE_SMOOTH = pd.Timedelta("60min")
 # in the trades while the ladder still bracketed the line north of it. Ladder
 # and map only -- like Piiholo it is often in trade air, so it stays out of
 # the cloudbase and the upslope clock.
-KEKOA = ("HNMA", "Kekoa camera", 20.79729, 2819)
+KEKOA = ("HNMA", "Red Hill", 20.79729, 2819)   # FAA calls it Kekoa; Sam: "Red Hill"
 KEKOA_LON = -156.31142
 KEKOA_URL = "https://weathercams.faa.gov/api/summary"
 KEKOA_PAGE = "https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/summary"
