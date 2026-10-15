@@ -859,6 +859,34 @@ def ladder_or_last(now: datetime):
 # wind is averaged over its last hour instead.
 LINE_SMOOTH = pd.Timedelta("60min")
 
+# The FAA weather camera Sam watches, Kekoa (HNMA), has its own wind, temperature
+# and humidity every 10 minutes ("advisory, not certified"; the last 6 hours
+# only). It sits at Waihou Springs' latitude, in the ladder's widest gap: on
+# 2026-10-14 it turned from SSW 13-19 mph to NNE-NE at 12:30-12:40 and stayed
+# in the trades while the ladder still bracketed the line north of it. Ladder
+# and map only -- like Piiholo it is often in trade air, so it stays out of
+# the cloudbase and the upslope clock.
+KEKOA = ("HNMA", "Kekoa camera", 20.79729, 2819)
+KEKOA_LON = -156.31142
+KEKOA_URL = "https://weathercams.faa.gov/api/summary"
+KEKOA_PAGE = "https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/summary"
+
+
+@functools.cache
+def read_kekoa() -> pd.DataFrame:
+    # The API answers 401 without the camera page as the referrer.
+    r = requests.get(KEKOA_URL, params={"siteId": 931},
+                     headers={**cv.HEAD, "Referer": KEKOA_PAGE}, timeout=30)
+    r.raise_for_status()
+    rows = []
+    for o in (r.json().get("payload") or {}).get("site", {}).get("advisoryWeather") or []:
+        if o.get("windDirDegrees") is None or o.get("windSpeedKnots") is None:
+            continue
+        rows.append({"observed": pd.Timestamp(o["observationDateTime"]).tz_convert(HST).tz_localize(None),
+                     "wind_dir": float(o["windDirDegrees"]),
+                     "wind_mph": float(o["windSpeedKnots"]) * 1.15078})
+    return pd.DataFrame(rows)
+
 
 def _ladder_readings(sid: str, since: datetime) -> pd.DataFrame:
     """One ladder station's wind since a time, from api.weather.gov."""
@@ -886,10 +914,14 @@ def smoothed_ladder(obs: pd.DataFrame, now: datetime) -> pd.DataFrame:
     since = now - LINE_SMOOTH
     cut = since.replace(tzinfo=None)
     rows = []
-    for sid, name, lat, elev in cv.LADDER:
+    for sid, name, lat, elev in cv.LADDER + [KEKOA]:
         have = (obs[(obs.station_id == sid) & obs.wind_dir.notna()]
                 [["observed", "wind_dir", "wind_mph"]] if len(obs) else pd.DataFrame())
-        if have.empty:
+        if sid == KEKOA[0]:
+            have = safely(read_kekoa)
+            if have is None:
+                continue
+        elif have.empty:
             try:
                 have = _retrying(_ladder_readings)(sid, since)
             except Exception:
@@ -1126,7 +1158,7 @@ COAST_POS = {"Paia": (20.9380, -156.3478), "Hamakuapoko Rd": (20.9200, -156.3410
 STATIONS_FILE = HERE / "docs" / "stations.json"
 
 
-def write_station_map(obs: pd.DataFrame, lad: pd.DataFrame, now: datetime) -> None:
+def write_station_map(obs: pd.DataFrame, lad: pd.DataFrame, now: datetime, pos=None, west=None) -> None:
     rows = []
     fresh = obs.observed.max() - pd.Timedelta("90min") if len(obs) else None
     for st in sampler.STATIONS:
@@ -1144,7 +1176,26 @@ def write_station_map(obs: pd.DataFrame, lad: pd.DataFrame, now: datetime) -> No
                      "dir": None if last is None else round(float(last.wind_dir)),
                      "mph": None if last is None else round(float(last.wind_mph)),
                      "at": None if last is None else f"{last.observed_local:%H:%M}"})
-    STATIONS_FILE.write_text(json.dumps({"made": f"{now:%H:%M}", "stations": rows}), encoding="utf-8")
+    r = lad[lad.name == KEKOA[1]] if len(lad) else lad
+    last = r.iloc[0] if len(r) else None
+    rows.append({"name": KEKOA[1], "lat": KEKOA[2], "lon": KEKOA_LON, "elev_ft": KEKOA[3],
+                 "dir": None if last is None else round(float(last.wind_dir)),
+                 "mph": None if last is None else round(float(last.wind_mph)),
+                 "at": None if last is None else f"{last.observed_local:%H:%M}"})
+    # The shear line, drawn as a stylised stroke through the middle of the
+    # bracket (Sam liked it with "a little artistic license"); none when the
+    # page reports no line.
+    line = None
+    if pos and pos.get("found"):
+        (_, nn), (_, sn) = _place(pos["north_lat"]), _place(pos["south_lat"])
+        nn = COAST_STATION.get(pos["north_of"], nn)
+        line = {"mid": (pos["north_lat"] + pos["south_lat"]) / 2,
+                "label": "Shear line · " + (nn if nn == sn else f"{nn}–{sn}"),
+                # Trade air at Pulehu (the west-slope alert): the line swings
+                # south round the lower west slope, passing below Pulehu (Sam).
+                "west_lat": 20.7953 - 0.010 if west else None}
+    STATIONS_FILE.write_text(json.dumps({"made": f"{now:%H:%M}", "stations": rows, "line": line}),
+                             encoding="utf-8")
 
 
 def build() -> str:
@@ -1391,7 +1442,7 @@ def build() -> str:
             said = f"Today's forecast: {ahead}" + (f" {said}" if said else "")
     summary_html = f'<p class="summary">{esc(said)}</p>' if said else ""
 
-    safely(write_station_map, obs, lad if isinstance(lad, pd.DataFrame) else pd.DataFrame(), now)
+    safely(write_station_map, obs, lad if isinstance(lad, pd.DataFrame) else pd.DataFrame(), now, pos, west)
 
     # tomorrow + outlook
     # Before 06:00 the next flying day is today, so the forecast panel shows it.
