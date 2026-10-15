@@ -1263,12 +1263,58 @@ def line_day(entries: list):
     return common, (None if far_text == common else (far_text, far["t"]))
 
 
+HISTORY_SUN = {"Kula Ag", "Keokea"}           # the Sun row's lower Kula slope
+
+
+def cloud_sun_history(obs, now, up, end) -> list:
+    """Two-hour blocks from 09:00 (Sam): lower-slope sun and the derived base.
+
+    Sun is Kula Ag and Keokea, each capped at 100%, as in the Sun row. The base
+    is the median of the station estimate every 20 minutes, inside the upslope
+    only -- outside it the stations read the drainage layer.
+    """
+    day = now.replace(tzinfo=None, hour=0, minute=0, second=0, microsecond=0)
+    last = min(day + timedelta(hours=17), now.replace(tzinfo=None))
+    rows = [(t, st.name, w) for t, st, w in
+            _retrying(sampler.read_mesonet_sun)(day + timedelta(hours=9), last)
+            if st.name in HISTORY_SUN]
+    core = _core(obs) if len(obs) else obs
+    out = []
+    for h in range(9, 17, 2):
+        a, b = day + timedelta(hours=h), day + timedelta(hours=h + 2)
+        if a >= last:
+            break
+        shares = []
+        for name in HISTORY_SUN:
+            got = [(t, w) for t, n, w in rows if n == name and a <= t < b]
+            if got:
+                clear = mesonet.clear_sky(pd.DatetimeIndex([t for t, _ in got]).tz_localize(HST)).sum()
+                if clear > 50:
+                    shares.append(min(sum(w for _, w in got) / clear, 1.0))
+        sun = sum(shares) / len(shares) if shares else None
+        base = None
+        if up is not None and len(core):
+            lo, hi = max(a, up), min(b, end) if end is not None else b
+            ts = pd.date_range(lo, hi, freq="20min") if lo < hi else []
+            vals = [v for v in (_base_at(core, t) for t in ts) if v is not None]
+            base = round(float(np.median(vals)), -2) if vals else None
+        out.append((f"{h:02d}–{h + 2:02d}", sun, base))
+    return out
+
+
+def history_table(hist) -> str:
+    head = "".join(f'<th class="n">{lbl}</th>' for lbl, _, _ in hist)
+    sun = "".join(f'<td class="n">{pct(s)}</td>' for _, s, _ in hist)
+    base = "".join(f'<td class="n">{ft(b)}</td>' for _, _, b in hist)
+    return (f'<div class="tablewrap"><table class="hist"><thead><tr><th></th>{head}</tr></thead>'
+            f'<tbody><tr><td>Sun</td>{sun}</tr><tr><td>Base ft</td>{base}</tr></tbody></table></div>')
+
+
 def day_review(obs, now, up, evening, rnet, word, model, fc_today, fc_pair, entries) -> dict:
     """The whole flying day, for the Today panel after the upslope ends."""
     day = now.replace(tzinfo=None, hour=0, minute=0, second=0, microsecond=0)
     end = upslope_end(rnet, evening) if up is not None else None
     fc_word = strength_word(fc_today["thermal"]) if fc_today is not None else None
-    day_sun = safely(window_sun, now)
     said = []
 
     therm = "Unavailable"
@@ -1289,31 +1335,22 @@ def day_review(obs, now, up, evening, rnet, word, model, fc_today, fc_pair, entr
         up_html = "No clear upslope today"
         said.append("No clear upslope today.")
 
-    base_html = "Not derived<div class=\"sub\">No upslope, so no slope air to derive it from</div>"
-    if up is not None:
-        core = _core(obs)
-        b11, b14 = (_base_at(core, day + timedelta(hours=h)) for h in (11, 14))
-        b11 = b11 if up <= day + timedelta(hours=11) else None
-        if b11 is not None or b14 is not None:
-            pair = (None if b11 is None else round(b11, -2), None if b14 is None else round(b14, -2))
-            shown = am_pm(pair) if pair[0] is not None else ft(pair[1])
-            base_html = (f'<span class="num">{shown} ft</span><div class="sub">'
-                         + ("11:00 → 14:00" if pair[0] is not None else "14:00")
-                         + ", derived from the stations"
-                         + (f"; forecast {am_pm(fc_pair)} ft" if fc_pair and fc_pair[0] is not None else "")
-                         + "</div>")
-            said.append(f"Cloudbase about {shown} ft"
-                        + (" from 11:00 to 14:00." if pair[0] is not None else " at 14:00."))
-        else:
-            base_html = "Unavailable"
-
+    hist = safely(cloud_sun_history, obs, now, up, end) or []
     fc_sun = fc_today["sun"] if fc_today is not None else None
-    sun_html = "Unavailable"
-    if day_sun is not None:
-        sun_html = (f'<span class="num">{pct(min(day_sun, 1))}</span> of clear sky at Kula Ag, 09:00–15:00'
-                    + (f'<div class="sub">GFS forecast {pct(fc_sun)} for 10:00–14:00</div>'
-                       if fc_sun is not None and not pd.isna(fc_sun) else ""))
-        said.append(f"Kula Ag had {pct(min(day_sun, 1))} of clear-sky sun from 09:00 to 15:00.")
+    fc_bits = ([f"forecast base {am_pm(fc_pair)} ft at 11:00 → 14:00"] if fc_pair and fc_pair[0] is not None else []) + \
+              ([f"GFS sun {pct(fc_sun)} for 10:00–14:00"] if fc_sun is not None and not pd.isna(fc_sun) else [])
+    if hist:
+        hist_html = (history_table(hist) + '<div class="sub">Two-hour blocks. Sun: lower Kula slope '
+                     "(Kula Ag, Keokea); base derived from the stations, during the upslope only"
+                     + ("; " + ", ".join(fc_bits) if fc_bits else "") + "</div>")
+        suns = [x for _, x, _ in hist if x is not None]
+        bases = [x for _, _, x in hist if x is not None]
+        if suns:
+            said.append("Sun on the lower slope " + " → ".join(pct(x) for x in suns) + " by two-hour blocks.")
+        if bases:
+            said.append("Cloudbase about " + " → ".join(ft(x) for x in bases) + " ft.")
+    else:
+        hist_html = "Unavailable"
 
     ld = line_day(entries)
     if ld:
@@ -1333,7 +1370,7 @@ def day_review(obs, now, up, evening, rnet, word, model, fc_today, fc_pair, entr
                  if lw else "Unavailable")
 
     return {"date": f"{now:%Y-%m-%d}", "word": word, "summary": " ".join(said),
-            "therm": therm, "base": base_html, "sun": sun_html, "line": line_html,
+            "therm": therm, "hist": hist_html, "line": line_html,
             "up": up_html, "wind": wind_html}
 
 
@@ -1612,9 +1649,10 @@ def build() -> str:
         today_title = f"{'Today' if rd == now.date() else 'Yesterday'} · {rd:%a %d %b}"
         today_chip = rating_chip(review["word"])
         summary_html = f'<p class="summary">{esc(review["summary"])}</p>'
-        therm_html, base_html, sun_html = review["therm"], review["base"], review["sun"]
-        line_html, up_html, wind_html = review["line"], review["up"], review["wind"]
-        base_label, ceil_html = "Cloudbase", ""
+        therm_html, line_html = review["therm"], review["line"]
+        up_html, wind_html = review["up"], review["wind"]
+        base_label, base_html, ceil_html = "Cloud and sun", review.get("hist", "Unavailable"), ""
+        sun_html = None                                   # in the history
 
     # tomorrow + outlook
     # The next flying day: today until its upslope begins, then tomorrow.
@@ -1680,7 +1718,8 @@ def build() -> str:
     return PAGE.substitute(
         updated=f"{now:%a %d %b %Y · %H:%M} HST", today_kind=today_kind, today_title=today_title,
         today_chip=today_chip, summary=summary_html, base_label=base_label,
-        therm=therm_html, base=base_html, sun=sun_html, up=up_html, line=line_html,
+        therm=therm_html, base=base_html, up=up_html, line=line_html,
+        sun_row=(f"<dt>Sun</dt><dd>{sun_html}</dd>" if sun_html is not None else ""),
         wind=wind_html,
         ceil_row=(f"<dt>Ceiling</dt><dd>{ceil_html}</dd>" if ceil_html else ""),
         tom_title=f"{'Tomorrow' if tom > now.date() else 'Today'} · {tom:%a %d %b}", tom_chip=tom_chip, tomorrow=t_html,

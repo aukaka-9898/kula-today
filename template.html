@@ -69,6 +69,7 @@ dd { margin: 0; min-width: 0; }
 table { border-collapse: collapse; width: 100%; font-size: .9rem; }
 th { font: 600 .72rem var(--display); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--rule); }
 td { padding: 7px 10px; border-bottom: 1px solid var(--rule); white-space: nowrap; }
+table.hist { font-size: .82rem; margin: 2px 0; } table.hist td, table.hist th { padding: 3px 6px; }
 td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: tabular-nums; }
 .notes { font-size: .84rem; color: var(--muted); display: grid; gap: 6px; max-width: 75ch; }
 .notes p { margin: 0; }
@@ -98,7 +99,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
       <dl>
         <dt>Thermals</dt><dd>$therm</dd>
         <dt>$base_label</dt><dd>$base</dd>
-        <dt>Sun</dt><dd>$sun</dd>
+        $sun_row
         <dt>Shear line</dt><dd>$line</dd>
         $ceil_row
         <dt>Upslope</dt><dd>$up</dd>
