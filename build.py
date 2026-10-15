@@ -1198,7 +1198,12 @@ def write_station_map(obs: pd.DataFrame, lad: pd.DataFrame, now: datetime, pos=N
                 "label": "Shear line · " + (nn if nn == sn else f"{nn}–{sn}"),
                 # Trade air at Pulehu (the west-slope alert): the line swings
                 # south round the lower west slope, passing below Pulehu (Sam).
-                "west_lat": 20.7953 - 0.010 if west else None}
+                # Always south of where the line would otherwise end: once the
+                # line itself is south of Pulehu, "below Pulehu" bent it north.
+                "west_lat": None}
+        if west:
+            west_end = line["mid"] - 0.006          # the template's plain west end
+            line["west_lat"] = min(20.7953 - 0.010, west_end - 0.010)
     STATIONS_FILE.write_text(json.dumps({"made": f"{now:%H:%M}", "stations": rows, "line": line}),
                              encoding="utf-8")
 
