@@ -85,7 +85,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><div class="tag">Kula soaring briefing</div><h1>Kula Today</h1></div>
-    <div class="date">Updated Thu 15 Oct 2026 · 19:12 HST</div>
+    <div class="date">Updated Thu 15 Oct 2026 · 23:41 HST</div>
   </header>
 
   <div>
@@ -96,15 +96,15 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
   <div class="cols">
     <section class="panel today" aria-labelledby="t-today">
       <div class="kind">The day in review</div>
-      <div class="head"><h2 id="t-today">Today · Thu 15 Oct</h2><span class="chip fair">Light</span></div>
-      <p class="summary">A light day (forecast light). The upslope ran from about 08:00 to about 16:15. Cloudbase held 4,000–4,900 ft; the forecast had 4,400–4,400. Most of the day the shear line was crossing Kula Highway between Pukalani and Omaopio; about 15:22 it was crossing Kula Highway near Omaopio.</p><div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted,#6b6b66);margin:2px 0 4px">
+      <div class="head"><h2 id="t-today">Today · Thu 15 Oct</h2></div>
+      <p class="summary">The upslope ran from about 08:00 to about 16:15. Cloudbase held 4,000–4,900 ft; the forecast had 4,400–5,100. Most of the day the shear line was crossing Kula Highway between Pukalani and Omaopio; about 15:22 it was crossing Kula Highway near Omaopio.</p><div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted,#6b6b66);margin:2px 0 4px">
 <span><span style="display:inline-block;width:16px;border-top:2px dashed #eb6834;vertical-align:middle"></span> Forecast</span>
 <span><span style="display:inline-block;width:16px;height:2px;background:#2a78d6;vertical-align:middle"></span> Derived (stations)</span><span><span style="display:inline-block;width:12px;height:10px;background:rgba(137,135,129,.18);vertical-align:middle"></span> Upslope</span></div>
 <div style="position:relative;width:100%;min-width:0;height:220px"><canvas id="basechart" role="img" aria-label="Derived cloudbase against the forecast through the day"></canvas></div>
 <div class="sub">Derived from the stations every 15 minutes during the upslope; forecast by hour, a later run (the morning forecast was not saved).</div>
 <script>
 (function () {
-  var d = {"derived": [[480, 4510.0], [495, 4560.0], [510, 4360.0], [525, 4120.0], [540, 4050.0], [555, 4200.0], [570, 4230.0], [585, 4520.0], [600, 4610.0], [615, 4690.0], [630, 4650.0], [645, 4700.0], [660, 4740.0], [675, 4800.0], [690, 4610.0], [705, 4560.0], [720, 4580.0], [735, 4560.0], [750, 4610.0], [765, 4540.0], [780, 4430.0], [795, 4490.0], [810, 4630.0], [825, 4710.0], [840, 4670.0], [855, 4730.0], [870, 4870.0], [885, 4940.0], [900, 4830.0], [915, 4700.0], [930, 4430.0], [945, 4430.0], [960, 4390.0], [975, 4290.0]], "forecast": [[780, 4360.0]], "up": [480, 975], "nocu": null}, pt = function (a) { return {x: a[0], y: a[1]}; };
+  var d = {"derived": [[480, 4510.0], [495, 4560.0], [510, 4360.0], [525, 4120.0], [540, 4050.0], [555, 4200.0], [570, 4230.0], [585, 4520.0], [600, 4610.0], [615, 4690.0], [630, 4650.0], [645, 4700.0], [660, 4740.0], [675, 4800.0], [690, 4610.0], [705, 4560.0], [720, 4580.0], [735, 4560.0], [750, 4610.0], [765, 4540.0], [780, 4430.0], [795, 4490.0], [810, 4630.0], [825, 4710.0], [840, 4670.0], [855, 4730.0], [870, 4870.0], [885, 4940.0], [900, 4830.0], [915, 4700.0], [930, 4430.0], [945, 4430.0], [960, 4390.0], [975, 4290.0]], "forecast": [[780, 4360.0], [840, 5060.0], [900, 4560.0], [960, 4560.0]], "up": [480, 975], "nocu": null}, pt = function (a) { return {x: a[0], y: a[1]}; };
   var dark = matchMedia('(prefers-color-scheme: dark)').matches, muted = '#898781', grid = dark ? '#2c2c2a' : '#e1e0d9';
   var nocu = { id: 'nocu', beforeDatasetsDraw: function (c) { if (!d.nocu) return; var x = c.scales.x, a = c.chartArea, g = c.ctx,
     x0 = x.getPixelForValue(d.nocu[0]), x1 = x.getPixelForValue(d.nocu[1]);
@@ -139,26 +139,26 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 })();
 </script>
       <dl>
-        <dt>Thermals</dt><dd><strong>Light</strong> for the day, 10:00–14:00<div class="sub">Kula Ag's measured air through the NAM sounding (thermal.py); forecast was Light</div></dd>
+        <dt>Thermals</dt><dd>Unavailable</dd>
         <dt>Cloudbase</dt><dd><span class="num">4,000–4,900 ft</span><div class="sub">Derived from the stations during the upslope; the chart above sets it against the forecast</div></dd>
         
         <dt>Shear line</dt><dd>Crossing Kula Highway between Pukalani and Omaopio<div class="sub">Most of the day, 45 updates. Furthest south about 15:22: Crossing Kula Highway near Omaopio</div></dd>
         
-        <dt>Upslope</dt><dd><span class="num">08:00</span> to about <span class="num">16:15</span></dd>
+        <dt>Upslope</dt><dd><span class="num">08:00</span> to about <span class="num">16:15</span><div class="sub">Drainage from about 20:15</div></dd>
         <dt>Wind</dt><dd><span class="num">4 mph</span>, gusts to 13<div class="sub">Lower elevations, during the upslope</div></dd>
       </dl>
     </section>
     <section class="panel tomorrow" aria-labelledby="t-tomorrow">
       <div class="kind">Forecast</div>
       <div class="head"><h2 id="t-tomorrow">Tomorrow · Fri 16 Oct</h2><span class="chip good">Moderate</span></div>
-      <p class="summary">The model sees little cloud over Kula; the slope&#x27;s own cumulus are too small for it to show, so expect some. A base lowering after midday. Thermals probably moderate. Trades from the ENE should put the shear line at Pukalani.</p><div class="alert">Possible short day: the model has moist trade air lifted up the windward slope and pushed over the summit ridge on an easterly, from about 15:00. If it comes, Kula can lose its sun by mid-afternoon. Look for early clouds at the summit ridge.</div><div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted,#6b6b66);margin:2px 0 4px">
+      <p class="summary">The model sees little cloud over Kula; the slope&#x27;s own cumulus are too small for it to show, so expect some. A base lowering after midday. Thermals probably moderate. Trades from the ENE should put the shear line at Pukalani.</p><div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted,#6b6b66);margin:2px 0 4px">
 <span><span style="display:inline-block;width:16px;border-top:2px dashed #eb6834;vertical-align:middle"></span> Forecast</span>
 </div>
 <div style="position:relative;width:100%;min-width:0;height:220px"><canvas id="fcchart" role="img" aria-label="Derived cloudbase against the forecast through the day"></canvas></div>
 
 <script>
 (function () {
-  var d = {"derived": [], "forecast": [[540, 4960.0], [600, 5760.0], [660, 5860.0], [720, 6260.0], [780, 5560.0], [840, 4560.0]], "up": null, "nocu": [900, 1020]}, pt = function (a) { return {x: a[0], y: a[1]}; };
+  var d = {"derived": [], "forecast": [[540, 5060.0], [600, 5860.0], [660, 5760.0], [720, 5660.0], [780, 4760.0], [840, 5160.0], [900, 4560.0]], "up": null, "nocu": [960, 1020]}, pt = function (a) { return {x: a[0], y: a[1]}; };
   var dark = matchMedia('(prefers-color-scheme: dark)').matches, muted = '#898781', grid = dark ? '#2c2c2a' : '#e1e0d9';
   var nocu = { id: 'nocu', beforeDatasetsDraw: function (c) { if (!d.nocu) return; var x = c.scales.x, a = c.chartArea, g = c.ctx,
     x0 = x.getPixelForValue(d.nocu[0]), x1 = x.getPixelForValue(d.nocu[1]);
@@ -193,12 +193,12 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 })();
 </script><dl>
         <dt>Thermals</dt><dd>Probably moderate<div class="sub">thermal.py on the forecast air (+3 F, it runs cool); within one category of the measured rating on every test day</div></dd>
-        <dt>Cloudbase</dt><dd><span class="num">5,900 → 4,600 ft</span><div class="sub">11:00 → 14:00</div></dd>
-        <dt>Sun</dt><dd><span class="num">98%</span> of clear sky, 10:00–14:00 (GFS)<div class="sub">The model can't see the slope's own cumulus: when it says 90% or more, Kula has measured about 80%. Good flying days measure about 80%, overcast about 50%, socked in 20%.</div></dd>
+        <dt>Cloudbase</dt><dd><span class="num">5,800 → 5,200 ft</span><div class="sub">11:00 → 14:00</div></dd>
+        <dt>Sun</dt><dd><span class="num">97%</span> of clear sky, 10:00–14:00 (GFS)<div class="sub">The model can't see the slope's own cumulus: when it says 90% or more, Kula has measured about 80%. Good flying days measure about 80%, overcast about 50%, socked in 20%.</div></dd>
         <dt>Shear line</dt><dd>At Pukalani<div class="sub">Trades ENE (074°)</div></dd>
         
       </dl>
-      <div class="sub">Forecast as of 19:10 HST</div>
+      <div class="sub">Forecast as of 23:41 HST</div>
     </section>
   </div>
 
@@ -212,7 +212,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
     <h2 id="t-week">The week</h2>
     <div class="tablewrap"><table>
       <thead><tr><th>Day</th><th class="n">Sun</th><th class="n">Base ft, 11:00 → 14:00</th><th>Thermals</th><th>Shear line</th></tr></thead>
-      <tbody><tr><td>Fri 16</td><td class="n">98%</td><td class="n">5,900 → 4,600</td><td>Moderate</td><td>Pukalani</td></tr><tr><td>Sat 17</td><td class="n">98%</td><td class="n">5,900 → 5,800</td><td>Moderate</td><td>Pukalani</td></tr><tr><td>Sun 18</td><td class="n">100%</td><td class="n">6,800 → 6,300</td><td>Strong</td><td>Pukalani</td></tr><tr><td>Mon 19</td><td class="n">83%</td><td class="n">5,300 → 4,600</td><td>Moderate</td><td>Pukalani</td></tr><tr><td>Tue 20</td><td class="n">83%</td><td class="n">7,000 → 6,400</td><td>Strong</td><td>Pukalani</td></tr><tr><td>Wed 21</td><td class="n">47%</td><td class="n">4,300</td><td>Light</td><td>Pukalani</td></tr><tr><td>Thu 22</td><td class="n">61%</td><td class="n">4,800 → 5,500</td><td>Light</td><td>Makawao</td></tr></tbody>
+      <tbody><tr><td>Fri 16</td><td class="n">97%</td><td class="n">5,800 → 5,200</td><td>Moderate</td><td>Pukalani</td></tr><tr><td>Sat 17</td><td class="n">90%</td><td class="n">6,100 → 6,300</td><td>Moderate</td><td>Pukalani</td></tr><tr><td>Sun 18</td><td class="n">101%</td><td class="n">5,900 → 5,500</td><td>Moderate</td><td>Pukalani</td></tr><tr><td>Mon 19</td><td class="n">86%</td><td class="n">5,100 → 4,500</td><td>Moderate</td><td>Pukalani</td></tr><tr><td>Tue 20</td><td class="n">88%</td><td class="n">6,200 → 6,600</td><td>Moderate</td><td>Pukalani</td></tr><tr><td>Wed 21</td><td class="n">100%</td><td class="n">5,300 → 4,700</td><td>Light</td><td>Pukalani</td></tr><tr><td>Thu 22</td><td class="n">74%</td><td class="n">4,400 → 4,500</td><td>Flat</td><td>Makawao</td></tr></tbody>
     </table></div>
     <p>Sun is the GFS forecast for 10:00–14:00. The model can't see the slope's own cumulus, so its high numbers run about 10 points above what Kula measures.</p>
   </section>
