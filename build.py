@@ -169,9 +169,21 @@ def dewpoint_c(t_c: float, rh: float) -> float:
     return b * g / (a - g)
 
 
+# Mesonet-only stations for the map, not in the sampler (no NWS id, so the
+# sampler's api.weather.gov poll would fail on them). Nakula, high on the south
+# flank, is where cloud shows first coming round the backside below the
+# summit (Sam, 2026-10-15). Off the Kula slope: above the core's 4,400 ft cut,
+# and not on the sunlight ladder.
+MAP_ONLY = [sampler.Station("HCDP0143", "Nakula", 5355, 20.67474, -156.23349, "0143")]
+# Never in the Kula calculations (Sam): Nakula and the Kahikinui pair are
+# there only to watch summit cloud being pushed over Kula. By id, not left to
+# the elevation cut.
+OFF_SLOPE = OFF_SLOPE_STATIONS | {s.id for s in MAP_ONLY}
+
+
 def read_hcdp(start: datetime) -> dict[str, list]:
     """Today's Mesonet readings by station, oldest first, as sampler Readings."""
-    by_hcdp = {s.hcdp: s for s in sampler.STATIONS if s.hcdp}
+    by_hcdp = {s.hcdp: s for s in sampler.STATIONS + MAP_ONLY if s.hcdp}
     rows = mesonet.get("/mesonet/db/measurements", location="hawaii",
                        station_ids=",".join(by_hcdp), var_ids=HCDP_VARS,
                        start_date=start.strftime("%Y-%m-%dT%H:%M:%S-10:00"),
@@ -213,8 +225,10 @@ def observations(now: datetime) -> pd.DataFrame:
         hcdp = {}
         PROBLEMS.append(f"HCDP observations, using api.weather.gov: {type(e).__name__}: {e}")
     rows = []
-    for st in sampler.STATIONS:
+    for st in sampler.STATIONS + MAP_ONLY:
         got = hcdp.get(st.id)
+        if st in MAP_ONLY and not got:
+            continue                              # Mesonet only; remote, often down
         for attempt in range(0 if got else 3):   # api.weather.gov drops single requests
             try:
                 got, _ = sampler.read_nws(st, start)
@@ -245,7 +259,7 @@ def cloudbase_now(obs: pd.DataFrame) -> dict | None:
     The middle of the group was about 4,600.
     """
     fresh_after = obs.observed.max() - STALE
-    core = obs[~obs.station_id.isin(OFF_SLOPE_STATIONS | {"TT925"}) & (obs.elev_ft <= 4400)
+    core = obs[~obs.station_id.isin(OFF_SLOPE | {"TT925"}) & (obs.elev_ft <= 4400)
                & (obs.suspect == "") & (obs.observed >= fresh_after)]
     latest = core.sort_values("observed").groupby("station_id").tail(1)
     if len(latest) < 3:
@@ -370,7 +384,7 @@ def _cap(s: str) -> str:
 
 
 def _core(obs: pd.DataFrame) -> pd.DataFrame:
-    return obs[~obs.station_id.isin(OFF_SLOPE_STATIONS | {"TT925"}) & (obs.elev_ft <= 4400)
+    return obs[~obs.station_id.isin(OFF_SLOPE | {"TT925"}) & (obs.elev_ft <= 4400)
                & (obs.suspect == "")]
 
 
@@ -517,7 +531,7 @@ def summary(obs: pd.DataFrame, ladder, up, verdict, pos, west, now: datetime,
             line = f"Upslope has run since about {up:%H:%M} at {word} {mph:.0f} mph"
         else:
             line = f"Upslope has run since about {up:%H:%M}"
-        out.append(line + (f", and thermals rate {verdict}." if verdict and verdict != "--" else "."))
+        out.append(line + (f", and thermals seem {verdict.lower()}." if verdict and verdict != "--" else "."))
     elif now.hour < 11:
         out.append("Upslope has not set in yet.")
 
@@ -572,7 +586,7 @@ def forecast_summary(r, pair, today_pair, inv, today_word: str) -> str:
         out.append(_cap(", ".join(bits)) + ".")
     word = strength_word(r["thermal"])
     if word in ("Flat", "Light", "Moderate", "Strong"):
-        out.append(f"Thermals look {word.lower()}.")
+        out.append(f"Thermals probably {word.lower()}.")
     if inv and am is not None:
         out.append("The Kahului inversion sits at or above the expected base, so it may cap the tops."
                    if inv["base_ft"] >= am - 300 else
@@ -648,7 +662,7 @@ def lower_wind(obs: pd.DataFrame, since=None, until=None):
 
 
 def upslope_since(obs: pd.DataFrame):
-    core = obs[~obs.station_id.isin(OFF_SLOPE_STATIONS) & (obs.elev_ft <= 4400)].dropna(
+    core = obs[~obs.station_id.isin(OFF_SLOPE) & (obs.elev_ft <= 4400)].dropna(
         subset=["wind_dir", "wind_mph"]).copy()
     core = core[core.observed.dt.hour.between(5, 11)]
     if core.empty:
@@ -1046,6 +1060,40 @@ def am_pm(pair) -> str:
     return ft(am) if pm is None or pm == am else f"{ft(am)} → {ft(pm)}"
 
 
+# Summit cloud pushed over Kula (Sam, 2026-10-15; site lore: "early clouds on
+# the summit mean a short day in Kula"). On 10-15 trade moisture lifted up the
+# windward slope came over the ridge on an easterly and shaded Kula from
+# 15:00. The forecast column is Kahului's free air, which cannot show the
+# slope's own lifting, so the test is orographic: would the 6,000-8,500 ft
+# trade-layer air condense before an 8,500 ft crest (LCL = z + 410 ft per C of
+# spread), with an easterly >= 5 kt at 8,000-10,000 ft and no inversion below
+# 10,000 ft to hold the tops under the ridge. RRFS 18Z, 2026-08-14..10-15:
+# flagged 13 of 63 afternoons and caught 4 of the 5 measured intrusions
+# (Summit moist on an easterly, Kula Ag's sun halving), so "possible" only.
+SUMMIT_CREST_FT = 8500
+SUMMIT_EAST_KT = 5
+
+
+def summit_push(path, day) -> int | None:
+    """First hour, 12:00-16:00 HST on day, when the RRFS column says summit
+    cloud could be pushed over Kula; None if it never does."""
+    prof = sd.profiles(path)
+    for h in (12, 13, 14, 15, 16):
+        key = (pd.Timestamp(day) + pd.Timedelta(hours=h + 10)).tz_localize("UTC")
+        if key not in prof:
+            continue
+        q = prof[key]
+        lay = q[(q.height_ft >= 6000) & (q.height_ft <= 8500)]
+        ridge = q[(q.height_ft >= 8000) & (q.height_ft <= 10000)]
+        if lay.empty or ridge.empty:
+            continue
+        lcl = (lay.height_ft + 410 * (lay.temp_c - lay.dewpoint_c)).min()
+        east = (ridge.wind_kt * np.sin(np.radians(ridge.wind_dir))).mean()
+        if lcl <= SUMMIT_CREST_FT and east >= SUMMIT_EAST_KT and not sd.inversion(q):
+            return h
+    return None
+
+
 # The Ceiling line's sounding: NAM, then RRFS once NAM retires (check.py does
 # the same). Against Hilo and Lihue balloons (Jan-Oct 2026, 14:00 HST) NAM put
 # the trade inversion within ~75-280 ft and RRFS ~200-315 ft (20 afternoons),
@@ -1197,7 +1245,7 @@ STATIONS_FILE = HERE / "docs" / "stations.json"
 def write_station_map(obs: pd.DataFrame, lad: pd.DataFrame, now: datetime, pos=None, west=None) -> None:
     rows = []
     fresh = obs.observed.max() - pd.Timedelta("90min") if len(obs) else None
-    for st in sampler.STATIONS:
+    for st in sampler.STATIONS + MAP_ONLY:
         o = obs[(obs.station_id == st.id)] if len(obs) else obs
         o = o[o.observed >= fresh].dropna(subset=["wind_mph"]) if len(o) else o
         last = o.loc[o.observed.idxmax()] if len(o) else None
@@ -1528,12 +1576,13 @@ def build() -> str:
     if evening and up is not None:
         kind, since = evening
         up_html = {
-            "drain": f'Over<div class="sub">Drainage since about {since:%H:%M}; '
-                     f'upslope began about {up:%H:%M}</div>',
-            "over": f'Over<div class="sub">Slope losing heat since about {since:%H:%M}; '
-                    f'upslope began about {up:%H:%M}</div>',
-            "ending": f'Ending<div class="sub">Slope heating nearly stopped about {since:%H:%M}; '
-                      f'upslope began about {up:%H:%M}</div>',
+            # In time order (Sam): when it began, then how it is ending.
+            "drain": f'Began about <span class="num">{up:%H:%M}</span>, now over'
+                     f'<div class="sub">Drainage since about {since:%H:%M}</div>',
+            "over": f'Began about <span class="num">{up:%H:%M}</span>, now over'
+                    f'<div class="sub">Slope losing heat since about {since:%H:%M}</div>',
+            "ending": f'Began about <span class="num">{up:%H:%M}</span>, now ending'
+                      f'<div class="sub">Slope heating nearly stopped about {since:%H:%M}</div>',
         }[kind]
     elif up is not None:
         up_html = f'On since about <span class="num">{up:%H:%M}</span>'
@@ -1618,8 +1667,8 @@ def build() -> str:
         shaded = side_best is not None and not in_shadow and side_best < 0.55
         if shaded:
             thermal_word = "Flat"
-        therm_html = ((f"<strong>{thermal_word}</strong> as of {newest:%H:%M}" if newest is not None
-                       else f"<strong>{thermal_word}</strong> at {hour:02d}:00")
+        therm_html = ((f"Seem <strong>{thermal_word.lower()}</strong> as of {newest:%H:%M}" if newest is not None
+                       else f"Seem <strong>{thermal_word.lower()}</strong> at {hour:02d}:00")
                       + f"<div class=\"sub\">Kula Ag's last hour of air through the {model} sounding (thermal.py)"
                       + (f"; no sun anywhere on the Kula side (best {pct(side_best)})" if shaded else "")
                       + "</div>")
@@ -1627,7 +1676,7 @@ def build() -> str:
         pass
     elif now.hour < 10:
         word = strength_word(fc_today["thermal"]) if fc_today is not None else "--"
-        therm_html = (f"<strong>{word}</strong> forecast<div class=\"sub\">thermal.py on the forecast "
+        therm_html = (f"Probably <strong>{word.lower()}</strong> (forecast)<div class=\"sub\">thermal.py on the forecast "
                       "air; measured rating just after 10:00</div>"
                       if word in ("Flat", "Light", "Moderate", "Strong") else
                       "Not yet<div class=\"sub\">First rating just after 10:00, for 09:00–10:00</div>")
@@ -1712,8 +1761,14 @@ def build() -> str:
         prev = tom - timedelta(days=1)
         said_t = safely(forecast_summary, r, hours.get(tom), hours.get(prev), inv_t,
                         "today" if prev == now.date() else "yesterday")
-        t_html = (f'<p class="summary">{esc(said_t)}</p>' if said_t else "") + f"""<dl>
-        <dt>Thermals</dt><dd>{esc(strength_word(r['thermal']))}<div class="sub">thermal.py on the forecast air (+3 F, it runs cool); within one category of the measured rating on every test day</div></dd>
+        rrfs = safely(sd.fetch, "RRFS")
+        push = safely(summit_push, rrfs, tom) if rrfs else None
+        push_html = (f'<div class="alert">Possible short day: the model has moist trade air lifted '
+                     f'up the windward slope and pushed over the summit ridge on an easterly, from '
+                     f'about {push:02d}:00. If it comes, Kula can lose its sun by mid-afternoon. '
+                     f'Look for early clouds at the summit ridge.</div>' if push else "")
+        t_html = (f'<p class="summary">{esc(said_t)}</p>' if said_t else "") + push_html + f"""<dl>
+        <dt>Thermals</dt><dd>Probably {esc(strength_word(r['thermal']).lower())}<div class="sub">thermal.py on the forecast air (+3 F, it runs cool); within one category of the measured rating on every test day</div></dd>
         <dt>Cloudbase</dt><dd><span class="num">{am_pm(hours.get(tom))} ft</span><div class="sub">11:00 → 14:00</div></dd>
         <dt>Sun</dt><dd><span class="num">{pct(r['sun'])}</span> of clear sky, 10:00–14:00 (GFS)<div class="sub">The model can't see the slope's own cumulus: when it says 90% or more, Kula has measured about 80%. Good flying days measure about 80%, overcast about 50%, socked in 20%.</div></dd>
         <dt>Shear line</dt><dd>{esc(line_t)}<div class="sub">Trades {esc(wind_t)}</div>{line_alert}</dd>
