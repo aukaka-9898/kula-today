@@ -85,7 +85,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><div class="tag">Kula soaring briefing</div><h1>Kula Today</h1></div>
-    <div class="date">Updated Fri 16 Oct 2026 · 09:22 HST</div>
+    <div class="date">Updated Fri 16 Oct 2026 · 09:30 HST</div>
   </header>
 
   <div>
@@ -95,17 +95,17 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 
   <div class="cols">
     <section class="panel today" aria-labelledby="t-today">
-      <div class="kind">Measured today · 09:22 HST</div>
+      <div class="kind">Measured today · 09:30 HST</div>
       <div class="head"><h2 id="t-today">Today</h2><span class="chip good">Moderate</span></div>
-      <p class="summary">No cumulus over the slope yet. Kula Ag had full sun over the last hour. Upslope has run since about 08:00 at a light 2 mph. Trades are holding the shear line crossing Kula Highway between Pukalani and Omaopio, with no trade air on the lower west slope.</p>
+      <p class="summary">Cloudbase is edging up. Kula Ag had full sun over the last hour; the cloud tops out between Kula 1 and Kamehamenui 1, with sun above it. Upslope has run since about 08:00 at a light 2 mph. Trades are holding the shear line crossing Kula Highway between Pukalani and Omaopio, with no trade air on the lower west slope.</p>
       <dl>
         <dt>Thermals</dt><dd>Probably <strong>moderate</strong> (forecast)<div class="sub">thermal.py on the forecast air; measured rating just after 10:00</div></dd>
-        <dt>Derived<br>Cloudbase</dt><dd>No cumulus yet<div class="sub">They would form near about 3,700 ft, the condensation level derived from the stations; no cloud over the slope in the sunlight readings</div></dd>
+        <dt>Derived<br>Cloudbase</dt><dd><span class="num">3,300–4,900 ft</span><div class="sub">Stations disagree; middle about 3,700 ft (11 stations, 09:10)</div></dd>
         <dt>Sun</dt><dd><span class="num">77%</span> of clear sky, lower Kula slope<div class="sub">Last hour, as of 09:00; average of Kula Ag 95%, Keokea 43%, Pulehu 92%</div></dd>
-        <dt>Shear line</dt><dd>Crossing Kula Highway between Pukalani and Omaopio<div class="sub">Last hour: trades at Piiholo, upslope at Red Hill</div><div class="sub">Trades at the coast: Paia 083° at 15 mph</div></dd>
+        <dt>Shear line</dt><dd>Crossing Kula Highway between Pukalani and Omaopio<div class="sub">Last hour: trades at Piiholo, upslope at Red Hill</div><div class="sub">Trades at the coast: Paia 083° at 16 mph</div></dd>
         
         <dt>Upslope</dt><dd>On since about <span class="num">08:00</span><div class="sub">Drainage ended about 07:45</div></dd>
-        <dt>Wind</dt><dd><span class="num">2 mph</span>, gusts to 6<div class="sub">Lower elevations, 10 stations, last hour</div></dd>
+        <dt>Wind</dt><dd><span class="num">2 mph</span>, gusts to 5<div class="sub">Lower elevations, 10 stations, last hour</div></dd>
       </dl>
     </section>
     <section class="panel tomorrow" aria-labelledby="t-tomorrow">
@@ -243,6 +243,6 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 })();
 </script>
 <style>.stn{font:600 11px/1.2 var(--body);padding:1px 4px;background:rgba(255,255,255,.85);border:0;box-shadow:none;color:#17242f}.stn:before{display:none}</style>
-<!-- build problems: none -->
+<!-- build problems: HCDP observations, using api.weather.gov: ConnectTimeout: HTTPSConnectionPool(host='api.hcdp.ikewai.org', port=443): Max retries exceeded with url: /mesonet/db/measurements?location=hawaii&station_ids=0115%2C0118%2C0144%2C0116%2C0119%2C0145%2C0151%2C0152%2C0153%2C0143&var_ids=Tair_1_Avg%2CRH_1_Avg%2CWS_1_Avg%2CWDrs_1_Avg%2CWS_1_Max&start_date=2026-10-16T00%3A00%3A00-10%3A00&row_mode=json&limit=100000 (Caused by ConnectTimeoutError(<HTTPSConnection(host='api.hcdp.ikewai.org', port=443) at 0x7f482d917ad0), 'Connection to api.hcdp.ikewai.org timed out. (connect timeout=20)')); Mesonet sun: ConnectTimeout: HTTPSConnectionPool(host='api.hcdp.ikewai.org', port=443): Max retries exceeded with url: /mesonet/db/measurements?location=hawaii&station_ids=0115%2C0118%2C0144%2C0116%2C0119%2C0145%2C0151%2C0152%2C0153&var_ids=SWin_1_Avg&start_date=2026-10-16T07%3A50%3A00-10%3A00&end_date=2026-10-16T09%3A30%3A00-10%3A00&row_mode=json&limit=100000 (Caused by ConnectTimeoutError(<HTTPSConnection(host='api.hcdp.ikewai.org', port=443) at 0x7f482d9688f0), 'Connection to api.hcdp.ikewai.org timed out. (connect timeout=20)')); sun ladder from 08:00 reused; first_cumulus: ConnectTimeout: HTTPSConnectionPool(host='api.hcdp.ikewai.org', port=443): Max retries exceeded with url: /mesonet/db/measurements?location=hawaii&station_ids=0119%2C0116%2C0151&var_ids=SWin_1_Avg%2CLWin_1_Avg%2CTair_1_Avg&start_date=2026-10-16T07%3A30%3A00-10%3A00&end_date=2026-10-16T09%3A30%3A53-10%3A00&row_mode=json&limit=100000 (Caused by ConnectTimeoutError(<HTTPSConnection(host='api.hcdp.ikewai.org', port=443) at 0x7f482d7b2450), 'Connection to api.hcdp.ikewai.org timed out. (connect timeout=20)')); sun_trend: ConnectTimeout: HTTPSConnectionPool(host='api.hcdp.ikewai.org', port=443): Max retries exceeded with url: /mesonet/db/measurements?location=hawaii&station_ids=0115%2C0118%2C0144%2C0116%2C0119%2C0145%2C0151%2C0152%2C0153&var_ids=SWin_1_Avg&start_date=2026-10-16T08%3A00%3A00-10%3A00&end_date=2026-10-16T09%3A30%3A00-10%3A00&row_mode=json&limit=100000 (Caused by ConnectTimeoutError(<HTTPSConnection(host='api.hcdp.ikewai.org', port=443) at 0x7f482d7bafc0), 'Connection to api.hcdp.ikewai.org timed out. (connect timeout=20)')) -->
 </body>
 </html>
