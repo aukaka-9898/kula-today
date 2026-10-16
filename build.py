@@ -754,6 +754,20 @@ def _first_two(s: pd.Series):
     return None
 
 
+def sundown(now: datetime):
+    """When the clear-sky sun at Kula fell below 10 W/m2 this evening, or None
+    while it is still up. The page's own clock for dark: on 2026-10-15 the
+    Mesonet timed out, net radiation never arrived, and at 18:37 the page
+    still said the upslope was ending (Sam: "It's dark out")."""
+    ts = pd.date_range(now.replace(hour=15, minute=0, second=0, microsecond=0), now, freq="5min")
+    if len(ts) == 0:
+        return None
+    cs = np.asarray(mesonet.clear_sky(ts))
+    if cs[-1] >= 10:
+        return None
+    return ts[np.argmax(cs < 10)].tz_localize(None)
+
+
 def evening_state(obs: pd.DataFrame, rnet: pd.Series | None):
     """("ending" | "over" | "drain", since) once the slope stops heating.
 
@@ -1523,11 +1537,14 @@ def build() -> str:
     up, last_drain = safely(upslope_since, obs) or (None, None) if len(obs) else (None, None)
     rnet = safely(net_radiation, now) if now.hour >= 15 and up is not None and len(obs) else None
     evening = safely(evening_state, obs, rnet) if up is not None and len(obs) else None
+    down = safely(sundown, now) if now.hour >= 15 else None
+    if up is not None and down is not None and not (evening and evening[0] in ("over", "drain")):
+        evening = ("over", evening[1] if evening else down)     # it's dark, whatever reported
     # Night (Sam: the page should know): from the end of the upslope -- or 18:00
     # on a day without one -- until the next upslope, the Today panel shows the
     # day in review and the Forecast panel the next flying day.
     day_over = ((up is not None and evening is not None and evening[0] in ("over", "drain"))
-                or (up is None and now.hour >= 18))
+                or (up is None and (now.hour >= 18 or down is not None)))
     before_up = up is None and now.hour < 12
     ladder_start = ladder_or_last(now)
     ladder, sun_hour = ladder_start if ladder_start else ([], None)
@@ -1543,7 +1560,7 @@ def build() -> str:
     in_shadow = sun_hour is None or sun_hour < sun_on_at
     if in_shadow:
         ladder = []
-    night = now.hour >= 19                       # sun down: no sunlight ladder
+    night = now.hour >= 19 or down is not None   # sun down: no sunlight ladder
     if night:
         ladder = []
     pos_lad = safely(line_now, obs, now)
