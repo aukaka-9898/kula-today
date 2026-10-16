@@ -599,6 +599,24 @@ def thermal_today(obs: pd.DataFrame, now: datetime, path=None):
     return None if got.empty else got
 
 
+def thermal_now(obs: pd.DataFrame, path=None):
+    """(row, newest) -- the rating from Kula Ag's last 60 minutes of readings.
+
+    The clock-hour rating rested on 1-3 readings early in each hour; a full
+    rolling hour is steady, and is labelled by its newest reading (Sam).
+    """
+    ka = obs[obs.station_id == "001HI"].dropna(subset=["temp_f", "dew_f"])
+    if ka.empty:
+        return None
+    end = ka.observed.max()
+    w = ka[ka.observed > end - pd.Timedelta("60min")]
+    surf = pd.DataFrame({"hour": [end.hour], "temp_f": [w.temp_f.mean()],
+                         "dewpoint_f": [w.dew_f.mean()], "day": [end.date()]})
+    # thermal.py's window stops at 16:00; the live call runs to the upslope's end.
+    got = th.assess(surf, RELEASE_FT, window=(9, 18), path=path)
+    return None if got.empty else (got.iloc[0], end)
+
+
 # Gustiness on the lower slope (Sam: "indications of relatively gusty
 # conditions may be useful"). Kula's midday wind is light but its gusts run
 # well above it: over a year at Kula Ag and Keokea, 10:00-15:00, the typical
@@ -803,29 +821,39 @@ def evening_flow(obs: pd.DataFrame):
 
 
 def sun_ladder(now: datetime) -> list[tuple[str, int, float | None]]:
-    """Share of clear-sky sun over the last full hour, per station, top down.
+    """Share of clear-sky sun over the 60 minutes up to the newest reading,
+    per station, top down.
 
+    Not the last clock hour (Sam, 2026-10-15): at :52 that was 12:00-13:00,
+    up to two hours old. The Mesonet runs about 15 minutes behind, so the
+    window ends at its newest reading rather than now. RAWS reports by the
+    hour only, so Kula 1 and Kamehamenui keep their latest whole hour.
     Mesonet and RAWS each fail on their own; a HCDP connect timeout at
     14:23 on 2026-10-12 used to blank the whole ladder, RAWS included.
     """
-    end = now.replace(minute=0, second=0, microsecond=0).replace(tzinfo=None)
-    start = end - timedelta(hours=1)
-    rows: dict[str, list] = {}
+    now_l = now.replace(tzinfo=None, second=0, microsecond=0)
+    got_m = []
     try:
-        for obs_t, st, w in _retrying(sampler.read_mesonet_sun)(start, end):
-            if start <= obs_t < end:
-                rows.setdefault(st.id, []).append((obs_t, w))
+        got_m = _retrying(sampler.read_mesonet_sun)(now_l - timedelta(minutes=100), now_l)
     except Exception as e:
         PROBLEMS.append(f"Mesonet sun: {type(e).__name__}: {e}")
+    stamps = [t for t, st, _ in got_m if st.name == "Kula Ag"] or [t for t, _, _ in got_m]
+    end = max(stamps) if stamps else now_l
+    start = end - timedelta(hours=1)
+    rows: dict[str, list] = {}
+    for obs_t, st, w in got_m:
+        if start < obs_t <= end:
+            rows.setdefault(st.id, []).append((obs_t, w))
     for st in (s for s in sampler.STATIONS if s.raws):
         try:
-            got = _retrying(sampler.read_raws_sun)(st.raws, end.date(), end.date())
+            got = _retrying(sampler.read_raws_sun)(st.raws, now_l.date(), now_l.date())
         except Exception as e:
             PROBLEMS.append(f"RAWS sun {st.raws}: {type(e).__name__}: {e}")
             continue
-        for t, w in got:
-            if t == end:                                  # hour-ending stamp
-                rows.setdefault(st.id, []).append((t - timedelta(minutes=30), w))
+        done = [(t, w) for t, w in got if t <= now_l]      # hour-ending stamps
+        if done:
+            t, w = max(done)
+            rows.setdefault(st.id, []).append((t - timedelta(minutes=30), w))
     ladder = []
     for st in sampler.STATIONS:
         if st.id not in rows or st.id in ("019HI",):
@@ -1398,7 +1426,12 @@ def build() -> str:
     # so before the first full sunlit hour the stations get only skylight and read as
     # if under cloud -- 26% at Kula Ag with a clear sky on 2026-10-14 (Sam).
     sun_on, first_hr = SUN_ON[now.month], first_sun_hour(now.month)
-    in_shadow = sun_hour is None or sun_hour.hour < first_hr
+    sun_on_at = now.replace(tzinfo=None, hour=int(sun_on[:2]), minute=int(sun_on[3:]),
+                            second=0, microsecond=0)
+    # The window must start after the sun is on Kula; with the Mesonet's lag
+    # the first one lands about 75 minutes after.
+    first_at = f"{sun_on_at + timedelta(minutes=75):%H:%M}"
+    in_shadow = sun_hour is None or sun_hour < sun_on_at
     if in_shadow:
         ladder = []
     night = now.hour >= 19                       # sun down: no sunlight ladder
@@ -1561,30 +1594,33 @@ def build() -> str:
         wind_html = "Unavailable"
 
     # thermals text
-    thermal_word = None
+    thermal_word, day_word = None, None
     rated = therm[therm.index >= 10] if therm is not None else None
     model = cap_model(now)
+    # The day's rating (10:00-14:00) is for the day in review; the live row
+    # keeps the current call until the upslope ends (Sam: at 16:07 it said
+    # "10:00-14:00" beside the newest readings).
     if rated is not None and len(rated) and now.hour >= 15:
         mid = rated[(rated.index >= 10) & (rated.index <= 14)]
-        thermal_word = strength_word(th.describe(mid.ti_c.mean())) if len(mid) else None
+        day_word = strength_word(th.describe(mid.ti_c.mean())) if len(mid) else None
         day_sun = safely(window_sun, now)
         if day_sun is not None and day_sun < 0.40:      # broad overcast all day
-            thermal_word = "Flat"
-        if thermal_word:
-            therm_html = (f"<strong>{thermal_word}</strong> for the day, 10:00–14:00"
-                          f"<div class=\"sub\">Kula Ag's measured air through the {model} sounding "
-                          f"(thermal.py)" + (f"; {pct(min(day_sun, 1))} of clear-sky sun" if day_sun is not None else "")
-                          + "</div>")
-    elif rated is not None and len(rated):
+            day_word = "Flat"
+    if rated is not None and len(rated):
         hour = int(rated.index[-1])
         thermal_word = strength_word(rated.iloc[-1]["verdict"])
+        newest = None
+        tn = safely(thermal_now, obs, cap)
+        if tn is not None:
+            thermal_word, newest = strength_word(tn[0]["verdict"]), tn[1]
         # Flat only when NO part of the Kula side is in sun: under broken cloud,
         # differential heating still makes thermals where the sun hits (Sam).
         shaded = side_best is not None and not in_shadow and side_best < 0.55
         if shaded:
             thermal_word = "Flat"
-        therm_html = (f"<strong>{thermal_word}</strong> at {hour:02d}:00"
-                      f"<div class=\"sub\">Kula Ag's measured air through the {model} sounding (thermal.py)"
+        therm_html = ((f"<strong>{thermal_word}</strong> as of {newest:%H:%M}" if newest is not None
+                       else f"<strong>{thermal_word}</strong> at {hour:02d}:00")
+                      + f"<div class=\"sub\">Kula Ag's last hour of air through the {model} sounding (thermal.py)"
                       + (f"; no sun anywhere on the Kula side (best {pct(side_best)})" if shaded else "")
                       + "</div>")
     if thermal_word:
@@ -1600,19 +1636,19 @@ def build() -> str:
 
     fc_sun = fc_today["sun"] if fc_today is not None else None
     sun_html = ((f'<span class="num">{pct(fc_sun)}</span> of clear sky forecast, 10:00–14:00 (GFS)'
-                 f"<div class=\"sub\">Measured from just after {first_hr + 1:02d}:00; Kula is in "
+                 f"<div class=\"sub\">Measured from about {first_at}; Kula is in "
                  f"Haleakala's shadow until about {sun_on}</div>")
                 if in_shadow and fc_sun is not None and not pd.isna(fc_sun) else
                 f"Not yet<div class=\"sub\">Kula is in Haleakala's shadow until about {sun_on}; "
-                f"first reading just after {first_hr + 1:02d}:00</div>" if in_shadow else
+                f"first reading about {first_at}</div>" if in_shadow else
                 f'<span class="num">{pct(side_sun)}</span> of clear sky, lower Kula slope'
-                f'<div class="sub">{sun_hour:%H:%M}–{sun_hour + timedelta(hours=1):%H:%M}, average of '
+                f'<div class="sub">Last hour, as of {sun_hour + timedelta(hours=1):%H:%M}; average of '
                 + ", ".join(f"{n} {pct(v)}" for n, v in low_sun)
                 + ("; Pulehu left out, in trade air" if pulehu_out else "")
                 + '</div>'
                 if side_sun is not None else
                 f'<span class="num">{pct(ka_sun)}</span> of clear sky at Kula Ag'
-                f'<div class="sub">{sun_hour:%H:%M}–{sun_hour + timedelta(hours=1):%H:%M}</div>'
+                f'<div class="sub">Last hour, as of {sun_hour + timedelta(hours=1):%H:%M}</div>'
                 if ka_sun is not None else "Unavailable")
 
     today_chip = rating_chip(thermal_word or (strength_word(fc_today["thermal"])
@@ -1632,7 +1668,7 @@ def build() -> str:
     entries = safely(log_line, now, pos) or []
     review, today_kind, today_title = None, f"Measured today · {now:%H:%M} HST", "Today"
     if day_over:
-        review = safely(day_review, obs, now, up, evening, rnet, thermal_word, model,
+        review = safely(day_review, obs, now, up, evening, rnet, day_word, model,
                         fc_today, fc_pair, entries)
         if review:
             safely(REVIEW_FILE.write_text, json.dumps(review), "utf-8")
@@ -1723,12 +1759,12 @@ def build() -> str:
         wind=wind_html,
         ceil_row=(f"<dt>Ceiling</dt><dd>{ceil_html}</dd>" if ceil_html else ""),
         tom_title=f"{'Tomorrow' if tom > now.date() else 'Today'} · {tom:%a %d %b}", tom_chip=tom_chip, tomorrow=t_html,
-        rows=rows_html, ladder=ladder_html or (f"<p>Night. First reading tomorrow just after {first_hr + 1:02d}:00.</p>"
+        rows=rows_html, ladder=ladder_html or (f"<p>Night. First reading tomorrow about {first_at}.</p>"
                                                if night else
                                                f"<p>Not yet: the slope is in Haleakala's shadow until "
-                                               f"about {sun_on}. First reading just after {first_hr + 1:02d}:00.</p>"
+                                               f"about {sun_on}. First reading about {first_at}.</p>"
                                                if in_shadow else "<p>Unavailable.</p>"),
-        ladder_hour=(f"{sun_hour:%H:%M}–{sun_hour + timedelta(hours=1):%H:%M}"
+        ladder_hour=(f"as of {sun_hour + timedelta(hours=1):%H:%M}"
                      if sun_hour and not in_shadow and not night else "not yet"),
         # From 15:00 the sun is 40 deg up in the WSW and its path crosses a
         # 4,500 ft base 0.4 mi or more downslope -- usually the deck's edge.
