@@ -85,7 +85,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><div class="tag">Kula soaring briefing</div><h1>Kula Today</h1></div>
-    <div class="date">Updated Thu 15 Oct 2026 · 19:10 HST</div>
+    <div class="date">Updated Thu 15 Oct 2026 · 19:12 HST</div>
   </header>
 
   <div>
@@ -104,13 +104,20 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="sub">Derived from the stations every 15 minutes during the upslope; forecast by hour, a later run (the morning forecast was not saved).</div>
 <script>
 (function () {
-  var d = {"derived": [[480, 4510.0], [495, 4560.0], [510, 4360.0], [525, 4120.0], [540, 4050.0], [555, 4200.0], [570, 4230.0], [585, 4520.0], [600, 4610.0], [615, 4690.0], [630, 4650.0], [645, 4700.0], [660, 4740.0], [675, 4800.0], [690, 4610.0], [705, 4560.0], [720, 4580.0], [735, 4560.0], [750, 4610.0], [765, 4540.0], [780, 4430.0], [795, 4490.0], [810, 4630.0], [825, 4710.0], [840, 4670.0], [855, 4730.0], [870, 4870.0], [885, 4940.0], [900, 4830.0], [915, 4700.0], [930, 4430.0], [945, 4430.0], [960, 4390.0], [975, 4290.0]], "forecast": [[780, 4360.0]], "up": [480, 975]}, pt = function (a) { return {x: a[0], y: a[1]}; };
+  var d = {"derived": [[480, 4510.0], [495, 4560.0], [510, 4360.0], [525, 4120.0], [540, 4050.0], [555, 4200.0], [570, 4230.0], [585, 4520.0], [600, 4610.0], [615, 4690.0], [630, 4650.0], [645, 4700.0], [660, 4740.0], [675, 4800.0], [690, 4610.0], [705, 4560.0], [720, 4580.0], [735, 4560.0], [750, 4610.0], [765, 4540.0], [780, 4430.0], [795, 4490.0], [810, 4630.0], [825, 4710.0], [840, 4670.0], [855, 4730.0], [870, 4870.0], [885, 4940.0], [900, 4830.0], [915, 4700.0], [930, 4430.0], [945, 4430.0], [960, 4390.0], [975, 4290.0]], "forecast": [[780, 4360.0]], "up": [480, 975], "nocu": null}, pt = function (a) { return {x: a[0], y: a[1]}; };
   var dark = matchMedia('(prefers-color-scheme: dark)').matches, muted = '#898781', grid = dark ? '#2c2c2a' : '#e1e0d9';
+  var nocu = { id: 'nocu', beforeDatasetsDraw: function (c) { if (!d.nocu) return; var x = c.scales.x, a = c.chartArea, g = c.ctx,
+    x0 = x.getPixelForValue(d.nocu[0]), x1 = x.getPixelForValue(d.nocu[1]);
+    g.save(); g.fillStyle = 'rgba(137,135,129,0.10)'; g.fillRect(x0, a.top, x1 - x0, a.bottom - a.top);
+    g.fillStyle = muted; g.font = '11px sans-serif'; g.textAlign = 'center';
+    g.fillText('No cumulus', (x0 + x1) / 2, a.top + (a.bottom - a.top) / 2); g.restore(); } };
   var band = { id: 'band', beforeDatasetsDraw: function (c) { if (!d.up) return; var x = c.scales.x, a = c.chartArea, g = c.ctx;
     g.save(); g.fillStyle = 'rgba(137,135,129,0.14)';
     g.fillRect(x.getPixelForValue(d.up[0]), a.top, x.getPixelForValue(d.up[1]) - x.getPixelForValue(d.up[0]), a.bottom - a.top); g.restore(); } };
   var hm = function (m) { return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); };
   var ys = d.derived.concat(d.forecast).map(function (a) { return a[1]; });
+  var ms = d.derived.concat(d.forecast).map(function (a) { return a[0]; }).concat(d.nocu || []);
+  var xs = [Math.floor(Math.min.apply(null, ms) / 60) * 60, Math.ceil(Math.max.apply(null, ms) / 60) * 60];
   new Chart(document.getElementById('basechart'), {
     type: 'line',
     data: { datasets: [
@@ -122,12 +129,12 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
         title: function (i) { return hm(i[0].parsed.x); },
         label: function (i) { return i.dataset.label + ': ' + Math.round(i.parsed.y).toLocaleString() + ' ft'; } } } },
       scales: {
-        x: { type: 'linear', min: 480, max: 1020, ticks: { stepSize: 60, color: muted, callback: function (v) { return hm(v); } }, grid: { display: false } },
+        x: { type: 'linear', min: xs[0], max: xs[1], ticks: { stepSize: 60, color: muted, callback: function (v) { return hm(v); } }, grid: { display: false } },
         y: { min: Math.min(3500, Math.floor(Math.min.apply(null, ys) / 500) * 500),
               max: Math.max(7000, Math.ceil(Math.max.apply(null, ys) / 500) * 500),
               ticks: { stepSize: 500, color: muted, callback: function (v) { return v.toLocaleString(); } }, grid: { color: grid } }
       } },
-    plugins: [band]
+    plugins: [band, nocu]
   });
 })();
 </script>
@@ -151,13 +158,20 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 
 <script>
 (function () {
-  var d = {"derived": [], "forecast": [[540, 4960.0], [600, 5760.0], [660, 5860.0], [720, 6260.0], [780, 5560.0], [840, 4560.0]], "up": null}, pt = function (a) { return {x: a[0], y: a[1]}; };
+  var d = {"derived": [], "forecast": [[540, 4960.0], [600, 5760.0], [660, 5860.0], [720, 6260.0], [780, 5560.0], [840, 4560.0]], "up": null, "nocu": [900, 1020]}, pt = function (a) { return {x: a[0], y: a[1]}; };
   var dark = matchMedia('(prefers-color-scheme: dark)').matches, muted = '#898781', grid = dark ? '#2c2c2a' : '#e1e0d9';
+  var nocu = { id: 'nocu', beforeDatasetsDraw: function (c) { if (!d.nocu) return; var x = c.scales.x, a = c.chartArea, g = c.ctx,
+    x0 = x.getPixelForValue(d.nocu[0]), x1 = x.getPixelForValue(d.nocu[1]);
+    g.save(); g.fillStyle = 'rgba(137,135,129,0.10)'; g.fillRect(x0, a.top, x1 - x0, a.bottom - a.top);
+    g.fillStyle = muted; g.font = '11px sans-serif'; g.textAlign = 'center';
+    g.fillText('No cumulus', (x0 + x1) / 2, a.top + (a.bottom - a.top) / 2); g.restore(); } };
   var band = { id: 'band', beforeDatasetsDraw: function (c) { if (!d.up) return; var x = c.scales.x, a = c.chartArea, g = c.ctx;
     g.save(); g.fillStyle = 'rgba(137,135,129,0.14)';
     g.fillRect(x.getPixelForValue(d.up[0]), a.top, x.getPixelForValue(d.up[1]) - x.getPixelForValue(d.up[0]), a.bottom - a.top); g.restore(); } };
   var hm = function (m) { return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); };
   var ys = d.derived.concat(d.forecast).map(function (a) { return a[1]; });
+  var ms = d.derived.concat(d.forecast).map(function (a) { return a[0]; }).concat(d.nocu || []);
+  var xs = [Math.floor(Math.min.apply(null, ms) / 60) * 60, Math.ceil(Math.max.apply(null, ms) / 60) * 60];
   new Chart(document.getElementById('fcchart'), {
     type: 'line',
     data: { datasets: [
@@ -169,12 +183,12 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
         title: function (i) { return hm(i[0].parsed.x); },
         label: function (i) { return i.dataset.label + ': ' + Math.round(i.parsed.y).toLocaleString() + ' ft'; } } } },
       scales: {
-        x: { type: 'linear', min: 480, max: 1020, ticks: { stepSize: 60, color: muted, callback: function (v) { return hm(v); } }, grid: { display: false } },
+        x: { type: 'linear', min: xs[0], max: xs[1], ticks: { stepSize: 60, color: muted, callback: function (v) { return hm(v); } }, grid: { display: false } },
         y: { min: Math.min(3500, Math.floor(Math.min.apply(null, ys) / 500) * 500),
               max: Math.max(7000, Math.ceil(Math.max.apply(null, ys) / 500) * 500),
               ticks: { stepSize: 500, color: muted, callback: function (v) { return v.toLocaleString(); } }, grid: { color: grid } }
       } },
-    plugins: [band]
+    plugins: [band, nocu]
   });
 })();
 </script><dl>
