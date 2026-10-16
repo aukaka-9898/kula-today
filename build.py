@@ -1072,6 +1072,18 @@ def am_pm(pair) -> str:
 # (Summit moist on an easterly, Kula Ag's sun halving), so "possible" only.
 SUMMIT_CREST_FT = 8500
 SUMMIT_EAST_KT = 5
+# The forecast day's summit-cloud call, for Sam's session-start reminder to
+# check the webcam while its short loop still holds the morning
+# (KulaModel/.claude/hooks/session_alert.py reads it from the live site).
+# One day only, overwritten each build: "If I catch the note, great. If
+# not, next time" (Sam) -- no history kept.
+ALERTS_FILE = HERE / "docs" / "alerts.json"
+
+
+def log_alert(day, push, now: datetime) -> None:
+    ALERTS_FILE.write_text(json.dumps({f"{day}": {"summit_push_from": push,
+                                                  "updated": f"{now:%Y-%m-%d %H:%M}"}}),
+                           encoding="utf-8")
 
 
 def summit_push(path, day) -> int | None:
@@ -1763,6 +1775,8 @@ def build() -> str:
                         "today" if prev == now.date() else "yesterday")
         rrfs = safely(sd.fetch, "RRFS")
         push = safely(summit_push, rrfs, tom) if rrfs else None
+        if rrfs:
+            safely(log_alert, tom, push, now)
         push_html = (f'<div class="alert">Possible short day: the model has moist trade air lifted '
                      f'up the windward slope and pushed over the summit ridge on an easterly, from '
                      f'about {push:02d}:00. If it comes, Kula can lose its sun by mid-afternoon. '
