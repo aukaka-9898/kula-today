@@ -1388,6 +1388,16 @@ def forecast_base_hours(day) -> dict:
             if not pd.isna(v)}
 
 
+def forecast_cu_end(day):
+    """The hour the forecast thermals stop working for the rest of the day
+    (no cumulus from then), or None if they run to 17:00."""
+    part = cv.slope_parcel()
+    part = part[part.day == day]
+    got = th.assess(part, RELEASE_FT, window=(8, 17))
+    on = got.index[got.working.astype(bool)] if "working" in got else got.index
+    return int(on.max()) + 1 if len(on) and on.max() < 17 else None
+
+
 def save_morning_forecast(now: datetime) -> None:
     hours = forecast_base_hours(now.date())
     if hours:
@@ -1420,14 +1430,14 @@ def base_chart(obs, now, up, end) -> tuple[str, list, list]:
     return chart_html("basechart", derived, forecast, span, note), derived, forecast
 
 
-def chart_html(cid, derived, forecast, span, note) -> str:
+def chart_html(cid, derived, forecast, span, note, nocu=None) -> str:
     """Cloudbase line chart: derived (solid) and forecast (dashed) by minute of
     the day, the upslope shaded; derived and span may be empty for a forecast.
 
     One fixed scale, 3,500-7,000 ft, for every chart (Sam): the station
     estimate's 15-minute wobble reads as wobble, and days compare at a
     glance. It stretches only when a value falls outside."""
-    data = json.dumps({"derived": derived, "forecast": forecast, "up": span})
+    data = json.dumps({"derived": derived, "forecast": forecast, "up": span, "nocu": nocu})
     legend = ("" if not derived else
               '<span><span style="display:inline-block;width:16px;height:2px;background:#2a78d6;vertical-align:middle"></span> Derived (stations)</span>'
               '<span><span style="display:inline-block;width:12px;height:10px;background:rgba(137,135,129,.18);vertical-align:middle"></span> Upslope</span>')
@@ -1440,11 +1450,18 @@ def chart_html(cid, derived, forecast, span, note) -> str:
 (function () {{
   var d = {data}, pt = function (a) {{ return {{x: a[0], y: a[1]}}; }};
   var dark = matchMedia('(prefers-color-scheme: dark)').matches, muted = '#898781', grid = dark ? '#2c2c2a' : '#e1e0d9';
+  var nocu = {{ id: 'nocu', beforeDatasetsDraw: function (c) {{ if (!d.nocu) return; var x = c.scales.x, a = c.chartArea, g = c.ctx,
+    x0 = x.getPixelForValue(d.nocu[0]), x1 = x.getPixelForValue(d.nocu[1]);
+    g.save(); g.fillStyle = 'rgba(137,135,129,0.10)'; g.fillRect(x0, a.top, x1 - x0, a.bottom - a.top);
+    g.fillStyle = muted; g.font = '11px sans-serif'; g.textAlign = 'center';
+    g.fillText('No cumulus', (x0 + x1) / 2, a.top + (a.bottom - a.top) / 2); g.restore(); }} }};
   var band = {{ id: 'band', beforeDatasetsDraw: function (c) {{ if (!d.up) return; var x = c.scales.x, a = c.chartArea, g = c.ctx;
     g.save(); g.fillStyle = 'rgba(137,135,129,0.14)';
     g.fillRect(x.getPixelForValue(d.up[0]), a.top, x.getPixelForValue(d.up[1]) - x.getPixelForValue(d.up[0]), a.bottom - a.top); g.restore(); }} }};
   var hm = function (m) {{ return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); }};
   var ys = d.derived.concat(d.forecast).map(function (a) {{ return a[1]; }});
+  var ms = d.derived.concat(d.forecast).map(function (a) {{ return a[0]; }}).concat(d.nocu || []);
+  var xs = [Math.floor(Math.min.apply(null, ms) / 60) * 60, Math.ceil(Math.max.apply(null, ms) / 60) * 60];
   new Chart(document.getElementById('{cid}'), {{
     type: 'line',
     data: {{ datasets: [
@@ -1456,12 +1473,12 @@ def chart_html(cid, derived, forecast, span, note) -> str:
         title: function (i) {{ return hm(i[0].parsed.x); }},
         label: function (i) {{ return i.dataset.label + ': ' + Math.round(i.parsed.y).toLocaleString() + ' ft'; }} }} }} }},
       scales: {{
-        x: {{ type: 'linear', min: 480, max: 1020, ticks: {{ stepSize: 60, color: muted, callback: function (v) {{ return hm(v); }} }}, grid: {{ display: false }} }},
+        x: {{ type: 'linear', min: xs[0], max: xs[1], ticks: {{ stepSize: 60, color: muted, callback: function (v) {{ return hm(v); }} }}, grid: {{ display: false }} }},
         y: {{ min: Math.min(3500, Math.floor(Math.min.apply(null, ys) / 500) * 500),
               max: Math.max(7000, Math.ceil(Math.max.apply(null, ys) / 500) * 500),
               ticks: {{ stepSize: 500, color: muted, callback: function (v) {{ return v.toLocaleString(); }} }}, grid: {{ color: grid }} }}
       }} }},
-    plugins: [band]
+    plugins: [band, nocu]
   }});
 }})();
 </script>"""
@@ -1858,8 +1875,9 @@ def build() -> str:
                      f'Look for early clouds at the summit ridge.</div>' if push else "")
         # The forecast base through the day, charted like the review (Sam).
         fc_hours = safely(forecast_base_hours, tom) or {}
+        cu_end = safely(forecast_cu_end, tom)
         fc_chart = (chart_html("fcchart", [], [[h * 60, v] for h, v in sorted(fc_hours.items())], None,
-                               "")
+                               "", nocu=[cu_end * 60, 17 * 60] if cu_end else None)
                     if fc_hours else "")
         t_html = (f'<p class="summary">{esc(said_t)}</p>' if said_t else "") + push_html + fc_chart + f"""<dl>
         <dt>Thermals</dt><dd>Probably {esc(strength_word(r['thermal']).lower())}<div class="sub">thermal.py on the forecast air (+3 F, it runs cool); within one category of the measured rating on every test day</div></dd>
