@@ -85,7 +85,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><div class="tag">Kula soaring briefing</div><h1>Kula Today</h1></div>
-    <div class="date">Updated Thu 15 Oct 2026 · 19:04 HST</div>
+    <div class="date">Updated Thu 15 Oct 2026 · 19:10 HST</div>
   </header>
 
   <div>
@@ -97,14 +97,14 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
     <section class="panel today" aria-labelledby="t-today">
       <div class="kind">The day in review</div>
       <div class="head"><h2 id="t-today">Today · Thu 15 Oct</h2><span class="chip fair">Light</span></div>
-      <p class="summary">A light day (forecast light). The upslope ran from about 08:00 to about 16:15. Cloudbase held 4,000–4,900 ft; the forecast had 4,300–5,700. Most of the day the shear line was crossing Kula Highway between Pukalani and Omaopio; about 15:22 it was crossing Kula Highway near Omaopio.</p><div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted,#6b6b66);margin:2px 0 4px">
+      <p class="summary">A light day (forecast light). The upslope ran from about 08:00 to about 16:15. Cloudbase held 4,000–4,900 ft; the forecast had 4,400–4,400. Most of the day the shear line was crossing Kula Highway between Pukalani and Omaopio; about 15:22 it was crossing Kula Highway near Omaopio.</p><div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted,#6b6b66);margin:2px 0 4px">
 <span><span style="display:inline-block;width:16px;border-top:2px dashed #eb6834;vertical-align:middle"></span> Forecast</span>
 <span><span style="display:inline-block;width:16px;height:2px;background:#2a78d6;vertical-align:middle"></span> Derived (stations)</span><span><span style="display:inline-block;width:12px;height:10px;background:rgba(137,135,129,.18);vertical-align:middle"></span> Upslope</span></div>
 <div style="position:relative;width:100%;min-width:0;height:220px"><canvas id="basechart" role="img" aria-label="Derived cloudbase against the forecast through the day"></canvas></div>
 <div class="sub">Derived from the stations every 15 minutes during the upslope; forecast by hour, a later run (the morning forecast was not saved).</div>
 <script>
 (function () {
-  var d = {"derived": [[480, 4510.0], [495, 4560.0], [510, 4360.0], [525, 4120.0], [540, 4050.0], [555, 4200.0], [570, 4230.0], [585, 4520.0], [600, 4610.0], [615, 4690.0], [630, 4650.0], [645, 4700.0], [660, 4740.0], [675, 4800.0], [690, 4610.0], [705, 4560.0], [720, 4580.0], [735, 4560.0], [750, 4610.0], [765, 4540.0], [780, 4430.0], [795, 4490.0], [810, 4630.0], [825, 4710.0], [840, 4670.0], [855, 4730.0], [870, 4870.0], [885, 4940.0], [900, 4830.0], [915, 4700.0], [930, 4430.0], [945, 4430.0], [960, 4390.0], [975, 4290.0]], "forecast": [[540, 5260.0], [600, 5560.0], [660, 5660.0], [720, 5260.0], [780, 4360.0], [840, 4260.0], [900, 4460.0]], "up": [480, 975]}, pt = function (a) { return {x: a[0], y: a[1]}; };
+  var d = {"derived": [[480, 4510.0], [495, 4560.0], [510, 4360.0], [525, 4120.0], [540, 4050.0], [555, 4200.0], [570, 4230.0], [585, 4520.0], [600, 4610.0], [615, 4690.0], [630, 4650.0], [645, 4700.0], [660, 4740.0], [675, 4800.0], [690, 4610.0], [705, 4560.0], [720, 4580.0], [735, 4560.0], [750, 4610.0], [765, 4540.0], [780, 4430.0], [795, 4490.0], [810, 4630.0], [825, 4710.0], [840, 4670.0], [855, 4730.0], [870, 4870.0], [885, 4940.0], [900, 4830.0], [915, 4700.0], [930, 4430.0], [945, 4430.0], [960, 4390.0], [975, 4290.0]], "forecast": [[780, 4360.0]], "up": [480, 975]}, pt = function (a) { return {x: a[0], y: a[1]}; };
   var dark = matchMedia('(prefers-color-scheme: dark)').matches, muted = '#898781', grid = dark ? '#2c2c2a' : '#e1e0d9';
   var band = { id: 'band', beforeDatasetsDraw: function (c) { if (!d.up) return; var x = c.scales.x, a = c.chartArea, g = c.ctx;
     g.save(); g.fillStyle = 'rgba(137,135,129,0.14)';
@@ -184,7 +184,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
         <dt>Shear line</dt><dd>At Pukalani<div class="sub">Trades ENE (074°)</div></dd>
         
       </dl>
-      <div class="sub">Forecast as of 18:07 HST</div>
+      <div class="sub">Forecast as of 19:10 HST</div>
     </section>
   </div>
 
@@ -198,7 +198,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
     <h2 id="t-week">The week</h2>
     <div class="tablewrap"><table>
       <thead><tr><th>Day</th><th class="n">Sun</th><th class="n">Base ft, 11:00 → 14:00</th><th>Thermals</th><th>Shear line</th></tr></thead>
-      <tbody><tr><td>Fri 16</td><td class="n">98%</td><td class="n">5,900 → 4,600</td><td>Moderate</td><td>Pukalani</td></tr><tr><td>Sat 17</td><td class="n">98%</td><td class="n">5,900 → 5,800</td><td>Moderate</td><td>Pukalani</td></tr><tr><td>Sun 18</td><td class="n">100%</td><td class="n">6,800 → 6,300</td><td>Strong</td><td>Pukalani</td></tr><tr><td>Mon 19</td><td class="n">83%</td><td class="n">5,300 → 4,600</td><td>Moderate</td><td>Pukalani</td></tr><tr><td>Tue 20</td><td class="n">83%</td><td class="n">7,000 → 6,400</td><td>Moderate</td><td>Pukalani</td></tr><tr><td>Wed 21</td><td class="n">47%</td><td class="n">4,300</td><td>Moderate</td><td>Pukalani</td></tr><tr><td>Thu 22</td><td class="n">61%</td><td class="n">4,800 → 5,500</td><td>Light</td><td>Makawao</td></tr></tbody>
+      <tbody><tr><td>Fri 16</td><td class="n">98%</td><td class="n">5,900 → 4,600</td><td>Moderate</td><td>Pukalani</td></tr><tr><td>Sat 17</td><td class="n">98%</td><td class="n">5,900 → 5,800</td><td>Moderate</td><td>Pukalani</td></tr><tr><td>Sun 18</td><td class="n">100%</td><td class="n">6,800 → 6,300</td><td>Strong</td><td>Pukalani</td></tr><tr><td>Mon 19</td><td class="n">83%</td><td class="n">5,300 → 4,600</td><td>Moderate</td><td>Pukalani</td></tr><tr><td>Tue 20</td><td class="n">83%</td><td class="n">7,000 → 6,400</td><td>Strong</td><td>Pukalani</td></tr><tr><td>Wed 21</td><td class="n">47%</td><td class="n">4,300</td><td>Light</td><td>Pukalani</td></tr><tr><td>Thu 22</td><td class="n">61%</td><td class="n">4,800 → 5,500</td><td>Light</td><td>Makawao</td></tr></tbody>
     </table></div>
     <p>Sun is the GFS forecast for 10:00–14:00. The model can't see the slope's own cumulus, so its high numbers run about 10 points above what Kula measures.</p>
   </section>
