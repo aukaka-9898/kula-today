@@ -1416,7 +1416,7 @@ def base_chart(obs, now, up, end) -> tuple[str, list, list]:
     forecast = [[h * 60, v] for h, v in sorted(fc.items())]
     span = [up.hour * 60 + up.minute, stop.hour * 60 + stop.minute]
     note = (f"Derived from the stations every 15 minutes during the upslope; forecast by hour, "
-            f"{src}, +400 ft as on the page.")
+            f"{src}.")
     return chart_html("basechart", derived, forecast, span, note), derived, forecast
 
 
@@ -1435,7 +1435,7 @@ def chart_html(cid, derived, forecast, span, note) -> str:
 <span><span style="display:inline-block;width:16px;border-top:2px dashed #eb6834;vertical-align:middle"></span> Forecast</span>
 {legend}</div>
 <div style="position:relative;width:100%;min-width:0;height:220px"><canvas id="{cid}" role="img" aria-label="Derived cloudbase against the forecast through the day"></canvas></div>
-<div class="sub">{esc(note)}</div>
+{f'<div class="sub">{esc(note)}</div>' if note else ""}
 <script>
 (function () {{
   var d = {data}, pt = function (a) {{ return {{x: a[0], y: a[1]}}; }};
@@ -1859,7 +1859,7 @@ def build() -> str:
         # The forecast base through the day, charted like the review (Sam).
         fc_hours = safely(forecast_base_hours, tom) or {}
         fc_chart = (chart_html("fcchart", [], [[h * 60, v] for h, v in sorted(fc_hours.items())], None,
-                               "Forecast cloudbase by hour, +400 ft (the forecast air runs cool).")
+                               "")
                     if fc_hours else "")
         t_html = (f'<p class="summary">{esc(said_t)}</p>' if said_t else "") + push_html + fc_chart + f"""<dl>
         <dt>Thermals</dt><dd>Probably {esc(strength_word(r['thermal']).lower())}<div class="sub">thermal.py on the forecast air (+3 F, it runs cool); within one category of the measured rating on every test day</div></dd>
