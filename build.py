@@ -1373,10 +1373,17 @@ MORNING_BASE_FILE = HERE / "docs" / "forecast_base.json"
 
 
 def forecast_base_hours(day) -> dict:
-    """Forecast cloudbase by hour, 08:00-17:00, with the same +400 ft as the page."""
+    """Forecast cloudbase by hour, with the same +400 ft as the page, only
+    from the first to the last hour thermal.py has thermals working: before
+    and after, a condensation level is no cloudbase (Sam: "meaningless until
+    thermal activity begins")."""
     part = cv.slope_parcel()
     part = part[part.day == day]
     got = th.assess(part, RELEASE_FT, window=(8, 17))
+    on = got.index[got.working.astype(bool)] if "working" in got else got.index
+    if not len(on):
+        return {}
+    got = got.loc[on.min():on.max()]
     return {int(h): round(float(v) + FORECAST_BASE_LOW_FT, -1) for h, v in got.lcl_ft.items()
             if not pd.isna(v)}
 
