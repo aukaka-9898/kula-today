@@ -1401,7 +1401,11 @@ def base_chart(obs, now, up, end) -> tuple[str, list, list]:
 
 def chart_html(cid, derived, forecast, span, note) -> str:
     """Cloudbase line chart: derived (solid) and forecast (dashed) by minute of
-    the day, the upslope shaded; derived and span may be empty for a forecast."""
+    the day, the upslope shaded; derived and span may be empty for a forecast.
+
+    One fixed scale, 3,500-7,000 ft, for every chart (Sam): the station
+    estimate's 15-minute wobble reads as wobble, and days compare at a
+    glance. It stretches only when a value falls outside."""
     data = json.dumps({"derived": derived, "forecast": forecast, "up": span})
     legend = ("" if not derived else
               '<span><span style="display:inline-block;width:16px;height:2px;background:#2a78d6;vertical-align:middle"></span> Derived (stations)</span>'
@@ -1432,8 +1436,8 @@ def chart_html(cid, derived, forecast, span, note) -> str:
         label: function (i) {{ return i.dataset.label + ': ' + Math.round(i.parsed.y).toLocaleString() + ' ft'; }} }} }} }},
       scales: {{
         x: {{ type: 'linear', min: 480, max: 1020, ticks: {{ stepSize: 60, color: muted, callback: function (v) {{ return hm(v); }} }}, grid: {{ display: false }} }},
-        y: {{ suggestedMin: Math.floor((Math.min.apply(null, ys) - 300) / 500) * 500,
-              suggestedMax: Math.ceil((Math.max.apply(null, ys) + 300) / 500) * 500,
+        y: {{ min: Math.min(3500, Math.floor(Math.min.apply(null, ys) / 500) * 500),
+              max: Math.max(7000, Math.ceil(Math.max.apply(null, ys) / 500) * 500),
               ticks: {{ stepSize: 500, color: muted, callback: function (v) {{ return v.toLocaleString(); }} }}, grid: {{ color: grid }} }}
       }} }},
     plugins: [band]
