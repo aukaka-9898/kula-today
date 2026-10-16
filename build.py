@@ -1351,51 +1351,97 @@ def line_day(entries: list):
     return common, (None if far_text == common else (far_text, far["t"]))
 
 
-HISTORY_SUN = {"Kula Ag", "Keokea"}           # the Sun row's lower Kula slope
+# The review's cloudbase chart (Sam, 2026-10-15: "a direct comparison
+# between derived and predicted would create (or destroy) interest"; sun
+# dropped). The forecast is the one a pilot saw: saved each morning update
+# until the upslope begins, then frozen for the day.
+MORNING_BASE_FILE = HERE / "docs" / "forecast_base.json"
 
 
-def cloud_sun_history(obs, now, up, end) -> list:
-    """Two-hour blocks from 09:00 (Sam): lower-slope sun and the derived base.
+def forecast_base_hours(day) -> dict:
+    """Forecast cloudbase by hour, 08:00-17:00, with the same +400 ft as the page."""
+    part = cv.slope_parcel()
+    part = part[part.day == day]
+    got = th.assess(part, RELEASE_FT, window=(8, 17))
+    return {int(h): round(float(v) + FORECAST_BASE_LOW_FT, -1) for h, v in got.lcl_ft.items()
+            if not pd.isna(v)}
 
-    Sun is Kula Ag and Keokea, each capped at 100%, as in the Sun row. The base
-    is the median of the station estimate every 20 minutes, inside the upslope
-    only -- outside it the stations read the drainage layer.
-    """
+
+def save_morning_forecast(now: datetime) -> None:
+    hours = forecast_base_hours(now.date())
+    if hours:
+        MORNING_BASE_FILE.write_text(json.dumps({"date": f"{now:%Y-%m-%d}", "made": f"{now:%H:%M}",
+                                                 "hours": hours}), encoding="utf-8")
+
+
+def base_chart(obs, now, up, end) -> tuple[str, list, list]:
+    """(html, derived, forecast): the derived base every 15 minutes through
+    the upslope against that morning's forecast by hour."""
     day = now.replace(tzinfo=None, hour=0, minute=0, second=0, microsecond=0)
-    last = min(day + timedelta(hours=17), now.replace(tzinfo=None))
-    rows = [(t, st.name, w) for t, st, w in
-            _retrying(sampler.read_mesonet_sun)(day + timedelta(hours=9), last)
-            if st.name in HISTORY_SUN]
-    core = _core(obs) if len(obs) else obs
-    out = []
-    for h in range(9, 17, 2):
-        a, b = day + timedelta(hours=h), day + timedelta(hours=h + 2)
-        if a >= last:
-            break
-        shares = []
-        for name in HISTORY_SUN:
-            got = [(t, w) for t, n, w in rows if n == name and a <= t < b]
-            if got:
-                clear = mesonet.clear_sky(pd.DatetimeIndex([t for t, _ in got]).tz_localize(HST)).sum()
-                if clear > 50:
-                    shares.append(min(sum(w for _, w in got) / clear, 1.0))
-        sun = sum(shares) / len(shares) if shares else None
-        base = None
-        if up is not None and len(core):
-            lo, hi = max(a, up), min(b, end) if end is not None else b
-            ts = pd.date_range(lo, hi, freq="20min") if lo < hi else []
-            vals = [v for v in (_base_at(core, t) for t in ts) if v is not None]
-            base = round(float(np.median(vals)), -2) if vals else None
-        out.append((f"{h:02d}–{h + 2:02d}", sun, base))
-    return out
+    core = _core(obs)
+    stop = end if end is not None else obs.observed.max()
+    derived = [[t.hour * 60 + t.minute, round(v, -1)]
+               for t in pd.date_range(up.ceil("15min"), stop, freq="15min")
+               if (v := _base_at(core, t)) is not None]
+    src = "that morning"
+    try:
+        saved = json.loads(MORNING_BASE_FILE.read_text(encoding="utf-8"))
+        assert saved["date"] == f"{day:%Y-%m-%d}"
+        fc = {int(h): v for h, v in saved["hours"].items()}
+        src = f"as of {saved['made']} that morning"
+    except Exception:
+        fc = safely(forecast_base_hours, day.date()) or {}
+        src = "a later run (the morning forecast was not saved)"
+    forecast = [[h * 60, v] for h, v in sorted(fc.items())]
+    span = [up.hour * 60 + up.minute, stop.hour * 60 + stop.minute]
+    note = (f"Derived from the stations every 15 minutes during the upslope; forecast by hour, "
+            f"{src}, +400 ft as on the page.")
+    return chart_html("basechart", derived, forecast, span, note), derived, forecast
 
 
-def history_table(hist) -> str:
-    head = "".join(f'<th class="n">{lbl}</th>' for lbl, _, _ in hist)
-    sun = "".join(f'<td class="n">{pct(s)}</td>' for _, s, _ in hist)
-    base = "".join(f'<td class="n">{ft(b)}</td>' for _, _, b in hist)
-    return (f'<div class="tablewrap"><table class="hist"><thead><tr><th></th>{head}</tr></thead>'
-            f'<tbody><tr><td>Sun</td>{sun}</tr><tr><td>Base ft</td>{base}</tr></tbody></table></div>')
+def chart_html(cid, derived, forecast, span, note) -> str:
+    """Cloudbase line chart: derived (solid) and forecast (dashed) by minute of
+    the day, the upslope shaded; derived and span may be empty for a forecast."""
+    data = json.dumps({"derived": derived, "forecast": forecast, "up": span})
+    legend = ("" if not derived else
+              '<span><span style="display:inline-block;width:16px;height:2px;background:#2a78d6;vertical-align:middle"></span> Derived (stations)</span>'
+              '<span><span style="display:inline-block;width:12px;height:10px;background:rgba(137,135,129,.18);vertical-align:middle"></span> Upslope</span>')
+    return f"""<div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted,#6b6b66);margin:2px 0 4px">
+<span><span style="display:inline-block;width:16px;border-top:2px dashed #eb6834;vertical-align:middle"></span> Forecast</span>
+{legend}</div>
+<div style="position:relative;width:100%;min-width:0;height:220px"><canvas id="{cid}" role="img" aria-label="Derived cloudbase against the forecast through the day"></canvas></div>
+<div class="sub">{esc(note)}</div>
+<script>
+(function () {{
+  var d = {data}, pt = function (a) {{ return {{x: a[0], y: a[1]}}; }};
+  var dark = matchMedia('(prefers-color-scheme: dark)').matches, muted = '#898781', grid = dark ? '#2c2c2a' : '#e1e0d9';
+  var band = {{ id: 'band', beforeDatasetsDraw: function (c) {{ if (!d.up) return; var x = c.scales.x, a = c.chartArea, g = c.ctx;
+    g.save(); g.fillStyle = 'rgba(137,135,129,0.14)';
+    g.fillRect(x.getPixelForValue(d.up[0]), a.top, x.getPixelForValue(d.up[1]) - x.getPixelForValue(d.up[0]), a.bottom - a.top); g.restore(); }} }};
+  var hm = function (m) {{ return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); }};
+  var ys = d.derived.concat(d.forecast).map(function (a) {{ return a[1]; }});
+  new Chart(document.getElementById('{cid}'), {{
+    type: 'line',
+    data: {{ datasets: [
+      {{ label: 'Derived', data: d.derived.map(pt), borderColor: '#2a78d6', borderWidth: 2, pointRadius: 0, tension: 0.3 }},
+      {{ label: 'Forecast', data: d.forecast.map(pt), borderColor: '#eb6834', borderWidth: 2, borderDash: [6, 4], pointRadius: 3, pointBackgroundColor: '#eb6834', tension: 0.3 }}
+    ] }},
+    options: {{ responsive: true, maintainAspectRatio: false, interaction: {{ mode: 'nearest', axis: 'x', intersect: false }},
+      plugins: {{ legend: {{ display: false }}, tooltip: {{ callbacks: {{
+        title: function (i) {{ return hm(i[0].parsed.x); }},
+        label: function (i) {{ return i.dataset.label + ': ' + Math.round(i.parsed.y).toLocaleString() + ' ft'; }} }} }} }},
+      scales: {{
+        x: {{ type: 'linear', min: 480, max: 1020, ticks: {{ stepSize: 60, color: muted, callback: function (v) {{ return hm(v); }} }}, grid: {{ display: false }} }},
+        y: {{ suggestedMin: Math.floor((Math.min.apply(null, ys) - 300) / 500) * 500,
+              suggestedMax: Math.ceil((Math.max.apply(null, ys) + 300) / 500) * 500,
+              ticks: {{ stepSize: 500, color: muted, callback: function (v) {{ return v.toLocaleString(); }} }}, grid: {{ color: grid }} }}
+      }} }},
+    plugins: [band]
+  }});
+}})();
+</script>"""
+
+
 
 
 def day_review(obs, now, up, evening, rnet, word, model, fc_today, fc_pair, entries) -> dict:
@@ -1423,22 +1469,20 @@ def day_review(obs, now, up, evening, rnet, word, model, fc_today, fc_pair, entr
         up_html = "No clear upslope today"
         said.append("No clear upslope today.")
 
-    hist = safely(cloud_sun_history, obs, now, up, end) or []
-    fc_sun = fc_today["sun"] if fc_today is not None else None
-    fc_bits = ([f"forecast base {am_pm(fc_pair)} ft at 11:00 → 14:00"] if fc_pair and fc_pair[0] is not None else []) + \
-              ([f"GFS sun {pct(fc_sun)} for 10:00–14:00"] if fc_sun is not None and not pd.isna(fc_sun) else [])
-    if hist:
-        hist_html = (history_table(hist) + '<div class="sub">Two-hour blocks. Sun: lower Kula slope '
-                     "(Kula Ag, Keokea); base derived from the stations, during the upslope only"
-                     + ("; " + ", ".join(fc_bits) if fc_bits else "") + "</div>")
-        suns = [x for _, x, _ in hist if x is not None]
-        bases = [x for _, _, x in hist if x is not None]
-        if suns:
-            said.append("Sun on the lower slope " + " → ".join(pct(x) for x in suns) + " by two-hour blocks.")
-        if bases:
-            said.append("Cloudbase about " + " → ".join(ft(x) for x in bases) + " ft.")
-    else:
-        hist_html = "Unavailable"
+    chart_html = "Not derived<div class=\"sub\">No upslope, so no slope air to derive it from</div>"
+    if up is not None and len(obs):
+        got = safely(base_chart, obs, now, up, end)
+        if got and got[1]:
+            chart, derived, forecast = got
+            dv = [v for _, v in derived]
+            lo_m, hi_m = up.hour * 60 + up.minute, (end or obs.observed.max()).hour * 60 + (end or obs.observed.max()).minute
+            fv = [v for m, v in forecast if lo_m <= m <= hi_m]
+            said.append(f"Cloudbase held {ft(round(min(dv), -2))}–{ft(round(max(dv), -2))} ft"
+                        + (f"; the forecast had {ft(round(min(fv), -2))}–{ft(round(max(fv), -2))}."
+                           if fv else "."))
+            chart_html = (f'<span class="num">{ft(round(min(dv), -2))}–{ft(round(max(dv), -2))} ft</span>'
+                          '<div class="sub">Derived from the stations during the upslope; the chart above '
+                          'sets it against the forecast</div>')
 
     ld = line_day(entries)
     if ld:
@@ -1458,7 +1502,8 @@ def day_review(obs, now, up, evening, rnet, word, model, fc_today, fc_pair, entr
                  if lw else "Unavailable")
 
     return {"date": f"{now:%Y-%m-%d}", "word": word, "summary": " ".join(said),
-            "therm": therm, "hist": hist_html, "line": line_html,
+            "therm": therm, "base": chart_html, "chart": chart if up is not None and len(obs) and got and got[1] else "",
+            "line": line_html,
             "up": up_html, "wind": wind_html}
 
 
@@ -1745,13 +1790,15 @@ def build() -> str:
         today_kind = "The day in review"
         today_title = f"{'Today' if rd == now.date() else 'Yesterday'} · {rd:%a %d %b}"
         today_chip = rating_chip(review["word"])
-        summary_html = f'<p class="summary">{esc(review["summary"])}</p>'
+        summary_html = f'<p class="summary">{esc(review["summary"])}</p>' + review.get("chart", "")
         therm_html, line_html = review["therm"], review["line"]
         up_html, wind_html = review["up"], review["wind"]
-        base_label, base_html, ceil_html = "Cloud and sun", review.get("hist", "Unavailable"), ""
+        base_label, base_html, ceil_html = "Cloudbase", review.get("base", "Unavailable"), ""
         sun_html = None                                   # in the history
 
     # tomorrow + outlook
+    if before_up:
+        safely(save_morning_forecast, now)
     # The next flying day: today until its upslope begins, then tomorrow.
     tom = now.date() + timedelta(days=0 if before_up else 1)
     t_html = "<p>Forecast unavailable.</p>"
@@ -1781,7 +1828,12 @@ def build() -> str:
                      f'up the windward slope and pushed over the summit ridge on an easterly, from '
                      f'about {push:02d}:00. If it comes, Kula can lose its sun by mid-afternoon. '
                      f'Look for early clouds at the summit ridge.</div>' if push else "")
-        t_html = (f'<p class="summary">{esc(said_t)}</p>' if said_t else "") + push_html + f"""<dl>
+        # The forecast base through the day, charted like the review (Sam).
+        fc_hours = safely(forecast_base_hours, tom) or {}
+        fc_chart = (chart_html("fcchart", [], [[h * 60, v] for h, v in sorted(fc_hours.items())], None,
+                               "Forecast cloudbase by hour, +400 ft (the forecast air runs cool).")
+                    if fc_hours else "")
+        t_html = (f'<p class="summary">{esc(said_t)}</p>' if said_t else "") + push_html + fc_chart + f"""<dl>
         <dt>Thermals</dt><dd>Probably {esc(strength_word(r['thermal']).lower())}<div class="sub">thermal.py on the forecast air (+3 F, it runs cool); within one category of the measured rating on every test day</div></dd>
         <dt>Cloudbase</dt><dd><span class="num">{am_pm(hours.get(tom))} ft</span><div class="sub">11:00 → 14:00</div></dd>
         <dt>Sun</dt><dd><span class="num">{pct(r['sun'])}</span> of clear sky, 10:00–14:00 (GFS)<div class="sub">The model can't see the slope's own cumulus: when it says 90% or more, Kula has measured about 80%. Good flying days measure about 80%, overcast about 50%, socked in 20%.</div></dd>
