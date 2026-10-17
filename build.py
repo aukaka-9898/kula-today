@@ -1592,6 +1592,19 @@ def station_forecast_lcl(day) -> dict:
     return out
 
 
+def morning_inversions(now: datetime) -> dict:
+    """{hour: [base_ft, top_ft]} 09-15 from the morning's cap-model sounding
+    (Kahului), for the capped-day log (Sam, 2026-10-17: "get a few more capped
+    days logged")."""
+    prof = sd.profiles(sd.fetch(cap_model(now)))
+    out = {}
+    for h in range(9, 16):
+        k = (pd.Timestamp(now.date()) + pd.Timedelta(hours=h + 10)).tz_localize("UTC")
+        if k in prof and (inv := sd.inversion(prof[k])):
+            out[h] = [round(inv["base_ft"]), round(inv["top_ft"])]
+    return out
+
+
 def save_morning_forecast(now: datetime) -> None:
     hours = forecast_base_hours(now.date())
     if not hours:
@@ -1606,7 +1619,8 @@ def save_morning_forecast(now: datetime) -> None:
         "sun": None if (fs := safely(cv.sun_forecast)) is None or now.date() not in fs.index
                else float(fs.loc[now.date()]),
         "summit_push": safely(summit_push, rrfs, now.date()) if rrfs else None,
-        "stations": safely(station_forecast_lcl, now.date())}), encoding="utf-8")
+        "stations": safely(station_forecast_lcl, now.date()),
+        "inv": safely(morning_inversions, now)}), encoding="utf-8")
 
 
 # -- the automated review (Sam, 2026-10-16: "Can your review be automated?") --
@@ -1741,6 +1755,11 @@ def write_scorecard(obs, now, up, end, word, entries) -> None:
         sun = {h: g.w.sum() / g.clear.sum() for h, g in sx.groupby(sx.t.dt.hour) if g.clear.sum() > 50}
     except Exception:
         pass
+    try:
+        _dl = json.loads(DERIVED_LOG.read_text(encoding="utf-8"))
+        shown = {int(k): v[0] for k, v in _dl.get("points", {}).items()} if _dl.get("date") == d else {}
+    except Exception:
+        shown = {}
     hrs = []
     for h in range(9, 16):
         fb = mf.get("hours", {}).get(str(h))
@@ -1748,6 +1767,13 @@ def write_scorecard(obs, now, up, end, word, entries) -> None:
                     "fc_base": fb, "fc_base_raw": None if fb is None else fb - FORECAST_BASE_LOW_FT,
                     "derived": None if h not in derived.index else round(float(derived[h]), -1),
                     "derived_top2": None if h not in top2.index else round(float(top2[h]), -1),
+                    "derived_shown": shown.get(h * 60),
+                    "inv_base": (mf.get("inv") or {}).get(str(h), [None, None])[0],
+                    "inv_top": (mf.get("inv") or {}).get(str(h), [None, None])[1],
+                    "fc_capped": (None if fb is None else
+                                  min(fb, (mf.get("inv") or {}).get(str(h), [None, 1e9])[1])
+                                  if (mf.get("inv") or {}).get(str(h)) and fb >= (mf.get("inv") or {})[str(h)][0]
+                                  else fb),
                     "fc_temp": mf.get("temp", {}).get(str(h)), "temp": None if h not in ka_t.index else round(float(ka_t[h]), 1),
                     "fc_dew": mf.get("dew", {}).get(str(h)), "dew": None if h not in ka_td.index else round(float(ka_td[h]), 1),
                     "sun": None if h not in sun else round(float(sun[h]), 2)})
