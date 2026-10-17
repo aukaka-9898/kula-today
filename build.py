@@ -1622,6 +1622,14 @@ def write_scorecard(obs, now, up, end, word, entries) -> None:
     core["h"] = core.observed.dt.hour
     derived = (core.groupby(["h", "station_id"]).lcl_ft.mean().groupby("h").median()
                if len(core) else pd.Series(dtype=float))
+    # Logged for later (Sam, 2026-10-17): the mean of the two highest core
+    # stations reporting each hour -- best of five methods against his 13
+    # sightings (330 ft typical miss vs the median's 395), not yet the page's.
+    if len(core):
+        hs = core.groupby(["h", "station_id"]).agg(lcl=("lcl_ft", "mean"), elev=("elev_ft", "first")).reset_index()
+        top2 = hs.sort_values("elev", ascending=False).groupby("h").head(2).groupby("h").lcl.mean()
+    else:
+        top2 = pd.Series(dtype=float)
     ka = obs[(obs.station_id == "001HI") & (obs.observed.dt.date == day.date())]
     ka_t = ka.groupby(ka.observed.dt.hour).temp_f.mean()
     ka_td = ka.groupby(ka.observed.dt.hour).dew_f.mean()
@@ -1640,6 +1648,7 @@ def write_scorecard(obs, now, up, end, word, entries) -> None:
         hrs.append({"date": d, "hour": h,
                     "fc_base": fb, "fc_base_raw": None if fb is None else fb - FORECAST_BASE_LOW_FT,
                     "derived": None if h not in derived.index else round(float(derived[h]), -1),
+                    "derived_top2": None if h not in top2.index else round(float(top2[h]), -1),
                     "fc_temp": mf.get("temp", {}).get(str(h)), "temp": None if h not in ka_t.index else round(float(ka_t[h]), 1),
                     "fc_dew": mf.get("dew", {}).get(str(h)), "dew": None if h not in ka_td.index else round(float(ka_td[h]), 1),
                     "sun": None if h not in sun else round(float(sun[h]), 2)})
