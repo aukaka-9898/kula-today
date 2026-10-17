@@ -1043,9 +1043,25 @@ def best_split(lad: pd.DataFrame) -> dict:
     if len(f) < 2:
         return {"found": False, "why": "too few ladder stations reporting"}
     side = f.side.tolist()
+    # A shear reading counts half a vote for the side its direction is
+    # nearer (Sam, 2026-10-17): Pulehu Rd 2 NNE 17 and Olinda Rd N 10 sat just
+    # outside the trades sector, counted for nothing, and with Makawao Ave and
+    # Kula 2 missing a tie sent the line 2.5 mi north of Red Hill, where the
+    # webcam had it. Gaps: 330-20 splits at 355, 140-180 at 160.
+    def lean(d):
+        if d is None or pd.isna(d):
+            return None
+        d = d % 360
+        if d >= 330 or d < 20:
+            return "trades" if (d >= 355 or d < 20) else "upslope"
+        if 140 < d < 180:
+            return "trades" if d < 160 else "upslope"
+        return None
+    leans = [lean(d) if sd == "shear" else None for d, sd in zip(f.wind_dir, side)]
     best, k_best = -1, None
     for k in range(1, len(f)):
-        score = side[:k].count("trades") + side[k:].count("upslope")
+        score = (side[:k].count("trades") + side[k:].count("upslope")
+                 + 0.5 * leans[:k].count("trades") + 0.5 * leans[k:].count("upslope"))
         if score > best:
             best, k_best = score, k
     if "trades" not in side[:k_best] or "upslope" not in side[k_best:]:
