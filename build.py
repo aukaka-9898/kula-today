@@ -1390,13 +1390,13 @@ def forecast_base_hours(day) -> dict:
 
 def forecast_cu_end(day):
     """The hour the forecast thermals stop working for the rest of the day
-    (no cumulus from then), or None if they run to 17:00."""
+    (no cumulus from then), or None if they run to 16:00."""
     part = cv.slope_parcel()
     part = part[part.day == day]
     got = th.assess(part, RELEASE_FT, window=(8, 17))
     on = got.index[got.working.astype(bool)] if "working" in got else got.index
-    # Only when at least an hour is left before 17:00, or the band is a sliver.
-    return int(on.max()) + 1 if len(on) and on.max() < 16 else None
+    # Only when at least an hour is left before 16:00, where the charts end.
+    return int(on.max()) + 1 if len(on) and on.max() < 15 else None
 
 
 def save_morning_forecast(now: datetime) -> None:
@@ -1438,10 +1438,15 @@ def chart_html(cid, derived, forecast, span, note, nocu=None) -> str:
     One fixed scale, 3,500-7,000 ft, for every chart (Sam): the station
     estimate's 15-minute wobble reads as wobble, and days compare at a
     glance. It stretches only when a value falls outside."""
+    # Every chart shows 09:00-16:00 (Sam): the flying day, nothing outside it.
+    clip = lambda pts: [q for q in pts if 540 <= q[0] <= 960]
+    derived, forecast = clip(derived), clip(forecast)
+    if span:
+        span = [max(span[0], 540), min(span[1], 960)]
     data = json.dumps({"derived": derived, "forecast": forecast, "up": span, "nocu": nocu})
     legend = ("" if not derived else
               '<span><span style="display:inline-block;width:16px;height:2px;background:#2a78d6;vertical-align:middle"></span> Derived (stations)</span>'
-              '<span><span style="display:inline-block;width:12px;height:10px;background:rgba(137,135,129,.18);vertical-align:middle"></span> Upslope</span>')
+              '')
     return f"""<div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted,#6b6b66);margin:2px 0 4px">
 <span><span style="display:inline-block;width:16px;border-top:2px dashed #eb6834;vertical-align:middle"></span> Forecast</span>
 {legend}</div>
@@ -1461,8 +1466,7 @@ def chart_html(cid, derived, forecast, span, note, nocu=None) -> str:
     g.fillRect(x.getPixelForValue(d.up[0]), a.top, x.getPixelForValue(d.up[1]) - x.getPixelForValue(d.up[0]), a.bottom - a.top); g.restore(); }} }};
   var hm = function (m) {{ return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); }};
   var ys = d.derived.concat(d.forecast).map(function (a) {{ return a[1]; }});
-  var ms = d.derived.concat(d.forecast).map(function (a) {{ return a[0]; }}).concat(d.nocu || []);
-  var xs = [Math.floor(Math.min.apply(null, ms) / 60) * 60, Math.ceil(Math.max.apply(null, ms) / 60) * 60];
+  var xs = [540, 960];
   new Chart(document.getElementById('{cid}'), {{
     type: 'line',
     data: {{ datasets: [
@@ -1479,7 +1483,7 @@ def chart_html(cid, derived, forecast, span, note, nocu=None) -> str:
               max: Math.max(7000, Math.ceil(Math.max.apply(null, ys) / 500) * 500),
               ticks: {{ stepSize: 500, color: muted, callback: function (v) {{ return v.toLocaleString(); }} }}, grid: {{ color: grid }} }}
       }} }},
-    plugins: [band, nocu]
+    plugins: [nocu]
   }});
 }})();
 </script>"""
@@ -1884,7 +1888,7 @@ def build() -> str:
         fc_hours = safely(forecast_base_hours, tom) or {}
         cu_end = safely(forecast_cu_end, tom)
         fc_chart = (chart_html("fcchart", [], [[h * 60, v] for h, v in sorted(fc_hours.items())], None,
-                               "", nocu=[cu_end * 60, 17 * 60] if cu_end else None)
+                               "", nocu=[cu_end * 60, 16 * 60] if cu_end else None)
                     if fc_hours else "")
         t_html = (f'<p class="summary">{esc(said_t)}</p>' if said_t else "") + push_html + fc_chart + f"""<dl>
         <dt>Thermals</dt><dd>Probably {esc(strength_word(r['thermal']).lower())}<div class="sub">thermal.py on the forecast air (+3 F, it runs cool); within one category of the measured rating on every test day</div></dd>
