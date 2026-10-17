@@ -1027,6 +1027,15 @@ def best_split(lad: pd.DataFrame) -> dict:
     reached Piiholo and Pulehu (Sam: "Contradiction").
     """
     f = lad.sort_values("lat", ascending=False).reset_index(drop=True)
+    # A rung whose newest reading lags the ladder's typical one by 30 min or
+    # more sits out (Sam, option 2): at 17:07 on 2026-10-16 Lower Kimo Dr's
+    # 16:10 trades and a lone stale Waihou reading outvoted Red Hill's fresh
+    # upslope and put the line at Omaopio. Measured from the median, not the
+    # freshest: api.weather.gov runs ~50 min behind the Mesonet and FAA, so
+    # "45 min behind the freshest" would have dropped most MECO and coast rungs.
+    if len(f) >= 4:
+        typical = f.observed_local.median()
+        f = f[f.observed_local > typical - pd.Timedelta("30min")].reset_index(drop=True)
     if len(f) < 2:
         return {"found": False, "why": "too few ladder stations reporting"}
     side = f.side.tolist()
