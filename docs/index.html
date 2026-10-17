@@ -85,7 +85,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><div class="tag">Kula soaring briefing</div><h1>Kula Today</h1></div>
-    <div class="date">Updated Sat 17 Oct 2026 · 08:25 HST</div>
+    <div class="date">Updated Sat 17 Oct 2026 · 08:31 HST</div>
   </header>
 
   <div>
@@ -155,7 +155,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
       <div class="kind">Forecast</div>
       <div class="head"><h2 id="t-tomorrow">Today · Sat 17 Oct</h2><span class="chip good">Moderate</span></div>
       <p class="summary">The model sees little cloud over Kula; the slope&#x27;s own cumulus are too small for it to show, so expect some. A base lowering after midday. Thermals probably moderate. The Kahului inversion is below the expected base, so probably no cap. Trades from the ENE should put the shear line at Pukalani.</p><div style="font-weight:600;font-size:.9rem;margin:10px 0 2px">Forecast cloudbase, Sat 17 Oct</div><div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted,#6b6b66);margin:2px 0 4px">
-<span><span style="display:inline-block;width:16px;border-top:2px dashed #eb6834;vertical-align:middle"></span> Forecast, ± 700 ft</span>
+<span><span style="display:inline-block;width:16px;border-top:2px dashed #eb6834;vertical-align:middle"></span> Forecast</span>
 </div>
 <div style="position:relative;width:100%;min-width:0;height:220px"><canvas id="fcchart" role="img" aria-label="Derived cloudbase against the forecast through the day"></canvas></div>
 
@@ -172,22 +172,18 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
     g.save(); g.fillStyle = 'rgba(137,135,129,0.14)';
     g.fillRect(x.getPixelForValue(d.up[0]), a.top, x.getPixelForValue(d.up[1]) - x.getPixelForValue(d.up[0]), a.bottom - a.top); g.restore(); } };
   var hm = function (m) { return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); };
-  var BAND = 700;
   var ys = d.derived.map(function (a) { return a[1]; }).concat(d.forecast.map(function (a) { return a[1]; }));
   var xs = [540, 960];
   new Chart(document.getElementById('fcchart'), {
     type: 'line',
     data: { datasets: [
       { label: 'Derived', data: d.derived.map(pt), borderColor: '#2a78d6', borderWidth: 2, pointRadius: 0, tension: 0.3 },
-      { label: 'band+', data: d.forecast.map(function (a) { return {x: a[0], y: a[1] + BAND}; }), borderWidth: 0, pointRadius: 0, tension: 0.3, fill: '+1', backgroundColor: 'rgba(235,104,52,0.13)' },
-      { label: 'band-', data: d.forecast.map(function (a) { return {x: a[0], y: a[1] - BAND}; }), borderWidth: 0, pointRadius: 0, tension: 0.3, fill: false },
       { label: 'Forecast', data: d.forecast.map(pt), borderColor: '#eb6834', borderWidth: 2, borderDash: [6, 4], pointRadius: 3, pointBackgroundColor: '#eb6834', tension: 0.3 }
     ] },
     options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'nearest', axis: 'x', intersect: false },
       plugins: { legend: { display: false }, tooltip: { callbacks: {
         title: function (i) { return hm(i[0].parsed.x); },
-        label: function (i) { return i.dataset.label + ': ' + Math.round(i.parsed.y).toLocaleString() + ' ft'; } },
-        filter: function (i) { return i.dataset.label.indexOf('band') < 0; } } },
+        label: function (i) { return i.dataset.label + ': ' + Math.round(i.parsed.y).toLocaleString() + ' ft'; } } } },
       scales: {
         x: { type: 'linear', min: xs[0], max: xs[1], ticks: { stepSize: 60, color: muted, callback: function (v) { return hm(v); } }, grid: { display: false } },
         y: { min: Math.min(3500, Math.floor(Math.min.apply(null, ys) / 500) * 500),
