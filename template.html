@@ -197,5 +197,27 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 </script>
 <style>.stn{font:600 11px/1.2 var(--body);padding:1px 4px;background:rgba(255,255,255,.85);border:0;box-shadow:none;color:#17242f}.stn:before{display:none}</style>
 <!-- build problems: $diag -->
+<script>
+/* Catch up with a new build within ~2 minutes (Sam, 2026-10-17: "the page
+   does not seem to autoupdate"). stations.json's "made" is the build time;
+   when it differs from this page's, reload with a fresh address so the
+   browser's 10-minute cached copy is bypassed. The 15-minute refresh stays
+   as a backstop. */
+(function () {
+  var built = "$built";
+  function check() {
+    fetch("stations.json?" + Date.now(), {cache: "no-store"})
+      .then(function (r) { return r.json(); })
+      .then(function (j) {
+        if (j && j.built && j.built > built) {     /* only a NEWER build reloads */
+          location.replace(location.pathname + "?v=" + Date.now());
+        }
+      })
+      .catch(function () {});
+  }
+  setInterval(check, 120000);
+  document.addEventListener("visibilitychange", function () { if (!document.hidden) { check(); } });
+})();
+</script>
 </body>
 </html>

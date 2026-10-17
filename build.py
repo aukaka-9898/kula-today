@@ -1475,7 +1475,8 @@ def write_station_map(obs: pd.DataFrame, lad: pd.DataFrame, now: datetime, pos=N
         if west:
             west_end = line["mid"] - 0.006          # the template's plain west end
             line["west_lat"] = min(20.7953 - 0.005, west_end - 0.005)   # Sam: less bend
-    STATIONS_FILE.write_text(json.dumps({"made": f"{now:%H:%M}", "stations": rows, "line": line}),
+    STATIONS_FILE.write_text(json.dumps({"made": f"{now:%H:%M}", "built": f"{now:%Y-%m-%dT%H:%M}",
+                                         "stations": rows, "line": line}),
                              encoding="utf-8")
 
 
@@ -2576,6 +2577,7 @@ def build() -> str:
 
     return PAGE.substitute(
         updated=f"{now:%a %d %b %Y · %H:%M} HST", today_kind=today_kind, today_title=today_title,
+        built=f"{now:%Y-%m-%dT%H:%M}",
         today_chip=today_chip, summary=summary_html, base_label=base_label,
         therm=therm_html, base=base_html, up=up_html, line=line_html,
         sun_row=(f"<dt>Sun</dt><dd>{sun_html}</dd>" if sun_html is not None else ""),
