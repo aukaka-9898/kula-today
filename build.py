@@ -459,6 +459,12 @@ def summary(obs: pd.DataFrame, ladder, up, verdict, pos, west, now: datetime,
             d = cur - ago
             trend = ("rising" if d >= 300 else "edging up" if d >= 150 else
                      "lowering" if d <= -300 else "edging down" if d <= -150 else "steady")
+            # Rose over the hour but not in the last 30 min: levelling off, so
+            # the summary doesn't say "still rising" beside a P4 "base held"
+            # (Sam, 2026-10-17: "contradiction").
+            half = _base_at(core, t - pd.Timedelta("30min"))
+            if half is not None and abs(d) >= 150 and abs(cur - half) < 150:
+                trend = "levelling off"
             if d <= -300:
                 worse.append("base lowering")
             elif d >= 300:
@@ -469,7 +475,8 @@ def summary(obs: pd.DataFrame, ladder, up, verdict, pos, west, now: datetime,
             if t.hour >= 12 and morning and max(morning) - cur >= 700:
                 out.append(f"Cloudbase has come down from its late-morning high and is {trend} now.")
             elif t.hour < 12 and morning and cur >= max(morning) - 200 and d >= 150:
-                out.append(f"Cloudbase is at its highest of the day and still {trend}.")
+                out.append(f"Cloudbase is at its highest of the day and "
+                           f"{'levelling off' if trend == 'levelling off' else 'still ' + trend}.")
             else:
                 out.append(f"Cloudbase is {trend}.")
 
