@@ -1495,6 +1495,53 @@ SCORE_HOURS = HERE / "docs" / "scorecard_hours.csv"
 SCORE_DAYS = HERE / "docs" / "scorecard_days.csv"
 PATTERN_LOG = HERE / "docs" / "patterns_log.json"
 
+# The FAA cameras' image analytics -- visibility and sky cover every 10 min --
+# as a CHECK on the stations, not shown on the page (Sam, 2026-10-17: "Use it
+# as a check on other sources"). Puunianiau (6,854 ft) in cloud means the
+# deck's top reaches it, against Park HQ's humidity a mile away; Red Hill
+# (2,819 ft) in cloud means the base is down to it, against the derived base.
+# The FAA keeps ~6 h, so every build saves what it sees.
+CAMERA_LOG = HERE / "docs" / "camera_log.csv"
+CAMERAS = {"Puunianiau": (850, 6854), "Red Hill": (931, 2819)}
+CAM_IN_CLOUD_MI = 3          # visibility below this = camera in cloud
+CAM_MIN_CONFIDENCE = 55      # the software's own confidence, per cent
+
+
+def log_cameras(now: datetime) -> None:
+    rows = []
+    for name, (sid, elev) in CAMERAS.items():
+        page = f"https://weathercams.faa.gov/cameras/state/HI/cameraSite/{sid}/summary"
+        r = requests.get(KEKOA_URL, params={"siteId": sid}, timeout=30,
+                         headers={**cv.HEAD, "Referer": page})
+        r.raise_for_status()
+        for v in (r.json().get("payload") or {}).get("site", {}).get("visibilities") or []:
+            if v.get("visibilityStatuteMi") is None:
+                continue
+            t = pd.Timestamp(v["processedTime"]).tz_convert(HST).tz_localize(None)
+            sc = v.get("skyCondition") or {}
+            rows.append({"time": f"{t:%Y-%m-%d %H:%M}", "camera": name, "elev_ft": elev,
+                         "vis_mi": v["visibilityStatuteMi"], "confidence": v.get("confidence"),
+                         "cloud_pct": sc.get("cloudPercentage")})
+    if not rows:
+        return
+    old = pd.read_csv(CAMERA_LOG) if CAMERA_LOG.exists() else pd.DataFrame()
+    allr = pd.concat([old, pd.DataFrame(rows)], ignore_index=True).drop_duplicates(["time", "camera"], keep="last")
+    cut = f"{now - timedelta(days=60):%Y-%m-%d}"
+    allr[allr.time >= cut].sort_values(["time", "camera"]).to_csv(CAMERA_LOG, index=False)
+
+
+def camera_cloud_minutes(day: str, camera: str):
+    """Minutes, 09:00-16:00, the camera's analytics put it in cloud (None if no data)."""
+    if not CAMERA_LOG.exists():
+        return None
+    c = pd.read_csv(CAMERA_LOG)
+    c = c[(c.camera == camera) & c.time.str.startswith(day)]
+    c = c[(c.time.str[11:16] >= "09:00") & (c.time.str[11:16] < "16:00")]
+    if len(c) < 12:
+        return None
+    ok = c[c.confidence >= CAM_MIN_CONFIDENCE]
+    return int(10 * (ok.vis_mi < CAM_IN_CLOUD_MI).sum())
+
 
 def log_patterns(now: datetime, fired: list) -> dict:
     """{id: first HH:MM it fired today}, kept for the day's scorecard."""
@@ -1586,12 +1633,19 @@ def write_scorecard(obs, now, up, end, word, entries) -> None:
     except Exception:
         pass
     dropped = sum(1 for e in entries if e.get("dropped"))
+    ph = obs[(obs.station_id == "002HI") & (obs.observed.dt.date == day.date())
+             & obs.observed.dt.hour.between(9, 15)]
+    ph_cloud = (int(10 * (_rh(ph.temp_f, ph.dew_f) >= 95).groupby(ph.observed.dt.floor("10min")).max().sum())
+                if len(ph) else None)
+    rh_cloud = int(60 * sum(1 for r in hrs if r["derived"] is not None and r["derived"] <= 3300))
     _replace_day(SCORE_DAYS, [{
         "date": d, "word": word, "fc_morning_made": mf.get("made"), "fc_sun": mf.get("sun"),
         "summit_alert": mf.get("summit_push"), "intrusion": intrusion,
         "upslope": None if up is None else f"{up:%H:%M}", "upslope_end": None if end is None else f"{end:%H:%M}",
         "line_updates": len(entries), "line_updates_with_dropped": dropped,
-        "patterns": " ".join(f"{k}@{v}" for k, v in sorted(_patterns_today(d).items()))}], d)
+        "patterns": " ".join(f"{k}@{v}" for k, v in sorted(_patterns_today(d).items())),
+        "cam_puunianiau_cloud_min": camera_cloud_minutes(d, "Puunianiau"), "parkhq_cloud_min": ph_cloud,
+        "cam_redhill_cloud_min": camera_cloud_minutes(d, "Red Hill"), "derived_low_min": rh_cloud}], d)
 
 
 def _patterns_today(d: str) -> dict:
@@ -1638,6 +1692,17 @@ def review_summary(now: datetime) -> None:
             if share > 0.3:
                 flags.append(f"Shear line: a stale station sat out of {share:.0%} of updates over the last week "
                              "(the rule under review).")
+    if SCORE_DAYS.exists():
+        dd = pd.read_csv(SCORE_DAYS, dtype={"date": str}).tail(14)
+        for cam, stn, what in (("cam_puunianiau_cloud_min", "parkhq_cloud_min", "cloud at the tops (Puunianiau camera vs Park HQ)"),
+                               ("cam_redhill_cloud_min", "derived_low_min", "cloud down to 2,800 ft (Red Hill camera vs derived base)")):
+            if cam in dd and stn in dd:
+                both = dd.dropna(subset=[cam, stn])
+                off = both[(both[cam] - both[stn]).abs() >= 120]
+                stats[f"{cam}_days"] = int(len(both))
+                if len(both) >= 5 and len(off) >= 3:
+                    flags.append(f"Camera check: {what} disagreed by 2 h or more on {len(off)} of {len(both)} days "
+                                 f"({', '.join(off.date.str[5:])}).")
     if SCORE_STATIONS.exists() and SCORE_HOURS.exists():
         sc = pd.read_csv(SCORE_STATIONS, dtype={"date": str}).dropna(subset=["fc_lcl", "lcl"])
         nd = sc.date.nunique()
@@ -2174,6 +2239,7 @@ def build() -> str:
     safely(write_station_map, obs, lad if isinstance(lad, pd.DataFrame) else pd.DataFrame(), now, pos, west)
 
     entries = safely(log_line, now, pos) or []
+    safely(log_cameras, now)
     safely(review_summary, now)
     review, today_kind, today_title = None, f"Measured today · {now:%H:%M} HST", "Today"
     if day_over:
