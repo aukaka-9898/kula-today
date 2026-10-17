@@ -423,6 +423,40 @@ def sun_trend(now: datetime) -> float | None:
     return None if late is None or early is None else late - early
 
 
+def _stations_at(core: pd.DataFrame, t) -> int:
+    c = core[(core.observed <= t) & (core.observed > t - pd.Timedelta("20min"))]
+    return int(c.station_id.nunique())
+
+
+# The chart's derived points, kept through the day (Sam, 2026-10-17): an
+# update that can't reach the Mesonet falls back to api.weather.gov, ~50 min
+# late, and a point that needed the Mesonet stations vanished (10:45 that
+# day). A point is only ever replaced by one built from more stations.
+DERIVED_LOG = HERE / "docs" / "derived_log.json"
+
+
+def _kept_points(day, fresh: list) -> list:
+    """[[minute, ft]] for the chart: today's saved points merged with this
+    update's (t, base, n_stations), keeping the most stations per point."""
+    d = f"{day:%Y-%m-%d}"
+    try:
+        log = json.loads(DERIVED_LOG.read_text(encoding="utf-8"))
+        pts = log.get("points", {}) if log.get("date") == d else {}
+    except Exception:
+        pts = {}
+    for t, v, n in fresh:
+        if v is None:
+            continue
+        k = str(t.hour * 60 + t.minute)
+        if k not in pts or n >= pts[k][1]:
+            pts[k] = [round(v, -1), n]
+    try:
+        DERIVED_LOG.write_text(json.dumps({"date": d, "points": pts}), encoding="utf-8")
+    except Exception:
+        pass
+    return [[int(k), v] for k, (v, n) in sorted(pts.items(), key=lambda kv: int(kv[0]))]
+
+
 def _base_at(core: pd.DataFrame, t) -> float | None:
     """Median of each core station's latest LCL at t, readings up to 20 min old.
 
@@ -1817,9 +1851,8 @@ def base_chart(obs, now, up, end, cid="basechart", title="Cloudbase, derived vs 
     day = now.replace(tzinfo=None, hour=0, minute=0, second=0, microsecond=0)
     core = _core(obs)
     stop = end if end is not None else obs.observed.max()
-    derived = [[t.hour * 60 + t.minute, round(v, -1)]
-               for t in pd.date_range(up.ceil("15min"), stop, freq="15min")
-               if (v := _base_at(core, t)) is not None]
+    derived = _kept_points(day, [(t, _base_at(core, t), _stations_at(core, t))
+                                 for t in pd.date_range(up.ceil("15min"), stop, freq="15min")])
     src = "that morning"
     try:
         saved = json.loads(MORNING_BASE_FILE.read_text(encoding="utf-8"))
