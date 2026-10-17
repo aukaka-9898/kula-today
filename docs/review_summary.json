@@ -1,14 +1,19 @@
 {
- "made": "2026-10-16 20:38",
+ "made": "2026-10-16 20:40",
  "flags": [
-  "Forecast base has run +517 ft against the derived base over 28 days (the +400 ft correction included; without it +117)."
+  "Forecast base has run +505 ft against the derived base over 29 days (the +400 ft correction included; without it +105)."
  ],
  "stats": {
-  "base_days": 28,
-  "base_mean": 517,
-  "base_raw_mean": 117,
-  "base_sd": 774,
-  "base_morning": 557,
-  "base_afternoon": 508
+  "base_days": 29,
+  "base_mean": 505,
+  "base_raw_mean": 105,
+  "base_sd": 776,
+  "base_morning": 573,
+  "base_afternoon": 471,
+  "alert_days": 0,
+  "alert_hits": 0,
+  "intrusions_missed": 0,
+  "line_dropped_share_7d": 0.0,
+  "station_days": 31
  }
 }
