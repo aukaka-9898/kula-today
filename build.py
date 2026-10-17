@@ -2020,7 +2020,20 @@ def build() -> str:
     # before it the slope stations read the night's drainage, which the ladder
     # took for trades (07:55 on 2026-10-14 put the line "north of Pukalani").
     line_on = up is not None and not (evening and evening[0] in ("over", "drain"))
-    if not line_on:
+    # Before the upslope the measured line is shown only when the south side
+    # already reads upslope -- at least two rungs south of the line, Kula Ag
+    # among them (Sam, 2026-10-17: trades north of Red Hill, faint WSW-WNW
+    # south of it). On a drainage morning the slope reads easterly, nothing
+    # reads upslope, and the forecast line stays (07:55 on 2026-10-14).
+    early_line = False
+    if (not line_on and up is None and now.hour >= 6 and pos and pos.get("found")
+            and isinstance(lad, pd.DataFrame) and len(lad)):
+        south = lad[lad.lat <= pos["south_lat"]]
+        ups = south[south.side == "upslope"]
+        early_line = len(ups) >= 2 and "Kula Ag" in set(ups.name)
+    if early_line:
+        line_html = line_html.replace("</div>", " (before the upslope)</div>", 1)
+    if not line_on and not early_line:
         pos, west = None, None
         line_html = 'Done for the day<div class="sub">The upslope is over</div>'
         if up is None:
