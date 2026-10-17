@@ -85,7 +85,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><div class="tag">Kula soaring briefing</div><h1>Kula Today</h1></div>
-    <div class="date">Updated Sat 17 Oct 2026 · 09:52 HST</div>
+    <div class="date">Updated Sat 17 Oct 2026 · 10:06 HST</div>
   </header>
 
   <div>
@@ -95,16 +95,16 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 
   <div class="cols">
     <section class="panel today" aria-labelledby="t-today">
-      <div class="kind">Measured today · 09:52 HST</div>
-      <div class="head"><h2 id="t-today">Today</h2><span class="chip good">Moderate</span></div>
-      <p class="summary">Cloudbase is edging up. Kula Ag had about half sun over the last hour; the cloud tops out between Kula 1 and Kamehamenui 1, with sun above it. Upslope has run since about 08:15 at a light 2 mph. Trades are holding the shear line crossing Kula Highway between Pukalani and Kamehameha Schools, with no trade air on the lower west slope.</p><div class="watch"><div class="kind">What to watch</div><ul><li>Moisture under a low lid (Kahului inversion 4,537–5,009 ft): risk of cumulus spreading into a flat deck at the lid by midday. <span class="pid">P4 · Deck under the lid</span></li><li>Little room to climb: cloud about 400 ft above Kula Ag (3,162 ft). <span class="pid">P5 · No headroom</span></li></ul></div><div style="font-weight:600;font-size:.9rem;margin:10px 0 2px">Cloudbase so far, derived vs forecast</div><div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted,#6b6b66);margin:2px 0 4px">
+      <div class="kind">Measured today · 10:06 HST</div>
+      <div class="head"><h2 id="t-today">Today</h2></div>
+      <p class="summary">Cloudbase is at its highest of the day and still rising. Kula Ag had mostly sun over the last hour; the cloud tops out between Keokea and Kamehamenui 1, with sun above it. Upslope has run since about 08:15 at a light 2 mph. Trades are holding the shear line crossing Kula Highway near Omaopio, with no trade air on the lower west slope.</p><div class="watch"><div class="kind">What to watch</div><ul><li>Moisture under a low lid (Kahului inversion 4,537–5,009 ft): risk of cumulus spreading into a flat deck at the lid by midday. <span class="pid">P4 · Deck under the lid</span></li><li>Little room to climb: cloud about 600 ft above Kula Ag (3,162 ft). <span class="pid">P5 · No headroom</span></li></ul></div><div style="font-weight:600;font-size:.9rem;margin:10px 0 2px">Cloudbase so far, derived vs forecast</div><div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted,#6b6b66);margin:2px 0 4px">
 <span><span style="display:inline-block;width:16px;border-top:2px dashed #eb6834;vertical-align:middle"></span> Forecast</span>
 <span><span style="display:inline-block;width:16px;height:2px;background:#2a78d6;vertical-align:middle"></span> Derived (stations)</span></div>
 <div style="position:relative;width:100%;min-width:0;height:220px"><canvas id="livechart" role="img" aria-label="Derived cloudbase against the forecast through the day"></canvas></div>
 <div class="sub">Derived from the stations every 15 minutes during the upslope; forecast by hour, the 09:07 morning forecast.</div>
 <script>
 (function () {
-  var d = {"derived": [[540, 3350.0], [555, 3250.0], [570, 3520.0]], "forecast": [[540, 4560.0], [600, 5260.0], [660, 5860.0], [720, 5860.0], [780, 5060.0], [840, 4660.0], [900, 4160.0], [960, 4160.0]], "up": [540, 570], "nocu": null}, pt = function (a) { return {x: a[0], y: a[1]}; };
+  var d = {"derived": [[540, 3350.0], [555, 3410.0], [570, 3510.0], [585, 3770.0]], "forecast": [[540, 4560.0], [600, 5260.0], [660, 5860.0], [720, 5860.0], [780, 5060.0], [840, 4660.0], [900, 4160.0], [960, 4160.0]], "up": [540, 585], "nocu": null}, pt = function (a) { return {x: a[0], y: a[1]}; };
   var dark = matchMedia('(prefers-color-scheme: dark)').matches, muted = '#898781', grid = dark ? '#2c2c2a' : '#e1e0d9';
   var nocu = { id: 'nocu', beforeDatasetsDraw: function (c) { if (!d.nocu) return; var x = c.scales.x, a = c.chartArea, g = c.ctx,
     x0 = x.getPixelForValue(d.nocu[0]), x1 = x.getPixelForValue(d.nocu[1]);
@@ -138,10 +138,10 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 })();
 </script>
       <dl>
-        <dt>Thermals</dt><dd>Probably <strong>moderate</strong> (forecast)<div class="sub">thermal.py on the forecast air; measured rating just after 10:00</div></dd>
-        <dt>Derived<br>Cloudbase</dt><dd><span class="num">3,000–4,100 ft</span><div class="sub">Stations disagree; middle about 3,500 ft (11 stations, 09:30)</div></dd>
-        <dt>Sun</dt><dd><span class="num">57%</span> of clear sky, lower Kula slope<div class="sub">Last hour, as of 09:30; average of Kula Ag 65%, Keokea 34%, Pulehu 71%</div></dd>
-        <dt>Shear line</dt><dd>Crossing Kula Highway between Pukalani and Kamehameha Schools<div class="sub">Last hour: trades at Piiholo, upslope at MECO Pulehu Rd 2</div></dd>
+        <dt>Thermals</dt><dd>Unavailable<div class="sub">Kula Ag's readings did not come through this update</div></dd>
+        <dt>Derived<br>Cloudbase</dt><dd><span class="num">3,300–4,600 ft</span><div class="sub">Stations disagree; middle about 3,700 ft (10 stations, 09:45)</div></dd>
+        <dt>Sun</dt><dd><span class="num">62%</span> of clear sky, lower Kula slope<div class="sub">Last hour, as of 09:45; average of Kula Ag 72%, Keokea 32%, Pulehu 82%</div></dd>
+        <dt>Shear line</dt><dd>Crossing Kula Highway near Omaopio<div class="sub">Last hour: trades at MECO Olinda Rd, upslope at Red Hill</div><div class="sub">Trades at the coast: Paia 076° at 22 mph</div></dd>
         <dt>Ceiling</dt><dd>Possible cap near the base<div class="sub">Kahului inversion 4,537–5,009 ft</div></dd>
         <dt>Upslope</dt><dd>On since about <span class="num">08:15</span><div class="sub">Drainage ended about 07:45</div></dd>
         <dt>Wind</dt><dd><span class="num">2 mph</span>, gusts to 7<div class="sub">Lower elevations, 9 stations, last hour</div></dd>
@@ -157,7 +157,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 
 <script>
 (function () {
-  var d = {"derived": [], "forecast": [[540, 5060.0], [600, 5560.0], [660, 5760.0], [720, 5860.0], [780, 5860.0], [840, 5260.0], [900, 4960.0], [960, 5260.0]], "up": null, "nocu": null}, pt = function (a) { return {x: a[0], y: a[1]}; };
+  var d = {"derived": [], "forecast": [[540, 5160.0], [600, 5560.0], [660, 5660.0], [720, 5860.0], [780, 5460.0], [840, 4760.0], [900, 4660.0], [960, 4660.0]], "up": null, "nocu": null}, pt = function (a) { return {x: a[0], y: a[1]}; };
   var dark = matchMedia('(prefers-color-scheme: dark)').matches, muted = '#898781', grid = dark ? '#2c2c2a' : '#e1e0d9';
   var nocu = { id: 'nocu', beforeDatasetsDraw: function (c) { if (!d.nocu) return; var x = c.scales.x, a = c.chartArea, g = c.ctx,
     x0 = x.getPixelForValue(d.nocu[0]), x1 = x.getPixelForValue(d.nocu[1]);
@@ -201,9 +201,9 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
   </div>
 
   <section class="block" aria-labelledby="t-ladder">
-    <h2 id="t-ladder">Sunlight up the slope, as of 09:30</h2>
+    <h2 id="t-ladder">Sunlight up the slope, as of 09:45</h2>
     <p>Share of clear-sky sunlight measured at each station over the last 60 minutes of readings. Stations under cloud read low; stations above its top read full sun.</p>
-    <div class="rows"><div class="row"><span>Summit</span><span class="elev">9,776</span><div class="bar "><span style="width:100%"></span></div><span class="pct">100%</span></div><div class="row"><span>Nene Nest</span><span class="elev">8,500</span><div class="bar "><span style="width:100%"></span></div><span class="pct">100%</span></div><div class="row"><span>Park HQ</span><span class="elev">6,926</span><div class="bar "><span style="width:100%"></span></div><span class="pct">100%</span></div><div class="row"><span>Kamehamenui 1</span><span class="elev">6,601</span><div class="bar "><span style="width:83%"></span></div><span class="pct">83%</span></div><div class="row"><span>Kula 1</span><span class="elev">6,554</span><div class="bar shaded"><span style="width:13%"></span></div><span class="pct">13%</span></div><div class="base"><span class="lbl">Cloudbase now</span><span class="elev">3,500</span><div class="line"></div><span></span></div><div class="row"><span>Kula Ag</span><span class="elev">3,162</span><div class="bar "><span style="width:65%"></span></div><span class="pct">65%</span></div><div class="row"><span>Keokea</span><span class="elev">2,849</span><div class="bar shaded"><span style="width:34%"></span></div><span class="pct">34%</span></div><div class="row"><span>Piiholo</span><span class="elev">2,090</span><div class="bar "><span style="width:66%"></span></div><span class="pct">66%</span></div><div class="row"><span>Pulehu</span><span class="elev">1,402</span><div class="bar "><span style="width:71%"></span></div><span class="pct">71%</span></div></div>
+    <div class="rows"><div class="row"><span>Summit</span><span class="elev">9,776</span><div class="bar "><span style="width:100%"></span></div><span class="pct">100%</span></div><div class="row"><span>Nene Nest</span><span class="elev">8,500</span><div class="bar "><span style="width:100%"></span></div><span class="pct">100%</span></div><div class="row"><span>Park HQ</span><span class="elev">6,926</span><div class="bar "><span style="width:100%"></span></div><span class="pct">100%</span></div><div class="row"><span>Kamehamenui 1</span><span class="elev">6,601</span><div class="bar "><span style="width:93%"></span></div><span class="pct">93%</span></div><div class="row"><span>Kula 1</span><span class="elev">6,554</span><div class="bar "><span style="width:66%"></span></div><span class="pct">66%</span></div><div class="base"><span class="lbl">Cloudbase now</span><span class="elev">3,700</span><div class="line"></div><span></span></div><div class="row"><span>Kula Ag</span><span class="elev">3,162</span><div class="bar "><span style="width:72%"></span></div><span class="pct">72%</span></div><div class="row"><span>Keokea</span><span class="elev">2,849</span><div class="bar shaded"><span style="width:32%"></span></div><span class="pct">32%</span></div><div class="row"><span>Piiholo</span><span class="elev">2,090</span><div class="bar "><span style="width:81%"></span></div><span class="pct">81%</span></div><div class="row"><span>Pulehu</span><span class="elev">1,402</span><div class="bar "><span style="width:82%"></span></div><span class="pct">82%</span></div></div>
   </section>
 
   <section class="block" aria-labelledby="t-week">
