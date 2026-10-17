@@ -27,6 +27,7 @@ Context keys (filled by build.py; any may be None):
                     (best of Kula 1, Kamehamenui 1, Park HQ), last 60 min
   p4_since          when P4 was first confirmed today ("HH:MM")
   inv               Kahului inversion today: {"base_ft", "top_ft"} or None
+                    (no pattern uses it since 2026-10-17)
   summit_push       first hour the summit-cloud forecast holds, or None
   upslope_typical   "HH:MM" for this month
 """
@@ -57,31 +58,25 @@ def _base_will_lift(c):
 
 
 def _deck_under_lid(c):
-    """Moist low layer under a low Kahului inversion: cumulus can't grow and
-    spread into a flat deck at the lid."""
-    inv = c["inv"]
-    base = c["morning"]["base"] if c["morning"] else c["base"]
-    if not inv or base is None:
-        return None
-    gap = inv["base_ft"] - base
-    if not -300 <= gap <= 1500:          # 1,000 missed 10-17 (1,180 ft gap, base rising into it)
-        return None
-    # Confirmed (Sam, 2026-10-17: "A confirmation of p4 should be in the
-    # tile"): the base has held for the last 45 min, within 1,000 ft under the
-    # lid; the lower Kula slope is shaded; the upper slope is in sun.
+    """Cumulus capped and spread into a flat deck. From the stations only
+    (Sam, 2026-10-17: "Kahului inversion is useless for our purposes"): the
+    base has held for the last 45 min, the lower Kula slope is shaded and the
+    upper slope is in sun. No forecast warning -- the model's lid can't be
+    trusted to give one."""
+    base = c["base"]
     hist = c.get("base_hist") or []
     low, high = c.get("low_sun"), c.get("high_sun")
-    if (len(hist) >= 4 and max(hist) - min(hist) <= 300 and gap <= 1000
+    if base is None:
+        return None
+    if (len(hist) >= 4 and max(hist) - min(hist) <= 300
             and low is not None and low < 0.6 and high is not None and high >= 0.75):
         # Dated from the start of the 45-minute stall that confirmed it.
         first = c.get("p4_since") or c["now"].strftime("%H:%M")
         h, m = map(int, first.split(":"))
         since = f"{(h * 60 + m - 45) // 60:02d}:{(h * 60 + m - 45) % 60:02d}"
-        return (f"Deck under the lid since about {since}: base held at about {round(base, -2):,.0f} ft "
-                f"for the last 45 minutes under the Kahului inversion ({inv['base_ft']:,.0f} ft); lower Kula "
-                "slope shaded, sun above it.", "confirmed")
-    return (f"Moisture under a low lid (Kahului inversion {inv['base_ft']:,.0f}–{inv['top_ft']:,.0f} ft): "
-            "risk of cumulus spreading into a flat deck at the lid by midday.")
+        return (f"Deck at a lid since about {since}: base held at about {round(base, -2):,.0f} ft "
+                "for the last 45 minutes; lower Kula slope shaded, sun above it.", "confirmed")
+    return None
 
 
 def _no_headroom(c):
@@ -102,7 +97,8 @@ PATTERNS = [
      "origin": "2026-10-17: Kula Ag dew point +6 F after sunrise, 98% humid", "fn": _base_will_lift},
     {"id": "P4", "name": "Deck under the lid", "active": True, "where": "today",
      "origin": "2026-10-17: moist slope under a 4,500-5,000 ft Kahului inversion; capped days 10-03/04",
-     "note": "Sam 2026-10-17: keep as a \"take your chances\" warning; no nowcast of break-through",
+     "note": "Sam 2026-10-17: keep as a \"take your chances\" warning; no nowcast of break-through. "
+             "Stations only since 2026-10-17 (Kahului inversion dropped)",
      "fn": _deck_under_lid},
     {"id": "P5", "name": "No headroom", "active": False, "where": "today",
      "origin": "2026-10-17: morning base 3,400 ft (Kula Ag height stands in for launch)",

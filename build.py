@@ -710,10 +710,6 @@ def forecast_summary(r, pair, today_pair, inv, today_word: str) -> str:
     word = strength_word(r["thermal"])
     if word in ("Flat", "Light", "Moderate", "Strong"):
         out.append(f"Thermals probably {word.lower()}.")
-    if inv and am is not None:
-        out.append("The Kahului inversion sits at or above the expected base, so it may cap the tops."
-                   if inv["base_ft"] >= am - 300 else
-                   "The Kahului inversion is below the expected base, so probably no cap.")
     line = r["shear_location"]
     if line is None or pd.isna(line):
         out.append("No trade line is expected.")
@@ -2051,19 +2047,20 @@ def day_notes(derived: list, forecast: list, inv, phase: dict, fired: dict) -> l
     if best and best[2] >= 700:
         notes.append(f"Base stepped up about {round(best[2], -2):,.0f} ft between {_hm(best[0])} and "
                      f"{_hm(best[1])} as mixing took over.")
-    # a plateau at the Kahului lid
-    if inv and pts:
-        near = [(m, v) for m, v in pts if abs(v - inv["base_ft"]) <= 500]
-        run, longest = [], []
-        for m, v in near:
-            run = run + [(m, v)] if run and m - run[-1][0] == 15 else [(m, v)]
-            longest = run if len(run) > len(longest) else longest
-        if len(longest) >= 5:
-            mean = sum(v for _, v in longest) / len(longest)
-            hrs = (longest[-1][0] - longest[0][0]) / 60
-            notes.append(f"Base held at about {round(mean, -2):,.0f} ft, at the Kahului lid "
-                         f"({inv['base_ft']:,.0f} ft), from {_hm(longest[0][0])} for about "
-                         f"{hrs:.0f} hour{'s' if round(hrs) != 1 else ''}.")
+    # a plateau: the base held within 400 ft for 2 h or more -- the stations'
+    # own sign of a cap, with no model lid needed (Sam, 2026-10-17: the
+    # Kahului inversion is useless for our purposes)
+    run, longest = [], []
+    for m, v in pts:
+        run = run + [(m, v)] if run and m - run[-1][0] == 15 else [(m, v)]
+        while max(x for _, x in run) - min(x for _, x in run) > 400:
+            run = run[1:]
+        longest = run if len(run) > len(longest) else longest
+    if len(longest) >= 9:
+        mean = sum(v for _, v in longest) / len(longest)
+        hrs = (longest[-1][0] - longest[0][0]) / 60
+        notes.append(f"Base held flat at about {round(mean, -2):,.0f} ft from {_hm(longest[0][0])} "
+                     f"for about {hrs:.0f} hour{'s' if round(hrs) != 1 else ''}.")
     # forecast peak against the real base at the same time
     if forecast and pts:
         fm, fv = max(forecast, key=lambda x: x[1])
@@ -2287,20 +2284,11 @@ def build() -> str:
         base_html = ('Done for the day<div class="sub">The upslope is over; the derived '
                      "base returns with tomorrow's upslope</div>")
 
-    # ceiling text -- shown only when the model has a lid in reach (Sam,
-    # 2026-10-14): "none" is the usual case, and NAM/RRFS miss about half
-    # the real ones anyway, so a standing "no lid" line said little.
-    inv = next((i for i in inv_today if i), None)
+    # No Ceiling row (Sam, 2026-10-17: "Kahului inversion is useless for our
+    # purposes"): too low on 9/21 (the slope broke through), and on 10-17 it
+    # came and went run to run while Kula sat capped at ~5,000 ft. The
+    # inversion is still logged (scorecard inv_base/inv_top) to keep checking.
     ceil_html = ""
-    if inv is not None:
-        kb = base["mid"] if base else None
-        rng = f"{ft(inv['base_ft'])}–{ft(inv['top_ft'])} ft"
-        if kb is not None and inv["base_ft"] < kb - 300:
-            ceil_html = (f"Probably no cap<div class=\"sub\">Kahului inversion {rng}, "
-                         f"below Kula's base</div>")
-        else:
-            ceil_html = (f"Possible cap near the base<div class=\"sub\">Kahului inversion "
-                         f"{rng}</div>")
 
     # upslope text
     if evening and up is not None:
@@ -2540,8 +2528,6 @@ def build() -> str:
         line_alert = (f'<div class="alert">{esc(NOT_FLYABLE)}</div>'
                       if dict(cv.LANDMARKS).get(r["shear_location"], 99) <= NOT_FLYABLE_LAT else "")
         wind_t = "--" if pd.isna(r["dir_deg"]) else f"{cv.compass(r['dir_deg'])} ({r['dir_deg']:03.0f}°)"
-        cap_t = (f"Kahului inversion {ft(inv_t['base_ft'])}–{ft(inv_t['top_ft'])} ft"
-                 if inv_t else "")
         tom_chip = rating_chip(strength_word(r["thermal"]))
         prev = tom - timedelta(days=1)
         said_t = safely(forecast_summary, r, hours.get(tom), hours.get(prev), inv_t,
@@ -2567,7 +2553,6 @@ def build() -> str:
         <dt>Cloudbase</dt><dd><span class="num">{am_pm(hours.get(tom))} ft</span><div class="sub">11:00 → 14:00, give or take about {FORECAST_BAND_FT:,} ft</div></dd>
         <dt>Sun</dt><dd><span class="num">{pct(r['sun'])}</span> of clear sky, 10:00–14:00 (GFS)<div class="sub">The model can't see the slope's own cumulus: when it says 90% or more, Kula has measured about 80%. Good flying days measure about 80%, overcast about 50%, socked in 20%.</div></dd>
         <dt>Shear line</dt><dd>{esc(line_t)}<div class="sub">Trades {esc(wind_t)}</div>{line_alert}</dd>
-        {f"<dt>Ceiling</dt><dd>{esc(cap_t)}</dd>" if inv_t else ""}
       </dl>
       <div class="sub">Forecast as of {fc_made.astimezone(HST):%H:%M} HST</div>"""
         for day, w in week.iterrows():
