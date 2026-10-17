@@ -503,16 +503,33 @@ def summary(obs: pd.DataFrame, ladder, up, verdict, pos, west, now: datetime,
             out.append("The whole slope is in sun.")
         else:
             text = f"Kula Ag had {_sun_words(ka)} over the last hour"
-            shaded = [i for i, (_, s) in enumerate(lit) if s < 0.5]
+            # Where the deck tops out (Sam, 2026-10-17): heights, and only from
+            # the sunlight stations at 4,000 ft and up -- a shaded station
+            # lower down sits UNDER the cloud ("between about 2,800 and 3,200
+            # ft" with the base at 3,800). When they can't place it, fall back
+            # to the Puunianiau camera (6,854 ft): in cloud or clear.
+            high = [(n, e, s) for n, e, s in ladder
+                    if s is not None and e >= 4000 and n not in OFF_DECK]      # top down
+            cb = safely(cloudbase_now, obs)
+            shaded = [i for i, (_, _, s) in enumerate(high) if s < 0.5]
             top = shaded[0] if shaded else None
-            above = [n for n, s in lit[:top] if s >= 0.75] if top else []
+            above = [(n, e) for n, e, s in high[:top] if s >= 0.75] if top else []
             if cu_clear:
                 pass        # no cumulus: a low reading is terrain shadow or haze, not a deck
-            elif top is not None and above:
-                text += (f"; the cloud tops out between {lit[top][0]} and {above[-1]}, "
-                         "with sun above it")
             elif top == 0:
                 text += "; cloud reaches all the way to the Summit"
+            else:
+                placed = False
+                if top is not None and above:
+                    floor = max(high[top][1], cb["mid"]) if cb else high[top][1]
+                    if floor < above[-1][1] - 200:
+                        text += (f"; the cloud tops out between about {round(floor, -2):,.0f} and "
+                                 f"{round(above[-1][1], -2):,.0f} ft, with sun above it")
+                        placed = True
+                cam = safely(camera_now, "Puunianiau") if not placed and (ka < 0.5 or top is not None) else None
+                if cam is not None:
+                    text += ("; cloud reaches about 6,900 ft (Puunianiau camera in cloud)" if cam
+                             else "; the cloud tops out below about 6,900 ft (Puunianiau camera clear)")
             out.append(text + ".")
 
     if evening and up is not None:
@@ -1528,6 +1545,21 @@ def log_cameras(now: datetime) -> None:
     allr = pd.concat([old, pd.DataFrame(rows)], ignore_index=True).drop_duplicates(["time", "camera"], keep="last")
     cut = f"{now - timedelta(days=60):%Y-%m-%d}"
     allr[allr.time >= cut].sort_values(["time", "camera"]).to_csv(CAMERA_LOG, index=False)
+
+
+def camera_now(camera: str):
+    """True/False: the camera's latest confident reading (within 40 min) puts
+    it in cloud; None if there is none."""
+    if not CAMERA_LOG.exists():
+        return None
+    c = pd.read_csv(CAMERA_LOG)
+    c = c[(c.camera == camera) & (c.confidence >= CAM_MIN_CONFIDENCE)]
+    if c.empty:
+        return None
+    last = c.iloc[-1]
+    if pd.Timestamp(last.time) < datetime.now(HST).replace(tzinfo=None) - timedelta(minutes=40):
+        return None
+    return bool(last.vis_mi < CAM_IN_CLOUD_MI)
 
 
 def camera_cloud_minutes(day: str, camera: str):
