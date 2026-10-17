@@ -1426,6 +1426,32 @@ def forecast_cu_end(day):
     return int(on.max()) + 1 if len(on) and on.max() < 15 else None
 
 
+def core_stations() -> list:
+    """The slope stations behind the derived base (as _core selects them)."""
+    return [st for st in sampler.STATIONS
+            if st.id not in OFF_SLOPE and st.id != "TT925" and st.elev_ft <= 4400]
+
+
+def station_forecast_lcl(day) -> dict:
+    """Forecast LCL by hour (09-15) at each core station's own position and
+    elevation, one Open-Meteo request for all (sampler's formula: station
+    elevation + 1000/4.5 ft per F of spread)."""
+    sts = core_stations()
+    r = requests.get(cv.OPEN_METEO, timeout=60, params={
+        "latitude": ",".join(f"{st.lat:.5f}" for st in sts),
+        "longitude": ",".join(f"{st.lon:.5f}" for st in sts),
+        "elevation": ",".join(str(round(st.elev_ft / 3.28084)) for st in sts),
+        "hourly": "temperature_2m,dew_point_2m", "timezone": "Pacific/Honolulu",
+        "temperature_unit": "fahrenheit", "start_date": f"{day}", "end_date": f"{day}"}).json()
+    out = {}
+    for st, loc in zip(sts, r if isinstance(r, list) else [r]):
+        hh = loc["hourly"]
+        out[st.id] = {int(t[11:13]): round(st.elev_ft + (tt - td) / 4.5 * 1000, -1)
+                      for t, tt, td in zip(hh["time"], hh["temperature_2m"], hh["dew_point_2m"])
+                      if 9 <= int(t[11:13]) <= 15 and tt is not None and td is not None}
+    return out
+
+
 def save_morning_forecast(now: datetime) -> None:
     hours = forecast_base_hours(now.date())
     if not hours:
@@ -1439,7 +1465,8 @@ def save_morning_forecast(now: datetime) -> None:
         "dew": {int(r.hour): float(r.dewpoint_f) for r in part.itertuples()},
         "sun": None if (fs := safely(cv.sun_forecast)) is None or now.date() not in fs.index
                else float(fs.loc[now.date()]),
-        "summit_push": safely(summit_push, rrfs, now.date()) if rrfs else None}), encoding="utf-8")
+        "summit_push": safely(summit_push, rrfs, now.date()) if rrfs else None,
+        "stations": safely(station_forecast_lcl, now.date())}), encoding="utf-8")
 
 
 # -- the automated review (Sam, 2026-10-16: "Can your review be automated?") --
@@ -1449,6 +1476,11 @@ def save_morning_forecast(now: datetime) -> None:
 # flags only, and it never changes a correction itself.
 SCORE_HOURS = HERE / "docs" / "scorecard_hours.csv"
 SCORE_DAYS = HERE / "docs" / "scorecard_days.csv"
+# Per-station forecast vs measured LCL, for a per-station forecast base once
+# 6-8 weeks are logged (Sam, 2026-10-16: test on 31 days had per-station
+# corrections ~12% better than the flat +400, but too few days to trust).
+SCORE_STATIONS = HERE / "docs" / "scorecard_stations.csv"
+STATION_DAYS_NEEDED = 42
 REVIEW_SUMMARY = HERE / "docs" / "review_summary.json"
 
 
@@ -1494,6 +1526,14 @@ def write_scorecard(obs, now, up, end, word, entries) -> None:
                     "fc_dew": mf.get("dew", {}).get(str(h)), "dew": None if h not in ka_td.index else round(float(ka_td[h]), 1),
                     "sun": None if h not in sun else round(float(sun[h]), 2)})
     _replace_day(SCORE_HOURS, hrs, d)
+
+    fcs = mf.get("stations") or {}
+    per = (core.groupby(["station_id", "h"]).lcl_ft.mean() if len(core) else pd.Series(dtype=float))
+    srows = [{"date": d, "hour": h, "station_id": st.id,
+              "fc_lcl": (fcs.get(st.id) or {}).get(str(h)),
+              "lcl": None if (st.id, h) not in per.index else round(float(per[(st.id, h)]), -1)}
+             for st in core_stations() for h in range(9, 16)]
+    _replace_day(SCORE_STATIONS, srows, d)
 
     # Did summit cloud come over? Summit near saturation on an easterly while
     # Kula Ag's sun halved from late morning to its worst afternoon hour.
@@ -1557,6 +1597,26 @@ def review_summary(now: datetime) -> None:
             if share > 0.3:
                 flags.append(f"Shear line: a stale station sat out of {share:.0%} of updates over the last week "
                              "(the rule under review).")
+    if SCORE_STATIONS.exists() and SCORE_HOURS.exists():
+        sc = pd.read_csv(SCORE_STATIONS, dtype={"date": str}).dropna(subset=["fc_lcl", "lcl"])
+        nd = sc.date.nunique()
+        stats["station_days"] = int(nd)
+        if nd >= STATION_DAYS_NEEDED:
+            days = sorted(sc.date.unique())
+            first, second = set(days[:nd // 2]), set(days[nd // 2:])
+            bias = (sc[sc.date.isin(first)].assign(e=lambda q: q.fc_lcl - q.lcl)
+                    .groupby("station_id").e.mean())
+            t = sc[sc.date.isin(second)].copy()
+            t["fc_corr"] = t.fc_lcl - t.station_id.map(bias).fillna(0)
+            fc_base = t.groupby(["date", "hour"])["fc_corr"].median()
+            der = t.groupby(["date", "hour"]).lcl.median()
+            hh = pd.read_csv(SCORE_HOURS, dtype={"date": str}).set_index(["date", "hour"])
+            now_err = (hh.fc_base - hh.derived).reindex(fc_base.index).dropna()
+            st_err = (fc_base - der).reindex(now_err.index)
+            flags.append(f"Per-station forecast base: {nd} days logged. On the later half, per-station "
+                         f"corrections miss the derived base by {st_err.abs().mean():.0f} ft typically, "
+                         f"the page's Kula Ag + {FORECAST_BASE_LOW_FT} ft by {now_err.abs().mean():.0f} ft. "
+                         "Ready to decide whether to switch.")
     REVIEW_SUMMARY.write_text(json.dumps({"made": f"{now:%Y-%m-%d %H:%M}", "flags": flags, "stats": stats},
                                          indent=1), encoding="utf-8")
 
