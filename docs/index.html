@@ -85,7 +85,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><div class="tag">Kula soaring briefing</div><h1>Kula Today</h1></div>
-    <div class="date">Updated Fri 16 Oct 2026 · 20:29 HST</div>
+    <div class="date">Updated Fri 16 Oct 2026 · 20:38 HST</div>
   </header>
 
   <div>
@@ -97,14 +97,14 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
     <section class="panel today" aria-labelledby="t-today">
       <div class="kind">The day in review</div>
       <div class="head"><h2 id="t-today">Today · Fri 16 Oct</h2><span class="chip fair">Light</span></div>
-      <p class="summary">A light day (forecast moderate). The upslope ran from about 08:00 to about 16:30. Cloudbase held 3,700–5,200 ft; the forecast had 4,300–5,800. Most of the day the shear line was crossing Kula Highway between Pukalani and Omaopio; about 17:07 it was crossing Kula Highway between Omaopio and the middle Lower Kula Road junction.</p><div style="font-weight:600;font-size:.9rem;margin:10px 0 2px">Cloudbase, derived vs forecast</div><div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted,#6b6b66);margin:2px 0 4px">
+      <p class="summary">A light day (forecast moderate). The upslope ran from about 08:00 to about 16:15. Cloudbase held 3,700–5,200 ft; the forecast had 4,300–5,800. Most of the day the shear line was crossing Kula Highway between Pukalani and Omaopio; about 17:07 it was crossing Kula Highway between Omaopio and the middle Lower Kula Road junction.</p><div style="font-weight:600;font-size:.9rem;margin:10px 0 2px">Cloudbase, derived vs forecast</div><div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted,#6b6b66);margin:2px 0 4px">
 <span><span style="display:inline-block;width:16px;border-top:2px dashed #eb6834;vertical-align:middle"></span> Forecast, ± 700 ft</span>
 <span><span style="display:inline-block;width:16px;height:2px;background:#2a78d6;vertical-align:middle"></span> Derived (stations)</span></div>
 <div style="position:relative;width:100%;min-width:0;height:220px"><canvas id="basechart" role="img" aria-label="Derived cloudbase against the forecast through the day"></canvas></div>
 <div class="sub">Derived from the stations every 15 minutes during the upslope; forecast by hour, the 08:37 morning forecast.</div>
 <script>
 (function () {
-  var d = {"derived": [[540, 3850.0], [555, 3990.0], [570, 3990.0], [585, 4030.0], [600, 4250.0], [615, 4370.0], [630, 4470.0], [645, 4590.0], [660, 4640.0], [675, 4770.0], [690, 4920.0], [705, 5030.0], [720, 5180.0], [735, 5170.0], [750, 5250.0], [765, 5250.0], [780, 5040.0], [795, 5010.0], [810, 5200.0], [825, 5160.0], [840, 5050.0], [855, 5110.0], [870, 5170.0], [885, 4950.0], [900, 5050.0], [915, 5110.0], [930, 4870.0], [945, 4610.0], [960, 4380.0]], "forecast": [[540, 4960.0], [600, 5760.0], [660, 5760.0], [720, 4960.0], [780, 4660.0], [840, 4360.0], [900, 4260.0]], "up": [540, 960], "nocu": null}, pt = function (a) { return {x: a[0], y: a[1]}; };
+  var d = {"derived": [[540, 3850.0], [555, 3990.0], [570, 3990.0], [585, 4030.0], [600, 4250.0], [615, 4370.0], [630, 4470.0], [645, 4590.0], [660, 4640.0], [675, 4770.0], [690, 4920.0], [705, 5010.0], [720, 5180.0], [735, 5170.0], [750, 5250.0], [765, 5250.0], [780, 5040.0], [795, 5010.0], [810, 5200.0], [825, 5160.0], [840, 5060.0], [855, 5110.0], [870, 5170.0], [885, 4950.0], [900, 5050.0], [915, 5110.0], [930, 4870.0], [945, 4610.0], [960, 4380.0]], "forecast": [[540, 4960.0], [600, 5760.0], [660, 5760.0], [720, 4960.0], [780, 4660.0], [840, 4360.0], [900, 4260.0]], "up": [540, 960], "nocu": null}, pt = function (a) { return {x: a[0], y: a[1]}; };
   var dark = matchMedia('(prefers-color-scheme: dark)').matches, muted = '#898781', grid = dark ? '#2c2c2a' : '#e1e0d9';
   var nocu = { id: 'nocu', beforeDatasetsDraw: function (c) { if (!d.nocu) return; var x = c.scales.x, a = c.chartArea, g = c.ctx,
     x0 = x.getPixelForValue(d.nocu[0]), x1 = x.getPixelForValue(d.nocu[1]);
@@ -147,7 +147,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
         
         <dt>Shear line</dt><dd>Crossing Kula Highway between Pukalani and Omaopio<div class="sub">Most of the day, 42 updates. Furthest south about 17:07: Crossing Kula Highway between Omaopio and the middle Lower Kula Road junction</div></dd>
         
-        <dt>Upslope</dt><dd><span class="num">08:00</span> to about <span class="num">16:30</span></dd>
+        <dt>Upslope</dt><dd><span class="num">08:00</span> to about <span class="num">16:15</span></dd>
         <dt>Wind</dt><dd><span class="num">4 mph</span>, gusts to 14<div class="sub">Lower elevations, during the upslope</div></dd>
       </dl>
     </section>
@@ -289,6 +289,6 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 })();
 </script>
 <style>.stn{font:600 11px/1.2 var(--body);padding:1px 4px;background:rgba(255,255,255,.85);border:0;box-shadow:none;color:#17242f}.stn:before{display:none}</style>
-<!-- build problems: HCDP observations, using api.weather.gov: ConnectTimeout: HTTPSConnectionPool(host='api.hcdp.ikewai.org', port=443): Max retries exceeded with url: /mesonet/db/measurements?location=hawaii&station_ids=0115%2C0118%2C0144%2C0116%2C0119%2C0145%2C0151%2C0152%2C0153%2C0143&var_ids=Tair_1_Avg%2CRH_1_Avg%2CWS_1_Avg%2CWDrs_1_Avg%2CWS_1_Max&start_date=2026-10-16T00%3A00%3A00-10%3A00&row_mode=json&limit=100000 (Caused by ConnectTimeoutError(<HTTPSConnection(host='api.hcdp.ikewai.org', port=443) at 0x7fbadf3ddbb0), 'Connection to api.hcdp.ikewai.org timed out. (connect timeout=20)')); net_radiation: ConnectTimeout: HTTPSConnectionPool(host='api.hcdp.ikewai.org', port=443): Max retries exceeded with url: /mesonet/db/measurements?location=hawaii&station_ids=0119&var_ids=Rnet_1_Avg&start_date=2026-10-16T12%3A00%3A00-10%3A00&row_mode=json&limit=100000 (Caused by ConnectTimeoutError(<HTTPSConnection(host='api.hcdp.ikewai.org', port=443) at 0x7fbadf1c34a0), 'Connection to api.hcdp.ikewai.org timed out. (connect timeout=20)')); Mesonet sun: ConnectTimeout: HTTPSConnectionPool(host='api.hcdp.ikewai.org', port=443): Max retries exceeded with url: /mesonet/db/measurements?location=hawaii&station_ids=0115%2C0118%2C0144%2C0116%2C0119%2C0145%2C0151%2C0152%2C0153&var_ids=SWin_1_Avg&start_date=2026-10-16T18%3A49%3A00-10%3A00&end_date=2026-10-16T20%3A29%3A00-10%3A00&row_mode=json&limit=100000 (Caused by ConnectTimeoutError(<HTTPSConnection(host='api.hcdp.ikewai.org', port=443) at 0x7fbadf4158e0), 'Connection to api.hcdp.ikewai.org timed out. (connect timeout=20)')); first_cumulus: ConnectTimeout: HTTPSConnectionPool(host='api.hcdp.ikewai.org', port=443): Max retries exceeded with url: /mesonet/db/measurements?location=hawaii&station_ids=0119%2C0116%2C0151&var_ids=SWin_1_Avg%2CLWin_1_Avg%2CTair_1_Avg&start_date=2026-10-16T07%3A30%3A00-10%3A00&end_date=2026-10-16T20%3A29%3A51-10%3A00&row_mode=json&limit=100000 (Caused by ConnectTimeoutError(<HTTPSConnection(host='api.hcdp.ikewai.org', port=443) at 0x7fbadf1e0140), 'Connection to api.hcdp.ikewai.org timed out. (connect timeout=20)')); window_sun: ConnectTimeout: HTTPSConnectionPool(host='api.hcdp.ikewai.org', port=443): Max retries exceeded with url: /mesonet/db/measurements?location=hawaii&station_ids=0115%2C0118%2C0144%2C0116%2C0119%2C0145%2C0151%2C0152%2C0153&var_ids=SWin_1_Avg&start_date=2026-10-16T09%3A00%3A00-10%3A00&end_date=2026-10-16T15%3A00%3A00-10%3A00&row_mode=json&limit=100000 (Caused by ConnectTimeoutError(<HTTPSConnection(host='api.hcdp.ikewai.org', port=443) at 0x7fbadf1978c0), 'Connection to api.hcdp.ikewai.org timed out. (connect timeout=20)')); sun_trend: ConnectTimeout: HTTPSConnectionPool(host='api.hcdp.ikewai.org', port=443): Max retries exceeded with url: /mesonet/db/measurements?location=hawaii&station_ids=0115%2C0118%2C0144%2C0116%2C0119%2C0145%2C0151%2C0152%2C0153&var_ids=SWin_1_Avg&start_date=2026-10-16T18%3A59%3A00-10%3A00&end_date=2026-10-16T20%3A29%3A00-10%3A00&row_mode=json&limit=100000 (Caused by ConnectTimeoutError(<HTTPSConnection(host='api.hcdp.ikewai.org', port=443) at 0x7fbadf201af0), 'Connection to api.hcdp.ikewai.org timed out. (connect timeout=20)')) -->
+<!-- build problems: none -->
 </body>
 </html>

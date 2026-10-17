@@ -1,0 +1,14 @@
+{
+ "made": "2026-10-16 20:38",
+ "flags": [
+  "Forecast base has run +517 ft against the derived base over 28 days (the +400 ft correction included; without it +117)."
+ ],
+ "stats": {
+  "base_days": 28,
+  "base_mean": 517,
+  "base_raw_mean": 117,
+  "base_sd": 774,
+  "base_morning": 557,
+  "base_afternoon": 508
+ }
+}
