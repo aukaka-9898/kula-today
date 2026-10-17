@@ -457,6 +457,70 @@ def _kept_points(day, fresh: list) -> list:
     return [[int(k), v] for k, (v, n) in sorted(pts.items(), key=lambda kv: int(kv[0]))]
 
 
+# Dew-morning base phases (Sam, 2026-10-17): "Two transitions." 1: the
+# saturated morning -- every station near saturation, the median is right.
+# 2: convection starts while the lower slope is still damp from the dew --
+# the median undershoots and the upper stations show the moisture above the
+# surface (Crater Rd, the highest, matched his 4,900 that day). 3: the lower
+# slope has dried -- the median is right again. Only after a wet morning (the
+# morning-cloud line fired). Switches: highest station >= 500 ft above the median
+# (2), back within 300 ft (3) -- fitted to one day, logged to be checked.
+BASE_PHASE_FILE = HERE / "docs" / "base_phase.json"
+PHASE2_SPLIT_FT = 500
+PHASE3_CLOSE_FT = 300
+PHASE = {}
+
+
+def _upper_pair(latest: pd.DataFrame):
+    """The highest station reporting (normally Crater Rd). A pair of the two
+    highest depended on who had reported: Waipoli Rd (~4,360) pulled it to
+    4,560 on 2026-10-17 while Crater Rd (4,740-4,920) matched Sam's 4,900."""
+    top = latest.sort_values("elev_ft", ascending=False).head(1)
+    return float(top.lcl_ft.iloc[0]), list(top.name)
+
+
+def update_phase(obs: pd.DataFrame, now: datetime, wet_now: bool, up, day_over: bool) -> dict:
+    d = f"{now:%Y-%m-%d}"
+    try:
+        ph = json.loads(BASE_PHASE_FILE.read_text(encoding="utf-8"))
+        if ph.get("date") != d:
+            raise ValueError
+    except Exception:
+        ph = {"date": d, "wet": False, "phase": 1, "intervals": []}
+    if wet_now:
+        ph["wet"] = True
+    if ph["wet"] and up is not None and not day_over and len(obs):
+        core = _core(obs)
+        core = core[core.observed >= obs.observed.max() - STALE]
+        latest = core.sort_values("observed").groupby("station_id").tail(1)
+        if len(latest) >= 4:
+            med = float(latest.lcl_ft.median())
+            upper, _ = _upper_pair(latest)
+            stamp = f"{latest.observed.max():%H:%M}"
+            if ph["phase"] == 1 and upper - med >= PHASE2_SPLIT_FT:
+                ph["phase"] = 2
+                ph["intervals"].append([stamp, None])
+            elif ph["phase"] == 2 and upper - med <= PHASE3_CLOSE_FT:
+                ph["phase"] = 3
+                ph["intervals"][-1][1] = stamp
+    BASE_PHASE_FILE.write_text(json.dumps(ph), encoding="utf-8")
+    return ph
+
+
+def _in_phase2(t) -> bool:
+    hm = f"{t:%H:%M}"
+    return any(a <= hm and (b is None or hm < b) for a, b in PHASE.get("intervals", []))
+
+
+def _derived_at(core: pd.DataFrame, t) -> float | None:
+    """The derived base at t: the highest station in phase 2, else the median."""
+    if not _in_phase2(t):
+        return _base_at(core, t)
+    c = core[(core.observed <= t) & (core.observed > t - pd.Timedelta("20min"))]
+    latest = c.sort_values("observed").groupby("station_id").tail(1)
+    return _upper_pair(latest)[0] if len(latest) >= 3 else None
+
+
 def _base_at(core: pd.DataFrame, t) -> float | None:
     """Median of each core station's latest LCL at t, readings up to 20 min old.
 
@@ -491,7 +555,7 @@ def summary(obs: pd.DataFrame, ladder, up, verdict, pos, west, now: datetime,
         # The trend describes the END of the chart's line: the last 30 minutes,
         # two chart steps (Sam, 2026-10-17: "The today description window
         # should match the chart"). Subject to change.
-        cur, ago = _base_at(core, t), _base_at(core, t - pd.Timedelta("30min"))
+        cur, ago = _derived_at(core, t), _derived_at(core, t - pd.Timedelta("30min"))
         if cur is not None and ago is not None and t >= obs.observed.max() - STALE:
             d = cur - ago
             trend = ("rising" if d >= 200 else "edging up" if d >= 100 else
@@ -501,7 +565,7 @@ def summary(obs: pd.DataFrame, ladder, up, verdict, pos, west, now: datetime,
             elif d >= 200:
                 better.append("base rising")
             day = t.normalize()
-            morning = [x for x in (_base_at(core, day + pd.Timedelta(minutes=m))
+            morning = [x for x in (_derived_at(core, day + pd.Timedelta(minutes=m))
                                    for m in range(600, 721, 30)) if x is not None]
             if t.hour >= 12 and morning and max(morning) - cur >= 700:
                 out.append(f"Cloudbase has come down from its late-morning high and is {trend} now.")
@@ -1727,7 +1791,8 @@ def write_scorecard(obs, now, up, end, word, entries) -> None:
         "line_updates": len(entries), "line_updates_with_dropped": dropped,
         "patterns": " ".join(f"{k}@{v}" for k, v in sorted(_patterns_today(d).items())),
         "cam_puunianiau_cloud_min": camera_cloud_minutes(d, "Puunianiau"), "parkhq_cloud_min": ph_cloud,
-        "cam_redhill_cloud_min": camera_cloud_minutes(d, "Red Hill"), "derived_low_min": rh_cloud}], d)
+        "cam_redhill_cloud_min": camera_cloud_minutes(d, "Red Hill"), "derived_low_min": rh_cloud,
+        "base_phase2": " ".join(f"{a}-{b or ''}" for a, b in PHASE.get("intervals", [])) if PHASE.get("date") == d else ""}], d)
 
 
 def _patterns_today(d: str) -> dict:
@@ -1851,7 +1916,7 @@ def base_chart(obs, now, up, end, cid="basechart", title="Cloudbase, derived vs 
     day = now.replace(tzinfo=None, hour=0, minute=0, second=0, microsecond=0)
     core = _core(obs)
     stop = end if end is not None else obs.observed.max()
-    derived = _kept_points(day, [(t, _base_at(core, t), _stations_at(core, t))
+    derived = _kept_points(day, [(t, _derived_at(core, t), _stations_at(core, t))
                                  for t in pd.date_range(up.ceil("15min"), stop, freq="15min")])
     src = "that morning"
     try:
@@ -2093,6 +2158,18 @@ def build() -> str:
     cu = safely(first_cumulus, now) if up is not None else None
     cu_clear = bool(cu) and cu[0] == "clear"
     mc = safely(morning_cloud, obs, now) if up is None and 6 <= now.hour < 12 and len(obs) else None
+    global PHASE
+    PHASE = safely(update_phase, obs, now, bool(mc), up, day_over) or {}
+    if PHASE.get("phase") == 2 and base and len(obs):
+        _c = _core(obs)
+        _c = _c[_c.observed >= obs.observed.max() - STALE]
+        _lat = _c.sort_values("observed").groupby("station_id").tail(1)
+        if len(_lat) >= 3:
+            _up, _names = _upper_pair(_lat)
+            base_html = (f'<span class="num">About {ft(round(_up, -2))} ft</span>'
+                         f'<div class="sub">From the highest station ({", ".join(_names)}): the lower slope is '
+                         f'still damp from the night\'s dew. All stations: about {ft(round(base["mid"], -2))} ft</div>')
+            base = {**base, "mid": _up}
     if mc:
         base_label = "Morning<br>cloud"
         dew = (f"; Kula Ag {mc['ka_t']:.0f}/{mc['ka_td']:.0f} °F ({mc['ka_rh']:.0f}%)"
@@ -2306,7 +2383,7 @@ def build() -> str:
            "upslope_typical": UPSLOPE_TYPICAL[now.month]}
     _core_now = _core(obs) if len(obs) else obs
     _end = obs.observed.max() if len(obs) else None
-    ctx["base_hist"] = ([v for v in (_base_at(_core_now, _end - pd.Timedelta(minutes=m)) for m in (0, 15, 30, 45))
+    ctx["base_hist"] = ([v for v in (_derived_at(_core_now, _end - pd.Timedelta(minutes=m)) for m in (0, 15, 30, 45))
                          if v is not None] if _end is not None else [])
     _sun = {n: min(v, 1.0) for n, e, v in ladder if v is not None}
     _low = [_sun[n] for n in ("Kula Ag", "Keokea") if n in _sun]
