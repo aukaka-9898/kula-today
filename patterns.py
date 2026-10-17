@@ -85,8 +85,10 @@ PATTERNS = [
     {"id": "P4", "name": "Deck under the lid", "active": True, "where": "today",
      "origin": "2026-10-17: moist slope under a 4,500-5,000 ft Kahului inversion; capped days 10-03/04",
      "fn": _deck_under_lid},
-    {"id": "P5", "name": "No headroom", "active": True, "where": "today",
-     "origin": "2026-10-17: morning base 3,400 ft (Kula Ag height stands in for launch)", "fn": _no_headroom},
+    {"id": "P5", "name": "No headroom", "active": False, "where": "today",
+     "origin": "2026-10-17: morning base 3,400 ft (Kula Ag height stands in for launch)",
+     "retired": "2026-10-17, Sam: \"p5 is pointless\" -- a base that low means launch is in cloud, "
+                "not launchable, which the morning-cloud line already says", "fn": _no_headroom},
 ]
 
 
