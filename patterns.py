@@ -22,6 +22,10 @@ Context keys (filled by build.py; any may be None):
   ka_td_trend       Kula Ag dew-point change over the last 30 min (F)
   ka_sun            Kula Ag's share of clear-sky sun, last 60 min (0-1)
   base              current derived base (ft) or None
+  base_hist         derived base every 15 min over the last 45 min (ft)
+  low_sun, high_sun lower Kula slope sun (Kula Ag, Keokea) and upper slope sun
+                    (best of Kula 1, Kamehamenui 1, Park HQ), last 60 min
+  p4_since          when P4 was first confirmed today ("HH:MM")
   inv               Kahului inversion today: {"base_ft", "top_ft"} or None
   summit_push       first hour the summit-cloud forecast holds, or None
   upslope_typical   "HH:MM" for this month
@@ -62,6 +66,20 @@ def _deck_under_lid(c):
     gap = inv["base_ft"] - base
     if not -300 <= gap <= 1500:          # 1,000 missed 10-17 (1,180 ft gap, base rising into it)
         return None
+    # Confirmed (Sam, 2026-10-17: "A confirmation of p4 should be in the
+    # tile"): the base has held for the last 45 min, within 1,000 ft under the
+    # lid; the lower Kula slope is shaded; the upper slope is in sun.
+    hist = c.get("base_hist") or []
+    low, high = c.get("low_sun"), c.get("high_sun")
+    if (len(hist) >= 4 and max(hist) - min(hist) <= 300 and gap <= 1000
+            and low is not None and low < 0.6 and high is not None and high >= 0.75):
+        # Dated from the start of the 45-minute stall that confirmed it.
+        first = c.get("p4_since") or c["now"].strftime("%H:%M")
+        h, m = map(int, first.split(":"))
+        since = f"{(h * 60 + m - 45) // 60:02d}:{(h * 60 + m - 45) % 60:02d}"
+        return (f"Deck under the lid since about {since}: base held at about {round(base, -2):,.0f} ft "
+                f"for the last 45 minutes under the Kahului inversion ({inv['base_ft']:,.0f} ft); lower Kula "
+                "slope shaded, sun above it.", "confirmed")
     return (f"Moisture under a low lid (Kahului inversion {inv['base_ft']:,.0f}–{inv['top_ft']:,.0f} ft): "
             "risk of cumulus spreading into a flat deck at the lid by midday.")
 
@@ -94,7 +112,9 @@ PATTERNS = [
 
 
 def watch(context: dict) -> list:
-    """[(id, name, sentence)] for every active Today pattern that fires."""
+    """[(id, name, sentence)] for every active Today pattern that fires. A
+    pattern may return (sentence, "confirmed") once observations bear it out;
+    it then shows as "<name> · confirmed" and is logged as "<id>c"."""
     out = []
     for p in PATTERNS:
         if not p["active"] or p["fn"] is None:
@@ -103,6 +123,8 @@ def watch(context: dict) -> list:
             text = p["fn"](context)
         except Exception:
             text = None
-        if text:
+        if isinstance(text, tuple):
+            out.append((p["id"] + "c", f"{p['name']} · confirmed", text[0]))
+        elif text:
             out.append((p["id"], p["name"], text))
     return out

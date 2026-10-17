@@ -2255,6 +2255,16 @@ def build() -> str:
            "ka_td_trend": float(recent.dew_f.iloc[-1] - recent.dew_f.iloc[0]) if len(recent) >= 2 else None,
            "ka_sun": ka_sun, "inv": next((i for i in inv_today if i), None),
            "upslope_typical": UPSLOPE_TYPICAL[now.month]}
+    _core_now = _core(obs) if len(obs) else obs
+    _end = obs.observed.max() if len(obs) else None
+    ctx["base_hist"] = ([v for v in (_base_at(_core_now, _end - pd.Timedelta(minutes=m)) for m in (0, 15, 30, 45))
+                         if v is not None] if _end is not None else [])
+    _sun = {n: min(v, 1.0) for n, e, v in ladder if v is not None}
+    _low = [_sun[n] for n in ("Kula Ag", "Keokea") if n in _sun]
+    _high = [_sun[n] for n in ("Kula 1", "Kamehamenui 1", "Park HQ") if n in _sun]
+    ctx["low_sun"] = sum(_low) / len(_low) if _low else None
+    ctx["high_sun"] = max(_high) if _high else None
+    ctx["p4_since"] = _patterns_today(f"{now:%Y-%m-%d}").get("P4c")
     fired = (safely(patterns.watch, ctx) or []) if not day_over else []
     safely(log_patterns, now, fired)
     if fired:
