@@ -1621,6 +1621,42 @@ def review_summary(now: datetime) -> None:
                                          indent=1), encoding="utf-8")
 
 
+# The morning before the upslope (Sam, 2026-10-17: "the today tile should not
+# wait for upslope"). The derived base is shown only when the slope is near
+# saturation -- dew-fed low cloud, as at 08:30 that day (Kula Ag 64/64 F,
+# median LCL 3,300 ft); on dry mornings the stations disagree wildly (3,000-
+# 7,900 ft at 07:17 on 10-14, "absurd") and it waits for the upslope.
+MORNING_SATURATED_RH = 90       # per cent (95 missed 10-17: Keokea, Waipoli, Crater sat at 93)
+MORNING_SATURATED_N = 3         # stations at or above it
+
+
+def _rh(t_f, td_f):
+    t, td = (t_f - 32) / 1.8, (td_f - 32) / 1.8
+    return 100 * np.exp(17.625 * td / (243.04 + td)) / np.exp(17.625 * t / (243.04 + t))
+
+
+def morning_cloud(obs: pd.DataFrame, now: datetime):
+    """Low morning cloud from a near-saturated slope, or None. Returns the
+    median LCL, how many stations are near saturation, Kula Ag's air and its
+    dew-point rise since the morning low (the night's dew evaporating)."""
+    core = _core(obs)
+    last = core.sort_values("observed").groupby("station_id").tail(1)
+    last = last[last.observed > obs.observed.max() - pd.Timedelta("45min")]
+    if len(last) < 4:
+        return None
+    wet = last[_rh(last.temp_f, last.dew_f) >= MORNING_SATURATED_RH]
+    if len(wet) < MORNING_SATURATED_N:
+        return None
+    ka = obs[(obs.station_id == "001HI") & (obs.observed.dt.hour >= 4)].sort_values("observed")
+    out = {"base": float(last.lcl_ft.median()), "n_wet": len(wet), "n": len(last)}
+    if len(ka):
+        k = ka.iloc[-1]
+        low = ka.loc[ka.dew_f.idxmin()]
+        out.update(ka_t=float(k.temp_f), ka_td=float(k.dew_f), ka_rh=float(_rh(k.temp_f, k.dew_f)),
+                   rise=float(k.dew_f - low.dew_f), since=low.observed)
+    return out
+
+
 def base_chart(obs, now, up, end, cid="basechart", title="Cloudbase, derived vs forecast") -> tuple[str, list, list]:
     """(html, derived, forecast): the derived base every 15 minutes through
     the upslope against that morning's forecast by hour."""
@@ -1869,7 +1905,19 @@ def build() -> str:
     base_label = "Derived<br>Cloudbase"
     cu = safely(first_cumulus, now) if up is not None else None
     cu_clear = bool(cu) and cu[0] == "clear"
-    if up is None and now.hour < 12:
+    mc = safely(morning_cloud, obs, now) if up is None and 6 <= now.hour < 12 and len(obs) else None
+    if mc:
+        base_label = "Morning<br>cloud"
+        dew = (f"; Kula Ag {mc['ka_t']:.0f}/{mc['ka_td']:.0f} °F ({mc['ka_rh']:.0f}%)"
+               + (f", dew point up {mc['rise']:.0f} °F since {mc['since']:%H:%M} as the night's dew evaporates"
+                  if mc.get("rise", 0) >= 1.5 else "") if "ka_t" in mc else "")
+        base_html = (f'Low cloud down to about <span class="num">{ft(round(mc["base"], -2))} ft</span>'
+                     f'<div class="sub">{mc["n_wet"]} of {mc["n"]} slope stations near saturation{dew}. '
+                     f'The forecast had {am_pm(fc_pair)} ft at 11:00 → 14:00</div>'
+                     if fc_pair and fc_pair[0] is not None else
+                     f'Low cloud down to about <span class="num">{ft(round(mc["base"], -2))} ft</span>'
+                     f'<div class="sub">{mc["n_wet"]} of {mc["n"]} slope stations near saturation{dew}</div>')
+    elif up is None and now.hour < 12:
         if fc_pair and fc_pair[0] is not None:
             base_label = "Forecast<br>Cloudbase"      # not derived until the upslope
         base_html = (f'<span class="num">{am_pm(fc_pair)} ft</span> forecast'
@@ -2041,6 +2089,12 @@ def build() -> str:
                        next((i for i in inv_today if i), None), "yesterday")
         if ahead:
             said = f"Today's forecast: {ahead}" + (f" {said}" if said else "")
+    if mc:
+        said = (f"Low cloud is down to about {ft(round(mc['base'], -2))} ft"
+                + (f"; the night's dew is evaporating -- Kula Ag's dew point is up {mc['rise']:.0f} °F "
+                   f"since {mc['since']:%H:%M} and it is still {mc['ka_rh']:.0f}% humid."
+                   if mc.get("rise", 0) >= 1.5 else ".")
+                + (f" {said}" if said else ""))
     summary_html = f'<p class="summary">{esc(said)}</p>' if said else ""
     # The day so far against the morning's forecast (Sam): the review's chart,
     # drawn live from the upslope to the newest reading.
@@ -2061,7 +2115,7 @@ def build() -> str:
             safely(REVIEW_FILE.write_text, json.dumps(review), "utf-8")
             end_t = upslope_end(rnet, evening) if up is not None else None
             safely(write_scorecard, obs, now, up, end_t, day_word, entries)
-    elif before_up:
+    elif before_up and now.hour < 6:            # live from 06:00 (Sam)
         try:
             saved = json.loads(REVIEW_FILE.read_text(encoding="utf-8"))
             if saved.get("date") == f"{now.date() - timedelta(days=1):%Y-%m-%d}":
