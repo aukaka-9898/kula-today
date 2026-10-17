@@ -454,29 +454,25 @@ def summary(obs: pd.DataFrame, ladder, up, verdict, pos, west, now: datetime,
         out.append("No cumulus over the slope yet.")
     elif not core.empty and upslope_on:            # no base talk outside the upslope
         t = core.observed.max()
-        cur, ago = _base_at(core, t), _base_at(core, t - pd.Timedelta("60min"))
+        # The trend describes the END of the chart's line: the last 30 minutes,
+        # two chart steps (Sam, 2026-10-17: "The today description window
+        # should match the chart"). Subject to change.
+        cur, ago = _base_at(core, t), _base_at(core, t - pd.Timedelta("30min"))
         if cur is not None and ago is not None and t >= obs.observed.max() - STALE:
             d = cur - ago
-            trend = ("rising" if d >= 300 else "edging up" if d >= 150 else
-                     "lowering" if d <= -300 else "edging down" if d <= -150 else "steady")
-            # Rose over the hour but not in the last 30 min: levelling off, so
-            # the summary doesn't say "still rising" beside a P4 "base held"
-            # (Sam, 2026-10-17: "contradiction").
-            half = _base_at(core, t - pd.Timedelta("30min"))
-            if half is not None and abs(d) >= 150 and abs(cur - half) < 150:
-                trend = "levelling off"
-            if d <= -300:
+            trend = ("rising" if d >= 200 else "edging up" if d >= 100 else
+                     "lowering" if d <= -200 else "edging down" if d <= -100 else "steady")
+            if d <= -200:
                 worse.append("base lowering")
-            elif d >= 300:
+            elif d >= 200:
                 better.append("base rising")
             day = t.normalize()
             morning = [x for x in (_base_at(core, day + pd.Timedelta(minutes=m))
                                    for m in range(600, 721, 30)) if x is not None]
             if t.hour >= 12 and morning and max(morning) - cur >= 700:
                 out.append(f"Cloudbase has come down from its late-morning high and is {trend} now.")
-            elif t.hour < 12 and morning and cur >= max(morning) - 200 and d >= 150:
-                out.append(f"Cloudbase is at its highest of the day and "
-                           f"{'levelling off' if trend == 'levelling off' else 'still ' + trend}.")
+            elif t.hour < 12 and morning and cur >= max(morning) - 200 and d >= 100:
+                out.append(f"Cloudbase is at its highest of the day and still {trend}.")
             else:
                 out.append(f"Cloudbase is {trend}.")
 
