@@ -1421,7 +1421,7 @@ def save_morning_forecast(now: datetime) -> None:
                                                  "hours": hours}), encoding="utf-8")
 
 
-def base_chart(obs, now, up, end, cid="basechart") -> tuple[str, list, list]:
+def base_chart(obs, now, up, end, cid="basechart", title="Cloudbase, derived vs forecast") -> tuple[str, list, list]:
     """(html, derived, forecast): the derived base every 15 minutes through
     the upslope against that morning's forecast by hour."""
     day = now.replace(tzinfo=None, hour=0, minute=0, second=0, microsecond=0)
@@ -1443,10 +1443,10 @@ def base_chart(obs, now, up, end, cid="basechart") -> tuple[str, list, list]:
     span = [up.hour * 60 + up.minute, stop.hour * 60 + stop.minute]
     note = (f"Derived from the stations every 15 minutes during the upslope; forecast by hour, "
             f"{src}.")
-    return chart_html(cid, derived, forecast, span, note), derived, forecast
+    return chart_html(cid, derived, forecast, span, note, title=title), derived, forecast
 
 
-def chart_html(cid, derived, forecast, span, note, nocu=None) -> str:
+def chart_html(cid, derived, forecast, span, note, nocu=None, title="") -> str:
     """Cloudbase line chart: derived (solid) and forecast (dashed) by minute of
     the day, the upslope shaded; derived and span may be empty for a forecast.
 
@@ -1462,7 +1462,9 @@ def chart_html(cid, derived, forecast, span, note, nocu=None) -> str:
     legend = ("" if not derived else
               '<span><span style="display:inline-block;width:16px;height:2px;background:#2a78d6;vertical-align:middle"></span> Derived (stations)</span>'
               '')
-    return f"""<div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted,#6b6b66);margin:2px 0 4px">
+    head = (f'<div style="font-weight:600;font-size:.9rem;margin:10px 0 2px">{esc(title)}</div>'
+            if title else "")
+    return f"""{head}<div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted,#6b6b66);margin:2px 0 4px">
 <span><span style="display:inline-block;width:16px;border-top:2px dashed #eb6834;vertical-align:middle"></span> Forecast</span>
 {legend}</div>
 <div style="position:relative;width:100%;min-width:0;height:220px"><canvas id="{cid}" role="img" aria-label="Derived cloudbase against the forecast through the day"></canvas></div>
@@ -1836,7 +1838,7 @@ def build() -> str:
     # The day so far against the morning's forecast (Sam): the review's chart,
     # drawn live from the upslope to the newest reading.
     if up is not None and len(obs) and not day_over:
-        live = safely(base_chart, obs, now, up, None, "livechart")
+        live = safely(base_chart, obs, now, up, None, "livechart", "Cloudbase so far, derived vs forecast")
         if live and live[1]:
             summary_html += live[0]
 
@@ -1903,7 +1905,8 @@ def build() -> str:
         fc_hours = safely(forecast_base_hours, tom) or {}
         cu_end = safely(forecast_cu_end, tom)
         fc_chart = (chart_html("fcchart", [], [[h * 60, v] for h, v in sorted(fc_hours.items())], None,
-                               "", nocu=[cu_end * 60, 16 * 60] if cu_end else None)
+                               "", nocu=[cu_end * 60, 16 * 60] if cu_end else None,
+                               title=f"Forecast cloudbase, {tom:%a %d %b}")
                     if fc_hours else "")
         t_html = (f'<p class="summary">{esc(said_t)}</p>' if said_t else "") + push_html + fc_chart + f"""<dl>
         <dt>Thermals</dt><dd>Probably {esc(strength_word(r['thermal']).lower())}<div class="sub">thermal.py on the forecast air (+3 F, it runs cool); within one category of the measured rating on every test day</div></dd>
