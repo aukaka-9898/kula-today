@@ -82,10 +82,9 @@ PATTERNS = [
      "origin": "2026-10-17 (Sam): dense low cloud, dew-fed morning", "fn": _late_start},
     {"id": "P3", "name": "Base will lift", "active": True, "where": "today",
      "origin": "2026-10-17: Kula Ag dew point +6 F after sunrise, 98% humid", "fn": _base_will_lift},
-    {"id": "P4", "name": "Deck under the lid", "active": False, "where": "today",
+    {"id": "P4", "name": "Deck under the lid", "active": True, "where": "today",
      "origin": "2026-10-17: moist slope under a 4,500-5,000 ft Kahului inversion; capped days 10-03/04",
-     "retired": "2026-10-17, Sam: a warning that can't say whether the base will break through the "
-                "lid or not is not useful (that day Kula Ag's base stopped at the lid at 09:45)",
+     "note": "Sam 2026-10-17: keep as a \"take your chances\" warning; no nowcast of break-through",
      "fn": _deck_under_lid},
     {"id": "P5", "name": "No headroom", "active": False, "where": "today",
      "origin": "2026-10-17: morning base 3,400 ft (Kula Ag height stands in for launch)",
