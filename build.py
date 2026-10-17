@@ -1033,9 +1033,12 @@ def best_split(lad: pd.DataFrame) -> dict:
     # upslope and put the line at Omaopio. Measured from the median, not the
     # freshest: api.weather.gov runs ~50 min behind the Mesonet and FAA, so
     # "45 min behind the freshest" would have dropped most MECO and coast rungs.
+    dropped = 0
     if len(f) >= 4:
         typical = f.observed_local.median()
-        f = f[f.observed_local > typical - pd.Timedelta("30min")].reset_index(drop=True)
+        keep = f.observed_local > typical - pd.Timedelta("30min")
+        dropped = int((~keep).sum())
+        f = f[keep].reset_index(drop=True)
     if len(f) < 2:
         return {"found": False, "why": "too few ladder stations reporting"}
     side = f.side.tolist()
@@ -1052,7 +1055,7 @@ def best_split(lad: pd.DataFrame) -> dict:
             "landmarks": [m for m, lat in cv.LANDMARKS if south.lat <= lat <= north.lat],
             "in_shear": south.side == "shear",
             "span_miles": abs(north.lat - south.lat) * cv.MILES_PER_DEG,
-            "as_of": f.observed_local.max()}
+            "as_of": f.observed_local.max(), "dropped": dropped}
 
 
 def line_now(obs: pd.DataFrame, now: datetime):
@@ -1358,7 +1361,7 @@ def log_line(now: datetime, pos) -> list:
     if pos and pos.get("found"):
         entries.append({"t": f"{now:%H:%M}", "north_lat": float(pos["north_lat"]),
                         "south_lat": float(pos["south_lat"]), "north_of": str(pos["north_of"]),
-                        "south_of": str(pos["south_of"])})
+                        "south_of": str(pos["south_of"]), "dropped": int(pos.get("dropped", 0))})
     LINE_LOG.write_text(json.dumps({"date": today, "entries": entries}), encoding="utf-8")
     return entries
 
@@ -1425,9 +1428,137 @@ def forecast_cu_end(day):
 
 def save_morning_forecast(now: datetime) -> None:
     hours = forecast_base_hours(now.date())
-    if hours:
-        MORNING_BASE_FILE.write_text(json.dumps({"date": f"{now:%Y-%m-%d}", "made": f"{now:%H:%M}",
-                                                 "hours": hours}), encoding="utf-8")
+    if not hours:
+        return
+    part = cv.slope_parcel()
+    part = part[(part.day == now.date()) & part.hour.between(9, 16)]
+    rrfs = safely(sd.fetch, "RRFS")
+    MORNING_BASE_FILE.write_text(json.dumps({
+        "date": f"{now:%Y-%m-%d}", "made": f"{now:%H:%M}", "hours": hours,
+        "temp": {int(r.hour): float(r.temp_f) for r in part.itertuples()},
+        "dew": {int(r.hour): float(r.dewpoint_f) for r in part.itertuples()},
+        "sun": None if (fs := safely(cv.sun_forecast)) is None or now.date() not in fs.index
+               else float(fs.loc[now.date()]),
+        "summit_push": safely(summit_push, rrfs, now.date()) if rrfs else None}), encoding="utf-8")
+
+
+# -- the automated review (Sam, 2026-10-16: "Can your review be automated?") --
+# Each evening the day review also writes the day's scorecard: hour rows
+# (09-15) and one day row, kept in docs/ for good. Every build then
+# recomputes a short summary that KulaModel's session-start hook reports --
+# flags only, and it never changes a correction itself.
+SCORE_HOURS = HERE / "docs" / "scorecard_hours.csv"
+SCORE_DAYS = HERE / "docs" / "scorecard_days.csv"
+REVIEW_SUMMARY = HERE / "docs" / "review_summary.json"
+
+
+def _replace_day(path, rows: list, day: str) -> None:
+    old = pd.read_csv(path, dtype={"date": str}) if path.exists() else pd.DataFrame()
+    if len(old):
+        old = old[old.date != day]
+    pd.concat([old, pd.DataFrame(rows)], ignore_index=True).to_csv(path, index=False)
+
+
+def write_scorecard(obs, now, up, end, word, entries) -> None:
+    day = now.replace(tzinfo=None, hour=0, minute=0, second=0, microsecond=0)
+    d = f"{day:%Y-%m-%d}"
+    try:
+        mf = json.loads(MORNING_BASE_FILE.read_text(encoding="utf-8"))
+        mf = mf if mf.get("date") == d else {}
+    except Exception:
+        mf = {}
+    core = _core(obs)
+    core = core[core.observed.dt.date == day.date()].copy()
+    core["h"] = core.observed.dt.hour
+    derived = (core.groupby(["h", "station_id"]).lcl_ft.mean().groupby("h").median()
+               if len(core) else pd.Series(dtype=float))
+    ka = obs[(obs.station_id == "001HI") & (obs.observed.dt.date == day.date())]
+    ka_t = ka.groupby(ka.observed.dt.hour).temp_f.mean()
+    ka_td = ka.groupby(ka.observed.dt.hour).dew_f.mean()
+    sun = {}
+    try:
+        got = [(t, w) for t, st, w in _retrying(sampler.read_mesonet_sun)(day + timedelta(hours=9), day + timedelta(hours=16))
+               if st.name == "Kula Ag"]
+        sx = pd.DataFrame(got, columns=["t", "w"])
+        sx["clear"] = mesonet.clear_sky(pd.DatetimeIndex(sx.t).tz_localize(HST))
+        sun = {h: g.w.sum() / g.clear.sum() for h, g in sx.groupby(sx.t.dt.hour) if g.clear.sum() > 50}
+    except Exception:
+        pass
+    hrs = []
+    for h in range(9, 16):
+        fb = mf.get("hours", {}).get(str(h))
+        hrs.append({"date": d, "hour": h,
+                    "fc_base": fb, "fc_base_raw": None if fb is None else fb - FORECAST_BASE_LOW_FT,
+                    "derived": None if h not in derived.index else round(float(derived[h]), -1),
+                    "fc_temp": mf.get("temp", {}).get(str(h)), "temp": None if h not in ka_t.index else round(float(ka_t[h]), 1),
+                    "fc_dew": mf.get("dew", {}).get(str(h)), "dew": None if h not in ka_td.index else round(float(ka_td[h]), 1),
+                    "sun": None if h not in sun else round(float(sun[h]), 2)})
+    _replace_day(SCORE_HOURS, hrs, d)
+
+    # Did summit cloud come over? Summit near saturation on an easterly while
+    # Kula Ag's sun halved from late morning to its worst afternoon hour.
+    intrusion = None
+    try:
+        r = mesonet.get("/mesonet/db/measurements", location="hawaii", station_ids="0153",
+                        var_ids="RH_1_Avg,WDrs_1_Avg,WS_1_Avg",
+                        start_date=f"{d}T13:00:00-10:00", end_date=f"{d}T16:00:00-10:00",
+                        row_mode="json", limit=5000)
+        x = pd.DataFrame(r)
+        x["value"] = pd.to_numeric(x.value)
+        v = x.pivot_table(index="timestamp", columns="variable", values="value")
+        east = float((v.WS_1_Avg * np.sin(np.radians(v.WDrs_1_Avg))).mean()) > 0
+        early = np.mean([sun[h] for h in (11, 12) if h in sun]) if any(h in sun for h in (11, 12)) else None
+        worst = min([sun[h] for h in (14, 15) if h in sun], default=None)
+        if early is not None and worst is not None:
+            intrusion = bool(v.RH_1_Avg.max() >= 93 and east and early >= 0.5 and worst <= early / 2)
+    except Exception:
+        pass
+    dropped = sum(1 for e in entries if e.get("dropped"))
+    _replace_day(SCORE_DAYS, [{
+        "date": d, "word": word, "fc_morning_made": mf.get("made"), "fc_sun": mf.get("sun"),
+        "summit_alert": mf.get("summit_push"), "intrusion": intrusion,
+        "upslope": None if up is None else f"{up:%H:%M}", "upslope_end": None if end is None else f"{end:%H:%M}",
+        "line_updates": len(entries), "line_updates_with_dropped": dropped}], d)
+
+
+def review_summary(now: datetime) -> None:
+    flags, stats = [], {}
+    if SCORE_HOURS.exists():
+        h = pd.read_csv(SCORE_HOURS, dtype={"date": str})
+        h = h[pd.to_datetime(h.date) >= pd.Timestamp(now.date()) - pd.Timedelta(days=30)].dropna(
+            subset=["fc_base", "derived"])
+        days = h.date.nunique()
+        stats["base_days"] = int(days)
+        if days >= 10:
+            err = h.fc_base - h.derived
+            m, raw = float(err.mean()), float((h.fc_base_raw - h.derived).mean())
+            stats.update(base_mean=round(m), base_raw_mean=round(raw), base_sd=round(float(err.std())))
+            if abs(m) > 300:
+                flags.append(f"Forecast base has run {m:+.0f} ft against the derived base over {days} days "
+                             f"(the +{FORECAST_BASE_LOW_FT} ft correction included; without it {raw:+.0f}).")
+            am, pm = err[h.hour <= 11].mean(), err[h.hour >= 13].mean()
+            stats.update(base_morning=round(float(am)), base_afternoon=round(float(pm)))
+            if abs(am - pm) > 600:
+                flags.append(f"Forecast base error differs by time of day over {days} days: morning {am:+.0f} ft, "
+                             f"afternoon {pm:+.0f} ft.")
+    if SCORE_DAYS.exists():
+        dd = pd.read_csv(SCORE_DAYS, dtype={"date": str})
+        al = dd[dd.summit_alert.notna()]
+        hits = int((al.intrusion == True).sum())  # noqa: E712
+        missed = int(((dd.intrusion == True) & dd.summit_alert.isna()).sum())  # noqa: E712
+        stats.update(alert_days=len(al), alert_hits=hits, intrusions_missed=missed)
+        if len(al) >= 5:
+            flags.append(f"Summit-cloud alert so far: {hits} of {len(al)} alerted days had cloud come over; "
+                         f"{missed} intrusions came without an alert.")
+        rec = dd.tail(7)
+        if rec.line_updates.sum() > 0:
+            share = float(rec.line_updates_with_dropped.sum() / rec.line_updates.sum())
+            stats["line_dropped_share_7d"] = round(share, 2)
+            if share > 0.3:
+                flags.append(f"Shear line: a stale station sat out of {share:.0%} of updates over the last week "
+                             "(the rule under review).")
+    REVIEW_SUMMARY.write_text(json.dumps({"made": f"{now:%Y-%m-%d %H:%M}", "flags": flags, "stats": stats},
+                                         indent=1), encoding="utf-8")
 
 
 def base_chart(obs, now, up, end, cid="basechart", title="Cloudbase, derived vs forecast") -> tuple[str, list, list]:
@@ -1864,12 +1995,15 @@ def build() -> str:
     safely(write_station_map, obs, lad if isinstance(lad, pd.DataFrame) else pd.DataFrame(), now, pos, west)
 
     entries = safely(log_line, now, pos) or []
+    safely(review_summary, now)
     review, today_kind, today_title = None, f"Measured today · {now:%H:%M} HST", "Today"
     if day_over:
         review = safely(day_review, obs, now, up, evening, rnet, day_word, model,
                         fc_today, fc_pair, entries)
         if review:
             safely(REVIEW_FILE.write_text, json.dumps(review), "utf-8")
+            end_t = upslope_end(rnet, evening) if up is not None else None
+            safely(write_scorecard, obs, now, up, end_t, day_word, entries)
     elif before_up:
         try:
             saved = json.loads(REVIEW_FILE.read_text(encoding="utf-8"))
