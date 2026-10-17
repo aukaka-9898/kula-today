@@ -533,7 +533,11 @@ def summary(obs: pd.DataFrame, ladder, up, verdict, pos, west, now: datetime,
                         text += (f"; the cloud tops out between about {round(floor, -2):,.0f} and "
                                  f"{round(above[-1][1], -2):,.0f} ft, with sun above it")
                         placed = True
-                cam = safely(camera_now, "Puunianiau") if not placed and (ka < 0.5 or top is not None) else None
+                # The lower Kula slope's average sun, as P4 uses: Kula Ag alone at
+                # 53% hid the tops while Keokea sat at 31% (Sam, 2026-10-17).
+                lowk = [min(s, 1.0) for n, _, s in ladder if n in ("Kula Ag", "Keokea") and s is not None]
+                shaded_low = bool(lowk) and sum(lowk) / len(lowk) < 0.6
+                cam = safely(camera_now, "Puunianiau") if not placed and (shaded_low or top is not None) else None
                 if cam is not None:
                     text += ("; cloud reaches about 6,900 ft (Puunianiau camera in cloud)" if cam
                              else "; the cloud tops out below about 6,900 ft (Puunianiau camera clear)")
