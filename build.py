@@ -2003,7 +2003,62 @@ def chart_html(cid, derived, forecast, span, note, nocu=None, title="") -> str:
 
 
 
-def day_review(obs, now, up, evening, rnet, word, model, fc_today, fc_pair, entries) -> dict:
+def _hm(m: int) -> str:
+    return f"{m // 60:02d}:{m % 60:02d}"
+
+
+def day_notes(derived: list, forecast: list, inv, phase: dict, fired: dict) -> list:
+    """What the day did, for the review (Sam, 2026-10-17: "The daily recap can
+    include such observations"). Fixed rules on the saved data, one per kind
+    of observation; an ordinary day gives few or none."""
+    notes = []
+    if phase.get("wet"):
+        start2 = phase["intervals"][0][0] if phase.get("intervals") else None
+        notes.append("Saturated, dew-fed morning" + (f": low cloud until about {start2}." if start2 else "."))
+    pts = sorted(derived)
+    # the biggest 30-minute rise of the base
+    best = None
+    for (m0, v0), (m1, v1) in zip(pts, pts[2:]):
+        if m1 - m0 == 30 and (best is None or v1 - v0 > best[2]):
+            best = (m0, m1, v1 - v0)
+    if best and best[2] >= 700:
+        notes.append(f"Base stepped up about {round(best[2], -2):,.0f} ft between {_hm(best[0])} and "
+                     f"{_hm(best[1])} as mixing took over.")
+    # a plateau at the Kahului lid
+    if inv and pts:
+        near = [(m, v) for m, v in pts if abs(v - inv["base_ft"]) <= 500]
+        run, longest = [], []
+        for m, v in near:
+            run = run + [(m, v)] if run and m - run[-1][0] == 15 else [(m, v)]
+            longest = run if len(run) > len(longest) else longest
+        if len(longest) >= 5:
+            mean = sum(v for _, v in longest) / len(longest)
+            hrs = (longest[-1][0] - longest[0][0]) / 60
+            notes.append(f"Base held at about {round(mean, -2):,.0f} ft, at the Kahului lid "
+                         f"({inv['base_ft']:,.0f} ft), from {_hm(longest[0][0])} for about "
+                         f"{hrs:.0f} hour{'s' if round(hrs) != 1 else ''}.")
+    # forecast peak against the real base at the same time
+    if forecast and pts:
+        fm, fv = max(forecast, key=lambda x: x[1])
+        near = [v for m, v in pts if abs(m - fm) <= 15]
+        if near:
+            gap = fv - near[0]
+            if abs(gap) >= 700:
+                notes.append(f"The forecast peaked at {round(fv, -2):,.0f} ft at {_hm(fm)}; the base then was "
+                             f"about {round(abs(gap), -2):,.0f} ft {'lower' if gap > 0 else 'higher'}.")
+    if fired:
+        parts = []
+        active = {q["id"] for q in patterns.PATTERNS if q["active"]}
+        for pid in sorted({k.rstrip("c") for k in fired} & active):
+            t = fired.get(pid)
+            c = fired.get(pid + "c")
+            parts.append(f"{pid}" + (f" at {t}" if t else "") + (f", confirmed {c}" if c else ""))
+        if parts:
+            notes.append("Patterns: " + "; ".join(parts) + ".")
+    return notes
+
+
+def day_review(obs, now, up, evening, rnet, word, model, fc_today, fc_pair, entries, inv=None) -> dict:
     """The whole flying day, for the Today panel after the upslope ends."""
     day = now.replace(tzinfo=None, hour=0, minute=0, second=0, microsecond=0)
     end = upslope_end(rnet, evening) if up is not None else None
@@ -2060,8 +2115,13 @@ def day_review(obs, now, up, evening, rnet, word, model, fc_today, fc_pair, entr
                   + '<div class="sub">Lower elevations, during the upslope</div>')
                  if lw else "Unavailable")
 
+    notes = (safely(day_notes, derived, forecast, inv, PHASE, _patterns_today(f"{now:%Y-%m-%d}")) or []
+             if up is not None and len(obs) and got and got[1] else [])
+    notes_html = ('<div class="watch"><div class="kind">What the day did</div><ul>'
+                  + "".join(f"<li>{esc(n)}</li>" for n in notes) + "</ul></div>") if notes else ""
     return {"date": f"{now:%Y-%m-%d}", "word": word, "summary": " ".join(said),
-            "therm": therm, "base": chart_html, "chart": chart if up is not None and len(obs) and got and got[1] else "",
+            "therm": therm, "base": chart_html, "notes": notes,
+            "chart": notes_html + (chart if up is not None and len(obs) and got and got[1] else ""),
             "line": line_html,
             "up": up_html, "wind": wind_html}
 
@@ -2412,7 +2472,7 @@ def build() -> str:
     review, today_kind, today_title = None, f"Measured today · {now:%H:%M} HST", "Today"
     if day_over:
         review = safely(day_review, obs, now, up, evening, rnet, day_word, model,
-                        fc_today, fc_pair, entries)
+                        fc_today, fc_pair, entries, next((i for i in inv_today if i), None))
         if review:
             safely(REVIEW_FILE.write_text, json.dumps(review), "utf-8")
             end_t = upslope_end(rnet, evening) if up is not None else None
