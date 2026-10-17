@@ -36,6 +36,7 @@ import mesonet                          # noqa: E402
 import sampler                          # noqa: E402
 import sounding as sd                   # noqa: E402
 import thermal as th                    # noqa: E402
+import patterns                         # noqa: E402
 from kula import OFF_SLOPE_STATIONS     # noqa: E402
 
 def _retrying(fn, tries: int = 3):
@@ -1476,6 +1477,21 @@ def save_morning_forecast(now: datetime) -> None:
 # flags only, and it never changes a correction itself.
 SCORE_HOURS = HERE / "docs" / "scorecard_hours.csv"
 SCORE_DAYS = HERE / "docs" / "scorecard_days.csv"
+PATTERN_LOG = HERE / "docs" / "patterns_log.json"
+
+
+def log_patterns(now: datetime, fired: list) -> dict:
+    """{id: first HH:MM it fired today}, kept for the day's scorecard."""
+    today = f"{now:%Y-%m-%d}"
+    try:
+        log = json.loads(PATTERN_LOG.read_text(encoding="utf-8"))
+    except Exception:
+        log = {}
+    seen = log.get("fired", {}) if log.get("date") == today else {}
+    for pid, _, _ in fired:
+        seen.setdefault(pid, f"{now:%H:%M}")
+    PATTERN_LOG.write_text(json.dumps({"date": today, "fired": seen}), encoding="utf-8")
+    return seen
 # Per-station forecast vs measured LCL, for a per-station forecast base once
 # 6-8 weeks are logged (Sam, 2026-10-16: test on 31 days had per-station
 # corrections ~12% better than the flat +400, but too few days to trust).
@@ -1558,7 +1574,16 @@ def write_scorecard(obs, now, up, end, word, entries) -> None:
         "date": d, "word": word, "fc_morning_made": mf.get("made"), "fc_sun": mf.get("sun"),
         "summit_alert": mf.get("summit_push"), "intrusion": intrusion,
         "upslope": None if up is None else f"{up:%H:%M}", "upslope_end": None if end is None else f"{end:%H:%M}",
-        "line_updates": len(entries), "line_updates_with_dropped": dropped}], d)
+        "line_updates": len(entries), "line_updates_with_dropped": dropped,
+        "patterns": " ".join(f"{k}@{v}" for k, v in sorted(_patterns_today(d).items()))}], d)
+
+
+def _patterns_today(d: str) -> dict:
+    try:
+        log = json.loads(PATTERN_LOG.read_text(encoding="utf-8"))
+        return log.get("fired", {}) if log.get("date") == d else {}
+    except Exception:
+        return {}
 
 
 def review_summary(now: datetime) -> None:
@@ -2096,6 +2121,20 @@ def build() -> str:
                    if mc.get("rise", 0) >= 1.5 else ".")
                 + (f" {said}" if said else ""))
     summary_html = f'<p class="summary">{esc(said)}</p>' if said else ""
+    # The pattern vocabulary (patterns.py): situations the page recognises,
+    # each shown with its ID so it can be found, changed or dropped there.
+    ka = obs[obs.station_id == "001HI"].sort_values("observed") if len(obs) else obs
+    recent = ka[ka.observed >= ka.observed.max() - pd.Timedelta("30min")] if len(ka) else ka
+    ctx = {"now": now, "up": up, "morning": mc, "base": base["mid"] if base else None,
+           "ka_td_trend": float(recent.dew_f.iloc[-1] - recent.dew_f.iloc[0]) if len(recent) >= 2 else None,
+           "ka_sun": ka_sun, "inv": next((i for i in inv_today if i), None),
+           "upslope_typical": UPSLOPE_TYPICAL[now.month]}
+    fired = (safely(patterns.watch, ctx) or []) if not day_over else []
+    safely(log_patterns, now, fired)
+    if fired:
+        summary_html += ('<div class="watch"><div class="kind">What to watch</div><ul>'
+                         + "".join(f'<li>{esc(t)} <span class="pid">{pid} · {esc(n)}</span></li>'
+                                   for pid, n, t in fired) + "</ul></div>")
     # The day so far against the morning's forecast (Sam): the review's chart,
     # drawn live from the upslope to the newest reading.
     if up is not None and len(obs) and not day_over:
@@ -2164,7 +2203,8 @@ def build() -> str:
         push_html = (f'<div class="alert">Possible short day: the model has moist trade air lifted '
                      f'up the windward slope and pushed over the summit ridge on an easterly, from '
                      f'about {push:02d}:00. If it comes, Kula can lose its sun by mid-afternoon. '
-                     f'Look for early clouds at the summit ridge.</div>' if push else "")
+                     f'Look for early clouds at the summit ridge. <span class="pid">P1 · Summit cloud pushed over</span></div>'
+                     if push else "")
         # The forecast base through the day, charted like the review (Sam).
         fc_hours = safely(forecast_base_hours, tom) or {}
         cu_end = safely(forecast_cu_end, tom)
