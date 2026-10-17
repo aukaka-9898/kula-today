@@ -25,7 +25,13 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
+      # Latest main with full history, not the shallow triggering commit: a
+      # queued build, or a code push landing mid-build, left Publish unable to
+      # rebase ("Run failed" emails, 12 runs 2026-10-12..17, all at Publish).
       - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
 
       - name: Check out the forecast code (private)
         uses: actions/checkout@v4
