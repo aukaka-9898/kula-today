@@ -933,6 +933,14 @@ LINE_SMOOTH = pd.Timedelta("60min")
 KEKOA = ("HNMA", "Red Hill", 20.79729, 2819)   # FAA calls it Kekoa; Sam: "Red Hill"
 KEKOA_LON = -156.31142
 KEKOA_URL = "https://weathercams.faa.gov/api/summary"
+# More rungs for the shear line (Sam), read from api.weather.gov like the
+# coastal three: (id, name, lat, elev_ft, lon). Ladder and map only.
+EXTRA_LADDER = [
+    ("015HE", "MECO Makawao Ave", 20.83766, 1595, -156.32803),
+    ("129HE", "MECO Pulehu Rd 2", 20.82525, 647, -156.39461),
+    ("003HE", "MECO Kula 2", 20.82302, 2320, -156.30763),
+    ("094HE", "MECO Olinda Rd", 20.80301, 4021, -156.27382),
+]
 KEKOA_PAGE = "https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/summary"
 
 
@@ -978,7 +986,7 @@ def smoothed_ladder(obs: pd.DataFrame, now: datetime) -> pd.DataFrame:
     since = now - LINE_SMOOTH
     cut = since.replace(tzinfo=None)
     rows = []
-    for sid, name, lat, elev in cv.LADDER + [KEKOA]:
+    for sid, name, lat, elev in cv.LADDER + [KEKOA] + [e[:4] for e in EXTRA_LADDER]:
         have = (obs[(obs.station_id == sid) & obs.wind_dir.notna()]
                 [["observed", "wind_dir", "wind_mph"]] if len(obs) else pd.DataFrame())
         if sid == KEKOA[0]:
@@ -1283,6 +1291,13 @@ def write_station_map(obs: pd.DataFrame, lad: pd.DataFrame, now: datetime, pos=N
         r = lad[lad.name == name] if len(lad) else lad
         last = r.iloc[0] if len(r) else None
         rows.append({"name": name, "lat": lat, "lon": lon, "elev_ft": None,
+                     "dir": None if last is None else round(float(last.wind_dir)),
+                     "mph": None if last is None else round(float(last.wind_mph)),
+                     "at": None if last is None else f"{last.observed_local:%H:%M}"})
+    for sid, name, lat, elev, lon in EXTRA_LADDER:
+        r = lad[lad.name == name] if len(lad) else lad
+        last = r.iloc[0] if len(r) else None
+        rows.append({"name": name, "lat": lat, "lon": lon, "elev_ft": elev,
                      "dir": None if last is None else round(float(last.wind_dir)),
                      "mph": None if last is None else round(float(last.wind_mph)),
                      "at": None if last is None else f"{last.observed_local:%H:%M}"})
