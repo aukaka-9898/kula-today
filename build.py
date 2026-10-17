@@ -1395,7 +1395,8 @@ def forecast_cu_end(day):
     part = part[part.day == day]
     got = th.assess(part, RELEASE_FT, window=(8, 17))
     on = got.index[got.working.astype(bool)] if "working" in got else got.index
-    return int(on.max()) + 1 if len(on) and on.max() < 17 else None
+    # Only when at least an hour is left before 17:00, or the band is a sliver.
+    return int(on.max()) + 1 if len(on) and on.max() < 16 else None
 
 
 def save_morning_forecast(now: datetime) -> None:
@@ -1405,7 +1406,7 @@ def save_morning_forecast(now: datetime) -> None:
                                                  "hours": hours}), encoding="utf-8")
 
 
-def base_chart(obs, now, up, end) -> tuple[str, list, list]:
+def base_chart(obs, now, up, end, cid="basechart") -> tuple[str, list, list]:
     """(html, derived, forecast): the derived base every 15 minutes through
     the upslope against that morning's forecast by hour."""
     day = now.replace(tzinfo=None, hour=0, minute=0, second=0, microsecond=0)
@@ -1419,7 +1420,7 @@ def base_chart(obs, now, up, end) -> tuple[str, list, list]:
         saved = json.loads(MORNING_BASE_FILE.read_text(encoding="utf-8"))
         assert saved["date"] == f"{day:%Y-%m-%d}"
         fc = {int(h): v for h, v in saved["hours"].items()}
-        src = f"as of {saved['made']} that morning"
+        src = f"the {saved['made']} morning forecast"
     except Exception:
         fc = safely(forecast_base_hours, day.date()) or {}
         src = "a later run (the morning forecast was not saved)"
@@ -1427,7 +1428,7 @@ def base_chart(obs, now, up, end) -> tuple[str, list, list]:
     span = [up.hour * 60 + up.minute, stop.hour * 60 + stop.minute]
     note = (f"Derived from the stations every 15 minutes during the upslope; forecast by hour, "
             f"{src}.")
-    return chart_html("basechart", derived, forecast, span, note), derived, forecast
+    return chart_html(cid, derived, forecast, span, note), derived, forecast
 
 
 def chart_html(cid, derived, forecast, span, note, nocu=None) -> str:
@@ -1813,6 +1814,12 @@ def build() -> str:
         if ahead:
             said = f"Today's forecast: {ahead}" + (f" {said}" if said else "")
     summary_html = f'<p class="summary">{esc(said)}</p>' if said else ""
+    # The day so far against the morning's forecast (Sam): the review's chart,
+    # drawn live from the upslope to the newest reading.
+    if up is not None and len(obs) and not day_over:
+        live = safely(base_chart, obs, now, up, None, "livechart")
+        if live and live[1]:
+            summary_html += live[0]
 
     safely(write_station_map, obs, lad if isinstance(lad, pd.DataFrame) else pd.DataFrame(), now, pos, west)
 
