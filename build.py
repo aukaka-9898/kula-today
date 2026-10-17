@@ -1647,8 +1647,9 @@ def base_chart(obs, now, up, end, cid="basechart", title="Cloudbase, derived vs 
 
 
 # A forecast base is an educated guess (Sam): hour by hour it missed the
-# stations by 680-850 ft either way over 31 days (9/13-10/13), so it is drawn
-# as a band, not a line.
+# stations by 680-850 ft either way over 31 days (9/13-10/13), so the
+# Forecast panel says "give or take" this much. The chart band that drew it
+# was dropped (Sam, 2026-10-17).
 FORECAST_BAND_FT = 700
 
 
@@ -1671,7 +1672,7 @@ def chart_html(cid, derived, forecast, span, note, nocu=None, title="") -> str:
     head = (f'<div style="font-weight:600;font-size:.9rem;margin:10px 0 2px">{esc(title)}</div>'
             if title else "")
     return f"""{head}<div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted,#6b6b66);margin:2px 0 4px">
-<span><span style="display:inline-block;width:16px;border-top:2px dashed #eb6834;vertical-align:middle"></span> Forecast, ± {FORECAST_BAND_FT:,} ft</span>
+<span><span style="display:inline-block;width:16px;border-top:2px dashed #eb6834;vertical-align:middle"></span> Forecast</span>
 {legend}</div>
 <div style="position:relative;width:100%;min-width:0;height:220px"><canvas id="{cid}" role="img" aria-label="Derived cloudbase against the forecast through the day"></canvas></div>
 {f'<div class="sub">{esc(note)}</div>' if note else ""}
@@ -1688,22 +1689,18 @@ def chart_html(cid, derived, forecast, span, note, nocu=None, title="") -> str:
     g.save(); g.fillStyle = 'rgba(137,135,129,0.14)';
     g.fillRect(x.getPixelForValue(d.up[0]), a.top, x.getPixelForValue(d.up[1]) - x.getPixelForValue(d.up[0]), a.bottom - a.top); g.restore(); }} }};
   var hm = function (m) {{ return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); }};
-  var BAND = {FORECAST_BAND_FT};
   var ys = d.derived.map(function (a) {{ return a[1]; }}).concat(d.forecast.map(function (a) {{ return a[1]; }}));
   var xs = [540, 960];
   new Chart(document.getElementById('{cid}'), {{
     type: 'line',
     data: {{ datasets: [
       {{ label: 'Derived', data: d.derived.map(pt), borderColor: '#2a78d6', borderWidth: 2, pointRadius: 0, tension: 0.3 }},
-      {{ label: 'band+', data: d.forecast.map(function (a) {{ return {{x: a[0], y: a[1] + BAND}}; }}), borderWidth: 0, pointRadius: 0, tension: 0.3, fill: '+1', backgroundColor: 'rgba(235,104,52,0.13)' }},
-      {{ label: 'band-', data: d.forecast.map(function (a) {{ return {{x: a[0], y: a[1] - BAND}}; }}), borderWidth: 0, pointRadius: 0, tension: 0.3, fill: false }},
       {{ label: 'Forecast', data: d.forecast.map(pt), borderColor: '#eb6834', borderWidth: 2, borderDash: [6, 4], pointRadius: 3, pointBackgroundColor: '#eb6834', tension: 0.3 }}
     ] }},
     options: {{ responsive: true, maintainAspectRatio: false, interaction: {{ mode: 'nearest', axis: 'x', intersect: false }},
       plugins: {{ legend: {{ display: false }}, tooltip: {{ callbacks: {{
         title: function (i) {{ return hm(i[0].parsed.x); }},
-        label: function (i) {{ return i.dataset.label + ': ' + Math.round(i.parsed.y).toLocaleString() + ' ft'; }} }},
-        filter: function (i) {{ return i.dataset.label.indexOf('band') < 0; }} }} }},
+        label: function (i) {{ return i.dataset.label + ': ' + Math.round(i.parsed.y).toLocaleString() + ' ft'; }} }} }} }},
       scales: {{
         x: {{ type: 'linear', min: xs[0], max: xs[1], ticks: {{ stepSize: 60, color: muted, callback: function (v) {{ return hm(v); }} }}, grid: {{ display: false }} }},
         y: {{ min: Math.min(3500, Math.floor(Math.min.apply(null, ys) / 500) * 500),
