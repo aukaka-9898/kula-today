@@ -2193,10 +2193,15 @@ def chart_html(cid, derived, forecast, span, note, nocu=None, title="") -> str:
               '')
     head = (f'<div style="font-weight:600;font-size:.9rem;margin:10px 0 2px">{esc(title)}</div>'
             if title else "")
+    # The Forecast key only when there is a forecast line (Sam, 2026-10-17:
+    # the derived-only charts still showed it).
+    fkey = ('<span><span style="display:inline-block;width:16px;border-top:2px dashed #eb6834;'
+            'vertical-align:middle"></span> Forecast</span>' if forecast else "")
+    aria = "Derived cloudbase against the forecast through the day" if forecast else "Derived cloudbase through the day"
     return f"""{head}<div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted,#6b6b66);margin:2px 0 4px">
-<span><span style="display:inline-block;width:16px;border-top:2px dashed #eb6834;vertical-align:middle"></span> Forecast</span>
+{fkey}
 {legend}</div>
-<div style="position:relative;width:100%;min-width:0;height:220px"><canvas id="{cid}" role="img" aria-label="Derived cloudbase against the forecast through the day"></canvas></div>
+<div style="position:relative;width:100%;min-width:0;height:220px"><canvas id="{cid}" role="img" aria-label="{aria}"></canvas></div>
 {f'<div class="sub">{esc(note)}</div>' if note else ""}
 <script>
 (function () {{
