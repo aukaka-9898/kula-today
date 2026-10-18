@@ -2023,6 +2023,14 @@ def _rh(t_f, td_f):
     return 100 * np.exp(17.625 * td / (243.04 + td)) / np.exp(17.625 * t / (243.04 + t))
 
 
+def slope_lcl(obs: pd.DataFrame):
+    """The middle of the slope stations' condensation levels now, or None."""
+    core = _core(obs)
+    last = core.sort_values("observed").groupby("station_id").tail(1)
+    last = last[last.observed > obs.observed.max() - pd.Timedelta("45min")]
+    return float(last.lcl_ft.median()) if len(last) >= 4 else None
+
+
 def morning_cloud(obs: pd.DataFrame, now: datetime):
     """Low morning cloud from a near-saturated slope, or None. Returns the
     median LCL, how many stations are near saturation, Kula Ag's air and its
@@ -2545,6 +2553,14 @@ def build() -> str:
                      f'About <span class="num">{ft(round(mc["base"], -2))} ft</span>'
                      f'<div class="sub">{mc["n_wet"]} of {mc["n"]} slope stations near saturation; '
                      f'no cloud overhead yet{dew}</div>')
+    elif up is None and now.hour < 12 and PHASE.get("wet") and (_fc := safely(slope_lcl, obs)):
+        # The morning line has fired today but the slope has dried below it in
+        # the sun, before the upslope registers (Sam, 2026-10-18: "latest
+        # update lost the low cloud call" just as the first wisps formed).
+        base_label = "First<br>clouds"
+        base_html = (f'About <span class="num">{ft(round(_fc, -2))} ft</span>'
+                     '<div class="sub">The slope is drying as it warms; the derived base takes over '
+                     'once the upslope sets in</div>')
     elif up is None and now.hour < 12:
         base_html = ('Not yet<div class="sub">Derived once the upslope sets in, '
                      f"usually about {UPSLOPE_TYPICAL[now.month]}. Today's call is in the Forecast panel</div>")
@@ -2715,6 +2731,9 @@ def build() -> str:
                        next((i for i in inv_today if i), None), "yesterday")
         if ahead:
             said = f"Today's forecast: {ahead}" + (f" {said}" if said else "")
+    if not mc and up is None and now.hour < 12 and PHASE.get("wet") and (_fc := safely(slope_lcl, obs)):
+        said = (f"First clouds at about {ft(round(_fc, -2))} ft; the slope is drying as it warms."
+                + (f" {said}" if said else ""))
     if mc:
         said = ((f"Low cloud is down to about {ft(round(mc['base'], -2))} ft" if mc.get("overhead") else
                  f"No cloud over Kula yet. First clouds will form at about {ft(round(mc['base'], -2))} ft, "
