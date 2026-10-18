@@ -2843,9 +2843,10 @@ def build() -> str:
         # the sign; later Kula's own cumulus hide the summit. The model's hour
         # (push) is still logged for scoring.
         push_html = ('<div class="alert">Possible summit cloud push-over during the day: the model has '
-                     'moist trade air pushed over the summit ridge on an easterly. '
-                     '<b>Check the summit ridge in the morning</b> (Red Hill camera): clouds there are '
-                     'the sign. <span class="pid">P1 · Summit cloud pushed over</span></div>'
+                     'moist trade air pushed over the summit ridge on an easterly. If it comes, Kula can '
+                     'lose its sun, thermals weaken and the day ends early; the moist air mixed in also '
+                     'holds the base lower. <b>Check the summit ridge in the morning</b> (Red Hill camera): '
+                     'clouds there are the sign. <span class="pid">P1 · Summit cloud pushed over</span></div>'
                      if push else "")
         # The hourly forecast chart is gone (Sam, 2026-10-17): over 32 days its
         # afternoon shape was right less often than "always flat", and its
