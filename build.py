@@ -2774,10 +2774,14 @@ def build() -> str:
         push = safely(summit_push, rrfs, tom) if rrfs else None
         if rrfs:
             safely(log_alert, tom, push, now)
-        push_html = (f'<div class="alert">Possible short day: the model has moist trade air lifted '
-                     f'up the windward slope and pushed over the summit ridge on an easterly, from '
-                     f'about {push:02d}:00. If it comes, Kula can lose its sun by mid-afternoon. '
-                     f'Look for early clouds at the summit ridge. <span class="pid">P1 · Summit cloud pushed over</span></div>'
+        # Sam, 2026-10-18: say only that a push-over is possible during the day,
+        # and flag the morning look -- cloud on the summit ridge in the morning is
+        # the sign; later Kula's own cumulus hide the summit. The model's hour
+        # (push) is still logged for scoring.
+        push_html = ('<div class="alert">Possible summit cloud push-over during the day: the model has '
+                     'moist trade air pushed over the summit ridge on an easterly. '
+                     '<b>Check the summit ridge in the morning</b> (Red Hill camera): clouds there are '
+                     'the sign. <span class="pid">P1 · Summit cloud pushed over</span></div>'
                      if push else "")
         # The hourly forecast chart is gone (Sam, 2026-10-17): over 32 days its
         # afternoon shape was right less often than "always flat", and its
