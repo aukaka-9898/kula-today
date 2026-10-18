@@ -2091,11 +2091,14 @@ def base_chart(obs, now, up, end, cid="basechart", title="Cloudbase, derived vs 
     except Exception:
         fc = safely(forecast_base_hours, day.date()) or {}
         src = "a later run (the morning forecast was not saved)"
-    forecast = [[h * 60, v] for h, v in sorted(fc.items())] if with_forecast else []
+    forecast = [[h * 60, v] for h, v in sorted(fc.items())]
     span = [up.hour * 60 + up.minute, stop.hour * 60 + stop.minute]
     note = (f"Derived from the stations every 15 minutes during the upslope; forecast by hour, "
             f"{src}." if with_forecast else "Derived from the stations every 15 minutes during the upslope.")
-    return chart_html(cid, derived, forecast, span, note, title=title), derived, forecast
+    # The forecast is still returned for the review notes and the scorecard,
+    # just not drawn (Sam, 2026-10-17: derived-only charts).
+    return (chart_html(cid, derived, forecast if with_forecast else [], span, note, title=title),
+            derived, forecast)
 
 
 # A forecast base is an educated guess (Sam): hour by hour it missed the
@@ -2218,13 +2221,15 @@ def day_notes(derived: list, forecast: list, inv, phase: dict, fired: dict, deca
                              f"about {round(abs(gap), -2):,.0f} ft {'lower' if gap > 0 else 'higher'}.")
     if fired:
         parts = []
-        active = {q["id"] for q in patterns.PATTERNS if q["active"]}
-        for pid in sorted({k.rstrip("c") for k in fired} & active):
+        # Named, not just numbered (Sam, 2026-10-17: "p3 and p4 are claimed
+        # but not defined"): the ID stays for finding it in patterns.py.
+        names = {q["id"]: q["name"] for q in patterns.PATTERNS if q["active"]}
+        for pid in sorted({k.rstrip("c") for k in fired} & set(names)):
             t = fired.get(pid)
             c = fired.get(pid + "c")
-            parts.append(f"{pid}" + (f" at {t}" if t else "") + (f", confirmed {c}" if c else ""))
+            parts.append(f"{names[pid]} ({pid})" + (f" from {t}" if t else "") + (f", confirmed {c}" if c else ""))
         if parts:
-            notes.append("Patterns: " + "; ".join(parts) + ".")
+            notes.append("Watched for: " + "; ".join(parts) + ".")
     return notes
 
 
@@ -2255,7 +2260,7 @@ def day_review(obs, now, up, evening, rnet, word, model, fc_today, fc_pair, entr
 
     chart_html = "Not derived<div class=\"sub\">No upslope, so no slope air to derive it from</div>"
     if up is not None and len(obs):
-        got = safely(base_chart, obs, now, up, end)
+        got = safely(base_chart, obs, now, up, end, "basechart", "Cloudbase, derived", False)
         if got and got[1]:
             chart, derived, forecast = got
             dv = [v for _, v in derived]
