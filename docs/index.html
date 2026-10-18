@@ -85,7 +85,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><div class="tag">Kula soaring briefing</div><h1>Kula Today</h1></div>
-    <div class="date">Updated Sat 17 Oct 2026 · 16:07 HST</div>
+    <div class="date">Updated Sat 17 Oct 2026 · 16:22 HST</div>
   </header>
 
   <div>
@@ -95,16 +95,16 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 
   <div class="cols">
     <section class="panel today" aria-labelledby="t-today">
-      <div class="kind">Measured today · 16:07 HST</div>
+      <div class="kind">Measured today · 16:22 HST</div>
       <div class="head"><h2 id="t-today">Today</h2><span class="chip good">Moderate</span></div>
-      <p class="summary">Cloudbase is steady. Kula Ag had mostly sun over the last hour; the cloud tops out between about 6,600 and 6,900 ft, with sun above it. Upslope has run since about 08:15 at a light 4 mph, and thermals seem moderate. Trades are holding the shear line crossing Kula Highway near Omaopio, with no trade air on the lower west slope.</p><div class="watch"><div class="kind">What to watch</div><ul><li>Deck at a lid since about 10:05: base held at about 4,800 ft for the last 45 minutes; lower Kula slope shaded, sun above it. <span class="pid">P4c · Deck under the lid · confirmed</span></li></ul></div><div style="font-weight:600;font-size:.9rem;margin:10px 0 2px">Cloudbase so far, derived vs forecast</div><div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted,#6b6b66);margin:2px 0 4px">
+      <p class="summary">Cloudbase is steady. Kula Ag had full sun over the last hour; the cloud tops out between about 6,600 and 6,900 ft, with sun above it. Upslope has run since about 08:15 at a light 5 mph, and thermals seem moderate. Trades are holding the shear line crossing Kula Highway near Omaopio, with no trade air on the lower west slope.</p><div style="font-weight:600;font-size:.9rem;margin:10px 0 2px">Cloudbase so far, derived vs forecast</div><div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted,#6b6b66);margin:2px 0 4px">
 <span><span style="display:inline-block;width:16px;border-top:2px dashed #eb6834;vertical-align:middle"></span> Forecast</span>
 <span><span style="display:inline-block;width:16px;height:2px;background:#2a78d6;vertical-align:middle"></span> Derived (stations)</span></div>
 <div style="position:relative;width:100%;min-width:0;height:220px"><canvas id="livechart" role="img" aria-label="Derived cloudbase against the forecast through the day"></canvas></div>
 <div class="sub">Derived from the stations every 15 minutes during the upslope; forecast by hour, the 09:07 morning forecast.</div>
 <script>
 (function () {
-  var d = {"derived": [[540, 3350.0], [555, 3410.0], [570, 4830.0], [585, 5010.0], [600, 4810.0], [615, 4780.0], [630, 4690.0], [645, 4740.0], [660, 4740.0], [675, 4760.0], [690, 5030.0], [705, 4980.0], [720, 4720.0], [735, 4820.0], [750, 4810.0], [765, 4740.0], [780, 4480.0], [795, 4610.0], [810, 4900.0], [825, 4850.0], [840, 4870.0], [855, 4830.0], [870, 4710.0], [885, 4780.0], [900, 4630.0], [915, 4850.0], [930, 4610.0], [945, 4800.0]], "forecast": [[540, 4560.0], [600, 5260.0], [660, 5860.0], [720, 5860.0], [780, 5060.0], [840, 4660.0], [900, 4160.0], [960, 4160.0]], "up": [540, 945], "nocu": null}, pt = function (a) { return {x: a[0], y: a[1]}; };
+  var d = {"derived": [[540, 3350.0], [555, 3410.0], [570, 4830.0], [585, 5010.0], [600, 4810.0], [615, 4780.0], [630, 4690.0], [645, 4740.0], [660, 4740.0], [675, 4760.0], [690, 5030.0], [705, 4980.0], [720, 4720.0], [735, 4820.0], [750, 4810.0], [765, 4740.0], [780, 4480.0], [795, 4610.0], [810, 4900.0], [825, 4850.0], [840, 4870.0], [855, 4830.0], [870, 4710.0], [885, 4780.0], [900, 4630.0], [915, 4720.0], [930, 4820.0], [945, 4790.0], [960, 4790.0]], "forecast": [[540, 4560.0], [600, 5260.0], [660, 5860.0], [720, 5860.0], [780, 5060.0], [840, 4660.0], [900, 4160.0], [960, 4160.0]], "up": [540, 960], "nocu": null}, pt = function (a) { return {x: a[0], y: a[1]}; };
   var dark = matchMedia('(prefers-color-scheme: dark)').matches, muted = '#898781', grid = dark ? '#2c2c2a' : '#e1e0d9';
   var nocu = { id: 'nocu', beforeDatasetsDraw: function (c) { if (!d.nocu) return; var x = c.scales.x, a = c.chartArea, g = c.ctx,
     x0 = x.getPixelForValue(d.nocu[0]), x1 = x.getPixelForValue(d.nocu[1]);
@@ -138,13 +138,13 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 })();
 </script>
       <dl>
-        <dt>Thermals</dt><dd>Seem <strong>moderate</strong> as of 15:45<div class="sub">Kula Ag's last hour of air through the NAM sounding (thermal.py)</div></dd>
-        <dt>Derived<br>Cloudbase</dt><dd><span class="num">About 4,800 ft</span><div class="sub">Station estimate, 4,200–5,100 ft (11 stations, 15:45)</div></dd>
-        <dt>Sun</dt><dd><span class="num">60%</span> of clear sky, lower Kula slope<div class="sub">Last hour, as of 15:45; average of Kula Ag 84%, Keokea 35%; Pulehu left out, in trade air</div></dd>
-        <dt>Shear line</dt><dd>Crossing Kula Highway near Omaopio<div class="sub">Last hour: trades at MECO Olinda Rd, upslope at Red Hill</div><div class="sub">Trades at the coast: Paia 068° at 21 mph</div></dd>
+        <dt>Thermals</dt><dd>Seem <strong>moderate</strong> as of 16:00<div class="sub">Kula Ag's last hour of air through the NAM sounding (thermal.py)</div></dd>
+        <dt>Derived<br>Cloudbase</dt><dd><span class="num">About 4,800 ft</span><div class="sub">Station estimate, 4,500–5,200 ft (11 stations, 16:00)</div></dd>
+        <dt>Sun</dt><dd><span class="num">64%</span> of clear sky, lower Kula slope<div class="sub">Last hour, as of 16:00; average of Kula Ag 100%, Keokea 29%; Pulehu left out, in trade air</div></dd>
+        <dt>Shear line</dt><dd>Crossing Kula Highway near Omaopio<div class="sub">Last hour: trades at MECO Olinda Rd, upslope at Red Hill</div><div class="sub">Trades at the coast: Paia 064° at 24 mph</div></dd>
         
         <dt>Upslope</dt><dd>On since about <span class="num">08:15</span><div class="sub">Drainage ended about 07:45</div></dd>
-        <dt>Wind</dt><dd><span class="num">5 mph</span>, gusts to 15<div class="sub">Lower elevations, 10 stations, last hour</div><div class="alert">Gustier than usual</div></dd>
+        <dt>Wind</dt><dd><span class="num">5 mph</span>, gusts to 15<div class="sub">Lower elevations, 10 stations, last hour</div></dd>
       </dl>
     </section>
     <section class="panel tomorrow" aria-labelledby="t-tomorrow">
@@ -195,14 +195,14 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
         <dt>Sun</dt><dd><span class="num">95%</span> of clear sky, 10:00–14:00 (GFS)<div class="sub">The model can't see the slope's own cumulus: when it says 90% or more, Kula has measured about 80%. Good flying days measure about 80%, overcast about 50%, socked in 20%.</div></dd>
         <dt>Shear line</dt><dd>At Pukalani<div class="sub">Trades ENE (070°)</div></dd>
       </dl>
-      <div class="sub">Forecast as of 15:07 HST</div>
+      <div class="sub">Forecast as of 16:22 HST</div>
     </section>
   </div>
 
   <section class="block" aria-labelledby="t-ladder">
-    <h2 id="t-ladder">Sunlight up the slope, as of 15:45</h2>
-    <p>Share of clear-sky sunlight measured at each station over the last 60 minutes of readings. Stations under cloud read low; stations above its top read full sun.</p>
-    <div class="rows"><div class="row"><span>Summit</span><span class="elev">9,776</span><div class="bar "><span style="width:99%"></span></div><span class="pct">99%</span></div><div class="row"><span>Nene Nest</span><span class="elev">8,500</span><div class="bar "><span style="width:100%"></span></div><span class="pct">100%</span></div><div class="row"><span>Park HQ</span><span class="elev">6,926</span><div class="bar "><span style="width:100%"></span></div><span class="pct">100%</span></div><div class="row"><span>Kamehamenui 1</span><span class="elev">6,601</span><div class="bar "><span style="width:61%"></span></div><span class="pct">61%</span></div><div class="row"><span>Kula 1</span><span class="elev">6,554</span><div class="bar shaded"><span style="width:18%"></span></div><span class="pct">18%</span></div><div class="base"><span class="lbl">Cloudbase now</span><span class="elev">4,800</span><div class="line"></div><span></span></div><div class="row"><span>Kula Ag</span><span class="elev">3,162</span><div class="bar "><span style="width:84%"></span></div><span class="pct">84%</span></div><div class="row"><span>Keokea</span><span class="elev">2,849</span><div class="bar shaded"><span style="width:35%"></span></div><span class="pct">35%</span></div><div class="row"><span>Piiholo</span><span class="elev">2,090</span><div class="bar "><span style="width:100%"></span></div><span class="pct">100%</span></div><div class="row"><span>Pulehu</span><span class="elev">1,402</span><div class="bar "><span style="width:71%"></span></div><span class="pct">71%</span></div></div>
+    <h2 id="t-ladder">Sunlight up the slope, as of 16:00</h2>
+    <p>Share of clear-sky sunlight measured at each station over the last 60 minutes of readings. Stations under cloud read low; stations above its top read full sun. Late in the day the sun is low in the west, so a station under the deck can read full sun coming in under the deck's edge.</p>
+    <div class="rows"><div class="row"><span>Summit</span><span class="elev">9,776</span><div class="bar "><span style="width:98%"></span></div><span class="pct">98%</span></div><div class="row"><span>Nene Nest</span><span class="elev">8,500</span><div class="bar "><span style="width:100%"></span></div><span class="pct">100%</span></div><div class="row"><span>Park HQ</span><span class="elev">6,926</span><div class="bar "><span style="width:100%"></span></div><span class="pct">100%</span></div><div class="row"><span>Kamehamenui 1</span><span class="elev">6,601</span><div class="bar "><span style="width:61%"></span></div><span class="pct">61%</span></div><div class="row"><span>Kula 1</span><span class="elev">6,554</span><div class="bar shaded"><span style="width:18%"></span></div><span class="pct">18%</span></div><div class="base"><span class="lbl">Cloudbase now</span><span class="elev">4,800</span><div class="line"></div><span></span></div><div class="row"><span>Kula Ag</span><span class="elev">3,162</span><div class="bar "><span style="width:100%"></span></div><span class="pct">100%</span></div><div class="row"><span>Keokea</span><span class="elev">2,849</span><div class="bar shaded"><span style="width:29%"></span></div><span class="pct">29%</span></div><div class="row"><span>Piiholo</span><span class="elev">2,090</span><div class="bar "><span style="width:100%"></span></div><span class="pct">100%</span></div><div class="row"><span>Pulehu</span><span class="elev">1,402</span><div class="bar "><span style="width:75%"></span></div><span class="pct">75%</span></div></div>
   </section>
 
   <section class="block" aria-labelledby="t-week">
@@ -288,7 +288,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
    browser's 10-minute cached copy is bypassed. The 15-minute refresh stays
    as a backstop. */
 (function () {
-  var built = "2026-10-17T16:07";
+  var built = "2026-10-17T16:22";
   function check() {
     fetch("stations.json?" + Date.now(), {cache: "no-store"})
       .then(function (r) { return r.json(); })
