@@ -85,7 +85,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><div class="tag">Kula soaring briefing</div><h1>Kula Today</h1></div>
-    <div class="date">Updated Sat 17 Oct 2026 · 18:52 HST</div>
+    <div class="date">Updated Sat 17 Oct 2026 · 19:05 HST</div>
   </header>
 
   <div>
@@ -150,7 +150,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
     <section class="panel tomorrow" aria-labelledby="t-tomorrow">
       <div class="kind">Forecast</div>
       <div class="head"><h2 id="t-tomorrow">Tomorrow · Sun 18 Oct</h2><span class="chip good">Moderate</span></div>
-      <p class="summary">The model sees little cloud over Kula; the slope&#x27;s own cumulus are too small for it to show, so expect some. Thermals probably moderate. Trades from the ENE should put the shear line at Pukalani.</p><dl>
+      <p class="summary">Thermals probably moderate. Trades from the ENE should put the shear line at Pukalani.</p><dl>
         <dt>Thermals</dt><dd>Probably moderate<div class="sub">thermal.py on the forecast air (+3 F, it runs cool); within one category of the measured rating on every test day</div></dd>
         <dt>Cloudbase</dt><dd>Probably normal for October, about 4,500–5,400 ft<div class="sub">Most days the base levels off by mid-morning and holds. Nothing in the forecast points to a low or a high day.</div></dd>
         <dt>Sun</dt><dd><span class="num">95%</span> of clear sky, 10:00–14:00 (GFS)<div class="sub">The model can't see the slope's own cumulus: when it says 90% or more, Kula has measured about 80%. Good flying days measure about 80%, overcast about 50%, socked in 20%.</div></dd>
@@ -241,7 +241,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 })();
 </script>
 <style>.stn{font:600 11px/1.2 var(--body);padding:1px 4px;background:rgba(255,255,255,.85);border:0;box-shadow:none;color:#17242f}.stn:before{display:none}</style>
-<!-- build problems: none -->
+<!-- build problems: sun ladder from 17:30 reused -->
 <script>
 /* Catch up with a new build within ~2 minutes (Sam, 2026-10-17: "the page
    does not seem to autoupdate"). stations.json's "made" is the build time;
@@ -249,7 +249,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
    browser's 10-minute cached copy is bypassed. The 15-minute refresh stays
    as a backstop. */
 (function () {
-  var built = "2026-10-17T18:52";
+  var built = "2026-10-17T19:05";
   function check() {
     fetch("stations.json?" + Date.now(), {cache: "no-store"})
       .then(function (r) { return r.json(); })
