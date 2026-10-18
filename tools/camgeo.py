@@ -11,7 +11,10 @@ import numpy as np, requests
 HERE = os.path.dirname(os.path.abspath(__file__))
 CACHE = os.path.join(HERE, "camgeo_dem.json")
 LAT0, LON0, H0 = 20.79729, -156.31142, 2819 / 3.281   # m
-BEARING, HFOV, W, H = 180.0, 90.0, 1920, 1080
+# Bearing 183.8, not the FAA's listed 180: Sam's pasture top (20.727188,
+# -156.312052; ~4,600 ft, terrain model 4,633) sits at pixel ~905, 658, which
+# 180 put 60 px too far right (2026-10-18). Tilt still from the 4,900 ft line.
+BEARING, HFOV, W, H = 183.8, 90.0, 1920, 1080
 F = (W / 2) / math.tan(math.radians(HFOV / 2))         # focal length in px
 R = 6371000.0
 DISTS = np.arange(300, 40000, 200)
