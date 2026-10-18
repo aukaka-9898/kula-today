@@ -85,7 +85,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><div class="tag">Kula soaring briefing</div><h1>Kula Today</h1></div>
-    <div class="date">Updated Sat 17 Oct 2026 · 18:40 HST</div>
+    <div class="date">Updated Sat 17 Oct 2026 · 18:47 HST</div>
   </header>
 
   <div>
@@ -139,7 +139,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 </script>
       <dl>
         <dt>Thermals</dt><dd><strong>Light</strong> for the day, 10:00–14:00<div class="sub">Kula Ag's measured air through the NAM sounding (thermal.py); forecast was Moderate</div></dd>
-        <dt>Cloudbase</dt><dd><span class="num">3,300–5,000 ft</span><div class="sub">Derived from the stations during the upslope; the chart above sets it against the forecast</div></dd>
+        <dt>Cloudbase</dt><dd><span class="num">3,300–5,000 ft</span><div class="sub">Derived from the stations during the upslope</div></dd>
         
         <dt>Shear line</dt><dd>Crossing Kula Highway near Omaopio<div class="sub">Most of the day, 56 updates</div></dd>
         
@@ -249,7 +249,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
    browser's 10-minute cached copy is bypassed. The 15-minute refresh stays
    as a backstop. */
 (function () {
-  var built = "2026-10-17T18:40";
+  var built = "2026-10-17T18:47";
   function check() {
     fetch("stations.json?" + Date.now(), {cache: "no-store"})
       .then(function (r) { return r.json(); })
