@@ -2356,11 +2356,10 @@ def day_review(obs, now, up, evening, rnet, word, model, fc_today, fc_pair, entr
             dv = [v for _, v in derived]
             lo_m, hi_m = up.hour * 60 + up.minute, (end or obs.observed.max()).hour * 60 + (end or obs.observed.max()).minute
             fv = [v for m, v in forecast if lo_m <= m <= hi_m]
-            said.append(f"Cloudbase held {ft(round(min(dv), -2))}–{ft(round(max(dv), -2))} ft"
-                        + (f"; the forecast had {ft(round(min(fv), -2))}–{ft(round(max(fv), -2))}."
-                           if fv else "."))
-            chart_html = (f'<span class="num">{ft(round(min(dv), -2))}–{ft(round(max(dv), -2))} ft</span>'
-                          '<div class="sub">Derived from the stations during the upslope</div>')
+            # Not repeated in words (Sam, 2026-10-17: "since derived cloudbase is
+            # charted it does not need to be repeated in text"): no "Cloudbase
+            # held X-Y" sentence and no Cloudbase row in the review.
+            chart_html = ""
 
     ld = line_day(entries)
     if ld:
@@ -2753,7 +2752,7 @@ def build() -> str:
         summary_html = f'<p class="summary">{esc(review["summary"])}</p>' + review.get("chart", "")
         therm_html, line_html = review["therm"], review["line"]
         up_html, wind_html = review["up"], review["wind"]
-        base_label, base_html, ceil_html = "Cloudbase", review.get("base", "Unavailable"), ""
+        base_label, base_html, ceil_html = "Cloudbase", review.get("base", ""), ""
         sun_html = None                                   # in the history
 
     # tomorrow + outlook
@@ -2855,6 +2854,7 @@ def build() -> str:
         built=f"{now:%Y-%m-%dT%H:%M}",
         today_chip=today_chip, summary=summary_html, base_label=base_label,
         therm=therm_html, base=base_html, up=up_html, line=line_html,
+        base_row=(f"<dt>{base_label}</dt><dd>{base_html}</dd>" if base_html else ""),
         sun_row=(f"<dt>Sun</dt><dd>{sun_html}</dd>" if sun_html is not None else ""),
         wind=wind_html,
         ceil_row=(f"<dt>Ceiling</dt><dd>{ceil_html}</dd>" if ceil_html else ""),
