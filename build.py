@@ -1758,7 +1758,8 @@ def log_call(day, base: str, thermal: str, now: datetime) -> None:
         log = json.loads(CALLS_LOG.read_text(encoding="utf-8"))
     except Exception:
         log = {}
-    log[f"{day}"] = {"base": base, "thermal": thermal, "made": f"{now:%Y-%m-%d %H:%M}"}
+    log[f"{day}"] = {"base": base, "rule": CALL_RULE.get(f"{day}"), "thermal": thermal,
+                     "made": f"{now:%Y-%m-%d %H:%M}"}
     keep = sorted(log)[-120:]
     CALLS_LOG.write_text(json.dumps({k: log[k] for k in keep}, indent=0), encoding="utf-8")
 
@@ -1896,7 +1897,7 @@ def _call_scores(d: str, hrs: list) -> dict:
         h0 = int(fired[:2])
         if h0 in by_h and 15 in by_h:
             fell = bool(by_h[15] - by_h[h0] <= -300)
-    return {"base_call": call.get("base"), "thermal_call": call.get("thermal"),
+    return {"base_call": call.get("base"), "base_rule": call.get("rule"), "thermal_call": call.get("thermal"),
             "base_cat": rules.category(sum(mid) / len(mid), int(d[5:7])) if mid else None,
             "p6_fell": fell}
 
@@ -2121,20 +2122,30 @@ def today_level(now: datetime):
     return sum(v) / len(v) if v else None
 
 
+CALL_RULE = {}          # the rule behind the last cloudbase_call, for the call log
+
+
 def cloudbase_call(day, path, fc_hours: dict, level_today) -> tuple[str, str]:
-    """The day's base as a category, from the rules in rules.py (B1, B2)."""
+    """The day's base as a category, from the rules in rules.py (B1-B3)."""
+    CALL_RULE[f"{day}"] = None
     lo, hi = MONTH_BASE_RANGE[day.month]
     air = airmass_noon(path, day) if path else None
     fc = [v - FORECAST_BASE_LOW_FT for h, v in fc_hours.items() if 11 <= h <= 14]
     if air:
         f = {"month": day.month, "rh_5_7k": air["rh_5_7k"], "rh_7_10k": air["rh_7_10k"],
              "fc_level": sum(fc) / len(fc) if fc else None,      # B1 needs it, B2 does not
-             "today_cat": rules.category(level_today, datetime.now(HST).month)}
+             "today_cat": rules.category(level_today, datetime.now(HST).month),
+             "today_level": level_today}
         if rules.says("B1", f):
+            CALL_RULE[f"{day}"] = "B1"
             return ("Probably a low day",
                     "Moist air aloft and a low forecast base both point to it: right about 8 times in 10.")
         if rules.says("B2", f):
+            CALL_RULE[f"{day}"] = "B2"
             return ("May be a high day", "Dry air aloft after a high day today: right about 2 times in 3.")
+        if rules.says("B3", f):
+            CALL_RULE[f"{day}"] = "B3"
+            return ("May be a high day", "High base today and a high forecast: right about half the time.")
     return (f"Probably normal for {day:%B}, about {lo:,}–{hi:,} ft",
             "Most days the base levels off by mid-morning and holds. Nothing in the forecast points to "
             "a low or a high day.")

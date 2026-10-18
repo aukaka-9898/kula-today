@@ -18,6 +18,7 @@ Features (the page computes them live; monthly.py from the history tables):
     rh_7_10k    the same, 7,000-10,000 ft
     fc_level    the page's forecast base, 11-14 HST, without the +400 (ft)
     today_cat   "low" / "normal" / "high": the day the forecast is made on
+    today_level the day the forecast is made on: its midday derived base (ft)
     base_late   the derived base around 10:00-12:00 (ft)
 """
 import json
@@ -50,6 +51,13 @@ def _may_be_high(f) -> bool:
     return f.get("today_cat") == "high" and f["rh_5_7k"] < 40 and f["rh_7_10k"] < 20
 
 
+def _high_forecast(f) -> bool:
+    """A high base today and a forecast base well above the month's middle
+    (tomorrow only). Sam, 2026-10-17: "high day rule should be a priority"."""
+    lo, hi = MONTH_BASE_RANGE[f["month"]]
+    return f["today_level"] > 5150 and f["fc_level"] - (lo + hi) / 2 > 950
+
+
 def _high_base_drop(f) -> bool:
     """A base already high by late morning under moist air aloft comes down."""
     return f["base_late"] > 5400 and f["rh_5_7k"] > 45
@@ -62,6 +70,10 @@ RULES = {
     "B2": {"name": "May be high", "says": "high", "fn": _may_be_high,
            "history": "right 66% on 6% of days (high days 21% of all); low on 2%",
            "origin": "2026-10-17 (Sam: \"may be a high day\")"},
+    "B3": {"name": "May be high (high base, high forecast)", "says": "high", "fn": _high_forecast,
+           "history": "with B2: right 52% on 18% of days, catching 96 of 213 high days (45%); "
+                      "B3 alone 45%; the three slices 49/52/67%; low on 5%",
+           "origin": "2026-10-17: high-day search over 1,020 days (Sam: a priority)"},
     "P6": {"name": "High base, likely to drop", "says": "falls", "fn": _high_base_drop,
            "history": "fell 300+ ft by 15:00 on 84% of the 10% of days it fired (37% of all days)",
            "origin": "2026-10-17: recurred in all three held-back years at 11:00 and 12:00"},

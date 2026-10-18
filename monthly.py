@@ -48,6 +48,7 @@ def features() -> pd.DataFrame:
     d["cat"] = [rules.category(v, m) for v, m in zip(d.level, d.month)]
     prev = d.set_index("date")["cat"].asfreq("D").shift(1)
     d["today_cat"] = d.date.map(prev)                      # the day the forecast was made on
+    d["today_level"] = d.date.map(d.set_index("date")["level"].asfreq("D").shift(1))
     a = pd.read_csv(H / "nam12_ahead.csv", parse_dates=["date"])
     a = a[a.lead == 1][["date", "rh_5_7k_12", "rh_7_10k_12"]].rename(
         columns={"rh_5_7k_12": "rh_5_7k", "rh_7_10k_12": "rh_7_10k"})
@@ -66,7 +67,7 @@ def fires(rid: str, x: pd.DataFrame) -> pd.Series:
     for r in x.itertuples():
         f = {"month": r.month, "rh_5_7k": r.rh_5_7k_same if rid == "P6" else r.rh_5_7k,
              "rh_7_10k": r.rh_7_10k, "fc_level": r.fc_level, "today_cat": r.today_cat,
-             "base_late": r.base_late}
+             "today_level": r.today_level, "base_late": r.base_late}
         try:
             out.append(bool(fn(f)) if not any(pd.isna(v) for k, v in f.items() if k != "today_cat") else False)
         except TypeError:
@@ -118,9 +119,9 @@ def score_live(month: str) -> dict:
     s = pd.read_csv(SCORE_DAYS, dtype={"date": str})
     s = s[s.date.str.startswith(month)]
     out = {}
-    if "base_call" in s and "base_cat" in s:
-        for rid, word, cat in (("B1", "Low", "low"), ("B2", "May be high", "high")):
-            c = s[s.base_call == word]
+    if "base_rule" in s and "base_cat" in s:
+        for rid, cat in (("B1", "low"), ("B2", "high"), ("B3", "high")):
+            c = s[s.base_rule == rid]
             out[rid] = {"calls": len(c), "right": int((c.base_cat == cat).sum())}
     if "p6_fell" in s:
         c = s[s.p6_fell.notna()]
