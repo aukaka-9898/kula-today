@@ -85,7 +85,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><div class="tag">Kula soaring briefing</div><h1>Kula Today</h1></div>
-    <div class="date">Updated Sat 17 Oct 2026 · 18:37 HST</div>
+    <div class="date">Updated Sat 17 Oct 2026 · 18:40 HST</div>
   </header>
 
   <div>
@@ -98,9 +98,9 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
       <div class="kind">The day in review</div>
       <div class="head"><h2 id="t-today">Today · Sat 17 Oct</h2><span class="chip fair">Light</span></div>
       <p class="summary">A light day (forecast moderate). The upslope ran from about 08:15 to about 16:45. Cloudbase held 3,300–5,000 ft; the forecast had 4,200–5,900. Most of the day the shear line was crossing Kula Highway near Omaopio.</p><div class="watch"><div class="kind">What the day did</div><ul><li>Saturated, dew-fed morning: low cloud until about 09:30.</li><li>Base stepped up about 1,600 ft between 09:15 and 09:45 as mixing took over.</li><li>Base held flat at about 4,800 ft from 13:15 for about 4 hours, then the cloud decayed from the base up from about 16:30.</li><li>The forecast peaked at 5,900 ft at 11:00; the base then was about 1,100 ft lower.</li><li>Watched for: Base will lift (P3) from 08:56; Deck under the lid (P4) from 08:56, confirmed 10:50.</li></ul></div><div style="font-weight:600;font-size:.9rem;margin:10px 0 2px">Cloudbase, derived</div><div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted,#6b6b66);margin:2px 0 4px">
-<span><span style="display:inline-block;width:16px;border-top:2px dashed #eb6834;vertical-align:middle"></span> Forecast</span>
+
 <span><span style="display:inline-block;width:16px;height:2px;background:#2a78d6;vertical-align:middle"></span> Derived (stations)</span></div>
-<div style="position:relative;width:100%;min-width:0;height:220px"><canvas id="basechart" role="img" aria-label="Derived cloudbase against the forecast through the day"></canvas></div>
+<div style="position:relative;width:100%;min-width:0;height:220px"><canvas id="basechart" role="img" aria-label="Derived cloudbase through the day"></canvas></div>
 <div class="sub">Derived from the stations every 15 minutes during the upslope.</div>
 <script>
 (function () {
@@ -156,7 +156,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
         <dt>Sun</dt><dd><span class="num">95%</span> of clear sky, 10:00–14:00 (GFS)<div class="sub">The model can't see the slope's own cumulus: when it says 90% or more, Kula has measured about 80%. Good flying days measure about 80%, overcast about 50%, socked in 20%.</div></dd>
         <dt>Shear line</dt><dd>At Pukalani<div class="sub">Trades ENE (070°)</div></dd>
       </dl>
-      <div class="sub">Forecast as of 18:23 HST</div>
+      <div class="sub">Forecast as of 18:23 HST</div><div class="sub">Forecast rules last checked October 2026: all holding.</div>
     </section>
   </div>
 
@@ -249,7 +249,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
    browser's 10-minute cached copy is bypassed. The 15-minute refresh stays
    as a backstop. */
 (function () {
-  var built = "2026-10-17T18:37";
+  var built = "2026-10-17T18:40";
   function check() {
     fetch("stations.json?" + Date.now(), {cache: "no-store"})
       .then(function (r) { return r.json(); })
