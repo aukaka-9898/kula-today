@@ -2536,7 +2536,11 @@ def build() -> str:
     cu_clear = bool(cu) and cu[0] == "clear"
     mc = safely(morning_cloud, obs, now) if up is None and 6 <= now.hour < 12 and len(obs) else None
     global PHASE
-    PHASE = safely(update_phase, obs, now, bool(mc and mc.get("dewy")), up, day_over, bool(mc)) or {}
+    # Dew-morning phase 2 (base from the highest stations) RETIRED, Sam
+    # 2026-10-18: "Even with dew, stations provide correct base." wet is never
+    # set now, so _derived_at always uses all stations; the phase file keeps
+    # only the "morning" flag for the First clouds hand-over.
+    PHASE = safely(update_phase, obs, now, False, up, day_over, bool(mc)) or {}
     if PHASE.get("phase") == 2 and base and len(obs):
         _c = _core(obs)
         _c = _c[_c.observed >= obs.observed.max() - STALE]
