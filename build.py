@@ -701,8 +701,8 @@ def forecast_summary(r, pair, today_pair, inv, today_word: str) -> str:
             bits.append(f"a lower base than {today_word}")
     # No "rising / lowering through the afternoon": the forecast's afternoon
     # shape had no skill over 32 days (Sam, 2026-10-17).
-    if sky:
-        out.append(f"{sky}.")
+    # No sky sentence (Sam, 2026-10-17: "Unnecessary"): the model cannot see
+    # Kula's own cumulus, and the Sun row already says so.
     if bits:
         out.append(_cap(", ".join(bits)) + ".")
     word = strength_word(r["thermal"])
