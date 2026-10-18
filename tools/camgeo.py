@@ -2,8 +2,8 @@
 
 Camera at 20.79729 N, -156.31142, 2,819 ft, bearing 180, 90 deg wide over 1920
 px (rectilinear assumed, square pixels). Terrain from Open-Meteo's elevation
-API (Copernicus 90 m) sampled along each azimuth. Tilt calibrated so Sam's
-red line (x 872-937, y 651) lands on 4,900 ft.
+API (Copernicus 90 m) sampled along each azimuth. Tilt calibrated on Sam's
+pasture top (4,600 ft); bearing 183.8 from the same landmark.
 """
 import json, math, os, sys
 import numpy as np, requests
@@ -76,16 +76,15 @@ def terrain_at(x, y, tilt):
 
 
 def calibrate():
-    # Find the tilt that puts the red line's middle (x 905, y 651) at 4,900 ft.
-    lo, hi = -15.0, 15.0
-    for _ in range(40):
-        mid = (lo + hi) / 2
-        h, _ = terrain_at(905, 651, mid)
-        if h is None or h > 4900:
-            hi = mid      # looking too high on the slope -> tilt down
-        else:
-            lo = mid
-    return (lo + hi) / 2
+    """Tilt from Sam's pasture top: 20.727188, -156.312052, 4,600 ft, seen at
+    pixel ~905, 658 (2026-10-18). Replaces the hand-drawn 4,900 ft line, which
+    Sam says was about 300 ft off."""
+    lat, lon, el_m, y = 20.727188, -156.312052, 4600 / 3.281, 658
+    la1, lo1, la2, lo2 = map(math.radians, (LAT0, LON0, lat, lon))
+    d = 2 * R * math.asin(math.sqrt(math.sin((la2 - la1) / 2) ** 2
+                                    + math.cos(la1) * math.cos(la2) * math.sin((lo2 - lo1) / 2) ** 2))
+    ang = math.degrees(math.atan((el_m - H0 - d ** 2 / (2 * R) * (1 - 0.13)) / d))
+    return ang - math.degrees(math.atan((H / 2 - y) / F))
 
 
 if __name__ == "__main__":
