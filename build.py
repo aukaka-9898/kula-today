@@ -1601,6 +1601,33 @@ def morning_inversions(now: datetime) -> dict:
     return out
 
 
+# The latest forecast for each hour, beside the morning save (Sam, 2026-10-17:
+# "Are we recording latest model cloudbase to compare with derived?"). Each
+# build recomputes today's forecast base and keeps it only for hours not yet
+# begun -- Open-Meteo's past hours are partly filled from what happened, which
+# would flatter the score. Tells whether later runs fix the morning's misses
+# (stale forecast) or repeat them (model bias a correction can fix).
+FORECAST_LATEST_FILE = HERE / "docs" / "forecast_latest.json"
+
+
+def log_forecast_latest(now: datetime) -> None:
+    if not 6 <= now.hour < 16:
+        return
+    d = f"{now:%Y-%m-%d}"
+    try:
+        fl = json.loads(FORECAST_LATEST_FILE.read_text(encoding="utf-8"))
+        if fl.get("date") != d:
+            raise ValueError
+    except Exception:
+        fl = {"date": d, "hours": {}, "made": {}}
+    hours = forecast_base_hours(now.date()) or {}
+    for h, v in hours.items():
+        if h > now.hour:
+            fl["hours"][str(h)] = v
+            fl["made"][str(h)] = f"{now:%H:%M}"
+    FORECAST_LATEST_FILE.write_text(json.dumps(fl), encoding="utf-8")
+
+
 def save_morning_forecast(now: datetime) -> None:
     hours = forecast_base_hours(now.date())
     if not hours:
@@ -1756,11 +1783,17 @@ def write_scorecard(obs, now, up, end, word, entries) -> None:
         shown = {int(k): v[0] for k, v in _dl.get("points", {}).items()} if _dl.get("date") == d else {}
     except Exception:
         shown = {}
+    try:
+        fl = json.loads(FORECAST_LATEST_FILE.read_text(encoding="utf-8"))
+        fl = fl.get("hours", {}) if fl.get("date") == d else {}
+    except Exception:
+        fl = {}
     hrs = []
     for h in range(9, 16):
         fb = mf.get("hours", {}).get(str(h))
         hrs.append({"date": d, "hour": h,
                     "fc_base": fb, "fc_base_raw": None if fb is None else fb - FORECAST_BASE_LOW_FT,
+                    "fc_base_latest": fl.get(str(h)),
                     "derived": None if h not in derived.index else round(float(derived[h]), -1),
                     "derived_top2": None if h not in top2.index else round(float(top2[h]), -1),
                     "derived_shown": shown.get(h * 60),
@@ -2483,6 +2516,7 @@ def build() -> str:
 
     entries = safely(log_line, now, pos) or []
     safely(log_cameras, now)
+    safely(log_forecast_latest, now)
     safely(review_summary, now)
     review, today_kind, today_title = None, f"Measured today · {now:%H:%M} HST", "Today"
     if day_over:
