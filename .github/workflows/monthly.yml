@@ -1,0 +1,61 @@
+name: Monthly rule check
+
+# The rolling 1,000-day check of the page's history rules (monthly.py):
+# adds last month to history/, rescoring every rule, and may switch one off
+# in docs/rules_status.json -- never on. 02:17 HST on the 2nd, so the month's
+# last Mesonet readings are in.
+on:
+  schedule:
+    - cron: "17 12 2 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build          # never alongside a page build
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Check out the forecast code (private)
+        uses: actions/checkout@v4
+        with:
+          repository: aukaka-9898/KulaModel
+          token: ${{ secrets.KULAMODEL_TOKEN }}
+          path: KulaModel
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install numpy pandas requests
+
+      - name: Check the rules
+        run: python monthly.py
+        env:
+          KULAMODEL: ${{ github.workspace }}/KulaModel
+          KULA_HISTORY: ${{ github.workspace }}/history
+          KULA_HISTORY_RAW: ${{ runner.temp }}/raw
+          HCDP_API_TOKEN: ${{ secrets.HCDP_API_TOKEN }}
+
+      - name: Publish
+        run: |
+          git config user.name "kula-today bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add history docs/monthly_report.md docs/monthly_report.json docs/rules_status.json
+          git diff --cached --quiet && exit 0
+          git commit -m "Monthly rule check"
+          for i in 1 2 3; do
+            git pull --rebase -q && git push && exit 0
+            sleep 5
+          done
+          exit 1

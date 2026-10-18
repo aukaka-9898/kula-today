@@ -1,0 +1,17 @@
+{
+ "rules": {
+  "B1": {
+   "active": true,
+   "live_fail_months": 0
+  },
+  "B2": {
+   "active": true,
+   "live_fail_months": 0
+  },
+  "P6": {
+   "active": true,
+   "live_fail_months": 0
+  }
+ },
+ "checked": "2026-10"
+}

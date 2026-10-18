@@ -37,6 +37,7 @@ import sampler                          # noqa: E402
 import sounding as sd                   # noqa: E402
 import thermal as th                    # noqa: E402
 import patterns                         # noqa: E402
+import rules                            # noqa: E402
 from kula import OFF_SLOPE_STATIONS     # noqa: E402
 
 def _retrying(fn, tries: int = 3):
@@ -1747,6 +1748,33 @@ def _replace_day(path, rows: list, day: str) -> None:
     pd.concat([old, pd.DataFrame(rows)], ignore_index=True).to_csv(path, index=False)
 
 
+# The page's own calls, kept for the monthly check (monthly.py): what the
+# Forecast panel said the evening before each day.
+CALLS_LOG = HERE / "docs" / "calls_log.json"
+
+
+def log_call(day, base: str, thermal: str, now: datetime) -> None:
+    try:
+        log = json.loads(CALLS_LOG.read_text(encoding="utf-8"))
+    except Exception:
+        log = {}
+    log[f"{day}"] = {"base": base, "thermal": thermal, "made": f"{now:%Y-%m-%d %H:%M}"}
+    keep = sorted(log)[-120:]
+    CALLS_LOG.write_text(json.dumps({k: log[k] for k in keep}, indent=0), encoding="utf-8")
+
+
+def rules_line() -> str:
+    """A quiet line saying the rules are still being checked (monthly.py)."""
+    st = rules.status()
+    if not st.get("checked"):
+        return ""
+    when = datetime.strptime(st["checked"], "%Y-%m")
+    off = [f"{rules.RULES[k]['name']}" for k, v in st.get("rules", {}).items()
+           if not v.get("active", True) and k in rules.RULES]
+    tail = "all holding" if not off else "switched off: " + ", ".join(off)
+    return f'<div class="sub">Forecast rules last checked {when:%B %Y}: {tail}.</div>'
+
+
 def write_scorecard(obs, now, up, end, word, entries) -> None:
     day = now.replace(tzinfo=None, hour=0, minute=0, second=0, microsecond=0)
     d = f"{day:%Y-%m-%d}"
@@ -1850,7 +1878,27 @@ def write_scorecard(obs, now, up, end, word, entries) -> None:
         "patterns": " ".join(f"{k}@{v}" for k, v in sorted(_patterns_today(d).items())),
         "cam_puunianiau_cloud_min": camera_cloud_minutes(d, "Puunianiau"), "parkhq_cloud_min": ph_cloud,
         "cam_redhill_cloud_min": camera_cloud_minutes(d, "Red Hill"), "derived_low_min": rh_cloud,
-        "base_phase2": " ".join(f"{a}-{b or ''}" for a, b in PHASE.get("intervals", [])) if PHASE.get("date") == d else ""}], d)
+        "base_phase2": " ".join(f"{a}-{b or ''}" for a, b in PHASE.get("intervals", [])) if PHASE.get("date") == d else "",
+        **_call_scores(d, hrs)}], d)
+
+
+def _call_scores(d: str, hrs: list) -> dict:
+    """The evening-before calls for day d against what it did."""
+    try:
+        call = json.loads(CALLS_LOG.read_text(encoding="utf-8")).get(d, {})
+    except Exception:
+        call = {}
+    by_h = {r["hour"]: r["derived"] for r in hrs if r["derived"] is not None}
+    mid = [by_h[h] for h in (11, 12, 13, 14) if h in by_h]
+    fired = _patterns_today(d).get("P6")
+    fell = None
+    if fired:
+        h0 = int(fired[:2])
+        if h0 in by_h and 15 in by_h:
+            fell = bool(by_h[15] - by_h[h0] <= -300)
+    return {"base_call": call.get("base"), "thermal_call": call.get("thermal"),
+            "base_cat": rules.category(sum(mid) / len(mid), int(d[5:7])) if mid else None,
+            "p6_fell": fell}
 
 
 def _patterns_today(d: str) -> dict:
@@ -1928,6 +1976,13 @@ def review_summary(now: datetime) -> None:
                          f"corrections miss the derived base by {st_err.abs().mean():.0f} ft typically, "
                          f"the page's Kula Ag + {FORECAST_BASE_LOW_FT} ft by {now_err.abs().mean():.0f} ft. "
                          "Ready to decide whether to switch.")
+    # The monthly rule check's events, for a week after it runs (monthly.py).
+    try:
+        mr = json.loads((HERE / "docs" / "monthly_report.json").read_text(encoding="utf-8"))
+        if mr.get("events") and now.replace(tzinfo=None) - datetime.fromisoformat(mr["made"]) <= timedelta(days=7):
+            flags += [f"Monthly rule check ({mr['month']}): {e}" for e in mr["events"]]
+    except Exception:
+        pass
     REVIEW_SUMMARY.write_text(json.dumps({"made": f"{now:%Y-%m-%d %H:%M}", "flags": flags, "stats": stats},
                                          indent=1), encoding="utf-8")
 
@@ -2030,9 +2085,7 @@ def decay_time(day: datetime, derived: list):
 # that recurred in all three held-back years) and a forecast base in the
 # month's lowest fifth: right 89% of the time on 8% of days. Either alone
 # was right ~62%, so then it says normal.
-MONTH_BASE_RANGE = {1: (4100, 5500), 2: (4200, 5100), 3: (4200, 5100), 4: (3900, 5200),
-                    5: (4300, 5100), 6: (4300, 5300), 7: (4600, 5500), 8: (4300, 5500),
-                    9: (4700, 5300), 10: (4500, 5400), 11: (4500, 5500), 12: (4500, 5600)}
+MONTH_BASE_RANGE = rules.MONTH_BASE_RANGE
 
 
 def _layer_rh(prof: pd.DataFrame, lo: float, hi: float) -> float:
@@ -2069,22 +2122,19 @@ def today_level(now: datetime):
 
 
 def cloudbase_call(day, path, fc_hours: dict, level_today) -> tuple[str, str]:
+    """The day's base as a category, from the rules in rules.py (B1, B2)."""
     lo, hi = MONTH_BASE_RANGE[day.month]
     air = airmass_noon(path, day) if path else None
     fc = [v - FORECAST_BASE_LOW_FT for h, v in fc_hours.items() if 11 <= h <= 14]
-    fc_low = bool(fc) and sum(fc) / len(fc) <= lo
-    this_month = MONTH_BASE_RANGE[datetime.now(HST).month]
-    today_low = level_today is not None and level_today <= this_month[0]
-    today_high = level_today is not None and level_today >= this_month[1]
-    moist = bool(air) and air["rh_7_10k"] > 55 and (air["rh_5_7k"] > 80 or today_low)
-    if moist and fc_low:
-        return ("Probably a low day",
-                "Moist air aloft and a low forecast base both point to it: right about 9 times in 10.")
-    # High is weaker (Sam: "may be a high day"): dry aloft after a high day
-    # today was high on 66% of 56 history days (21% of all days), low on 2%.
-    # It needs today's result, so tomorrow only.
-    if today_high and air and air["rh_5_7k"] < 40 and air["rh_7_10k"] < 20:
-        return ("May be a high day", "Dry air aloft after a high day today: right about 2 times in 3.")
+    if air:
+        f = {"month": day.month, "rh_5_7k": air["rh_5_7k"], "rh_7_10k": air["rh_7_10k"],
+             "fc_level": sum(fc) / len(fc) if fc else None,      # B1 needs it, B2 does not
+             "today_cat": rules.category(level_today, datetime.now(HST).month)}
+        if rules.says("B1", f):
+            return ("Probably a low day",
+                    "Moist air aloft and a low forecast base both point to it: right about 8 times in 10.")
+        if rules.says("B2", f):
+            return ("May be a high day", "Dry air aloft after a high day today: right about 2 times in 3.")
     return (f"Probably normal for {day:%B}, about {lo:,}–{hi:,} ft",
             "Most days the base levels off by mid-morning and holds. Nothing in the forecast points to "
             "a low or a high day.")
@@ -2728,7 +2778,11 @@ def build() -> str:
         <dt>Sun</dt><dd><span class="num">{pct(r['sun'])}</span> of clear sky, 10:00–14:00 (GFS)<div class="sub">The model can't see the slope's own cumulus: when it says 90% or more, Kula has measured about 80%. Good flying days measure about 80%, overcast about 50%, socked in 20%.</div></dd>
         <dt>Shear line</dt><dd>{esc(line_t)}<div class="sub">Trades {esc(wind_t)}</div>{line_alert}</dd>
       </dl>
-      <div class="sub">Forecast as of {fc_made.astimezone(HST):%H:%M} HST</div>"""
+      <div class="sub">Forecast as of {fc_made.astimezone(HST):%H:%M} HST</div>{rules_line()}"""
+        if tom > now.date():
+            safely(log_call, tom, ("Low" if cb_head.startswith("Probably a low") else
+                                   "May be high" if cb_head.startswith("May be a high") else "Normal"),
+                   strength_word(r["thermal"]), now)
         for day, w in week.iterrows():
             if day < tom:
                 continue

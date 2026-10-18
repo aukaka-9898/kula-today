@@ -102,11 +102,12 @@ def _high_base_drop(c):
     5,000-7,000 ft humidity over ~45% fell 300+ ft by 15:00 on 81-97% of
     training days; across 1,020 days it fired on 10% and fell on 84% (37% of
     all days)."""
+    import rules
     hist, rh = c.get("base_hist") or [], c.get("rh_5_7k")
     if not 11 <= c["now"].hour < 13 or len(hist) < 3 or rh is None:
         return None
     base = sum(hist) / len(hist)
-    if base <= 5400 or rh <= 45:
+    if not rules.says("P6", {"base_late": base, "rh_5_7k": rh}):
         return None
     return (f"Base already high (about {round(base, -2):,.0f} ft) with moist air above it: on days like "
             "this it usually comes down 300 ft or more by mid-afternoon.")
