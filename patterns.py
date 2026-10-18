@@ -26,6 +26,9 @@ Context keys (filled by build.py; any may be None):
   low_sun, high_sun lower Kula slope sun (Kula Ag, Keokea) and upper slope sun
                     (best of Kula 1, Kamehamenui 1, Park HQ), last 60 min
   p4_since          when P4 was first confirmed today ("HH:MM")
+  rh_5_7k           model humidity 5,000-7,000 ft at Kahului, noon today (%)
+  sky               {"drop", "cloudiest"}: the cloudiest Kula station's sky
+                    emissivity and how much it fell over the last hour
   inv               Kahului inversion today: {"base_ft", "top_ft"} or None
                     (no pattern uses it since 2026-10-17)
   summit_push       first hour the summit-cloud forecast holds, or None
@@ -92,6 +95,40 @@ def _no_headroom(c):
     return f"Little room to climb: cloud about {round(base - KULA_AG_FT, -2):,.0f} ft above Kula Ag ({KULA_AG_FT:,} ft)."
 
 
+def _high_base_drop(c):
+    """A base already high by late morning under moist air aloft comes back
+    down. From the history rule tree (KulaModel ruletree.py --rotate): in all
+    three held-back years, base over ~5,100-5,600 ft at 10-11 h with
+    5,000-7,000 ft humidity over ~45% fell 300+ ft by 15:00 on 81-97% of
+    training days; across 1,020 days it fired on 10% and fell on 84% (37% of
+    all days)."""
+    hist, rh = c.get("base_hist") or [], c.get("rh_5_7k")
+    if not 11 <= c["now"].hour < 13 or len(hist) < 3 or rh is None:
+        return None
+    base = sum(hist) / len(hist)
+    if base <= 5400 or rh <= 45:
+        return None
+    return (f"Base already high (about {round(base, -2):,.0f} ft) with moist air above it: on days like "
+            "this it usually comes down 300 ft or more by mid-afternoon.")
+
+
+def _late_decay(c):
+    """Late-day decay: the base holds while the Kula stations' sky clears.
+    Sam, 2026-10-17 ~17:00: "Clouds are dissipating, from base up it seems.
+    A false rise." The cloudiest of Kula Ag / Keokea / Pulehu (sky emissivity
+    from the radiometers) cleared by 0.05 or more in an hour while the base
+    stayed within 300 ft -- one station alone is fooled by streets and gaps
+    (Keokea under one, Kula Ag in the gap, that afternoon)."""
+    hist, sky = c.get("base_hist") or [], c.get("sky")
+    if c["now"].hour * 60 + c["now"].minute < 14 * 60 + 30 or len(hist) < 4 or not sky:
+        return None
+    if max(hist) - min(hist) > 300 or sky["drop"] < 0.05:
+        return None
+    return (f"Clouds decaying: the base has held near {round(sum(hist) / len(hist), -2):,.0f} ft and the sky "
+            "is clearing at the stations. A base that looks higher now is cloud evaporating from below, "
+            "not new lift.")
+
+
 PATTERNS = [
     {"id": "P1", "name": "Summit cloud pushed over", "active": True, "where": "forecast",
      "origin": "2026-10-15 (Sam): backside cloud over the summit ridge shaded Kula from 15:00",
@@ -109,6 +146,13 @@ PATTERNS = [
      "origin": "2026-10-17: morning base 3,400 ft (Kula Ag height stands in for launch)",
      "retired": "2026-10-17, Sam: \"p5 is pointless\" -- a base that low means launch is in cloud, "
                 "not launchable, which the morning-cloud line already says", "fn": _no_headroom},
+    {"id": "P6", "name": "High base, likely to drop", "active": True, "where": "today",
+     "origin": "2026-10-17: history rule tree, 1,020 days 2024-26, recurring in all three held-back years",
+     "fn": _high_base_drop},
+    {"id": "P7", "name": "Late-day decay", "active": True, "where": "today",
+     "origin": "2026-10-17 (Sam): cloud dissipating from the base up, base lingering at 4,900 ft; "
+               "Keokea's sky cleared 0.95 -> 0.86 at 16:30. Thresholds from that one day",
+     "fn": _late_decay},
 ]
 
 

@@ -698,11 +698,8 @@ def forecast_summary(r, pair, today_pair, inv, today_word: str) -> str:
             bits.append(f"a higher base than {today_word}")
         elif d <= -500:
             bits.append(f"a lower base than {today_word}")
-    if am is not None and pm is not None:
-        d = pm - am
-        drift = ("rising through the afternoon" if d >= 300 else
-                 "lowering after midday" if d <= -300 else "holding through the day")
-        bits.append(drift if bits else f"a base {drift}")
+    # No "rising / lowering through the afternoon": the forecast's afternoon
+    # shape had no skill over 32 days (Sam, 2026-10-17).
     if sky:
         out.append(f"{sky}.")
     if bits:
@@ -1966,7 +1963,118 @@ def morning_cloud(obs: pd.DataFrame, now: datetime):
     return out
 
 
-def base_chart(obs, now, up, end, cid="basechart", title="Cloudbase, derived vs forecast") -> tuple[str, list, list]:
+# -- sky over the Kula stations ---------------------------------------------
+# Sky emissivity (LWin / sigma T^4) from the Mesonet radiometers: high under
+# cloud, low under clear sky, whatever the sun angle. One station alone is
+# fooled by cloud streets and the gaps between them (2026-10-17: Keokea under
+# the south street, Kula Ag in the gap), so the cloudiest of three is used.
+SKY_STATIONS = ("0119", "0116", "0118")      # Kula Ag, Keokea, Pulehu
+DECAY_DROP = 0.05                             # cleared this much in an hour
+
+
+def kula_sky(start: datetime, end: datetime) -> pd.Series:
+    """The cloudiest Kula station's sky emissivity per 15 minutes."""
+    rows = _retrying(mesonet.get)("/mesonet/db/measurements", location="hawaii",
+                                  station_ids=",".join(SKY_STATIONS), var_ids="LWin_1_Avg,Tair_1_Avg",
+                                  start_date=start.strftime("%Y-%m-%dT%H:%M:%S-10:00"),
+                                  end_date=end.strftime("%Y-%m-%dT%H:%M:%S-10:00"),
+                                  row_mode="json", limit=100000)
+    if not rows:
+        return pd.Series(dtype=float)
+    x = pd.DataFrame(rows)
+    x["t"] = pd.to_datetime(x.timestamp).dt.tz_convert(HST).dt.tz_localize(None)
+    x["value"] = pd.to_numeric(x.value, errors="coerce")
+    w = x.pivot_table(index=["t", "station_id"], columns="variable", values="value").reset_index()
+    w["emis"] = w.LWin_1_Avg / (5.67e-8 * (w.Tair_1_Avg + 273.15) ** 4)
+    return w.groupby([w.t.dt.floor("15min"), "station_id"]).emis.mean().unstack().max(axis=1)
+
+
+def sky_now(now: datetime):
+    """{"drop", "cloudiest"}: how much the cloudiest Kula sky cleared over
+    the last hour, or None before 14:00 or without data."""
+    if now.hour < 14:
+        return None
+    end = now.replace(tzinfo=None)
+    s = kula_sky(end - timedelta(minutes=90), end)
+    if len(s) < 5:
+        return None
+    return {"drop": float(s.iloc[-5] - s.iloc[-1]), "cloudiest": float(s.iloc[-1])}
+
+
+def decay_time(day: datetime, derived: list):
+    """When the late-day decay began ("HH:MM"), for the review: the first
+    quarter hour from 14:30 where the cloudiest Kula sky had cleared by
+    DECAY_DROP over the hour while the base held within 300 ft."""
+    s = kula_sky(day + timedelta(hours=13, minutes=15), day + timedelta(hours=18, minutes=30))
+    base = dict(derived)
+    for t in s.index:
+        m = t.hour * 60 + t.minute
+        if m < 14 * 60 + 30 or (t - timedelta(hours=1)) not in s.index:
+            continue
+        held = [v for k, v in base.items() if m - 60 <= k <= m]
+        if s[t - timedelta(hours=1)] - s[t] >= DECAY_DROP and len(held) >= 3 and max(held) - min(held) <= 300:
+            return f"{t:%H:%M}"
+    return None
+
+
+# -- the day's base as a category ----------------------------------------------
+# Sam, 2026-10-17: "rather than worrying about feet we start with general
+# rules." Each month's normal range is the middle 60% of the 1,020 history
+# days (KulaModel history.py, 2024-01 to 2026-10). Low is called only when
+# two independent signals agree -- moist air aloft (the evening-before rule
+# that recurred in all three held-back years) and a forecast base in the
+# month's lowest fifth: right 89% of the time on 8% of days. Either alone
+# was right ~62%, so then it says normal.
+MONTH_BASE_RANGE = {1: (4100, 5500), 2: (4200, 5100), 3: (4200, 5100), 4: (3900, 5200),
+                    5: (4300, 5100), 6: (4300, 5300), 7: (4600, 5500), 8: (4300, 5500),
+                    9: (4700, 5300), 10: (4500, 5400), 11: (4500, 5500), 12: (4500, 5600)}
+
+
+def _layer_rh(prof: pd.DataFrame, lo: float, hi: float) -> float:
+    q = prof[(prof.height_ft >= lo) & (prof.height_ft <= hi)]
+    rh = 100 * np.exp(17.625 * q.dewpoint_c / (243.04 + q.dewpoint_c) - 17.625 * q.temp_c / (243.04 + q.temp_c))
+    return float(rh.mean())
+
+
+def airmass_noon(path, day) -> dict | None:
+    """Kahului humidity 5,000-7,000 and 7,000-10,000 ft at noon HST on `day`."""
+    prof = sd.profiles(path, model=cap_model(datetime.now(HST)))
+    k = pd.Timestamp(f"{day} 12:00").tz_localize(HST).tz_convert("UTC")
+    near = min(prof, key=lambda t: abs(t - k))
+    if abs(near - k) > pd.Timedelta("90min"):
+        return None
+    return {"rh_5_7k": _layer_rh(prof[near], 5000, 7000), "rh_7_10k": _layer_rh(prof[near], 7000, 10000)}
+
+
+def today_level(now: datetime):
+    """Today's midday base so far (11:00-14:59 derived points), or None."""
+    try:
+        dl = json.loads(DERIVED_LOG.read_text(encoding="utf-8"))
+    except Exception:
+        return None
+    if dl.get("date") != f"{now:%Y-%m-%d}":
+        return None
+    v = [p[0] for m, p in dl.get("points", {}).items() if 11 * 60 <= int(m) < 15 * 60]
+    return sum(v) / len(v) if v else None
+
+
+def cloudbase_call(day, path, fc_hours: dict, level_today) -> tuple[str, str]:
+    lo, hi = MONTH_BASE_RANGE[day.month]
+    air = airmass_noon(path, day) if path else None
+    fc = [v - FORECAST_BASE_LOW_FT for h, v in fc_hours.items() if 11 <= h <= 14]
+    fc_low = bool(fc) and sum(fc) / len(fc) <= lo
+    today_low = level_today is not None and level_today <= MONTH_BASE_RANGE[datetime.now(HST).month][0]
+    moist = bool(air) and air["rh_7_10k"] > 55 and (air["rh_5_7k"] > 80 or today_low)
+    if moist and fc_low:
+        return ("Probably a low day",
+                "Moist air aloft and a low forecast base both point to it: right about 9 times in 10.")
+    return (f"Probably normal for {day:%B}, about {lo:,}–{hi:,} ft",
+            "Most days the base levels off by mid-morning and holds. Nothing in the forecast points to "
+            "a low day.")
+
+
+def base_chart(obs, now, up, end, cid="basechart", title="Cloudbase, derived vs forecast",
+               with_forecast=True) -> tuple[str, list, list]:
     """(html, derived, forecast): the derived base every 15 minutes through
     the upslope against that morning's forecast by hour."""
     day = now.replace(tzinfo=None, hour=0, minute=0, second=0, microsecond=0)
@@ -1983,10 +2091,10 @@ def base_chart(obs, now, up, end, cid="basechart", title="Cloudbase, derived vs 
     except Exception:
         fc = safely(forecast_base_hours, day.date()) or {}
         src = "a later run (the morning forecast was not saved)"
-    forecast = [[h * 60, v] for h, v in sorted(fc.items())]
+    forecast = [[h * 60, v] for h, v in sorted(fc.items())] if with_forecast else []
     span = [up.hour * 60 + up.minute, stop.hour * 60 + stop.minute]
     note = (f"Derived from the stations every 15 minutes during the upslope; forecast by hour, "
-            f"{src}.")
+            f"{src}." if with_forecast else "Derived from the stations every 15 minutes during the upslope.")
     return chart_html(cid, derived, forecast, span, note, title=title), derived, forecast
 
 
@@ -2063,7 +2171,7 @@ def _hm(m: int) -> str:
     return f"{m // 60:02d}:{m % 60:02d}"
 
 
-def day_notes(derived: list, forecast: list, inv, phase: dict, fired: dict) -> list:
+def day_notes(derived: list, forecast: list, inv, phase: dict, fired: dict, decay=None) -> list:
     """What the day did, for the review (Sam, 2026-10-17: "The daily recap can
     include such observations"). Fixed rules on the saved data, one per kind
     of observation; an ordinary day gives few or none."""
@@ -2092,8 +2200,13 @@ def day_notes(derived: list, forecast: list, inv, phase: dict, fired: dict) -> l
     if len(longest) >= 9:
         mean = sum(v for _, v in longest) / len(longest)
         hrs = (longest[-1][0] - longest[0][0]) / 60
-        notes.append(f"Base held flat at about {round(mean, -2):,.0f} ft from {_hm(longest[0][0])} "
-                     f"for about {hrs:.0f} hour{'s' if round(hrs) != 1 else ''}.")
+        held = (f"Base held flat at about {round(mean, -2):,.0f} ft from {_hm(longest[0][0])} "
+                f"for about {hrs:.0f} hour{'s' if round(hrs) != 1 else ''}")
+        # The late-day decay (Sam, 2026-10-17: "dissipating, from base up"):
+        # the stations' sky clearing while the base held.
+        notes.append(held + (f", then the cloud decayed from the base up from about {decay}." if decay else "."))
+    elif decay:
+        notes.append(f"The cloud decayed from the base up from about {decay}.")
     # forecast peak against the real base at the same time
     if forecast and pts:
         fm, fv = max(forecast, key=lambda x: x[1])
@@ -2172,7 +2285,9 @@ def day_review(obs, now, up, evening, rnet, word, model, fc_today, fc_pair, entr
                   + '<div class="sub">Lower elevations, during the upslope</div>')
                  if lw else "Unavailable")
 
-    notes = (safely(day_notes, derived, forecast, inv, PHASE, _patterns_today(f"{now:%Y-%m-%d}")) or []
+    _day0 = now.replace(tzinfo=None, hour=0, minute=0, second=0, microsecond=0)
+    decay = safely(decay_time, _day0, derived) if derived else None
+    notes = (safely(day_notes, derived, forecast, inv, PHASE, _patterns_today(f"{now:%Y-%m-%d}"), decay) or []
              if up is not None and len(obs) and got and got[1] else [])
     notes_html = ('<div class="watch"><div class="kind">What the day did</div><ul>'
                   + "".join(f"<li>{esc(n)}</li>" for n in notes) + "</ul></div>") if notes else ""
@@ -2499,6 +2614,9 @@ def build() -> str:
     ctx["low_sun"] = sum(_low) / len(_low) if _low else None
     ctx["high_sun"] = max(_high) if _high else None
     ctx["p4_since"] = _patterns_today(f"{now:%Y-%m-%d}").get("P4c")
+    ctx["rh_5_7k"] = ((safely(airmass_noon, cap, now.date()) or {}).get("rh_5_7k")
+                      if cap and 11 <= now.hour < 13 else None)
+    ctx["sky"] = safely(sky_now, now) if up is not None else None
     fired = (safely(patterns.watch, ctx) or []) if not day_over else []
     safely(log_patterns, now, fired)
     if fired:
@@ -2508,7 +2626,7 @@ def build() -> str:
     # The day so far against the morning's forecast (Sam): the review's chart,
     # drawn live from the upslope to the newest reading.
     if up is not None and len(obs) and not day_over:
-        live = safely(base_chart, obs, now, up, None, "livechart", "Cloudbase so far, derived vs forecast")
+        live = safely(base_chart, obs, now, up, None, "livechart", "Cloudbase so far, derived", False)
         if live and live[1]:
             summary_html += live[0]
 
@@ -2575,16 +2693,16 @@ def build() -> str:
                      f'about {push:02d}:00. If it comes, Kula can lose its sun by mid-afternoon. '
                      f'Look for early clouds at the summit ridge. <span class="pid">P1 · Summit cloud pushed over</span></div>'
                      if push else "")
-        # The forecast base through the day, charted like the review (Sam).
+        # The hourly forecast chart is gone (Sam, 2026-10-17): over 32 days its
+        # afternoon shape was right less often than "always flat", and its
+        # level lost to the season average. The base is a category instead.
         fc_hours = safely(forecast_base_hours, tom) or {}
-        cu_end = safely(forecast_cu_end, tom)
-        fc_chart = (chart_html("fcchart", [], [[h * 60, v] for h, v in sorted(fc_hours.items())], None,
-                               "", nocu=[cu_end * 60, 16 * 60] if cu_end else None,
-                               title=f"Forecast cloudbase, {tom:%a %d %b}")
-                    if fc_hours else "")
-        t_html = (f'<p class="summary">{esc(said_t)}</p>' if said_t else "") + push_html + fc_chart + f"""<dl>
+        cb_head, cb_sub = (safely(cloudbase_call, tom, cap, fc_hours,
+                                  safely(today_level, now) if tom > now.date() else None)
+                           or (f"{am_pm(hours.get(tom))} ft", ""))
+        t_html = (f'<p class="summary">{esc(said_t)}</p>' if said_t else "") + push_html + f"""<dl>
         <dt>Thermals</dt><dd>Probably {esc(strength_word(r['thermal']).lower())}<div class="sub">thermal.py on the forecast air (+3 F, it runs cool); within one category of the measured rating on every test day</div></dd>
-        <dt>Cloudbase</dt><dd><span class="num">{am_pm(hours.get(tom))} ft</span><div class="sub">11:00 → 14:00, give or take about {FORECAST_BAND_FT:,} ft</div></dd>
+        <dt>Cloudbase</dt><dd>{esc(cb_head)}<div class="sub">{esc(cb_sub)}</div></dd>
         <dt>Sun</dt><dd><span class="num">{pct(r['sun'])}</span> of clear sky, 10:00–14:00 (GFS)<div class="sub">The model can't see the slope's own cumulus: when it says 90% or more, Kula has measured about 80%. Good flying days measure about 80%, overcast about 50%, socked in 20%.</div></dd>
         <dt>Shear line</dt><dd>{esc(line_t)}<div class="sub">Trades {esc(wind_t)}</div>{line_alert}</dd>
       </dl>
