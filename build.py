@@ -2015,6 +2015,7 @@ def review_summary(now: datetime) -> None:
 # 7,900 ft at 07:17 on 10-14, "absurd") and it waits for the upslope.
 MORNING_SATURATED_RH = 90       # per cent (95 missed 10-17: Keokea, Waipoli, Crater sat at 93)
 MORNING_SATURATED_N = 3         # stations at or above it
+SKY_OVERCAST = 0.93             # cloudiest Kula sky emissivity that counts as cloud overhead
 
 
 def _rh(t_f, td_f):
@@ -2048,6 +2049,13 @@ def morning_cloud(obs: pd.DataFrame, now: datetime):
     night = obs[(obs.station_id == "001HI") & (obs.observed.dt.hour * 60 + obs.observed.dt.minute < 390)]
     out["dewy"] = bool(len(night) and (_rh(night.temp_f, night.dew_f)
                                        .groupby(night.observed.dt.floor("30min")).mean() >= 95).any())
+    # Is there cloud overhead, or only damp air? (Sam, 2026-10-18: "There are
+    # no clouds in Kula yet".) The cloudiest Kula sky over the last 45 min;
+    # 0.97-0.98 under last evening's low cloud, ~0.81 clear. 0.93 is a
+    # judgment between them, not a tested value.
+    end = now.replace(tzinfo=None)
+    sky = safely(kula_sky, end - timedelta(minutes=45), end)
+    out["overhead"] = bool(sky is not None and len(sky) and float(sky.iloc[-1]) >= SKY_OVERCAST)
     return out
 
 
@@ -2523,7 +2531,7 @@ def build() -> str:
                          f'still damp from the night\'s dew. All stations: about {ft(round(base["mid"], -2))} ft</div>')
             base = {**base, "mid": _up}
     if mc:
-        base_label = "Morning<br>cloud"
+        base_label = "Morning<br>cloud" if mc.get("overhead") else "First<br>clouds"
         dew = (f"; Kula Ag {mc['ka_t']:.0f}/{mc['ka_td']:.0f} °F ({mc['ka_rh']:.0f}%)"
                + (f", dew point up {mc['rise']:.0f} °F since {mc['since']:%H:%M}"
                   + (" as the night's dew evaporates" if mc.get("dewy") else "")
@@ -2532,7 +2540,11 @@ def build() -> str:
         # while the Forecast panel's category said 4,500-5,400); the Forecast
         # panel carries today's call until the upslope.
         base_html = (f'Low cloud down to about <span class="num">{ft(round(mc["base"], -2))} ft</span>'
-                     f'<div class="sub">{mc["n_wet"]} of {mc["n"]} slope stations near saturation{dew}</div>')
+                     f'<div class="sub">{mc["n_wet"]} of {mc["n"]} slope stations near saturation{dew}</div>'
+                     if mc.get("overhead") else
+                     f'About <span class="num">{ft(round(mc["base"], -2))} ft</span>'
+                     f'<div class="sub">{mc["n_wet"]} of {mc["n"]} slope stations near saturation; '
+                     f'no cloud overhead yet{dew}</div>')
     elif up is None and now.hour < 12:
         base_html = ('Not yet<div class="sub">Derived once the upslope sets in, '
                      f"usually about {UPSLOPE_TYPICAL[now.month]}. Today's call is in the Forecast panel</div>")
@@ -2704,8 +2716,11 @@ def build() -> str:
         if ahead:
             said = f"Today's forecast: {ahead}" + (f" {said}" if said else "")
     if mc:
-        said = (f"Low cloud is down to about {ft(round(mc['base'], -2))} ft"
-                + (("; the night's dew is evaporating -- " if mc.get("dewy") else "; ")
+        said = ((f"Low cloud is down to about {ft(round(mc['base'], -2))} ft" if mc.get("overhead") else
+                 f"No cloud over Kula yet. First clouds will form at about {ft(round(mc['base'], -2))} ft, "
+                 "a little higher if the slope warms first")
+                + (("; the night's dew is evaporating -- " if mc.get("dewy") else
+                    "; " if mc.get("overhead") else ". ")
                    + f"Kula Ag's dew point is up {mc['rise']:.0f} °F "
                    f"since {mc['since']:%H:%M} and it is still {mc['ka_rh']:.0f}% humid."
                    if mc.get("rise", 0) >= 1.5 else ".")
