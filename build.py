@@ -2732,7 +2732,7 @@ def build() -> str:
         if ahead:
             said = f"Today's forecast: {ahead}" + (f" {said}" if said else "")
     if not mc and up is None and now.hour < 12 and PHASE.get("wet") and (_fc := safely(slope_lcl, obs)):
-        said = (f"First clouds at about {ft(round(_fc, -2))} ft; the slope is drying as it warms."
+        said = (f"First clouds will form at about {ft(round(_fc, -2))} ft; the slope is drying as it warms."
                 + (f" {said}" if said else ""))
     if mc:
         said = ((f"Low cloud is down to about {ft(round(mc['base'], -2))} ft" if mc.get("overhead") else
