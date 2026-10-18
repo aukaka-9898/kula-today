@@ -1532,12 +1532,17 @@ def line_day(entries: list):
 MORNING_BASE_FILE = HERE / "docs" / "forecast_base.json"
 
 
+@functools.lru_cache(maxsize=1)
+def _slope_parcel():
+    return cv.slope_parcel()
+
+
 def forecast_base_hours(day) -> dict:
     """Forecast cloudbase by hour, with the same +400 ft as the page, only
     from the first to the last hour thermal.py has thermals working: before
     and after, a condensation level is no cloudbase (Sam: "meaningless until
     thermal activity begins")."""
-    part = cv.slope_parcel()
+    part = _slope_parcel()
     part = part[part.day == day]
     got = th.assess(part, RELEASE_FT, window=(8, 17))
     on = got.index[got.working.astype(bool)] if "working" in got else got.index
@@ -2036,9 +2041,14 @@ def _layer_rh(prof: pd.DataFrame, lo: float, hi: float) -> float:
     return float(rh.mean())
 
 
+@functools.lru_cache(maxsize=4)
+def _profiles(path):
+    return sd.profiles(path, model=cap_model(datetime.now(HST)))
+
+
 def airmass_noon(path, day) -> dict | None:
     """Kahului humidity 5,000-7,000 and 7,000-10,000 ft at noon HST on `day`."""
-    prof = sd.profiles(path, model=cap_model(datetime.now(HST)))
+    prof = _profiles(path)
     k = pd.Timestamp(f"{day} 12:00").tz_localize(HST).tz_convert("UTC")
     near = min(prof, key=lambda t: abs(t - k))
     if abs(near - k) > pd.Timedelta("90min"):
@@ -2717,8 +2727,14 @@ def build() -> str:
                 continue
             lt = w["shear_location"]
             lt = "--" if lt is None or pd.isna(lt) else esc(line_short(lt))
+            # The base as the same category as the Forecast panel (Sam,
+            # 2026-10-17: "categorize The Week"). Beyond the model run's reach
+            # there is no air aloft to check, so it can only say Normal.
+            cat = safely(cloudbase_call, day, cap, safely(forecast_base_hours, day) or {},
+                         safely(today_level, now) if day == now.date() + timedelta(days=1) else None)
+            cat = "Low" if cat and cat[0].startswith("Probably a low") else "Normal" if cat else "--"
             rows_html += (f"<tr><td>{day:%a %d}</td><td class=\"n\">{pct(w['sun'])}</td>"
-                          f"<td class=\"n\">{am_pm(hours.get(day))}</td>"
+                          f"<td>{cat}</td>"
                           f"<td>{esc(strength_word(w['thermal']))}</td><td>{lt}</td></tr>")
 
     ladder_html = ""
