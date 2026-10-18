@@ -523,12 +523,10 @@ def _in_phase2(t) -> bool:
 
 
 def _derived_at(core: pd.DataFrame, t) -> float | None:
-    """The derived base at t: the highest station in phase 2, else the median."""
-    if not _in_phase2(t):
-        return _base_at(core, t)
-    c = core[(core.observed <= t) & (core.observed > t - pd.Timedelta("20min"))]
-    latest = c.sort_values("observed").groupby("station_id").tail(1)
-    return _upper_pair(latest)[0] if len(latest) >= 3 else None
+    """The derived base at t: the median of all stations, dew or not (Sam,
+    2026-10-18: "Even with dew, stations provide correct base"). The highest
+    stations are a forecast of where it lifts to, shown beside it in phase 2."""
+    return _base_at(core, t)
 
 
 def _base_at(core: pd.DataFrame, t) -> float | None:
@@ -2536,21 +2534,20 @@ def build() -> str:
     cu_clear = bool(cu) and cu[0] == "clear"
     mc = safely(morning_cloud, obs, now) if up is None and 6 <= now.hour < 12 and len(obs) else None
     global PHASE
-    # Dew-morning phase 2 (base from the highest stations) RETIRED, Sam
-    # 2026-10-18: "Even with dew, stations provide correct base." wet is never
-    # set now, so _derived_at always uses all stations; the phase file keeps
-    # only the "morning" flag for the First clouds hand-over.
-    PHASE = safely(update_phase, obs, now, False, up, day_over, bool(mc)) or {}
+    # Dew-morning phases: the base is always all stations; in phase 2 the
+    # highest stations forecast how far it lifts once the dew dries (Sam,
+    # 2026-10-18: "It was used to provide forecast of lifting").
+    PHASE = safely(update_phase, obs, now, bool(mc and mc.get("dewy")), up, day_over, bool(mc)) or {}
     if PHASE.get("phase") == 2 and base and len(obs):
         _c = _core(obs)
         _c = _c[_c.observed >= obs.observed.max() - STALE]
         _lat = _c.sort_values("observed").groupby("station_id").tail(1)
         if len(_lat) >= 3:
             _up, _names = _upper_pair(_lat)
-            base_html = (f'<span class="num">About {ft(round(_up, -2))} ft</span>'
-                         f'<div class="sub">From the highest station ({", ".join(_names)}): the lower slope is '
-                         f'still damp from the night\'s dew. All stations: about {ft(round(base["mid"], -2))} ft</div>')
-            base = {**base, "mid": _up}
+            base_html = (f'<span class="num">About {ft(round(base["mid"], -2))} ft</span>'
+                         f'<div class="sub">The lower slope is still damp from the dew overnight. The highest '
+                         f'stations ({", ".join(_names)}) are at about {ft(round(_up, -2))} ft: the base should '
+                         f'lift toward that as the dew dries</div>')
     if mc:
         base_label = "Morning<br>cloud" if mc.get("overhead") else "First<br>clouds"
         dew = (f"; Kula Ag {mc['ka_t']:.0f}/{mc['ka_td']:.0f} °F ({mc['ka_rh']:.0f}%)"
