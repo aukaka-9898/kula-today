@@ -2041,6 +2041,13 @@ def morning_cloud(obs: pd.DataFrame, now: datetime):
         low = ka.loc[ka.dew_f.idxmin()]
         out.update(ka_t=float(k.temp_f), ka_td=float(k.dew_f), ka_rh=float(_rh(k.temp_f, k.dew_f)),
                    rise=float(k.dew_f - low.dew_f), since=low.observed)
+    # Was there dew? Only if Kula Ag reached saturation overnight (any half
+    # hour at 95%+ from midnight to 06:30). Sam, 2026-10-18: on a dry night
+    # the dew point still rose 4 F -- trade air and crater spillover arriving,
+    # not dew -- and the page blamed the dew.
+    night = obs[(obs.station_id == "001HI") & (obs.observed.dt.hour * 60 + obs.observed.dt.minute < 390)]
+    out["dewy"] = bool(len(night) and (_rh(night.temp_f, night.dew_f)
+                                       .groupby(night.observed.dt.floor("30min")).mean() >= 95).any())
     return out
 
 
@@ -2518,7 +2525,8 @@ def build() -> str:
     if mc:
         base_label = "Morning<br>cloud"
         dew = (f"; Kula Ag {mc['ka_t']:.0f}/{mc['ka_td']:.0f} °F ({mc['ka_rh']:.0f}%)"
-               + (f", dew point up {mc['rise']:.0f} °F since {mc['since']:%H:%M} as the night's dew evaporates"
+               + (f", dew point up {mc['rise']:.0f} °F since {mc['since']:%H:%M}"
+                  + (" as the night's dew evaporates" if mc.get("dewy") else "")
                   if mc.get("rise", 0) >= 1.5 else "") if "ka_t" in mc else "")
         # No hourly forecast feet here (Sam, 2026-10-18: Today showed 5,600 -> 5,400
         # while the Forecast panel's category said 4,500-5,400); the Forecast
@@ -2697,7 +2705,8 @@ def build() -> str:
             said = f"Today's forecast: {ahead}" + (f" {said}" if said else "")
     if mc:
         said = (f"Low cloud is down to about {ft(round(mc['base'], -2))} ft"
-                + (f"; the night's dew is evaporating -- Kula Ag's dew point is up {mc['rise']:.0f} °F "
+                + (("; the night's dew is evaporating -- " if mc.get("dewy") else "; ")
+                   + f"Kula Ag's dew point is up {mc['rise']:.0f} °F "
                    f"since {mc['since']:%H:%M} and it is still {mc['ka_rh']:.0f}% humid."
                    if mc.get("rise", 0) >= 1.5 else ".")
                 + (f" {said}" if said else ""))

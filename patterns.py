@@ -55,14 +55,19 @@ def _base_will_lift(c):
     """Dew-fed morning cloud lifts once the dew is spent: watch Kula Ag's
     dew point stop rising."""
     m, tr = c["morning"], c["ka_td_trend"]
-    if not m or tr is None or m.get("rise", 0) < 1.5:
+    # Only after a saturated night (Sam, 2026-10-18): a rising dew point on a
+    # dry night is moisture arriving, not dew, and it need not stop.
+    if not m or tr is None or m.get("rise", 0) < 1.5 or not m.get("dewy"):
         return None
     # For planning (Sam, 2026-10-17): after a heavy dew the wet mid-slope can
     # keep feeding moisture once the base lifts -- on 10-17 the base held at
     # about 5,000 ft for three hours while the ground kept warming.
     cap = (" Possible cap: once it lifts, the wet slope can keep feeding moisture and hold the base "
            "down for hours.")
+    import rules
     if tr <= 0.3:
+        if c.get("spill") and rules.says("P8", c["spill"]):
+            return None     # P8 outranks it: moisture from above keeps the base down
         return "Kula Ag's dew point has stopped rising: the night's dew is about spent, so the base should start to lift." + cap
     return "The night's dew is still evaporating (Kula Ag's dew point still rising): the base stays low until it stops." + cap
 
