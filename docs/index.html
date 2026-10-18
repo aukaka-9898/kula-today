@@ -85,7 +85,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><div class="tag">Kula soaring briefing</div><h1>Kula Today</h1></div>
-    <div class="date">Updated Sat 17 Oct 2026 · 17:52 HST</div>
+    <div class="date">Updated Sat 17 Oct 2026 · 18:00 HST</div>
   </header>
 
   <div>
@@ -97,7 +97,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
     <section class="panel today" aria-labelledby="t-today">
       <div class="kind">The day in review</div>
       <div class="head"><h2 id="t-today">Today · Sat 17 Oct</h2><span class="chip fair">Light</span></div>
-      <p class="summary">A light day (forecast moderate). The upslope ran from about 08:15 to about 16:45. Cloudbase held 3,300–5,000 ft; the forecast had 4,200–5,900. Most of the day the shear line was crossing Kula Highway near Omaopio.</p><div class="watch"><div class="kind">What the day did</div><ul><li>Saturated, dew-fed morning: low cloud until about 09:30.</li><li>Base stepped up about 1,600 ft between 09:15 and 09:45 as mixing took over.</li><li>Base held flat at about 4,800 ft from 13:15 for about 4 hours.</li><li>The forecast peaked at 5,900 ft at 11:00; the base then was about 1,100 ft lower.</li><li>Patterns: P3 at 08:56; P4 at 08:56, confirmed 10:50.</li></ul></div><div style="font-weight:600;font-size:.9rem;margin:10px 0 2px">Cloudbase, derived vs forecast</div><div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted,#6b6b66);margin:2px 0 4px">
+      <p class="summary">A light day (forecast moderate). The upslope ran from about 08:15 to about 16:45. Cloudbase held 3,300–5,000 ft; the forecast had 4,200–5,900. Most of the day the shear line was crossing Kula Highway near Omaopio.</p><div class="watch"><div class="kind">What the day did</div><ul><li>Saturated, dew-fed morning: low cloud until about 09:30.</li><li>Base stepped up about 1,600 ft between 09:15 and 09:45 as mixing took over.</li><li>Base held flat at about 4,800 ft from 13:15 for about 4 hours, then the cloud decayed from the base up from about 16:30.</li><li>The forecast peaked at 5,900 ft at 11:00; the base then was about 1,100 ft lower.</li><li>Patterns: P3 at 08:56; P4 at 08:56, confirmed 10:50.</li></ul></div><div style="font-weight:600;font-size:.9rem;margin:10px 0 2px">Cloudbase, derived vs forecast</div><div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted,#6b6b66);margin:2px 0 4px">
 <span><span style="display:inline-block;width:16px;border-top:2px dashed #eb6834;vertical-align:middle"></span> Forecast</span>
 <span><span style="display:inline-block;width:16px;height:2px;background:#2a78d6;vertical-align:middle"></span> Derived (stations)</span></div>
 <div style="position:relative;width:100%;min-width:0;height:220px"><canvas id="basechart" role="img" aria-label="Derived cloudbase against the forecast through the day"></canvas></div>
@@ -150,48 +150,9 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
     <section class="panel tomorrow" aria-labelledby="t-tomorrow">
       <div class="kind">Forecast</div>
       <div class="head"><h2 id="t-tomorrow">Tomorrow · Sun 18 Oct</h2><span class="chip good">Moderate</span></div>
-      <p class="summary">The model sees little cloud over Kula; the slope&#x27;s own cumulus are too small for it to show, so expect some. A base lowering after midday. Thermals probably moderate. Trades from the ENE should put the shear line at Pukalani.</p><div style="font-weight:600;font-size:.9rem;margin:10px 0 2px">Forecast cloudbase, Sun 18 Oct</div><div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted,#6b6b66);margin:2px 0 4px">
-<span><span style="display:inline-block;width:16px;border-top:2px dashed #eb6834;vertical-align:middle"></span> Forecast</span>
-</div>
-<div style="position:relative;width:100%;min-width:0;height:220px"><canvas id="fcchart" role="img" aria-label="Derived cloudbase against the forecast through the day"></canvas></div>
-
-<script>
-(function () {
-  var d = {"derived": [], "forecast": [[540, 4960.0], [600, 5660.0], [660, 5760.0], [720, 6060.0], [780, 5360.0], [840, 5060.0], [900, 4760.0], [960, 4360.0]], "up": null, "nocu": null}, pt = function (a) { return {x: a[0], y: a[1]}; };
-  var dark = matchMedia('(prefers-color-scheme: dark)').matches, muted = '#898781', grid = dark ? '#2c2c2a' : '#e1e0d9';
-  var nocu = { id: 'nocu', beforeDatasetsDraw: function (c) { if (!d.nocu) return; var x = c.scales.x, a = c.chartArea, g = c.ctx,
-    x0 = x.getPixelForValue(d.nocu[0]), x1 = x.getPixelForValue(d.nocu[1]);
-    g.save(); g.fillStyle = 'rgba(137,135,129,0.10)'; g.fillRect(x0, a.top, x1 - x0, a.bottom - a.top);
-    g.fillStyle = muted; g.font = '11px sans-serif'; g.textAlign = 'center';
-    g.fillText('No cumulus', (x0 + x1) / 2, a.top + (a.bottom - a.top) / 2); g.restore(); } };
-  var band = { id: 'band', beforeDatasetsDraw: function (c) { if (!d.up) return; var x = c.scales.x, a = c.chartArea, g = c.ctx;
-    g.save(); g.fillStyle = 'rgba(137,135,129,0.14)';
-    g.fillRect(x.getPixelForValue(d.up[0]), a.top, x.getPixelForValue(d.up[1]) - x.getPixelForValue(d.up[0]), a.bottom - a.top); g.restore(); } };
-  var hm = function (m) { return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); };
-  var ys = d.derived.map(function (a) { return a[1]; }).concat(d.forecast.map(function (a) { return a[1]; }));
-  var xs = [540, 960];
-  new Chart(document.getElementById('fcchart'), {
-    type: 'line',
-    data: { datasets: [
-      { label: 'Derived', data: d.derived.map(pt), borderColor: '#2a78d6', borderWidth: 2, pointRadius: 0, tension: 0.3 },
-      { label: 'Forecast', data: d.forecast.map(pt), borderColor: '#eb6834', borderWidth: 2, borderDash: [6, 4], pointRadius: 3, pointBackgroundColor: '#eb6834', tension: 0.3 }
-    ] },
-    options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'nearest', axis: 'x', intersect: false },
-      plugins: { legend: { display: false }, tooltip: { callbacks: {
-        title: function (i) { return hm(i[0].parsed.x); },
-        label: function (i) { return i.dataset.label + ': ' + Math.round(i.parsed.y).toLocaleString() + ' ft'; } } } },
-      scales: {
-        x: { type: 'linear', min: xs[0], max: xs[1], ticks: { stepSize: 60, color: muted, callback: function (v) { return hm(v); } }, grid: { display: false } },
-        y: { min: Math.min(3500, Math.floor(Math.min.apply(null, ys) / 500) * 500),
-              max: Math.max(7000, Math.ceil(Math.max.apply(null, ys) / 500) * 500),
-              ticks: { stepSize: 500, color: muted, callback: function (v) { return v.toLocaleString(); } }, grid: { color: grid } }
-      } },
-    plugins: [nocu]
-  });
-})();
-</script><dl>
+      <p class="summary">The model sees little cloud over Kula; the slope&#x27;s own cumulus are too small for it to show, so expect some. Thermals probably moderate. Trades from the ENE should put the shear line at Pukalani.</p><dl>
         <dt>Thermals</dt><dd>Probably moderate<div class="sub">thermal.py on the forecast air (+3 F, it runs cool); within one category of the measured rating on every test day</div></dd>
-        <dt>Cloudbase</dt><dd><span class="num">5,800 → 5,100 ft</span><div class="sub">11:00 → 14:00, give or take about 700 ft</div></dd>
+        <dt>Cloudbase</dt><dd>Probably normal for October, about 4,500–5,400 ft<div class="sub">Most days the base levels off by mid-morning and holds. Nothing in the forecast points to a low day.</div></dd>
         <dt>Sun</dt><dd><span class="num">95%</span> of clear sky, 10:00–14:00 (GFS)<div class="sub">The model can't see the slope's own cumulus: when it says 90% or more, Kula has measured about 80%. Good flying days measure about 80%, overcast about 50%, socked in 20%.</div></dd>
         <dt>Shear line</dt><dd>At Pukalani<div class="sub">Trades ENE (070°)</div></dd>
       </dl>
@@ -288,7 +249,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
    browser's 10-minute cached copy is bypassed. The 15-minute refresh stays
    as a backstop. */
 (function () {
-  var built = "2026-10-17T17:52";
+  var built = "2026-10-17T18:00";
   function check() {
     fetch("stations.json?" + Date.now(), {cache: "no-store"})
       .then(function (r) { return r.json(); })
