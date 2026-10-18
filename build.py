@@ -1721,6 +1721,26 @@ def camera_cloud_minutes(day: str, camera: str):
     return int(10 * (ok.vis_mi < CAM_IN_CLOUD_MI).sum())
 
 
+def summit_spill(now: datetime, obs: pd.DataFrame):
+    """{"su_rh", "su_dir", "dew"} for P8 once the 08:59 summit reading is in
+    (Mesonet runs ~15 min behind): the Summit station 07:00-08:59 and whether
+    Kula Ag started saturated (95%+ at 06:00-06:59)."""
+    if now.hour * 60 + now.minute < 9 * 60 + 15:
+        return None
+    r = mesonet.get("/mesonet/db/measurements", location="hawaii", station_ids="0153",
+                    var_ids="RH_1_Avg,WDrs_1_Avg,WS_1_Avg",
+                    start_date=f"{now:%Y-%m-%d}T07:00:00-10:00", end_date=f"{now:%Y-%m-%d}T08:59:59-10:00",
+                    row_mode="json", limit=5000)
+    x = pd.DataFrame(r)
+    x["value"] = pd.to_numeric(x.value)
+    v = x.pivot_table(index="timestamp", columns="variable", values="value")
+    rad = np.radians(v.WDrs_1_Avg)
+    u, vv = float((v.WS_1_Avg * np.sin(rad)).mean()), float((v.WS_1_Avg * np.cos(rad)).mean())
+    ka = obs[(obs.station_id == "001HI") & (obs.observed.dt.hour == 6)] if len(obs) else obs
+    dew = bool(len(ka) and float(_rh(ka.temp_f, ka.dew_f).mean()) >= 95)
+    return {"su_rh": float(v.RH_1_Avg.mean()), "su_dir": float(np.degrees(np.arctan2(u, vv)) % 360), "dew": dew}
+
+
 def log_patterns(now: datetime, fired: list) -> dict:
     """{id: first HH:MM it fired today}, kept for the day's scorecard."""
     today = f"{now:%Y-%m-%d}"
@@ -2703,6 +2723,7 @@ def build() -> str:
     ctx["rh_5_7k"] = ((safely(airmass_noon, cap, now.date()) or {}).get("rh_5_7k")
                       if cap and 11 <= now.hour < 13 else None)
     ctx["sky"] = safely(sky_now, now) if up is not None else None
+    ctx["spill"] = safely(summit_spill, now, obs) if len(obs) else None
     fired = (safely(patterns.watch, ctx) or []) if not day_over else []
     safely(log_patterns, now, fired)
     if fired:

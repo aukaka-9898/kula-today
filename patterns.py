@@ -32,6 +32,8 @@ Context keys (filled by build.py; any may be None):
   inv               Kahului inversion today: {"base_ft", "top_ft"} or None
                     (no pattern uses it since 2026-10-17)
   summit_push       first hour the summit-cloud forecast holds, or None
+  spill             {"su_rh", "su_dir", "dew"}: the Summit station 07:00-08:59
+                    and whether Kula started saturated -- or None before ~09:15
   upslope_typical   "HH:MM" for this month
 """
 
@@ -130,6 +132,21 @@ def _late_decay(c):
             "not new lift.")
 
 
+def _summit_spillover(c):
+    """Crater spillover (Sam, 2026-10-18): the summit moist on an easterly
+    07:00-08:59. See rules.P8 for the history behind the numbers."""
+    import rules
+    s = c.get("spill")
+    if not s or not rules.says("P8", s):
+        return None
+    if s.get("dew"):
+        return ("Summit spillover on a dew morning: probably not flyable; the base is likely to stay "
+                "under 4,000 ft.")
+    return ("Summit spillover: moist trade air has been over the summit since 07:00. Crater cloud spilling "
+            "west gets mixed into Kula's thermals, so expect a lower base that stalls rather than climbs. "
+            "Low day about 4 times in 10 (usually under 2 in 10).")
+
+
 PATTERNS = [
     {"id": "P1", "name": "Summit cloud pushed over", "active": True, "where": "forecast",
      "origin": "2026-10-15 (Sam): backside cloud over the summit ridge shaded Kula from 15:00",
@@ -154,6 +171,9 @@ PATTERNS = [
      "origin": "2026-10-17 (Sam): cloud dissipating from the base up, base lingering at 4,900 ft; "
                "Keokea's sky cleared 0.95 -> 0.86 at 16:30. Thresholds from that one day",
      "fn": _late_decay},
+    {"id": "P8", "name": "Summit spillover", "active": True, "where": "today",
+     "origin": "2026-10-18 (Sam): crater full of cloud spilling west over the rim; tested on 1,019 days",
+     "fn": _summit_spillover},
 ]
 
 

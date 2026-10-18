@@ -20,6 +20,8 @@ Features (the page computes them live; monthly.py from the history tables):
     today_cat   "low" / "normal" / "high": the day the forecast is made on
     today_level the day the forecast is made on: its midday derived base (ft)
     base_late   the derived base around 10:00-12:00 (ft)
+    su_rh       Summit station (9,776 ft) mean humidity 07:00-08:59 (%)
+    su_dir      its vector-mean wind direction then (deg)
 """
 import json
 from pathlib import Path
@@ -67,6 +69,14 @@ def _leaning_high(f) -> bool:
     return f["rh_5_7k"] < 40 and f["rh_7_10k"] < 20 and f["fc_level"] - (lo + hi) / 2 > 600
 
 
+def _summit_spill(f) -> bool:
+    """Crater spillover: moist trade air over the summit on an easterly in
+    the early morning. Sam, 2026-10-18: lifted over the rim, blown west,
+    sinking and warming so the cloud evaporates; Kula's thermals then mix
+    that moist air in and the base comes out lower."""
+    return f["su_rh"] >= 85 and 45 <= f["su_dir"] <= 135
+
+
 def _high_base_drop(f) -> bool:
     """A base already high by late morning under moist air aloft comes down."""
     return f["base_late"] > 5400 and f["rh_5_7k"] > 45
@@ -86,6 +96,11 @@ RULES = {
     "B4": {"name": "Leaning high", "says": "high", "fn": _leaning_high,
            "history": "tomorrow 48%, 2 days out 41%, 3 days out 38% right on ~12% of days (high 21% of all), low ~5%",
            "origin": "2026-10-17 (Sam: \"use 'leaning high'\")", "lead": 2},
+    "P8": {"name": "Summit spillover", "says": "low", "fn": _summit_spill,
+           "history": "79 of 1,019 days without a dew start: low 43% (16% on other days), base median "
+                      "4,490 vs 4,950 ft, under 4,000 ft 28% vs 7%; the three slices 42/20/53% low. "
+                      "With a dew start (6 days): base median ~3,500 ft, under 4,000 ft on 4-5 of 6",
+           "origin": "2026-10-18 (Sam): crater full of cloud spilling west; \"lower base\""},
     "P6": {"name": "High base, likely to drop", "says": "falls", "fn": _high_base_drop,
            "history": "fell 300+ ft by 15:00 on 84% of the 10% of days it fired (37% of all days)",
            "origin": "2026-10-17: recurred in all three held-back years at 11:00 and 12:00"},
