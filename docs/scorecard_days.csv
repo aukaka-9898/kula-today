@@ -1,2 +1,3 @@
-date,word,fc_morning_made,fc_sun,summit_alert,intrusion,upslope,upslope_end,line_updates,line_updates_with_dropped
-2026-10-16,,08:37,,,,08:00,16:30,42,0
+date,word,fc_morning_made,fc_sun,summit_alert,intrusion,upslope,upslope_end,line_updates,line_updates_with_dropped,patterns,cam_puunianiau_cloud_min,parkhq_cloud_min,cam_redhill_cloud_min,derived_low_min,base_phase2
+2026-10-16,,08:37,,,,08:00,16:30,42,0,,,,,,
+2026-10-17,Light,09:07,0.8706337065972782,,0.0,08:15,16:45,56,46,P3@08:56 P4@08:56 P4c@10:50 P5@08:56,10.0,0.0,0.0,0.0,09:30-12:00
