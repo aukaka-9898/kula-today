@@ -2125,8 +2125,10 @@ def today_level(now: datetime):
 CALL_RULE = {}          # the rule behind the last cloudbase_call, for the call log
 
 
-def cloudbase_call(day, path, fc_hours: dict, level_today) -> tuple[str, str]:
-    """The day's base as a category, from the rules in rules.py (B1-B3)."""
+def cloudbase_call(day, path, fc_hours: dict, level_today, leaning=False) -> tuple[str, str]:
+    """The day's base as a category, from the rules in rules.py (B1-B4).
+    `leaning` allows B4, the weaker forecast-only high call, for the week
+    table's days two or more out."""
     CALL_RULE[f"{day}"] = None
     lo, hi = MONTH_BASE_RANGE[day.month]
     air = airmass_noon(path, day) if path else None
@@ -2146,6 +2148,9 @@ def cloudbase_call(day, path, fc_hours: dict, level_today) -> tuple[str, str]:
         if rules.says("B3", f):
             CALL_RULE[f"{day}"] = "B3"
             return ("May be a high day", "High base today and a high forecast: right about half the time.")
+        if leaning and f["fc_level"] is not None and rules.says("B4", f):
+            CALL_RULE[f"{day}"] = "B4"
+            return ("Leaning high", "Dry air aloft and a high forecast base: right about 4 times in 10.")
     return (f"Probably normal for {day:%B}, about {lo:,}–{hi:,} ft",
             "Most days the base levels off by mid-morning and holds. Nothing in the forecast points to "
             "a low or a high day.")
@@ -2810,9 +2815,12 @@ def build() -> str:
             # 2026-10-17: "categorize The Week"). Beyond the model run's reach
             # there is no air aloft to check, so it can only say Normal.
             cat = safely(cloudbase_call, day, cap, safely(forecast_base_hours, day) or {},
-                         safely(today_level, now) if day == now.date() + timedelta(days=1) else None)
+                         safely(today_level, now) if day == now.date() + timedelta(days=1) else None,
+                         day >= now.date() + timedelta(days=2))
+            # Normal shows as "--" (Sam, 2026-10-17): only a call worth making is named.
             cat = ("Low" if cat and cat[0].startswith("Probably a low") else
-                   "May be high" if cat and cat[0].startswith("May be a high") else "Normal" if cat else "--")
+                   "May be high" if cat and cat[0].startswith("May be a high") else
+                   "Leaning high" if cat and cat[0] == "Leaning high" else "--")
             rows_html += (f"<tr><td>{day:%a %d}</td><td class=\"n\">{pct(w['sun'])}</td>"
                           f"<td>{cat}</td>"
                           f"<td>{esc(strength_word(w['thermal']))}</td><td>{lt}</td></tr>")

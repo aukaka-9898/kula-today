@@ -54,8 +54,14 @@ def features() -> pd.DataFrame:
         columns={"rh_5_7k_12": "rh_5_7k", "rh_7_10k_12": "rh_7_10k"})
     n = pd.read_csv(H / "nam12.csv", parse_dates=["date"])[["date", "rh_5_7k_12"]].rename(
         columns={"rh_5_7k_12": "rh_5_7k_same"})
+    a2 = pd.read_csv(H / "nam12_ahead.csv", parse_dates=["date"])
+    a2 = a2[a2.lead == 2][["date", "rh_5_7k_12", "rh_7_10k_12"]].rename(
+        columns={"rh_5_7k_12": "rh_5_7k_2", "rh_7_10k_12": "rh_7_10k_2"})
     fc = pd.read_csv(H / "fc_level.csv", parse_dates=["date"])
-    x = d.merge(a, on="date", how="left").merge(n, on="date", how="left").merge(fc, on="date", how="left")
+    x = (d.merge(a, on="date", how="left").merge(a2, on="date", how="left")
+         .merge(n, on="date", how="left").merge(fc, on="date", how="left"))
+    if "fc_level_2" not in x:
+        x["fc_level_2"] = np.nan
     x["base_late"] = x[["b10", "b11"]].mean(axis=1)
     x["rest"] = x.b15 - x.b11
     return x
@@ -68,6 +74,8 @@ def fires(rid: str, x: pd.DataFrame) -> pd.Series:
         f = {"month": r.month, "rh_5_7k": r.rh_5_7k_same if rid == "P6" else r.rh_5_7k,
              "rh_7_10k": r.rh_7_10k, "fc_level": r.fc_level, "today_cat": r.today_cat,
              "today_level": r.today_level, "base_late": r.base_late}
+        if rid == "B4":           # judged 2 days out, as the week table uses it
+            f.update(rh_5_7k=r.rh_5_7k_2, rh_7_10k=r.rh_7_10k_2, fc_level=r.fc_level_2)
         try:
             out.append(bool(fn(f)) if not any(pd.isna(v) for k, v in f.items() if k != "today_cat") else False)
         except TypeError:
@@ -120,7 +128,7 @@ def score_live(month: str) -> dict:
     s = s[s.date.str.startswith(month)]
     out = {}
     if "base_rule" in s and "base_cat" in s:
-        for rid, cat in (("B1", "low"), ("B2", "high"), ("B3", "high")):
+        for rid, cat in (("B1", "low"), ("B2", "high"), ("B3", "high"), ("B4", "high")):
             c = s[s.base_rule == rid]
             out[rid] = {"calls": len(c), "right": int((c.base_cat == cat).sum())}
     if "p6_fell" in s:

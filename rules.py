@@ -58,6 +58,15 @@ def _high_forecast(f) -> bool:
     return f["today_level"] > 5150 and f["fc_level"] - (lo + hi) / 2 > 950
 
 
+def _leaning_high(f) -> bool:
+    """2-3 days out, the forecast alone: dry aloft and a forecast base 600+ ft
+    above the month's middle. About twice the usual chance of a high day but
+    right only ~4 in 10, so the week table says "Leaning high", not "May be"
+    (Sam, 2026-10-17)."""
+    lo, hi = MONTH_BASE_RANGE[f["month"]]
+    return f["rh_5_7k"] < 40 and f["rh_7_10k"] < 20 and f["fc_level"] - (lo + hi) / 2 > 600
+
+
 def _high_base_drop(f) -> bool:
     """A base already high by late morning under moist air aloft comes down."""
     return f["base_late"] > 5400 and f["rh_5_7k"] > 45
@@ -74,6 +83,9 @@ RULES = {
            "history": "with B2: right 52% on 18% of days, catching 96 of 213 high days (45%); "
                       "B3 alone 45%; the three slices 49/52/67%; low on 5%",
            "origin": "2026-10-17: high-day search over 1,020 days (Sam: a priority)"},
+    "B4": {"name": "Leaning high (2-3 days out)", "says": "high", "fn": _leaning_high,
+           "history": "2 days out right 41% on 12% of days (high 21% of all), low 5%; 3 days out 38%",
+           "origin": "2026-10-17 (Sam: \"use 'leaning high'\")", "lead": 2},
     "P6": {"name": "High base, likely to drop", "says": "falls", "fn": _high_base_drop,
            "history": "fell 300+ ft by 15:00 on 84% of the 10% of days it fired (37% of all days)",
            "origin": "2026-10-17: recurred in all three held-back years at 11:00 and 12:00"},
