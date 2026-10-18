@@ -89,16 +89,36 @@ def make(day: str | None = None, n: int = 16) -> None:
     print(f"{len(key)} frames of {len(frames)} -> http://localhost:8767/{day}_camtest/test.html")
 
 
-def camera_base(f: Path, tilt: float, heights: dict):
+COLS = (870, 890, 910, 930, 950, 970, 990)      # columns read across Sam's box
+MAX_SPREAD_FT = 600                               # wider = cloud in front of the slope
+
+
+def column_heights(tilt: float) -> dict:
+    return {x: {y: g.terrain_at(x, y, tilt)[0] for y in range(590, 700)} for x in COLS}
+
+
+def camera_base(f: Path, heights: dict):
+    """(base ft or None, spread ft). The cloud-to-slope edge read down seven
+    columns; a real base meets the slope at one height across them, a cloud in
+    front of the slope reads the terrain behind it and wanders. On 10-18 a
+    spread over 600 ft caught the two worst frames (08:51, 09:08) and no good
+    ones (Sam: "can the auto call on bad frames be filtered?")."""
     a = np.asarray(Image.open(f).convert("L"), dtype=float)
-    col = a[590:700, COL[0]:COL[1]].mean(axis=1)
-    sm = np.convolve(col, np.ones(3) / 3, mode="same")
-    top, bot = sm[:10].mean(), sm[-40:].mean()
-    if top < 135 or top - bot < 40:            # blue sky above, or no clear edge
-        return None
-    thr = (top + bot) / 2
-    i = next((k for k in range(5, len(sm)) if sm[k] < thr <= sm[k - 1]), None)
-    return heights.get(590 + i) if i is not None else None
+    hs = []
+    for x in COLS:
+        col = a[590:700, x - 6:x + 6].mean(axis=1)
+        sm = np.convolve(col, np.ones(3) / 3, mode="same")
+        top, bot = sm[:10].mean(), sm[-40:].mean()
+        if top < 135 or top - bot < 40:          # blue sky above, or no clear edge
+            continue
+        thr = (top + bot) / 2
+        i = next((k for k in range(5, len(sm)) if sm[k] < thr <= sm[k - 1]), None)
+        if i is not None and heights[x].get(590 + i) is not None:
+            hs.append(heights[x][590 + i])
+    if len(hs) < 4:
+        return None, None
+    spread = float(np.percentile(hs, 75) - np.percentile(hs, 25))
+    return (round(float(np.median(hs)), -1) if spread <= MAX_SPREAD_FT else None), round(spread, -1)
 
 
 def score(path: str, day: str | None = None) -> None:
@@ -110,8 +130,7 @@ def score(path: str, day: str | None = None) -> None:
     day = day or f"{datetime.now(b.HST):%Y-%m-%d}"
     d = folder(day)
     key = json.loads((d / "key.json").read_text(encoding="utf-8"))
-    tilt = g.calibrate()
-    heights = {y: g.terrain_at(905, y, tilt)[0] for y in range(590, 700)}
+    heights = column_heights(g.calibrate())
     when = datetime.now(b.HST)
     if day != f"{when:%Y-%m-%d}":
         when = datetime.fromisoformat(f"{day}T23:00").replace(tzinfo=b.HST)
@@ -122,9 +141,9 @@ def score(path: str, day: str | None = None) -> None:
         t = pd.Timestamp(f"{day} {hm}")
         c = core[(core.observed <= t) & (core.observed > t - pd.Timedelta("20min"))]
         L = c.sort_values("observed").groupby("station_id").tail(1)
+        cam, spread = camera_base(REVIEW / "camera_archive" / day / f"{hm.replace(':', '')}.jpg", heights)
         rows.append({"date": day, "time": hm, "frame": name, "sam": calls.get(name),
-                     "camera": camera_base(REVIEW / "camera_archive" / day / f"{hm.replace(':', '')}.jpg",
-                                           tilt, heights),
+                     "camera": cam, "spread": spread,
                      "derived": round(float(L.lcl_ft.median()), -1) if len(L) >= 4 else None})
     r = pd.DataFrame(rows).sort_values("time")
     r.to_csv(d / "results.csv", index=False)
