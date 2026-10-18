@@ -2342,8 +2342,7 @@ def day_review(obs, now, up, evening, rnet, word, model, fc_today, fc_pair, entr
                         + (f"; the forecast had {ft(round(min(fv), -2))}–{ft(round(max(fv), -2))}."
                            if fv else "."))
             chart_html = (f'<span class="num">{ft(round(min(dv), -2))}–{ft(round(max(dv), -2))} ft</span>'
-                          '<div class="sub">Derived from the stations during the upslope; the chart above '
-                          'sets it against the forecast</div>')
+                          '<div class="sub">Derived from the stations during the upslope</div>')
 
     ld = line_day(entries)
     if ld:
