@@ -480,7 +480,14 @@ def _upper_pair(latest: pd.DataFrame):
     return float(top.lcl_ft.iloc[0]), list(top.name)
 
 
-def update_phase(obs: pd.DataFrame, now: datetime, wet_now: bool, up, day_over: bool) -> dict:
+def update_phase(obs: pd.DataFrame, now: datetime, wet_now: bool, up, day_over: bool,
+                 morning_now: bool = False) -> dict:
+    """wet: a dew morning (the morning line after a saturated night) -- only
+    then may phase 2 read the base from the highest stations. Sam, 2026-10-18:
+    "morning derived heights should not ignore lower stations" -- on a damp
+    but dewless morning phase 2 ran 08:30-11:45 and put the base at
+    4,700-5,400 ft while it sat at 4,000 or less. morning: the morning line
+    fired at all today (for the hand-over "First clouds" line)."""
     d = f"{now:%Y-%m-%d}"
     try:
         ph = json.loads(BASE_PHASE_FILE.read_text(encoding="utf-8"))
@@ -490,6 +497,8 @@ def update_phase(obs: pd.DataFrame, now: datetime, wet_now: bool, up, day_over: 
         ph = {"date": d, "wet": False, "phase": 1, "intervals": []}
     if wet_now:
         ph["wet"] = True
+    if morning_now or wet_now:
+        ph["morning"] = True
     if ph["wet"] and up is not None and not day_over and len(obs):
         core = _core(obs)
         core = core[core.observed >= obs.observed.max() - STALE]
@@ -2527,7 +2536,7 @@ def build() -> str:
     cu_clear = bool(cu) and cu[0] == "clear"
     mc = safely(morning_cloud, obs, now) if up is None and 6 <= now.hour < 12 and len(obs) else None
     global PHASE
-    PHASE = safely(update_phase, obs, now, bool(mc), up, day_over) or {}
+    PHASE = safely(update_phase, obs, now, bool(mc and mc.get("dewy")), up, day_over, bool(mc)) or {}
     if PHASE.get("phase") == 2 and base and len(obs):
         _c = _core(obs)
         _c = _c[_c.observed >= obs.observed.max() - STALE]
@@ -2553,7 +2562,7 @@ def build() -> str:
                      f'About <span class="num">{ft(round(mc["base"], -2))} ft</span>'
                      f'<div class="sub">{mc["n_wet"]} of {mc["n"]} slope stations near saturation; '
                      f'no cloud overhead yet{dew}</div>')
-    elif up is None and now.hour < 12 and PHASE.get("wet") and (_fc := safely(slope_lcl, obs)):
+    elif up is None and now.hour < 12 and PHASE.get("morning") and (_fc := safely(slope_lcl, obs)):
         # The morning line has fired today but the slope has dried below it in
         # the sun, before the upslope registers (Sam, 2026-10-18: "latest
         # update lost the low cloud call" just as the first wisps formed).
@@ -2731,7 +2740,7 @@ def build() -> str:
                        next((i for i in inv_today if i), None), "yesterday")
         if ahead:
             said = f"Today's forecast: {ahead}" + (f" {said}" if said else "")
-    if not mc and up is None and now.hour < 12 and PHASE.get("wet") and (_fc := safely(slope_lcl, obs)):
+    if not mc and up is None and now.hour < 12 and PHASE.get("morning") and (_fc := safely(slope_lcl, obs)):
         said = (f"First clouds will form at about {ft(round(_fc, -2))} ft; the slope is drying as it warms."
                 + (f" {said}" if said else ""))
     if mc:
