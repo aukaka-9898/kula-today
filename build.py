@@ -2816,10 +2816,12 @@ def build() -> str:
             cat = safely(cloudbase_call, day, cap, safely(forecast_base_hours, day) or {},
                          safely(today_level, now) if day == now.date() + timedelta(days=1) else None,
                          True)
-            # Normal shows as "--" (Sam, 2026-10-17): only a call worth making is named.
+            # "Normal" again (Sam, 2026-10-18), after a day of "--"; "--" only
+            # when there is no call at all.
             cat = ("Low" if cat and cat[0].startswith("Probably a low") else
                    "May be high" if cat and cat[0].startswith("May be a high") else
-                   "Leaning high" if cat and cat[0] == "Leaning high" else "--")
+                   "Leaning high" if cat and cat[0] == "Leaning high" else
+                   "Normal" if cat else "--")
             rows_html += (f"<tr><td>{day:%a %d}</td><td class=\"n\">{pct(w['sun'])}</td>"
                           f"<td>{cat}</td>"
                           f"<td>{esc(strength_word(w['thermal']))}</td><td>{lt}</td></tr>")
