@@ -2073,14 +2073,21 @@ def cloudbase_call(day, path, fc_hours: dict, level_today) -> tuple[str, str]:
     air = airmass_noon(path, day) if path else None
     fc = [v - FORECAST_BASE_LOW_FT for h, v in fc_hours.items() if 11 <= h <= 14]
     fc_low = bool(fc) and sum(fc) / len(fc) <= lo
-    today_low = level_today is not None and level_today <= MONTH_BASE_RANGE[datetime.now(HST).month][0]
+    this_month = MONTH_BASE_RANGE[datetime.now(HST).month]
+    today_low = level_today is not None and level_today <= this_month[0]
+    today_high = level_today is not None and level_today >= this_month[1]
     moist = bool(air) and air["rh_7_10k"] > 55 and (air["rh_5_7k"] > 80 or today_low)
     if moist and fc_low:
         return ("Probably a low day",
                 "Moist air aloft and a low forecast base both point to it: right about 9 times in 10.")
+    # High is weaker (Sam: "may be a high day"): dry aloft after a high day
+    # today was high on 66% of 56 history days (21% of all days), low on 2%.
+    # It needs today's result, so tomorrow only.
+    if today_high and air and air["rh_5_7k"] < 40 and air["rh_7_10k"] < 20:
+        return ("May be a high day", "Dry air aloft after a high day today: right about 2 times in 3.")
     return (f"Probably normal for {day:%B}, about {lo:,}–{hi:,} ft",
             "Most days the base levels off by mid-morning and holds. Nothing in the forecast points to "
-            "a low day.")
+            "a low or a high day.")
 
 
 def base_chart(obs, now, up, end, cid="basechart", title="Cloudbase, derived vs forecast",
@@ -2732,7 +2739,8 @@ def build() -> str:
             # there is no air aloft to check, so it can only say Normal.
             cat = safely(cloudbase_call, day, cap, safely(forecast_base_hours, day) or {},
                          safely(today_level, now) if day == now.date() + timedelta(days=1) else None)
-            cat = "Low" if cat and cat[0].startswith("Probably a low") else "Normal" if cat else "--"
+            cat = ("Low" if cat and cat[0].startswith("Probably a low") else
+                   "May be high" if cat and cat[0].startswith("May be a high") else "Normal" if cat else "--")
             rows_html += (f"<tr><td>{day:%a %d}</td><td class=\"n\">{pct(w['sun'])}</td>"
                           f"<td>{cat}</td>"
                           f"<td>{esc(strength_word(w['thermal']))}</td><td>{lt}</td></tr>")
