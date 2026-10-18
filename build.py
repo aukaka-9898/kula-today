@@ -2500,21 +2500,14 @@ def build() -> str:
         dew = (f"; Kula Ag {mc['ka_t']:.0f}/{mc['ka_td']:.0f} °F ({mc['ka_rh']:.0f}%)"
                + (f", dew point up {mc['rise']:.0f} °F since {mc['since']:%H:%M} as the night's dew evaporates"
                   if mc.get("rise", 0) >= 1.5 else "") if "ka_t" in mc else "")
+        # No hourly forecast feet here (Sam, 2026-10-18: Today showed 5,600 -> 5,400
+        # while the Forecast panel's category said 4,500-5,400); the Forecast
+        # panel carries today's call until the upslope.
         base_html = (f'Low cloud down to about <span class="num">{ft(round(mc["base"], -2))} ft</span>'
-                     f'<div class="sub">{mc["n_wet"]} of {mc["n"]} slope stations near saturation{dew}. '
-                     f'The forecast had {am_pm(fc_pair)} ft at 11:00 → 14:00</div>'
-                     if fc_pair and fc_pair[0] is not None else
-                     f'Low cloud down to about <span class="num">{ft(round(mc["base"], -2))} ft</span>'
                      f'<div class="sub">{mc["n_wet"]} of {mc["n"]} slope stations near saturation{dew}</div>')
     elif up is None and now.hour < 12:
-        if fc_pair and fc_pair[0] is not None:
-            base_label = "Forecast<br>Cloudbase"      # not derived until the upslope
-        base_html = (f'<span class="num">{am_pm(fc_pair)} ft</span> forecast'
-                     '<div class="sub">11:00 → 14:00. Derived from the stations once the '
-                     f'upslope sets in, usually about {UPSLOPE_TYPICAL[now.month]}</div>'
-                     if fc_pair and fc_pair[0] is not None else
-                     'Not yet<div class="sub">Derived once the upslope sets in, '
-                     f'usually about {UPSLOPE_TYPICAL[now.month]}</div>')
+        base_html = ('Not yet<div class="sub">Derived once the upslope sets in, '
+                     f"usually about {UPSLOPE_TYPICAL[now.month]}. Today's call is in the Forecast panel</div>")
     elif base and cu_clear:
         base_html = (f'No cumulus yet<div class="sub">They would form near about '
                      f'{ft(round(base["mid"], -2))} ft, the condensation level derived from '
