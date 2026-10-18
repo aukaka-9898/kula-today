@@ -2776,7 +2776,10 @@ def build() -> str:
         cb_head, cb_sub = (safely(cloudbase_call, tom, cap, fc_hours,
                                   safely(today_level, now) if tom > now.date() else None)
                            or (f"{am_pm(hours.get(tom))} ft", ""))
-        t_html = (f'<p class="summary">{esc(said_t)}</p>' if said_t else "") + push_html + f"""<dl>
+        # No summary paragraph (Sam, 2026-10-17: "the whole summary paragraph
+        # is unnecessary"): the rows below say it. said_t is still worked out
+        # but not shown.
+        t_html = push_html + f"""<dl>
         <dt>Thermals</dt><dd>Probably {esc(strength_word(r['thermal']).lower())}<div class="sub">thermal.py on the forecast air (+3 F, it runs cool); within one category of the measured rating on every test day</div></dd>
         <dt>Cloudbase</dt><dd>{esc(cb_head)}<div class="sub">{esc(cb_sub)}</div></dd>
         <dt>Sun</dt><dd><span class="num">{pct(r['sun'])}</span> of clear sky, 10:00–14:00 (GFS)<div class="sub">The model can't see the slope's own cumulus: when it says 90% or more, Kula has measured about 80%. Good flying days measure about 80%, overcast about 50%, socked in 20%.</div></dd>
