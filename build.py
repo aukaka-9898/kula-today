@@ -2127,8 +2127,8 @@ CALL_RULE = {}          # the rule behind the last cloudbase_call, for the call 
 
 def cloudbase_call(day, path, fc_hours: dict, level_today, leaning=False) -> tuple[str, str]:
     """The day's base as a category, from the rules in rules.py (B1-B4).
-    `leaning` allows B4, the weaker forecast-only high call, for the week
-    table's days two or more out."""
+    `leaning` allows B4, the weaker forecast-only high call, after B2 and B3
+    (Sam, 2026-10-17: tomorrow falls back to it too)."""
     CALL_RULE[f"{day}"] = None
     lo, hi = MONTH_BASE_RANGE[day.month]
     air = airmass_noon(path, day) if path else None
@@ -2150,7 +2150,9 @@ def cloudbase_call(day, path, fc_hours: dict, level_today, leaning=False) -> tup
             return ("May be a high day", "High base today and a high forecast: right about half the time.")
         if leaning and f["fc_level"] is not None and rules.says("B4", f):
             CALL_RULE[f"{day}"] = "B4"
-            return ("Leaning high", "Dry air aloft and a high forecast base: right about 4 times in 10.")
+            near = (day - datetime.now(HST).date()).days <= 1
+            return ("Leaning high", "Dry air aloft and a high forecast base: right "
+                    + ("a little under half the time." if near else "about 4 times in 10."))
     return (f"Probably normal for {day:%B}, about {lo:,}–{hi:,} ft",
             "Most days the base levels off by mid-morning and holds. Nothing in the forecast points to "
             "a low or a high day.")
@@ -2790,7 +2792,7 @@ def build() -> str:
         # level lost to the season average. The base is a category instead.
         fc_hours = safely(forecast_base_hours, tom) or {}
         cb_head, cb_sub = (safely(cloudbase_call, tom, cap, fc_hours,
-                                  safely(today_level, now) if tom > now.date() else None)
+                                  safely(today_level, now) if tom > now.date() else None, True)
                            or (f"{am_pm(hours.get(tom))} ft", ""))
         # No summary paragraph (Sam, 2026-10-17: "the whole summary paragraph
         # is unnecessary"): the rows below say it. said_t is still worked out
@@ -2804,7 +2806,8 @@ def build() -> str:
       <div class="sub">Forecast as of {fc_made.astimezone(HST):%H:%M} HST</div>{rules_line()}"""
         if tom > now.date():
             safely(log_call, tom, ("Low" if cb_head.startswith("Probably a low") else
-                                   "May be high" if cb_head.startswith("May be a high") else "Normal"),
+                                   "May be high" if cb_head.startswith("May be a high") else
+                                   "Leaning high" if cb_head == "Leaning high" else "Normal"),
                    strength_word(r["thermal"]), now)
         for day, w in week.iterrows():
             if day < tom:
@@ -2816,7 +2819,7 @@ def build() -> str:
             # there is no air aloft to check, so it can only say Normal.
             cat = safely(cloudbase_call, day, cap, safely(forecast_base_hours, day) or {},
                          safely(today_level, now) if day == now.date() + timedelta(days=1) else None,
-                         day >= now.date() + timedelta(days=2))
+                         True)
             # Normal shows as "--" (Sam, 2026-10-17): only a call worth making is named.
             cat = ("Low" if cat and cat[0].startswith("Probably a low") else
                    "May be high" if cat and cat[0].startswith("May be a high") else

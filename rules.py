@@ -83,8 +83,8 @@ RULES = {
            "history": "with B2: right 52% on 18% of days, catching 96 of 213 high days (45%); "
                       "B3 alone 45%; the three slices 49/52/67%; low on 5%",
            "origin": "2026-10-17: high-day search over 1,020 days (Sam: a priority)"},
-    "B4": {"name": "Leaning high (2-3 days out)", "says": "high", "fn": _leaning_high,
-           "history": "2 days out right 41% on 12% of days (high 21% of all), low 5%; 3 days out 38%",
+    "B4": {"name": "Leaning high", "says": "high", "fn": _leaning_high,
+           "history": "tomorrow 48%, 2 days out 41%, 3 days out 38% right on ~12% of days (high 21% of all), low ~5%",
            "origin": "2026-10-17 (Sam: \"use 'leaning high'\")", "lead": 2},
     "P6": {"name": "High base, likely to drop", "says": "falls", "fn": _high_base_drop,
            "history": "fell 300+ ft by 15:00 on 84% of the 10% of days it fired (37% of all days)",
