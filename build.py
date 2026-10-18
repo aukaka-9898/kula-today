@@ -2546,7 +2546,7 @@ def build() -> str:
             _up, _names = _upper_pair(_lat)
             base_html = (f'<span class="num">About {ft(round(base["mid"], -2))} ft</span>'
                          f'<div class="sub">The lower slope is still damp from the dew overnight. The highest '
-                         f'stations ({", ".join(_names)}) are at about {ft(round(_up, -2))} ft: the base should '
+                         f'station ({", ".join(_names)}) is at about {ft(round(_up, -2))} ft: the base should '
                          f'lift toward that as the dew dries</div>')
     if mc:
         base_label = "Morning<br>cloud" if mc.get("overhead") else "First<br>clouds"
