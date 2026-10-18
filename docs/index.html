@@ -85,7 +85,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><div class="tag">Kula soaring briefing</div><h1>Kula Today</h1></div>
-    <div class="date">Updated Sun 18 Oct 2026 · 11:37 HST</div>
+    <div class="date">Updated Sun 18 Oct 2026 · 11:52 HST</div>
   </header>
 
   <div>
@@ -95,7 +95,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 
   <div class="cols">
     <section class="panel today" aria-labelledby="t-today">
-      <div class="kind">Measured today · 11:37 HST</div>
+      <div class="kind">Measured today · 11:52 HST</div>
       <div class="head"><h2 id="t-today">Today</h2><span class="chip good">Moderate</span></div>
       <p class="summary">Cloudbase is steady. Kula Ag had mostly sun over the last hour; the cloud tops out below about 6,900 ft (Puunianiau camera clear). Upslope has run since about 08:30 at a light 3 mph, and thermals seem moderate. Trades are holding the shear line crossing Kula Highway between Kamehameha Schools and Omaopio, with no trade air on the lower west slope.</p><div style="font-weight:600;font-size:.9rem;margin:10px 0 2px">Cloudbase so far, derived</div><div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted,#6b6b66);margin:2px 0 4px">
 
@@ -104,7 +104,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="sub">Derived from the stations every 15 minutes during the upslope.</div>
 <script>
 (function () {
-  var d = {"derived": [[540, 5090.0], [555, 4890.0], [570, 4740.0], [585, 4830.0], [600, 4780.0], [615, 4740.0], [630, 4980.0], [645, 5290.0], [660, 5180.0], [675, 5290.0]], "forecast": [], "up": [540, 675], "nocu": null}, pt = function (a) { return {x: a[0], y: a[1]}; };
+  var d = {"derived": [[540, 5090.0], [555, 4890.0], [570, 4740.0], [585, 4830.0], [600, 4780.0], [615, 4740.0], [630, 4980.0], [645, 5290.0], [660, 5180.0], [675, 5290.0]], "forecast": [], "up": [540, 682], "nocu": null}, pt = function (a) { return {x: a[0], y: a[1]}; };
   var dark = matchMedia('(prefers-color-scheme: dark)').matches, muted = '#898781', grid = dark ? '#2c2c2a' : '#e1e0d9';
   var nocu = { id: 'nocu', beforeDatasetsDraw: function (c) { if (!d.nocu) return; var x = c.scales.x, a = c.chartArea, g = c.ctx,
     x0 = x.getPixelForValue(d.nocu[0]), x1 = x.getPixelForValue(d.nocu[1]);
@@ -141,10 +141,10 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
         <dt>Thermals</dt><dd>Seem <strong>moderate</strong> as of 11:15<div class="sub">Kula Ag's last hour of air through the NAM sounding (thermal.py)</div></dd>
         <dt>Derived<br>Cloudbase</dt><dd><span class="num">About 5,300 ft</span><div class="sub">From the highest station (MECO Crater Rd): the lower slope is still damp from the night's dew. All stations: about 4,700 ft</div></dd>
         <dt>Sun</dt><dd><span class="num">62%</span> of clear sky, lower Kula slope<div class="sub">Last hour, as of 11:15; average of Kula Ag 69%, Keokea 47%, Pulehu 70%</div></dd>
-        <dt>Shear line</dt><dd>Crossing Kula Highway between Kamehameha Schools and Omaopio<div class="sub">Last hour: trades at MECO Pulehu Rd 2, upslope at MECO Olinda Rd</div><div class="sub">Trades at the coast: Paia 077° at 20 mph</div></dd>
+        <dt>Shear line</dt><dd>Crossing Kula Highway between Kamehameha Schools and Omaopio<div class="sub">Last hour: trades at MECO Pulehu Rd 2, upslope at MECO Olinda Rd</div><div class="sub">Trades at the coast: Paia 076° at 21 mph</div></dd>
         
         <dt>Upslope</dt><dd>On since about <span class="num">08:30</span><div class="sub">Drainage ended about 07:45</div></dd>
-        <dt>Wind</dt><dd><span class="num">3 mph</span>, gusts to 10<div class="sub">Lower elevations, 10 stations, last hour</div></dd>
+        <dt>Wind</dt><dd><span class="num">3 mph</span>, gusts to 11<div class="sub">Lower elevations, 10 stations, last hour</div></dd>
       </dl>
     </section>
     <section class="panel tomorrow" aria-labelledby="t-tomorrow">
@@ -241,7 +241,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 })();
 </script>
 <style>.stn{font:600 11px/1.2 var(--body);padding:1px 4px;background:rgba(255,255,255,.85);border:0;box-shadow:none;color:#17242f}.stn:before{display:none}</style>
-<!-- build problems: none -->
+<!-- build problems: HCDP observations, using api.weather.gov: ConnectTimeout: HTTPSConnectionPool(host='api.hcdp.ikewai.org', port=443): Max retries exceeded with url: /mesonet/db/measurements?location=hawaii&station_ids=0115%2C0118%2C0144%2C0116%2C0119%2C0145%2C0151%2C0152%2C0153%2C0143&var_ids=Tair_1_Avg%2CRH_1_Avg%2CWS_1_Avg%2CWDrs_1_Avg%2CWS_1_Max&start_date=2026-10-18T00%3A00%3A00-10%3A00&row_mode=json&limit=100000 (Caused by ConnectTimeoutError(<HTTPSConnection(host='api.hcdp.ikewai.org', port=443) at 0x7fa3d6206060), 'Connection to api.hcdp.ikewai.org timed out. (connect timeout=20)')); Mesonet sun: ConnectTimeout: HTTPSConnectionPool(host='api.hcdp.ikewai.org', port=443): Max retries exceeded with url: /mesonet/db/measurements?location=hawaii&station_ids=0115%2C0118%2C0144%2C0116%2C0119%2C0145%2C0151%2C0152%2C0153&var_ids=SWin_1_Avg&start_date=2026-10-18T10%3A12%3A00-10%3A00&end_date=2026-10-18T11%3A52%3A00-10%3A00&row_mode=json&limit=100000 (Caused by ConnectTimeoutError(<HTTPSConnection(host='api.hcdp.ikewai.org', port=443) at 0x7fa3d6299040), 'Connection to api.hcdp.ikewai.org timed out. (connect timeout=20)')); sun ladder from 10:15 reused; first_cumulus: ConnectTimeout: HTTPSConnectionPool(host='api.hcdp.ikewai.org', port=443): Max retries exceeded with url: /mesonet/db/measurements?location=hawaii&station_ids=0119%2C0116%2C0151&var_ids=SWin_1_Avg%2CLWin_1_Avg%2CTair_1_Avg&start_date=2026-10-18T07%3A30%3A00-10%3A00&end_date=2026-10-18T11%3A52%3A29-10%3A00&row_mode=json&limit=100000 (Caused by ConnectTimeoutError(<HTTPSConnection(host='api.hcdp.ikewai.org', port=443) at 0x7fa3d62990d0), 'Connection to api.hcdp.ikewai.org timed out. (connect timeout=20)')); sun_trend: ConnectTimeout: HTTPSConnectionPool(host='api.hcdp.ikewai.org', port=443): Max retries exceeded with url: /mesonet/db/measurements?location=hawaii&station_ids=0115%2C0118%2C0144%2C0116%2C0119%2C0145%2C0151%2C0152%2C0153&var_ids=SWin_1_Avg&start_date=2026-10-18T10%3A22%3A00-10%3A00&end_date=2026-10-18T11%3A52%3A00-10%3A00&row_mode=json&limit=100000 (Caused by ConnectTimeoutError(<HTTPSConnection(host='api.hcdp.ikewai.org', port=443) at 0x7fa3d62874d0), 'Connection to api.hcdp.ikewai.org timed out. (connect timeout=20)')); summit_spill: ConnectTimeout: HTTPSConnectionPool(host='api.hcdp.ikewai.org', port=443): Max retries exceeded with url: /mesonet/db/measurements?location=hawaii&station_ids=0153&var_ids=RH_1_Avg%2CWDrs_1_Avg%2CWS_1_Avg&start_date=2026-10-18T07%3A00%3A00-10%3A00&end_date=2026-10-18T08%3A59%3A59-10%3A00&row_mode=json&limit=5000 (Caused by ConnectTimeoutError(<HTTPSConnection(host='api.hcdp.ikewai.org', port=443) at 0x7fa3d6013830), 'Connection to api.hcdp.ikewai.org timed out. (connect timeout=20)')) -->
 <script>
 /* Catch up with a new build within ~2 minutes (Sam, 2026-10-17: "the page
    does not seem to autoupdate"). stations.json's "made" is the build time;
@@ -249,7 +249,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
    browser's 10-minute cached copy is bypassed. The 15-minute refresh stays
    as a backstop. */
 (function () {
-  var built = "2026-10-18T11:37";
+  var built = "2026-10-18T11:52";
   function check() {
     fetch("stations.json?" + Date.now(), {cache: "no-store"})
       .then(function (r) { return r.json(); })
