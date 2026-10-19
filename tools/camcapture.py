@@ -1,7 +1,7 @@
 """Save the FAA Kekoa south camera's frames before the feed drops them.
 
 The feed holds only the last ~36 frames (about 5 hours), so a Windows task on
-Sam's PC ("Kula camera capture") runs this at 10:00, 14:00, 18:00 and 22:00,
+Sam's PC ("Kula camera capture") runs this at 10:00, 14:00 and 18:30 (dark by 19:00),
 waking the PC if needed -- every 4 hours keeps an hour of overlap (Sam,
 2026-10-18; on his PC, not in the page's repo).
 Frames land in E:/dev/WX/KulaModel/review/camera_archive/<date>/<HHMM>.jpg
