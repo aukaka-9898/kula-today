@@ -85,7 +85,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><div class="tag">Kula soaring briefing</div><h1>Kula Today</h1></div>
-    <div class="date">Updated Sun 18 Oct 2026 · 17:52 HST</div>
+    <div class="date">Updated Sun 18 Oct 2026 · 18:04 HST</div>
   </header>
 
   <div>
@@ -97,7 +97,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
     <section class="panel today" aria-labelledby="t-today">
       <div class="kind">The day in review</div>
       <div class="head"><h2 id="t-today">Today · Sun 18 Oct</h2><span class="chip good">Moderate</span></div>
-      <p class="summary">A moderate day (forecast moderate). The upslope ran from about 08:30 to about 16:45. Most of the day the shear line was crossing Kula Highway near Omaopio; about 08:41 it was crossing Kula Highway between the middle Lower Kula Road junction and Waiakoa.</p><div class="watch"><div class="kind">What the day did</div><ul><li>Base held flat at about 5,100 ft from 11:30 for about 3 hours, then the cloud decayed from the base up from about 16:45.</li><li>The forecast peaked at 5,600 ft at 10:00; the base then was about 1,600 ft lower.</li><li>Watched for: Base will lift (P3) from 08:06; Deck under the lid (P4), confirmed 10:22.</li></ul></div><div style="font-weight:600;font-size:.9rem;margin:10px 0 2px">Cloudbase, derived</div><div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted,#6b6b66);margin:2px 0 4px">
+      <p class="summary">A moderate day (forecast moderate). The upslope ran from about 08:30 to about 16:45. Most of the day the shear line was crossing Kula Highway near Omaopio; about 08:41 it was crossing Kula Highway between the middle Lower Kula Road junction and Waiakoa.</p><div class="watch"><div class="kind">What the day did</div><ul><li>The cloud decayed from the base up from about 16:45.</li><li>The forecast peaked at 5,600 ft at 10:00; the base then was about 1,600 ft lower.</li><li>Watched for: Base will lift (P3) from 08:06; Deck under the lid (P4), confirmed 10:22.</li></ul></div><div style="font-weight:600;font-size:.9rem;margin:10px 0 2px">Cloudbase, derived</div><div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted,#6b6b66);margin:2px 0 4px">
 
 <span><span style="display:inline-block;width:16px;height:2px;background:#2a78d6;vertical-align:middle"></span> Derived (stations)</span></div>
 <div style="position:relative;width:100%;min-width:0;height:220px"><canvas id="basechart" role="img" aria-label="Derived cloudbase through the day"></canvas></div>
@@ -249,7 +249,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
    browser's 10-minute cached copy is bypassed. The 15-minute refresh stays
    as a backstop. */
 (function () {
-  var built = "2026-10-18T17:52";
+  var built = "2026-10-18T18:04";
   function check() {
     fetch("stations.json?" + Date.now(), {cache: "no-store"})
       .then(function (r) { return r.json(); })
