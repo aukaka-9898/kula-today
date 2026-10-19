@@ -85,7 +85,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><div class="tag">Kula soaring briefing</div><h1>Kula Today</h1></div>
-    <div class="date">Updated Sun 18 Oct 2026 · 17:37 HST</div>
+    <div class="date">Updated Sun 18 Oct 2026 · 17:52 HST</div>
   </header>
 
   <div>
@@ -95,12 +95,12 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 
   <div class="cols">
     <section class="panel today" aria-labelledby="t-today">
-      <div class="kind">Measured today · 17:37 HST</div>
-      <div class="head"><h2 id="t-today">Today</h2><span class="chip good">Moderate</span></div>
-      <p class="summary">Cloudbase is lowering. Kula Ag had full sun over the last hour; the cloud tops out between about 6,900 and 8,500 ft, with sun above it. The upslope is ending: the slope has nearly stopped gaining heat since about 16:45. Trades are holding the shear line crossing Kula Highway between Omaopio and the middle Lower Kula Road junction, with trade air reaching the lower west slope at Pulehu.</p><div style="font-weight:600;font-size:.9rem;margin:10px 0 2px">Cloudbase so far, derived</div><div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted,#6b6b66);margin:2px 0 4px">
+      <div class="kind">The day in review</div>
+      <div class="head"><h2 id="t-today">Today · Sun 18 Oct</h2><span class="chip good">Moderate</span></div>
+      <p class="summary">A moderate day (forecast moderate). The upslope ran from about 08:30 to about 16:45. Most of the day the shear line was crossing Kula Highway near Omaopio; about 08:41 it was crossing Kula Highway between the middle Lower Kula Road junction and Waiakoa.</p><div class="watch"><div class="kind">What the day did</div><ul><li>Base held flat at about 5,100 ft from 11:30 for about 3 hours, then the cloud decayed from the base up from about 16:45.</li><li>The forecast peaked at 5,600 ft at 10:00; the base then was about 1,600 ft lower.</li><li>Watched for: Base will lift (P3) from 08:06; Deck under the lid (P4), confirmed 10:22.</li></ul></div><div style="font-weight:600;font-size:.9rem;margin:10px 0 2px">Cloudbase, derived</div><div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted,#6b6b66);margin:2px 0 4px">
 
 <span><span style="display:inline-block;width:16px;height:2px;background:#2a78d6;vertical-align:middle"></span> Derived (stations)</span></div>
-<div style="position:relative;width:100%;min-width:0;height:220px"><canvas id="livechart" role="img" aria-label="Derived cloudbase through the day"></canvas></div>
+<div style="position:relative;width:100%;min-width:0;height:220px"><canvas id="basechart" role="img" aria-label="Derived cloudbase through the day"></canvas></div>
 <div class="sub">Derived from the stations every 15 minutes during the upslope.</div>
 <script>
 (function () {
@@ -117,7 +117,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
   var hm = function (m) { return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); };
   var ys = d.derived.map(function (a) { return a[1]; }).concat(d.forecast.map(function (a) { return a[1]; }));
   var xs = [540, 960];
-  new Chart(document.getElementById('livechart'), {
+  new Chart(document.getElementById('basechart'), {
     type: 'line',
     data: { datasets: [
       { label: 'Derived', data: d.derived.map(pt), borderColor: '#2a78d6', borderWidth: 2, pointRadius: 0, tension: 0.3 },
@@ -138,19 +138,19 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 })();
 </script>
       <dl>
-        <dt>Thermals</dt><dd>Seem <strong>moderate</strong> as of 17:15<div class="sub">Kula Ag's last hour of air through the NAM sounding (thermal.py)</div></dd>
-        <dt>Derived<br>Cloudbase</dt><dd><span class="num">About 4,800 ft</span><div class="sub">Station estimate, 4,300–5,300 ft (11 stations, 17:15)</div></dd>
-        <dt>Sun</dt><dd><span class="num">98%</span> of clear sky, lower Kula slope<div class="sub">Last hour, as of 17:15; average of Kula Ag 100%, Keokea 96%; Pulehu left out, in trade air</div></dd>
-        <dt>Shear line</dt><dd>Crossing Kula Highway between Omaopio and the middle Lower Kula Road junction<div class="sub">Last hour: trades at Lower Kimo Dr, upslope at MECO Kula</div><div class="sub">Trades at the coast: Paia 075° at 26 mph</div><div class="alert">Trade air reaching the lower west slope: Pulehu NE at 12 mph; the line may be further south than shown</div></dd>
+        <dt>Thermals</dt><dd><strong>Moderate</strong> for the day, 10:00–14:00<div class="sub">Kula Ag's measured air through the NAM sounding (thermal.py); forecast was Moderate</div></dd>
         
-        <dt>Upslope</dt><dd>Began about <span class="num">08:30</span>, now ending<div class="sub">Slope heating nearly stopped about 16:45</div></dd>
-        <dt>Wind</dt><dd><span class="num">6 mph</span>, gusts to 24<div class="sub">Lower elevations, 10 stations, last hour</div></dd>
+        
+        <dt>Shear line</dt><dd>Crossing Kula Highway near Omaopio<div class="sub">Most of the day, 42 updates. Furthest south about 08:41: Crossing Kula Highway between the middle Lower Kula Road junction and Waiakoa</div></dd>
+        
+        <dt>Upslope</dt><dd><span class="num">08:30</span> to about <span class="num">16:45</span></dd>
+        <dt>Wind</dt><dd><span class="num">4 mph</span>, gusts to 18<div class="sub">Lower elevations, during the upslope</div></dd>
       </dl>
     </section>
     <section class="panel tomorrow" aria-labelledby="t-tomorrow">
       <div class="kind">Forecast</div>
       <div class="head"><h2 id="t-tomorrow">Tomorrow · Mon 19 Oct</h2><span class="chip good">Moderate</span></div>
-      <dl>
+      <div class="alert">Possible summit cloud push-over during the day: the model has moist trade air pushed over the summit ridge on an easterly. If it comes, Kula can lose its sun, thermals weaken and the day ends early; the moist air mixed in also holds the base lower. <b>Check the summit ridge in the morning</b> (Red Hill camera): clouds there are the sign. <span class="pid">P1 · Summit cloud pushed over</span></div><dl>
         <dt>Thermals</dt><dd>Probably moderate<div class="sub">thermal.py on the forecast air (+3 F, it runs cool); within one category of the measured rating on every test day</div></dd>
         <dt>Cloudbase</dt><dd>Probably normal for October, about 4,500–5,400 ft<div class="sub">Most days the base levels off by mid-morning and holds. Nothing in the forecast points to a low or a high day.</div></dd>
         <dt>Sun</dt><dd><span class="num">85%</span> of clear sky, 10:00–14:00 (GFS)<div class="sub">The model can't see the slope's own cumulus: when it says 90% or more, Kula has measured about 80%. Good flying days measure about 80%, overcast about 50%, socked in 20%.</div></dd>
@@ -161,9 +161,9 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
   </div>
 
   <section class="block" aria-labelledby="t-ladder">
-    <h2 id="t-ladder">Sunlight up the slope, as of 17:15</h2>
+    <h2 id="t-ladder">Sunlight up the slope, not yet</h2>
     <p>Share of clear-sky sunlight measured at each station over the last 60 minutes of readings. Stations under cloud read low; stations above its top read full sun. Late in the day the sun is low in the west, so a station under the deck can read full sun coming in under the deck's edge.</p>
-    <div class="rows"><div class="row"><span>Summit</span><span class="elev">9,776</span><div class="bar "><span style="width:100%"></span></div><span class="pct">100%</span></div><div class="row"><span>Nene Nest</span><span class="elev">8,500</span><div class="bar "><span style="width:100%"></span></div><span class="pct">100%</span></div><div class="row"><span>Park HQ</span><span class="elev">6,926</span><div class="bar shaded"><span style="width:42%"></span></div><span class="pct">42%</span></div><div class="row"><span>Kamehamenui 1</span><span class="elev">6,601</span><div class="bar shaded"><span style="width:37%"></span></div><span class="pct">37%</span></div><div class="row"><span>Kula 1</span><span class="elev">6,554</span><div class="bar "><span style="width:98%"></span></div><span class="pct">98%</span></div><div class="base"><span class="lbl">Cloudbase now</span><span class="elev">4,800</span><div class="line"></div><span></span></div><div class="row"><span>Kula Ag</span><span class="elev">3,162</span><div class="bar "><span style="width:100%"></span></div><span class="pct">100%</span></div><div class="row"><span>Keokea</span><span class="elev">2,849</span><div class="bar "><span style="width:96%"></span></div><span class="pct">96%</span></div><div class="row"><span>Piiholo</span><span class="elev">2,090</span><div class="bar "><span style="width:100%"></span></div><span class="pct">100%</span></div><div class="row"><span>Pulehu</span><span class="elev">1,402</span><div class="bar "><span style="width:100%"></span></div><span class="pct">100%</span></div></div>
+    <div class="rows"><p>Night. First reading tomorrow about 09:15.</p></div>
   </section>
 
   <section class="block" aria-labelledby="t-week">
@@ -249,7 +249,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
    browser's 10-minute cached copy is bypassed. The 15-minute refresh stays
    as a backstop. */
 (function () {
-  var built = "2026-10-18T17:37";
+  var built = "2026-10-18T17:52";
   function check() {
     fetch("stations.json?" + Date.now(), {cache: "no-store"})
       .then(function (r) { return r.json(); })
