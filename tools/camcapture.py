@@ -1,8 +1,9 @@
 """Save the FAA Kekoa south camera's frames before the feed drops them.
 
 The feed holds only the last ~36 frames (about 5 hours), so a Windows task on
-Sam's PC runs this every 30 minutes, 06:00-19:00 (Sam, 2026-10-18: "The app
-should do the capture, short loop"; on his PC, not in the page's repo).
+Sam's PC ("Kula camera capture") runs this at 10:00, 14:00, 18:00 and 22:00,
+waking the PC if needed -- every 4 hours keeps an hour of overlap (Sam,
+2026-10-18; on his PC, not in the page's repo).
 Frames land in E:/dev/WX/KulaModel/review/camera_archive/<date>/<HHMM>.jpg
 (HST), for the blind camera tests (camtest.py). Standard library only.
 """
