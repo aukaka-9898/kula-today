@@ -2314,6 +2314,10 @@ def _hm(m: int) -> str:
     return f"{m // 60:02d}:{m % 60:02d}"
 
 
+FLAT_RANGE_FT = 300
+FLAT_TREND_FT_H = 75
+
+
 def day_notes(derived: list, forecast: list, inv, phase: dict, fired: dict, decay=None) -> list:
     """What the day did, for the review (Sam, 2026-10-17: "The daily recap can
     include such observations"). Fixed rules on the saved data, one per kind
@@ -2331,13 +2335,23 @@ def day_notes(derived: list, forecast: list, inv, phase: dict, fired: dict, deca
     if best and best[2] >= 700:
         notes.append(f"Base stepped up about {round(best[2], -2):,.0f} ft between {_hm(best[0])} and "
                      f"{_hm(best[1])} as mixing took over.")
-    # a plateau: the base held within 400 ft for 2 h or more -- the stations'
+    # a plateau: the base held flat for 2 h or more -- the stations'
     # own sign of a cap, with no model lid needed (Sam, 2026-10-17: the
     # Kahului inversion is useless for our purposes)
+    # Flat means not changing (Sam, 2026-10-18: "Held flat has nothing to do
+    # with the height of the base. It has to do with change in height"): the
+    # 400 ft band alone called a steady 150 ft/h climb (4,920 -> 5,510,
+    # 11:30-15:30) "held flat". Now within 300 ft AND a fitted trend under
+    # 75 ft an hour.
+    def _flat(r):
+        if max(x for _, x in r) - min(x for _, x in r) > FLAT_RANGE_FT:
+            return False
+        ms, vs = np.array([m for m, _ in r], float), np.array([x for _, x in r], float)
+        return abs(np.polyfit(ms, vs, 1)[0] * 60) <= FLAT_TREND_FT_H if len(r) >= 3 else True
     run, longest = [], []
     for m, v in pts:
         run = run + [(m, v)] if run and m - run[-1][0] == 15 else [(m, v)]
-        while max(x for _, x in run) - min(x for _, x in run) > 400:
+        while len(run) > 1 and not _flat(run):
             run = run[1:]
         longest = run if len(run) > len(longest) else longest
     if len(longest) >= 9:

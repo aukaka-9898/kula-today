@@ -83,7 +83,11 @@ def _deck_under_lid(c):
     low, high = c.get("low_sun"), c.get("high_sun")
     if base is None:
         return None
-    if (len(hist) >= 4 and max(hist) - min(hist) <= 300
+    # Flat = not changing (Sam, 2026-10-18): base_hist is newest first, 15 min
+    # apart; a steady climb of 150 ft/h stayed inside 300 ft over 45 min and
+    # P4 fired on a day with no cap. Now also under 75 ft an hour net.
+    trend = (hist[0] - hist[-1]) / (15 * (len(hist) - 1)) * 60 if len(hist) >= 2 else 0
+    if (len(hist) >= 4 and max(hist) - min(hist) <= 300 and abs(trend) <= 75
             and low is not None and low < 0.6 and high is not None and high >= 0.75):
         # Dated from the start of the 45-minute stall that confirmed it.
         first = c.get("p4_since") or c["now"].strftime("%H:%M")
