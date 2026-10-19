@@ -85,7 +85,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><div class="tag">Kula soaring briefing</div><h1>Kula Today</h1></div>
-    <div class="date">Updated Mon 19 Oct 2026 · 08:52 HST</div>
+    <div class="date">Updated Mon 19 Oct 2026 · 09:07 HST</div>
   </header>
 
   <div>
@@ -95,7 +95,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 
   <div class="cols">
     <section class="panel today" aria-labelledby="t-today">
-      <div class="kind">Measured today · 08:52 HST</div>
+      <div class="kind">Measured today · 09:07 HST</div>
       <div class="head"><h2 id="t-today">Today</h2><span class="chip good">Moderate</span></div>
       <p class="summary">No cumulus over the slope yet. Upslope has run since about 08:15 at a light 2 mph. Trades are holding the shear line crossing Kula Highway near Omaopio, with no trade air on the lower west slope.</p><div style="font-weight:600;font-size:.9rem;margin:10px 0 2px">Cloudbase so far, derived</div><div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted,#6b6b66);margin:2px 0 4px">
 
@@ -104,7 +104,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="sub">Derived from the stations every 15 minutes during the upslope.</div>
 <script>
 (function () {
-  var d = {"derived": [], "forecast": [], "up": [540, 510], "nocu": null}, pt = function (a) { return {x: a[0], y: a[1]}; };
+  var d = {"derived": [], "forecast": [], "up": [540, 525], "nocu": null}, pt = function (a) { return {x: a[0], y: a[1]}; };
   var dark = matchMedia('(prefers-color-scheme: dark)').matches, muted = '#898781', grid = dark ? '#2c2c2a' : '#e1e0d9';
   var nocu = { id: 'nocu', beforeDatasetsDraw: function (c) { if (!d.nocu) return; var x = c.scales.x, a = c.chartArea, g = c.ctx,
     x0 = x.getPixelForValue(d.nocu[0]), x1 = x.getPixelForValue(d.nocu[1]);
@@ -139,7 +139,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 </script>
       <dl>
         <dt>Thermals</dt><dd>Probably <strong>moderate</strong> (forecast)<div class="sub">thermal.py on the forecast air; measured rating just after 10:00</div></dd>
-        <dt>Derived<br>Cloudbase</dt><dd>No cumulus yet<div class="sub">They would form near about 4,600 ft, the condensation level derived from the stations; no cloud over the slope in the sunlight readings</div></dd>
+        <dt>Derived<br>Cloudbase</dt><dd>No cumulus yet<div class="sub">They would form near about 4,500 ft, the condensation level derived from the stations; no cloud over the slope in the sunlight readings</div></dd>
         <dt>Sun</dt><dd><span class="num">98%</span> of clear sky forecast, 10:00–14:00 (GFS)<div class="sub">Measured from about 09:15; Kula is in Haleakala's shadow until about 08:00</div></dd>
         <dt>Shear line</dt><dd>Crossing Kula Highway near Omaopio<div class="sub">Last hour: trades at MECO Olinda Rd, upslope at Red Hill</div><div class="sub">Trades at the coast: Paia 090° at 16 mph</div></dd>
         
@@ -249,7 +249,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
    browser's 10-minute cached copy is bypassed. The 15-minute refresh stays
    as a backstop. */
 (function () {
-  var built = "2026-10-19T08:52";
+  var built = "2026-10-19T09:07";
   function check() {
     fetch("stations.json?" + Date.now(), {cache: "no-store"})
       .then(function (r) { return r.json(); })
