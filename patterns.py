@@ -164,7 +164,11 @@ PATTERNS = [
      "origin": "2026-10-17 (Sam): dense low cloud, dew-fed morning", "fn": _late_start},
     {"id": "P3", "name": "Base will lift", "active": True, "where": "today",
      "origin": "2026-10-17: Kula Ag dew point +6 F after sunrise, 98% humid", "fn": _base_will_lift},
-    {"id": "P4", "name": "Deck under the lid", "active": True, "where": "today",
+    {"id": "P4", "name": "Deck under the lid", "active": False, "where": "today",
+     "retired": "2026-10-18, Sam: \"switch it off until we can better define what we're talking about "
+                "with a lid.\" A deck is normal in Kula; a lid means the deck's height is limited. P4 "
+                "tested base flatness and shading (an ordinary deck), not the tops. Redesign around the "
+                "tops: the upper-slope ladder (Kula 1, Park HQ, Nene, Summit) sunny and dry just above the base.",
      "origin": "2026-10-17: moist slope under a 4,500-5,000 ft Kahului inversion; capped days 10-03/04",
      "note": "Sam 2026-10-17: keep as a \"take your chances\" warning; no nowcast of break-through. "
              "Stations only since 2026-10-17 (Kahului inversion dropped)",
