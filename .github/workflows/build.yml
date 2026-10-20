@@ -46,11 +46,27 @@ jobs:
 
       - run: pip install numpy pandas requests
 
+      # Model soundings kept between builds (Sam, 2026-10-19: archives should be
+      # fetched only periodically). Each run restores the newest saved copy and
+      # saves its own; sounding.py refetches a live file only when it is over
+      # 3 h old and keeps archive files by date and cycle, so each model run
+      # is downloaded once instead of every 15 minutes.
+      - name: Restore the sounding cache
+        uses: actions/cache@v4
+        with:
+          path: .sounding
+          key: sounding-${{ github.run_id }}
+          restore-keys: sounding-
+
       - name: Build the page
         run: python build.py
         env:
           KULAMODEL: ${{ github.workspace }}/KulaModel
           HCDP_API_TOKEN: ${{ secrets.HCDP_API_TOKEN }}
+          KULA_SOUNDING_CACHE: ${{ github.workspace }}/.sounding
+
+      - name: Prune old soundings
+        run: find .sounding -type f -mtime +3 -delete 2>/dev/null || true
 
       - name: Publish
         run: |
