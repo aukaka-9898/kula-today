@@ -85,7 +85,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><div class="tag">Kula soaring briefing</div><h1>Kula Today</h1></div>
-    <div class="date">Updated Tue 20 Oct 2026 · 04:59 HST</div>
+    <div class="date">Updated Tue 20 Oct 2026 · 06:07 HST</div>
   </header>
 
   <div>
@@ -95,56 +95,17 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 
   <div class="cols">
     <section class="panel today" aria-labelledby="t-today">
-      <div class="kind">The day in review</div>
-      <div class="head"><h2 id="t-today">Yesterday · Mon 19 Oct</h2><span class="chip fair">Light</span></div>
-      <p class="summary">A light day (forecast moderate). The upslope ran from about 08:15 to about 16:00. Most of the day the shear line was crossing Kula Highway between Pukalani and Omaopio; about 08:52 it was crossing Kula Highway near Omaopio.</p><div style="font-weight:600;font-size:.9rem;margin:10px 0 2px">Cloudbase, derived</div><div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted,#6b6b66);margin:2px 0 4px">
-
-<span><span style="display:inline-block;width:16px;height:2px;background:#2a78d6;vertical-align:middle"></span> Derived (stations)</span></div>
-<div style="position:relative;width:100%;min-width:0;height:220px"><canvas id="basechart" role="img" aria-label="Derived cloudbase through the day"></canvas></div>
-<div class="sub">Derived from the stations every 15 minutes during the upslope.</div>
-<script>
-(function () {
-  var d = {"derived": [[540, 4160.0], [555, 4400.0], [570, 4720.0], [585, 4600.0], [600, 4470.0], [615, 4420.0], [630, 4600.0], [645, 4720.0], [660, 4560.0], [675, 4740.0], [690, 4670.0], [705, 4760.0], [720, 5070.0], [735, 4920.0], [750, 4900.0], [765, 4850.0], [780, 4980.0], [795, 4960.0], [810, 5380.0], [825, 5270.0], [840, 5070.0], [855, 4920.0], [870, 5250.0], [885, 5010.0], [900, 4850.0], [915, 5010.0], [930, 4780.0], [945, 4450.0], [960, 4410.0]], "forecast": [], "up": [540, 960], "nocu": null}, pt = function (a) { return {x: a[0], y: a[1]}; };
-  var dark = matchMedia('(prefers-color-scheme: dark)').matches, muted = '#898781', grid = dark ? '#2c2c2a' : '#e1e0d9';
-  var nocu = { id: 'nocu', beforeDatasetsDraw: function (c) { if (!d.nocu) return; var x = c.scales.x, a = c.chartArea, g = c.ctx,
-    x0 = x.getPixelForValue(d.nocu[0]), x1 = x.getPixelForValue(d.nocu[1]);
-    g.save(); g.fillStyle = 'rgba(137,135,129,0.10)'; g.fillRect(x0, a.top, x1 - x0, a.bottom - a.top);
-    g.fillStyle = muted; g.font = '11px sans-serif'; g.textAlign = 'center';
-    g.fillText('No cumulus', (x0 + x1) / 2, a.top + (a.bottom - a.top) / 2); g.restore(); } };
-  var band = { id: 'band', beforeDatasetsDraw: function (c) { if (!d.up) return; var x = c.scales.x, a = c.chartArea, g = c.ctx;
-    g.save(); g.fillStyle = 'rgba(137,135,129,0.14)';
-    g.fillRect(x.getPixelForValue(d.up[0]), a.top, x.getPixelForValue(d.up[1]) - x.getPixelForValue(d.up[0]), a.bottom - a.top); g.restore(); } };
-  var hm = function (m) { return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); };
-  var ys = d.derived.map(function (a) { return a[1]; }).concat(d.forecast.map(function (a) { return a[1]; }));
-  var xs = [540, 960];
-  new Chart(document.getElementById('basechart'), {
-    type: 'line',
-    data: { datasets: [
-      { label: 'Derived', data: d.derived.map(pt), borderColor: '#2a78d6', borderWidth: 2, pointRadius: 0, tension: 0.3 },
-      { label: 'Forecast', data: d.forecast.map(pt), borderColor: '#eb6834', borderWidth: 2, borderDash: [6, 4], pointRadius: 3, pointBackgroundColor: '#eb6834', tension: 0.3 }
-    ] },
-    options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'nearest', axis: 'x', intersect: false },
-      plugins: { legend: { display: false }, tooltip: { callbacks: {
-        title: function (i) { return hm(i[0].parsed.x); },
-        label: function (i) { return i.dataset.label + ': ' + Math.round(i.parsed.y).toLocaleString() + ' ft'; } } } },
-      scales: {
-        x: { type: 'linear', min: xs[0], max: xs[1], ticks: { stepSize: 60, color: muted, callback: function (v) { return hm(v); } }, grid: { display: false } },
-        y: { min: Math.min(3500, Math.floor(Math.min.apply(null, ys) / 500) * 500),
-              max: Math.max(7000, Math.ceil(Math.max.apply(null, ys) / 500) * 500),
-              ticks: { stepSize: 500, color: muted, callback: function (v) { return v.toLocaleString(); } }, grid: { color: grid } }
-      } },
-    plugins: [nocu]
-  });
-})();
-</script>
+      <div class="kind">Measured today · 06:07 HST</div>
+      <div class="head"><h2 id="t-today">Today</h2><span class="chip good">Strong</span></div>
+      <p class="summary">Today&#x27;s forecast: Thermals probably strong. Trades from the ENE should put the shear line at Pukalani. Upslope has not set in yet.</p>
       <dl>
-        <dt>Thermals</dt><dd><strong>Light</strong> for the day, 10:00–14:00<div class="sub">Kula Ag's measured air through the NAM sounding (thermal.py); forecast was Moderate</div></dd>
+        <dt>Thermals</dt><dd>Probably <strong>strong</strong> (forecast)<div class="sub">thermal.py on the forecast air; measured rating just after 10:00</div></dd>
+        <dt>Derived<br>Cloudbase</dt><dd>Not yet<div class="sub">Derived once the upslope sets in, usually about 08:30. Today's call is in the Forecast panel</div></dd>
+        <dt>Sun</dt><dd><span class="num">100%</span> of clear sky forecast, 10:00–14:00 (GFS)<div class="sub">Measured from about 09:15; Kula is in Haleakala's shadow until about 08:00</div></dd>
+        <dt>Shear line</dt><dd>At Pukalani (forecast)<div class="sub">Trades ENE (076°). Measured once the upslope sets in</div></dd>
         
-        
-        <dt>Shear line</dt><dd>Crossing Kula Highway between Pukalani and Omaopio<div class="sub">Most of the day, 23 updates. Furthest south about 08:52: Crossing Kula Highway near Omaopio</div></dd>
-        
-        <dt>Upslope</dt><dd><span class="num">08:15</span> to about <span class="num">16:00</span><div class="sub">Drainage from about 21:00</div></dd>
-        <dt>Wind</dt><dd><span class="num">3 mph</span>, gusts to 11<div class="sub">Lower elevations, during the upslope</div></dd>
+        <dt>Upslope</dt><dd>Not yet<div class="sub">Usually starts around 08:30</div></dd>
+        <dt>Wind</dt><dd><span class="num">4 mph</span>, gusts to 10<div class="sub">Lower elevations, 9 stations, last hour</div></dd>
       </dl>
     </section>
     <section class="panel tomorrow" aria-labelledby="t-tomorrow">
@@ -156,7 +117,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
         <dt>Sun</dt><dd><span class="num">100%</span> of clear sky, 10:00–14:00 (GFS)<div class="sub">The model can't see the slope's own cumulus: when it says 90% or more, Kula has measured about 80%. Good flying days measure about 80%, overcast about 50%, socked in 20%.</div></dd>
         <dt>Shear line</dt><dd>At Pukalani<div class="sub">Trades ENE (076°)</div></dd>
       </dl>
-      <div class="sub">Forecast as of 04:59 HST</div><div class="sub">Forecast rules last checked October 2026: all holding.</div>
+      <div class="sub">Forecast as of 06:07 HST</div><div class="sub">Forecast rules last checked October 2026: all holding.</div>
     </section>
   </div>
 
@@ -255,7 +216,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 })();
 </script>
 <style>.stn{font:600 11px/1.2 var(--body);padding:1px 4px;background:rgba(255,255,255,.85);border:0;box-shadow:none;color:#17242f}.stn:before{display:none}</style>
-<!-- build problems: none -->
+<!-- build problems: HCDP observations, using api.weather.gov: ConnectTimeout: HTTPSConnectionPool(host='api.hcdp.ikewai.org', port=443): Max retries exceeded with url: /mesonet/db/measurements?location=hawaii&station_ids=0115%2C0118%2C0144%2C0116%2C0119%2C0145%2C0151%2C0152%2C0153%2C0143&var_ids=Tair_1_Avg%2CRH_1_Avg%2CWS_1_Avg%2CWDrs_1_Avg%2CWS_1_Max&start_date=2026-10-20T00%3A00%3A00-10%3A00&row_mode=json&limit=100000 (Caused by ConnectTimeoutError(<HTTPSConnection(host='api.hcdp.ikewai.org', port=443) at 0x7cb0316028d0), 'Connection to api.hcdp.ikewai.org timed out. (connect timeout=20)')); Mesonet sun: ConnectTimeout: HTTPSConnectionPool(host='api.hcdp.ikewai.org', port=443): Max retries exceeded with url: /mesonet/db/measurements?location=hawaii&station_ids=0115%2C0118%2C0144%2C0116%2C0119%2C0145%2C0151%2C0152%2C0153&var_ids=SWin_1_Avg&start_date=2026-10-20T04%3A27%3A00-10%3A00&end_date=2026-10-20T06%3A07%3A00-10%3A00&row_mode=json&limit=100000 (Caused by ConnectTimeoutError(<HTTPSConnection(host='api.hcdp.ikewai.org', port=443) at 0x7cb031648a40), 'Connection to api.hcdp.ikewai.org timed out. (connect timeout=20)')) -->
 <script>
 /* Catch up with a new build within ~2 minutes (Sam, 2026-10-17: "the page
    does not seem to autoupdate"). stations.json's "made" is the build time;
@@ -263,7 +224,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
    browser's 10-minute cached copy is bypassed. The 15-minute refresh stays
    as a backstop. */
 (function () {
-  var built = "2026-10-20T04:59";
+  var built = "2026-10-20T06:07";
   function check() {
     fetch("stations.json?" + Date.now(), {cache: "no-store"})
       .then(function (r) { return r.json(); })
