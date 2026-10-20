@@ -93,8 +93,21 @@ COLS = (870, 890, 910, 930, 950, 970, 990)      # columns read across Sam's box
 MAX_SPREAD_FT = 600                               # wider = cloud in front of the slope
 
 
+ROWS = (590, 706)          # read window; extended down (Sam, 2026-10-19) to ~2,950 ft of slope
+# Below the pasture top the geometry reads high: Sam's pasture bottom (3,800 ft,
+# pixel ~1005, 677) comes out 4,050. Heights under 4,600 are stretched so the
+# two pasture landmarks land right; above 4,600 they already match Sam's calls.
+TOP_FT, BOTTOM_FT, BOTTOM_GEOM_FT = 4600, 3800, 4050
+
+
+def _anchor(h):
+    if h is None or h >= TOP_FT:
+        return h
+    return TOP_FT - (TOP_FT - h) * (TOP_FT - BOTTOM_FT) / (TOP_FT - BOTTOM_GEOM_FT)
+
+
 def column_heights(tilt: float) -> dict:
-    return {x: {y: g.terrain_at(x, y, tilt)[0] for y in range(590, 700)} for x in COLS}
+    return {x: {y: _anchor(g.terrain_at(x, y, tilt)[0]) for y in range(*ROWS)} for x in COLS}
 
 
 def camera_base(f: Path, heights: dict):
@@ -106,15 +119,15 @@ def camera_base(f: Path, heights: dict):
     a = np.asarray(Image.open(f).convert("L"), dtype=float)
     hs = []
     for x in COLS:
-        col = a[590:700, x - 6:x + 6].mean(axis=1)
+        col = a[ROWS[0]:ROWS[1], x - 6:x + 6].mean(axis=1)
         sm = np.convolve(col, np.ones(3) / 3, mode="same")
-        top, bot = sm[:10].mean(), sm[-40:].mean()
+        top, bot = sm[:10].mean(), sm[-20:].mean()       # slope reference: the lowest rows
         if top < 135 or top - bot < 40:          # blue sky above, or no clear edge
             continue
         thr = (top + bot) / 2
         i = next((k for k in range(5, len(sm)) if sm[k] < thr <= sm[k - 1]), None)
-        if i is not None and heights[x].get(590 + i) is not None:
-            hs.append(heights[x][590 + i])
+        if i is not None and heights[x].get(ROWS[0] + i) is not None:
+            hs.append(heights[x][ROWS[0] + i])
     if len(hs) < 4:
         return None, None
     spread = float(np.percentile(hs, 75) - np.percentile(hs, 25))
