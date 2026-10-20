@@ -107,7 +107,7 @@ def _anchor(h):
 
 
 def column_heights(tilt: float) -> dict:
-    return {x: {y: _anchor(g.terrain_at(x, y, tilt)[0]) for y in range(*ROWS)} for x in COLS}
+    return {x: {y: _anchor(g.terrain_at(x, y, tilt)[0]) for y in range(600, ROWS[1])} for x in COLS}
 
 
 def camera_base(f: Path, heights: dict):
@@ -128,10 +128,14 @@ def camera_base(f: Path, heights: dict):
         i = next((k for k in range(5, len(sm)) if sm[k] < thr <= sm[k - 1]), None)
         if i is not None and heights[x].get(ROWS[0] + i) is not None:
             hs.append(heights[x][ROWS[0] + i])
-    if len(hs) < 4:
-        return None, None
-    spread = float(np.percentile(hs, 75) - np.percentile(hs, 25))
-    return (round(float(np.median(hs)), -1) if spread <= MAX_SPREAD_FT else None), round(spread, -1)
+    if len(hs) >= 4:
+        spread = float(np.percentile(hs, 75) - np.percentile(hs, 25))
+        if spread <= MAX_SPREAD_FT:
+            return round(float(np.median(hs)), -1), round(spread, -1)
+    # Fallback: where the slope stops being visible (slopevis.py).
+    import slopevis
+    v, _ = slopevis.base_bright(f, heights, thr=30)
+    return (v if isinstance(v, float) else None), None
 
 
 def score(path: str, day: str | None = None) -> None:
