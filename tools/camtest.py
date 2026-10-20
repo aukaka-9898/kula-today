@@ -97,13 +97,17 @@ ROWS = (590, 706)          # read window; extended down (Sam, 2026-10-19) to ~2,
 # Below the pasture top the geometry reads high: Sam's pasture bottom (3,800 ft,
 # pixel ~1005, 677) comes out 4,050. Heights under 4,600 are stretched so the
 # two pasture landmarks land right; above 4,600 they already match Sam's calls.
-TOP_FT, BOTTOM_FT, BOTTOM_GEOM_FT = 4600, 3800, 4050
+# With the lidar slope (2026-10-19) the two pasture landmarks read 4,660 and
+# 4,130 (Sam: 4,600 and 3,800): the lens, not the terrain. Below the top the
+# geometry is mapped linearly onto Sam's two heights; above it, unchanged.
+TOP_FT, BOTTOM_FT = 4600, 3800
+TOP_GEOM_FT, BOTTOM_GEOM_FT = 4660, 4130
 
 
 def _anchor(h):
-    if h is None or h >= TOP_FT:
+    if h is None or h >= TOP_GEOM_FT:
         return h
-    return TOP_FT - (TOP_FT - h) * (TOP_FT - BOTTOM_FT) / (TOP_FT - BOTTOM_GEOM_FT)
+    return TOP_FT - (TOP_GEOM_FT - h) * (TOP_FT - BOTTOM_FT) / (TOP_GEOM_FT - BOTTOM_GEOM_FT)
 
 
 def column_heights(tilt: float) -> dict:

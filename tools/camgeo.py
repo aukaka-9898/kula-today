@@ -58,10 +58,38 @@ def angle_of(y, tilt):
     return tilt + math.degrees(math.atan((H / 2 - y) / F))
 
 
+# The target slope from USGS lidar (Sam, 2026-10-19: "the slope in the target
+# area can be considered quite even. Not a lot of points are necessary"): 15
+# points, azimuth 176-186 deg at 7-10 km, a quadratic surface in local metres
+# east/north of the camera -> ft. Fits 32 ft rms (54 ft leaving each point
+# out); the 90 m model reads 45 ft low there. Used inside that area only.
+SLOPE = json.load(open(os.path.join(HERE, "camgeo_slope.json"), encoding="utf-8"))["coef"]
+SLOPE_AZ, SLOPE_D = (174.0, 188.0), (6500.0, 10500.0)
+
+
+def _slope_ft(az, d):
+    la, lo = dest(LAT0, LON0, az, d)
+    e = (lo - LON0) * 111320 * math.cos(math.radians(LAT0))
+    n = (la - LAT0) * 110540
+    c = SLOPE
+    return c[0] + c[1] * e + c[2] * n + c[3] * e * e + c[4] * e * n + c[5] * n * n
+
+
+def profile_ft(az):
+    """Terrain heights (m) along az: the lidar surface in the target area,
+    the 90 m model elsewhere."""
+    el = profile(round(az, 1)).copy()
+    if SLOPE_AZ[0] <= az <= SLOPE_AZ[1]:
+        for i, d in enumerate(DISTS):
+            if SLOPE_D[0] <= d <= SLOPE_D[1]:
+                el[i] = _slope_ft(az, d) / 3.281
+    return el
+
+
 def terrain_at(x, y, tilt):
     """Elevation (ft) and distance (km) of the terrain point seen at pixel x, y."""
     az = az_of(x)
-    el = profile(round(az, 1))
+    el = profile_ft(az)
     drop = DISTS ** 2 / (2 * R) * (1 - 0.13)            # curvature with refraction
     ang = np.degrees(np.arctan((el - H0 - drop) / DISTS))
     target = angle_of(y, tilt)
