@@ -85,7 +85,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><div class="tag">Kula soaring briefing</div><h1>Kula Today</h1></div>
-    <div class="date">Updated Tue 20 Oct 2026 · 09:22 HST</div>
+    <div class="date">Updated Tue 20 Oct 2026 · 09:37 HST</div>
   </header>
 
   <div>
@@ -95,7 +95,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 
   <div class="cols">
     <section class="panel today" aria-labelledby="t-today">
-      <div class="kind">Measured today · 09:22 HST</div>
+      <div class="kind">Measured today · 09:37 HST</div>
       <div class="head"><h2 id="t-today">Today</h2><span class="chip good">Strong</span></div>
       <p class="summary">No cumulus over the slope yet. Kula Ag had full sun over the last hour. Upslope has run since about 08:30 at a light 3 mph. Trades are holding the shear line crossing Kula Highway near Omaopio, with no trade air on the lower west slope.</p><div style="font-weight:600;font-size:.9rem;margin:10px 0 2px">Cloudbase so far, derived</div><div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted,#6b6b66);margin:2px 0 4px">
 
@@ -104,7 +104,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="sub">Derived from the stations every 15 minutes during the upslope.</div>
 <script>
 (function () {
-  var d = {"derived": [[540, 4410.0]], "forecast": [], "up": [540, 540], "nocu": null}, pt = function (a) { return {x: a[0], y: a[1]}; };
+  var d = {"derived": [[540, 4410.0], [555, 4420.0]], "forecast": [], "up": [540, 560], "nocu": null}, pt = function (a) { return {x: a[0], y: a[1]}; };
   var dark = matchMedia('(prefers-color-scheme: dark)').matches, muted = '#898781', grid = dark ? '#2c2c2a' : '#e1e0d9';
   var nocu = { id: 'nocu', beforeDatasetsDraw: function (c) { if (!d.nocu) return; var x = c.scales.x, a = c.chartArea, g = c.ctx,
     x0 = x.getPixelForValue(d.nocu[0]), x1 = x.getPixelForValue(d.nocu[1]);
@@ -139,12 +139,12 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 </script>
       <dl>
         <dt>Thermals</dt><dd>Probably <strong>strong</strong> (forecast)<div class="sub">thermal.py on the forecast air; measured rating just after 10:00</div></dd>
-        <dt>Derived<br>Cloudbase</dt><dd>No cumulus yet<div class="sub">They would form near about 4,600 ft, the condensation level derived from the stations; no cloud over the slope in the sunlight readings</div></dd>
-        <dt>Sun</dt><dd><span class="num">71%</span> of clear sky, lower Kula slope<div class="sub">Last hour, as of 09:00; average of Kula Ag 99%, Keokea 22%, Pulehu 93%</div></dd>
-        <dt>Shear line</dt><dd>Crossing Kula Highway near Omaopio<div class="sub">Last hour: trades at MECO Olinda Rd, upslope at Red Hill</div><div class="sub">Trades at the coast: Paia 089° at 15 mph</div></dd>
+        <dt>Derived<br>Cloudbase</dt><dd>No cumulus yet<div class="sub">They would form near about 4,500 ft, the condensation level derived from the stations; no cloud over the slope in the sunlight readings</div></dd>
+        <dt>Sun</dt><dd><span class="num">79%</span> of clear sky, lower Kula slope<div class="sub">Last hour, as of 09:15; average of Kula Ag 99%, Keokea 43%, Pulehu 94%</div></dd>
+        <dt>Shear line</dt><dd>Crossing Kula Highway near Omaopio<div class="sub">Last hour: trades at MECO Olinda Rd, upslope at Red Hill</div><div class="sub">Trades at the coast: Paia 090° at 14 mph</div></dd>
         
         <dt>Upslope</dt><dd>On since about <span class="num">08:30</span><div class="sub">Drainage ended about 08:00</div></dd>
-        <dt>Wind</dt><dd><span class="num">3 mph</span>, gusts to 9<div class="sub">Lower elevations, 10 stations, last hour</div></dd>
+        <dt>Wind</dt><dd><span class="num">3 mph</span>, gusts to 10<div class="sub">Lower elevations, 10 stations, last hour</div></dd>
       </dl>
     </section>
     <section class="panel tomorrow" aria-labelledby="t-tomorrow">
@@ -161,9 +161,9 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
   </div>
 
   <section class="block" aria-labelledby="t-ladder">
-    <h2 id="t-ladder">Sunlight up the slope, as of 09:00</h2>
+    <h2 id="t-ladder">Sunlight up the slope, as of 09:15</h2>
     <p>Share of clear-sky sunlight measured at each station over the last 60 minutes of readings. Stations under cloud read low; stations above its top read full sun.</p>
-    <div class="rows"><div class="row"><span>Summit</span><span class="elev">9,776</span><div class="bar "><span style="width:100%"></span></div><span class="pct">100%</span></div><div class="row"><span>Nene Nest</span><span class="elev">8,500</span><div class="bar "><span style="width:100%"></span></div><span class="pct">100%</span></div><div class="row"><span>Park HQ</span><span class="elev">6,926</span><div class="bar "><span style="width:100%"></span></div><span class="pct">100%</span></div><div class="row"><span>Kamehamenui 1</span><span class="elev">6,601</span><div class="bar "><span style="width:83%"></span></div><span class="pct">83%</span></div><div class="row"><span>Kula 1</span><span class="elev">6,554</span><div class="bar shaded"><span style="width:9%"></span></div><span class="pct">9%</span></div><div class="base"><span class="lbl">Cloudbase now</span><span class="elev">4,600</span><div class="line"></div><span></span></div><div class="row"><span>Kula Ag</span><span class="elev">3,162</span><div class="bar "><span style="width:99%"></span></div><span class="pct">99%</span></div><div class="row"><span>Keokea</span><span class="elev">2,849</span><div class="bar shaded"><span style="width:22%"></span></div><span class="pct">22%</span></div><div class="row"><span>Piiholo</span><span class="elev">2,090</span><div class="bar "><span style="width:100%"></span></div><span class="pct">100%</span></div><div class="row"><span>Pulehu</span><span class="elev">1,402</span><div class="bar "><span style="width:93%"></span></div><span class="pct">93%</span></div></div>
+    <div class="rows"><div class="row"><span>Summit</span><span class="elev">9,776</span><div class="bar "><span style="width:100%"></span></div><span class="pct">100%</span></div><div class="row"><span>Nene Nest</span><span class="elev">8,500</span><div class="bar "><span style="width:100%"></span></div><span class="pct">100%</span></div><div class="row"><span>Park HQ</span><span class="elev">6,926</span><div class="bar "><span style="width:100%"></span></div><span class="pct">100%</span></div><div class="row"><span>Kamehamenui 1</span><span class="elev">6,601</span><div class="bar "><span style="width:83%"></span></div><span class="pct">83%</span></div><div class="row"><span>Kula 1</span><span class="elev">6,554</span><div class="bar shaded"><span style="width:9%"></span></div><span class="pct">9%</span></div><div class="base"><span class="lbl">Cloudbase now</span><span class="elev">4,500</span><div class="line"></div><span></span></div><div class="row"><span>Kula Ag</span><span class="elev">3,162</span><div class="bar "><span style="width:99%"></span></div><span class="pct">99%</span></div><div class="row"><span>Keokea</span><span class="elev">2,849</span><div class="bar shaded"><span style="width:43%"></span></div><span class="pct">43%</span></div><div class="row"><span>Piiholo</span><span class="elev">2,090</span><div class="bar "><span style="width:97%"></span></div><span class="pct">97%</span></div><div class="row"><span>Pulehu</span><span class="elev">1,402</span><div class="bar "><span style="width:94%"></span></div><span class="pct">94%</span></div></div>
   </section>
 
   <section class="block" aria-labelledby="t-week">
@@ -263,7 +263,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
    browser's 10-minute cached copy is bypassed. The 15-minute refresh stays
    as a backstop. */
 (function () {
-  var built = "2026-10-20T09:22";
+  var built = "2026-10-20T09:37";
   function check() {
     fetch("stations.json?" + Date.now(), {cache: "no-store"})
       .then(function (r) { return r.json(); })
