@@ -85,7 +85,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><div class="tag">Kula soaring briefing</div><h1>Kula Today</h1></div>
-    <div class="date">Updated Tue 20 Oct 2026 · 15:45 HST</div>
+    <div class="date">Updated Tue 20 Oct 2026 · 15:46 HST</div>
   </header>
 
   <div>
@@ -95,16 +95,16 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 
   <div class="cols">
     <section class="panel today" aria-labelledby="t-today">
-      <div class="kind">Measured today · 15:45 HST</div>
+      <div class="kind">Measured today · 15:46 HST</div>
       <div class="head"><h2 id="t-today">Today</h2><span class="chip good">Strong</span></div>
-      <p class="summary">Cloudbase is edging down. Kula Ag had full sun over the last hour. Upslope has run since about 08:30 at a light 6 mph, and thermals seem strong. Trades are holding the shear line crossing Kula Highway between Omaopio and the middle Lower Kula Road junction, with trade air reaching the lower west slope at Pulehu.</p><div style="font-weight:600;font-size:.9rem;margin:10px 0 2px">Cloudbase so far, derived</div><div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted,#6b6b66);margin:2px 0 4px">
+      <p class="summary">Cloudbase is steady. Kula Ag had full sun over the last hour. Upslope has run since about 08:30 at a moderate 6 mph, and thermals seem strong. Trades are holding the shear line crossing Kula Highway between Omaopio and the middle Lower Kula Road junction, with trade air reaching the lower west slope at Pulehu.</p><div style="font-weight:600;font-size:.9rem;margin:10px 0 2px">Cloudbase so far, derived</div><div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted,#6b6b66);margin:2px 0 4px">
 
 <span><span style="display:inline-block;width:16px;height:2px;background:#2a78d6;vertical-align:middle"></span> Derived (stations)</span></div>
 <div style="position:relative;width:100%;min-width:0;height:220px"><canvas id="livechart" role="img" aria-label="Derived cloudbase through the day"></canvas></div>
 <div class="sub">Derived from the stations every 15 minutes during the upslope.</div>
 <script>
 (function () {
-  var d = {"derived": [[540, 4410.0], [555, 4440.0], [570, 4660.0], [585, 4720.0], [600, 5020.0], [615, 4970.0], [630, 5190.0], [645, 5180.0], [660, 5320.0], [675, 5500.0], [690, 5700.0], [705, 5780.0], [720, 6050.0], [735, 6060.0], [750, 6140.0], [765, 6320.0], [780, 6200.0], [795, 6240.0], [810, 6010.0], [825, 6030.0], [840, 6160.0], [855, 6130.0], [870, 6270.0], [885, 6400.0], [900, 6350.0], [915, 6360.0], [930, 6230.0]], "forecast": [], "up": [540, 930], "nocu": null}, pt = function (a) { return {x: a[0], y: a[1]}; };
+  var d = {"derived": [[540, 4410.0], [555, 4440.0], [570, 4660.0], [585, 4720.0], [600, 5020.0], [615, 4970.0], [630, 5190.0], [645, 5180.0], [660, 5320.0], [675, 5500.0], [690, 5700.0], [705, 5780.0], [720, 6050.0], [735, 6060.0], [750, 6140.0], [765, 6320.0], [780, 6200.0], [795, 6240.0], [810, 6010.0], [825, 6030.0], [840, 6160.0], [855, 6130.0], [870, 6270.0], [885, 6400.0], [900, 6350.0], [915, 6360.0], [930, 6270.0]], "forecast": [], "up": [540, 930], "nocu": null}, pt = function (a) { return {x: a[0], y: a[1]}; };
   var dark = matchMedia('(prefers-color-scheme: dark)').matches, muted = '#898781', grid = dark ? '#2c2c2a' : '#e1e0d9';
   var nocu = { id: 'nocu', beforeDatasetsDraw: function (c) { if (!d.nocu) return; var x = c.scales.x, a = c.chartArea, g = c.ctx,
     x0 = x.getPixelForValue(d.nocu[0]), x1 = x.getPixelForValue(d.nocu[1]);
@@ -144,7 +144,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
         <dt>Shear line</dt><dd>Crossing Kula Highway between Omaopio and the middle Lower Kula Road junction<div class="sub">Last hour: trades at Lower Kimo Dr, upslope at MECO Kula</div><div class="sub">Trades at the coast: Paia 092° at 18 mph</div><div class="alert">Trade air reaching the lower west slope: Pulehu NE at 12 mph; the line may be further south than shown</div></dd>
         
         <dt>Upslope</dt><dd>On since about <span class="num">08:30</span><div class="sub">Drainage ended about 08:00</div></dd>
-        <dt>Wind</dt><dd><span class="num">5 mph</span>, gusts to 18<div class="sub">Lower elevations, 9 stations, last hour</div></dd>
+        <dt>Wind</dt><dd><span class="num">5 mph</span>, gusts to 18<div class="sub">Lower elevations, 10 stations, last hour</div></dd>
       </dl>
     </section>
     <section class="panel tomorrow" aria-labelledby="t-tomorrow">
@@ -263,7 +263,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
    browser's 10-minute cached copy is bypassed. The 15-minute refresh stays
    as a backstop. */
 (function () {
-  var built = "2026-10-20T15:45";
+  var built = "2026-10-20T15:46";
   function check() {
     fetch("stations.json?" + Date.now(), {cache: "no-store"})
       .then(function (r) { return r.json(); })
