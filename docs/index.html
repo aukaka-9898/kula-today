@@ -85,7 +85,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><div class="tag">Kula soaring briefing</div><h1>Kula Today</h1></div>
-    <div class="date">Updated Wed 21 Oct 2026 · 05:08 HST</div>
+    <div class="date">Updated Wed 21 Oct 2026 · 06:07 HST</div>
   </header>
 
   <div>
@@ -95,56 +95,17 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 
   <div class="cols">
     <section class="panel today" aria-labelledby="t-today">
-      <div class="kind">The day in review</div>
-      <div class="head"><h2 id="t-today">Yesterday · Tue 20 Oct</h2><span class="chip good">Moderate</span></div>
-      <p class="summary">A moderate day (forecast moderate). Thermals were strongest (moderate) about 13:00 to 16:00. The upslope ran from about 08:30 to about 18:30. A high day for October: the base reached about 6,400 ft (normal 4,500–5,400 ft). The evening before, the page called it normal, a miss. Most of the day the shear line was crossing Kula Highway near Omaopio; furthest north about 12:52, crossing Kula Highway between Kamehameha Schools and Omaopio; furthest south about 15:07, crossing Kula Highway between Omaopio and Waiakoa.</p><div class="watch"><div class="kind">What the day did</div><ul><li>Watched for: High base, likely to drop (P6) from 11:52.</li></ul></div><div style="font-weight:600;font-size:.9rem;margin:10px 0 2px">Cloudbase, derived</div><div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted,#6b6b66);margin:2px 0 4px">
-
-<span><span style="display:inline-block;width:16px;height:2px;background:#2a78d6;vertical-align:middle"></span> Derived (stations)</span></div>
-<div style="position:relative;width:100%;min-width:0;height:220px"><canvas id="basechart" role="img" aria-label="Derived cloudbase through the day"></canvas></div>
-<div class="sub">Derived from the stations every 15 minutes during the upslope.</div>
-<script>
-(function () {
-  var d = {"derived": [[540, 4410.0], [555, 4440.0], [570, 4660.0], [585, 4720.0], [600, 5020.0], [615, 4980.0], [630, 5190.0], [645, 5180.0], [660, 5340.0], [675, 5500.0], [690, 5700.0], [705, 5780.0], [720, 6050.0], [735, 6060.0], [750, 6140.0], [765, 6320.0], [780, 6200.0], [795, 6240.0], [810, 6010.0], [825, 6030.0], [840, 6160.0], [855, 6130.0], [870, 6270.0], [885, 6400.0], [900, 6350.0], [915, 6360.0], [930, 6290.0], [945, 6350.0], [960, 6190.0]], "forecast": [], "up": [540, 960], "nocu": null}, pt = function (a) { return {x: a[0], y: a[1]}; };
-  var dark = matchMedia('(prefers-color-scheme: dark)').matches, muted = '#898781', grid = dark ? '#2c2c2a' : '#e1e0d9';
-  var nocu = { id: 'nocu', beforeDatasetsDraw: function (c) { if (!d.nocu) return; var x = c.scales.x, a = c.chartArea, g = c.ctx,
-    x0 = x.getPixelForValue(d.nocu[0]), x1 = x.getPixelForValue(d.nocu[1]);
-    g.save(); g.fillStyle = 'rgba(137,135,129,0.10)'; g.fillRect(x0, a.top, x1 - x0, a.bottom - a.top);
-    g.fillStyle = muted; g.font = '11px sans-serif'; g.textAlign = 'center';
-    g.fillText('No cumulus', (x0 + x1) / 2, a.top + (a.bottom - a.top) / 2); g.restore(); } };
-  var band = { id: 'band', beforeDatasetsDraw: function (c) { if (!d.up) return; var x = c.scales.x, a = c.chartArea, g = c.ctx;
-    g.save(); g.fillStyle = 'rgba(137,135,129,0.14)';
-    g.fillRect(x.getPixelForValue(d.up[0]), a.top, x.getPixelForValue(d.up[1]) - x.getPixelForValue(d.up[0]), a.bottom - a.top); g.restore(); } };
-  var hm = function (m) { return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); };
-  var ys = d.derived.map(function (a) { return a[1]; }).concat(d.forecast.map(function (a) { return a[1]; }));
-  var xs = [540, 960];
-  new Chart(document.getElementById('basechart'), {
-    type: 'line',
-    data: { datasets: [
-      { label: 'Derived', data: d.derived.map(pt), borderColor: '#2a78d6', borderWidth: 2, pointRadius: 0, tension: 0.3 },
-      { label: 'Forecast', data: d.forecast.map(pt), borderColor: '#eb6834', borderWidth: 2, borderDash: [6, 4], pointRadius: 3, pointBackgroundColor: '#eb6834', tension: 0.3 }
-    ] },
-    options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'nearest', axis: 'x', intersect: false },
-      plugins: { legend: { display: false }, tooltip: { callbacks: {
-        title: function (i) { return hm(i[0].parsed.x); },
-        label: function (i) { return i.dataset.label + ': ' + Math.round(i.parsed.y).toLocaleString() + ' ft'; } } } },
-      scales: {
-        x: { type: 'linear', min: xs[0], max: xs[1], ticks: { stepSize: 60, color: muted, callback: function (v) { return hm(v); } }, grid: { display: false } },
-        y: { min: Math.min(3500, Math.floor(Math.min.apply(null, ys) / 500) * 500),
-              max: Math.max(7000, Math.ceil(Math.max.apply(null, ys) / 500) * 500),
-              ticks: { stepSize: 500, color: muted, callback: function (v) { return v.toLocaleString(); } }, grid: { color: grid } }
-      } },
-    plugins: [nocu]
-  });
-})();
-</script>
+      <div class="kind">Measured today · 06:07 HST</div>
+      <div class="head"><h2 id="t-today">Today</h2><span class="chip fair">Light</span></div>
+      <p class="summary">Today&#x27;s forecast: Thermals probably light. Trades from the ENE should put the shear line at Pukalani. Upslope has not set in yet.</p>
       <dl>
-        <dt>Thermals</dt><dd><strong>Moderate</strong> for the day, 10:00–14:00<div class="sub">Kula Ag's measured air through the NAM sounding (thermal.py); forecast was Moderate</div></dd>
+        <dt>Thermals</dt><dd>Probably <strong>light</strong> (forecast)<div class="sub">thermal.py on the forecast air; measured rating just after 10:00</div></dd>
+        <dt>Derived<br>Cloudbase</dt><dd>Not yet<div class="sub">Derived once the upslope sets in, usually about 08:30. Today's call is in the Forecast panel</div></dd>
+        <dt>Sun</dt><dd><span class="num">67%</span> of clear sky forecast, 10:00–14:00 (GFS)<div class="sub">Measured from about 09:15; Kula is in Haleakala's shadow until about 08:00</div></dd>
+        <dt>Shear line</dt><dd>At Pukalani (forecast)<div class="sub">Trades ENE (078°). Measured once the upslope sets in</div></dd>
         
-        
-        <dt>Shear line</dt><dd>Crossing Kula Highway near Omaopio<div class="sub">Most of the day, 41 updates. Furthest south about 15:07: Crossing Kula Highway between Omaopio and Waiakoa</div></dd>
-        
-        <dt>Upslope</dt><dd><span class="num">08:30</span> to about <span class="num">18:30</span><div class="sub">Drainage from about 18:30</div></dd>
-        <dt>Wind</dt><dd><span class="num">4 mph</span>, gusts to 14<div class="sub">Lower elevations, during the upslope</div></dd>
+        <dt>Upslope</dt><dd>Not yet<div class="sub">Usually starts around 08:30</div></dd>
+        <dt>Wind</dt><dd><span class="num">4 mph</span>, gusts to 10<div class="sub">Lower elevations, 9 stations, last hour</div></dd>
       </dl>
     </section>
     <section class="panel tomorrow" aria-labelledby="t-tomorrow">
@@ -152,7 +113,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
       <div class="head"><h2 id="t-tomorrow">Today · Wed 21 Oct</h2><span class="chip fair">Light</span></div>
       <div class="alert">Possible summit cloud push-over during the day: the model has moist trade air pushed over the summit ridge on an easterly. If it comes, Kula can lose its sun, thermals weaken and the day ends early; the moist air mixed in also holds the base lower. <b>Check the summit ridge in the morning</b> (Red Hill camera): clouds there are the sign. <span class="pid">P1 · Summit cloud pushed over</span></div><dl>
         <dt>Thermals</dt><dd>Probably light<div class="sub">thermal.py on the forecast air (+3 F, it runs cool); within one category of the measured rating on every test day</div></dd>
-        <dt>Cloudbase</dt><dd>May be a high day<div class="sub">Dry air aloft after a high day today: right about 2 times in 3.</div></dd>
+        <dt>Cloudbase</dt><dd>Probably normal for October, about 4,500–5,400 ft<div class="sub">Most days the base levels off by mid-morning and holds. Nothing in the forecast points to a low or a high day.</div></dd>
         <dt>Sun</dt><dd><span class="num">67%</span> of clear sky, 10:00–14:00 (GFS)<div class="sub">The model can't see the slope's own cumulus: when it says 90% or more, Kula has measured about 80%. Good flying days measure about 80%, overcast about 50%, socked in 20%.</div></dd>
         <dt>Shear line</dt><dd>At Pukalani<div class="sub">Trades ENE (078°)</div></dd>
       </dl>
@@ -170,7 +131,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
     <h2 id="t-week">The week</h2>
     <div class="tablewrap"><table>
       <thead><tr><th>Day</th><th class="n">Sun</th><th>Base</th><th>Thermals</th><th>Shear line</th></tr></thead>
-      <tbody><tr><td>Wed 21</td><td class="n">67%</td><td>May be high</td><td>Light</td><td>Pukalani</td></tr><tr><td>Thu 22</td><td class="n">88%</td><td>Normal</td><td>Light</td><td>Pukalani</td></tr><tr><td>Fri 23</td><td class="n">95%</td><td>Normal</td><td>Flat</td><td>Omaopio</td></tr><tr><td>Sat 24</td><td class="n">69%</td><td>Normal</td><td>Moderate</td><td>Omaopio</td></tr><tr><td>Sun 25</td><td class="n">94%</td><td>Normal</td><td>Moderate</td><td>Pukalani</td></tr><tr><td>Mon 26</td><td class="n">46%</td><td>Normal</td><td>Moderate</td><td>Pukalani</td></tr><tr><td>Tue 27</td><td class="n">10%</td><td>Normal</td><td>Light</td><td>Makawao</td></tr><tr><td>Wed 28</td><td class="n">33%</td><td>Normal</td><td>--</td><td>--</td></tr></tbody>
+      <tbody><tr><td>Wed 21</td><td class="n">67%</td><td>Normal</td><td>Light</td><td>Pukalani</td></tr><tr><td>Thu 22</td><td class="n">88%</td><td>Normal</td><td>Light</td><td>Pukalani</td></tr><tr><td>Fri 23</td><td class="n">95%</td><td>Normal</td><td>Flat</td><td>Omaopio</td></tr><tr><td>Sat 24</td><td class="n">69%</td><td>Normal</td><td>Moderate</td><td>Omaopio</td></tr><tr><td>Sun 25</td><td class="n">94%</td><td>Normal</td><td>Moderate</td><td>Pukalani</td></tr><tr><td>Mon 26</td><td class="n">46%</td><td>Normal</td><td>Moderate</td><td>Pukalani</td></tr><tr><td>Tue 27</td><td class="n">10%</td><td>Normal</td><td>Light</td><td>Makawao</td></tr><tr><td>Wed 28</td><td class="n">33%</td><td>Normal</td><td>--</td><td>--</td></tr></tbody>
     </table></div>
     <p>Sun is the GFS forecast for 10:00–14:00. The model can't see the slope's own cumulus, so its high numbers run about 10 points above what Kula measures.</p>
   </section>
@@ -255,7 +216,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 })();
 </script>
 <style>.stn{font:600 11px/1.2 var(--body);padding:1px 4px;background:rgba(255,255,255,.85);border:0;box-shadow:none;color:#17242f}.stn:before{display:none}</style>
-<!-- build problems: none -->
+<!-- build problems: HCDP observations, using api.weather.gov: ConnectTimeout: HTTPSConnectionPool(host='api.hcdp.ikewai.org', port=443): Max retries exceeded with url: /mesonet/db/measurements?location=hawaii&station_ids=0115%2C0118%2C0144%2C0116%2C0119%2C0145%2C0151%2C0152%2C0153%2C0143&var_ids=Tair_1_Avg%2CRH_1_Avg%2CWS_1_Avg%2CWDrs_1_Avg%2CWS_1_Max&start_date=2026-10-21T00%3A00%3A00-10%3A00&row_mode=json&limit=100000 (Caused by ConnectTimeoutError(<HTTPSConnection(host='api.hcdp.ikewai.org', port=443) at 0x7808e9b10770), 'Connection to api.hcdp.ikewai.org timed out. (connect timeout=20)')); Mesonet sun: ConnectTimeout: HTTPSConnectionPool(host='api.hcdp.ikewai.org', port=443): Max retries exceeded with url: /mesonet/db/measurements?location=hawaii&station_ids=0115%2C0118%2C0144%2C0116%2C0119%2C0145%2C0151%2C0152%2C0153&var_ids=SWin_1_Avg&start_date=2026-10-21T04%3A27%3A00-10%3A00&end_date=2026-10-21T06%3A07%3A00-10%3A00&row_mode=json&limit=100000 (Caused by ConnectTimeoutError(<HTTPSConnection(host='api.hcdp.ikewai.org', port=443) at 0x7808e9ba3200), 'Connection to api.hcdp.ikewai.org timed out. (connect timeout=20)')) -->
 <script>
 /* Catch up with a new build within ~2 minutes (Sam, 2026-10-17: "the page
    does not seem to autoupdate"). stations.json's "made" is the build time;
@@ -263,7 +224,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
    browser's 10-minute cached copy is bypassed. The 15-minute refresh stays
    as a backstop. */
 (function () {
-  var built = "2026-10-21T05:08";
+  var built = "2026-10-21T06:07";
   function check() {
     fetch("stations.json?" + Date.now(), {cache: "no-store"})
       .then(function (r) { return r.json(); })
