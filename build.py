@@ -120,6 +120,15 @@ SUN_ON = {1: "08:45", 2: "08:30", 3: "08:15", 4: "07:15", 5: "07:30", 6: "07:15"
           7: "07:20", 8: "07:30", 9: "08:00", 10: "08:00", 11: "08:15", 12: "08:45"}
 
 
+# Stations that come out of shadow later than Kula Ag, in minutes after SUN_ON
+# (Sam, 2026-10-20: "Could be some local shading"). 10-17 to 10-20, clear
+# mornings: Keokea 21-39% at 08:00 while Kula Ag read 85-95%; Kula 1 9-14% at
+# 08:00 and ~65% at 09:00 every day whatever the sky -- terrain or trees. Before
+# these times a station's reading is shadow, not cloud, and is left out.
+LATE_SUN_MIN = {"Keokea": 60, "Kula 1": 120}
+SHADOWED: set = set()
+
+
 def first_sun_hour(month: int) -> int:
     h, m = map(int, SUN_ON[month].split(":"))
     return h if m == 0 else h + 1
@@ -2490,6 +2499,10 @@ def build() -> str:
     in_shadow = sun_hour is None or sun_hour < sun_on_at
     if in_shadow:
         ladder = []
+    global SHADOWED
+    SHADOWED = ({n for n, late in LATE_SUN_MIN.items() if sun_hour < sun_on_at + timedelta(minutes=late)}
+                if ladder and sun_hour is not None else set())
+    ladder = [(n, e, None if n in SHADOWED else v) for n, e, v in ladder]
     night = now.hour >= 19 or down is not None   # sun down: no sunlight ladder
     if night:
         ladder = []
@@ -2923,7 +2936,7 @@ def build() -> str:
         shown = None if share is None else min(share, 1.0)
         ladder_html += (f'<div class="row"><span>{esc(name)}</span><span class="elev">{elev:,}</span>'
                         f'<div class="bar {cls}"><span style="width:{w:.0f}%"></span></div>'
-                        f'<span class="pct">{pct(shown)}</span></div>')
+                        f'<span class="pct">{"in shadow" if name in SHADOWED else pct(shown)}</span></div>')
     if base and ladder:
         b = round(base["mid"], -2)
         rows = ladder_html.split('<div class="row">')
