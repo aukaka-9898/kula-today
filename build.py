@@ -1794,6 +1794,13 @@ def log_call(day, base: str, thermal: str, now: datetime) -> None:
         log = json.loads(CALLS_LOG.read_text(encoding="utf-8"))
     except Exception:
         log = {}
+    # The scored call is the one standing at 18:00 the evening before, when
+    # pilots plan (Sam, 2026-10-20: "use 1800"); later runs no longer replace
+    # it. Before 18:00 each build updates it, so a missed evening still leaves
+    # the latest daytime call.
+    old = log.get(f"{day}") or {}
+    if str(old.get("made", "")) >= f"{day - timedelta(days=1)} 18:00":
+        return
     log[f"{day}"] = {"base": base, "rule": CALL_RULE.get(f"{day}"), "thermal": thermal,
                      "made": f"{now:%Y-%m-%d %H:%M}"}
     keep = sorted(log)[-120:]
