@@ -1531,6 +1531,46 @@ def upslope_end(rnet, evening):
     return evening[1] if evening else None
 
 
+def line_moves(entries: list) -> str | None:
+    """The day's shear-line landmarks in words (Sam, 2026-10-20: the wrap-up
+    should mention shear movement): where it sat most of the day, and its
+    furthest north and south with times, when they differ."""
+    if not entries:
+        return None
+    text = lambda e: line_between(e["north_lat"], e["south_lat"], e["north_of"], e["south_of"])
+    texts = [text(e) for e in entries]
+    common = max(dict.fromkeys(texts), key=texts.count)
+    south = min(entries, key=lambda e: e["south_lat"])
+    north = max(entries, key=lambda e: e["north_lat"])
+    out = f"Most of the day the shear line was {common}"
+    for label, e in (("furthest north", north), ("furthest south", south)):
+        if text(e) != common:
+            out += f"; {label} about {e['t']}, {text(e)}"
+    return out + "."
+
+
+THERM_HOURS = None      # thermal_today() for the review's thermal landmarks
+
+
+def thermal_moves(hours) -> str | None:
+    """Thermal landmarks for the wrap-up (Sam, 2026-10-20): when the measured
+    rating reached its strongest, or that it stayed light, 10:00-15:00."""
+    if hours is None or len(hours) == 0 or "ti_c" not in hours:
+        return None
+    h = hours[(hours.index >= 10) & (hours.index <= 15)].ti_c.dropna()
+    if h.empty:
+        return None
+    words = {int(k): th.describe(v) for k, v in h.items()}
+    order = ["Flat", "Light", "Moderate", "Strong", "Boom!"]
+    best = max(words.values(), key=order.index)
+    first = min(k for k, w in words.items() if w == best)
+    last = max(k for k, w in words.items() if w == best)
+    if best in ("Flat", "Light"):
+        return f"Thermals stayed {best.lower()} all day."
+    span = f"about {first:02d}:00" + (f" to {last + 1:02d}:00" if last > first else "")
+    return f"Thermals were strongest ({best.lower()}) {span}."
+
+
 def line_day(entries: list):
     """(where it sat most of the day, the furthest south and when) from the log."""
     if not entries:
@@ -2446,6 +2486,9 @@ def day_review(obs, now, up, evening, rnet, word, model, fc_today, fc_pair, entr
                  f"air through the {model} sounding (thermal.py)"
                  + (f"; forecast was {fc_word}" if fc_word else "") + "</div>")
         said.append(f"A {word.lower()} day" + (f" (forecast {fc_word.lower()})" if fc_word else "") + ".")
+        tm = safely(thermal_moves, THERM_HOURS)
+        if tm:
+            said.append(tm)
 
     if up is not None:
         up_html = (f'<span class="num">{up:%H:%M}</span> to about <span class="num">{end:%H:%M}</span>'
@@ -2495,8 +2538,7 @@ def day_review(obs, now, up, evening, rnet, word, model, fc_today, fc_pair, entr
         common, far = ld
         line_html = (f"{esc(_cap(common))}<div class=\"sub\">Most of the day, {len(entries)} updates"
                      + (f". Furthest south about {far[1]}: {esc(_cap(far[0]))}" if far else "") + "</div>")
-        said.append(f"Most of the day the shear line was {common}"
-                    + (f"; about {far[1]} it was {far[0]}." if far else "."))
+        said.append(line_moves(entries))
     else:
         line_html = "Not located<div class=\"sub\">No readings logged during the upslope</div>"
 
@@ -2529,6 +2571,8 @@ def build() -> str:
     # today
     base = safely(cloudbase_now, obs) if len(obs) else None
     therm = safely(thermal_today, obs, now, cap) if len(obs) else None
+    global THERM_HOURS
+    THERM_HOURS = therm
     up, last_drain = safely(upslope_since, obs) or (None, None) if len(obs) else (None, None)
     rnet = safely(net_radiation, now) if now.hour >= 15 and up is not None and len(obs) else None
     evening = safely(evening_state, obs, rnet) if up is not None and len(obs) else None
