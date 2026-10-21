@@ -13,9 +13,11 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 ARCHIVE = Path("E:/dev/WX/KulaModel/review/camera_archive")
-URL = "https://weathercams.faa.gov/api/summary?siteId=931"
-PAGE = "https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/summary"
-CAM_ID = 13417                     # Kekoa South
+# (site, camera, archive folder): Kekoa South for the slope near Kula; Kaheawa
+# Southeast (West Maui, 2026-10-20) sees Haleakala side-on, shoreline to summit.
+CAMS = ((931, 13417, "camera_archive"), (881, 13230, "camera_archive_kaheawa"))
+URL = "https://weathercams.faa.gov/api/summary?siteId={site}"
+PAGE = "https://weathercams.faa.gov/cameras/state/HI/cameraSite/{site}/summary"
 HST = timezone(timedelta(hours=-10))
 
 
@@ -27,12 +29,22 @@ def get(url: str, referer: str | None = None) -> bytes:
 
 
 def capture() -> int:
-    j = json.loads(get(URL, PAGE))
-    cam = next(c for c in j["payload"]["site"]["cameras"] if c["cameraId"] == CAM_ID)
+    new = 0
+    for site, cam_id, folder in CAMS:
+        try:
+            new += _capture(site, cam_id, ARCHIVE.parent / folder)
+        except Exception as e:
+            print(f"site {site}: {type(e).__name__}: {e}")
+    return new
+
+
+def _capture(site: int, cam_id: int, archive: Path) -> int:
+    j = json.loads(get(URL.format(site=site), PAGE.format(site=site)))
+    cam = next(c for c in j["payload"]["site"]["cameras"] if c["cameraId"] == cam_id)
     new = 0
     for im in cam["currentImages"]:
         t = datetime.fromisoformat(im["imageDatetime"].replace("Z", "+00:00")).astimezone(HST)
-        f = ARCHIVE / f"{t:%Y-%m-%d}" / f"{t:%H%M}.jpg"
+        f = archive / f"{t:%Y-%m-%d}" / f"{t:%H%M}.jpg"
         if f.exists():
             continue
         f.parent.mkdir(parents=True, exist_ok=True)
