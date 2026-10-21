@@ -2418,15 +2418,7 @@ def day_notes(derived: list, forecast: list, inv, phase: dict, fired: dict, deca
         notes.append(held + (f", then the cloud decayed from the base up from about {decay}." if decay else "."))
     elif decay:
         notes.append(f"The cloud decayed from the base up from about {decay}.")
-    # forecast peak against the real base at the same time
-    if forecast and pts:
-        fm, fv = max(forecast, key=lambda x: x[1])
-        near = [v for m, v in pts if abs(m - fm) <= 15]
-        if near:
-            gap = fv - near[0]
-            if abs(gap) >= 700:
-                notes.append(f"The forecast peaked at {round(fv, -2):,.0f} ft at {_hm(fm)}; the base then was "
-                             f"about {round(abs(gap), -2):,.0f} ft {'lower' if gap > 0 else 'higher'}.")
+    # (The "forecast peaked at X" note went with the hourly forecast, 2026-10-20.)
     if fired:
         parts = []
         # Named, not just numbered (Sam, 2026-10-17: "p3 and p4 are claimed
@@ -2478,6 +2470,25 @@ def day_review(obs, now, up, evening, rnet, word, model, fc_today, fc_pair, entr
             # charted it does not need to be repeated in text"): no "Cloudbase
             # held X-Y" sentence and no Cloudbase row in the review.
             chart_html = ""
+            # But say what kind of day it was for the month, and what the call
+            # the evening before said (Sam, 2026-10-20: "daily wrap up ignores
+            # the fact that base was high, very high").
+            mid = [v for m, v in derived if 11 * 60 <= m <= 14 * 60]
+            cat = rules.category(sum(mid) / len(mid), now.month) if mid else None
+            if cat in ("high", "low"):
+                lo, hi = MONTH_BASE_RANGE[now.month]
+                said.append(f"A {cat} day for {now:%B}: the base reached about {ft(round(max(dv), -2))} ft "
+                            f"(normal {lo:,}–{hi:,} ft)." if cat == "high" else
+                            f"A low day for {now:%B}: the base stayed down near {ft(round(sum(mid) / len(mid), -2))} ft "
+                            f"(normal {lo:,}–{hi:,} ft).")
+            try:
+                call = json.loads(CALLS_LOG.read_text(encoding="utf-8")).get(f"{now:%Y-%m-%d}") or {}
+            except Exception:
+                call = {}
+            if cat and call.get("base"):
+                want = {"low": ("Low",), "high": ("May be high", "Leaning high")}.get(cat, ("Normal",))
+                said.append(f"The evening before, the page called it {call['base'].lower()}"
+                            + (", a hit." if call["base"] in want else ", a miss."))
 
     ld = line_day(entries)
     if ld:
