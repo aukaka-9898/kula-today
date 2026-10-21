@@ -2182,6 +2182,44 @@ def today_level(now: datetime):
 
 
 CALL_RULE = {}          # the rule behind the last cloudbase_call, for the call log
+# Flicker (Sam, 2026-10-20: "Fix the flicker, but not stuck on a single
+# occurrence"): on 10-19 the call for 10-20 swung Leaning high <-> Normal a
+# dozen times as model runs nudged B4's inputs across its edges. A call is now
+# shown once it has held for 3 of the last 4 builds (~an hour by day); until
+# then the previous call stays. One build can neither switch it on nor off.
+CALL_HISTORY = HERE / "docs" / "call_history.json"
+CALL_VOTES, CALL_NEEDED = 4, 3
+SETTLED: dict = {}
+
+
+def settled_call(day, *args):
+    key = f"{day}"
+    if key in SETTLED:                      # Forecast panel and week table share a build
+        return SETTLED[key]
+    head, sub = cloudbase_call(day, *args)
+    try:
+        hist = json.loads(CALL_HISTORY.read_text(encoding="utf-8"))
+    except Exception:
+        hist = {}
+    h = hist.get(key) or {"recent": [], "shown": None, "texts": {}, "rules": {}}
+    h["recent"] = (h["recent"] + [head])[-CALL_VOTES:]
+    h["texts"][head] = [head, sub]
+    h["rules"][head] = CALL_RULE.get(key)
+    shown = h["shown"] if h["shown"] in h["texts"] else head
+    for lab in dict.fromkeys(h["recent"]):
+        if lab != shown and h["recent"].count(lab) >= CALL_NEEDED:
+            shown = lab
+    h["shown"] = shown
+    hist[key] = h
+    keep = f"{datetime.now(HST).date() - timedelta(days=1)}"
+    hist = {k: v for k, v in hist.items() if k >= keep}
+    try:
+        CALL_HISTORY.write_text(json.dumps(hist), encoding="utf-8")
+    except Exception:
+        pass
+    CALL_RULE[key] = h["rules"].get(shown)
+    SETTLED[key] = tuple(h["texts"][shown])
+    return SETTLED[key]
 
 
 def cloudbase_call(day, path, fc_hours: dict, level_today, leaning=False) -> tuple[str, str]:
@@ -2889,7 +2927,7 @@ def build() -> str:
         # afternoon shape was right less often than "always flat", and its
         # level lost to the season average. The base is a category instead.
         fc_hours = safely(forecast_base_hours, tom) or {}
-        cb_head, cb_sub = (safely(cloudbase_call, tom, cap, fc_hours,
+        cb_head, cb_sub = (safely(settled_call, tom, cap, fc_hours,
                                   safely(today_level, now) if tom > now.date() else None, True)
                            or (f"{am_pm(hours.get(tom))} ft", ""))
         # No summary paragraph (Sam, 2026-10-17: "the whole summary paragraph
@@ -2915,7 +2953,7 @@ def build() -> str:
             # The base as the same category as the Forecast panel (Sam,
             # 2026-10-17: "categorize The Week"). Beyond the model run's reach
             # there is no air aloft to check, so it can only say Normal.
-            cat = safely(cloudbase_call, day, cap, safely(forecast_base_hours, day) or {},
+            cat = safely(settled_call, day, cap, safely(forecast_base_hours, day) or {},
                          safely(today_level, now) if day == now.date() + timedelta(days=1) else None,
                          True)
             # "Normal" again (Sam, 2026-10-18), after a day of "--"; "--" only
