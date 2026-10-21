@@ -85,7 +85,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><div class="tag">Kula soaring briefing</div><h1>Kula Today</h1></div>
-    <div class="date">Updated Wed 21 Oct 2026 · 10:54 HST</div>
+    <div class="date">Updated Wed 21 Oct 2026 · 11:07 HST</div>
   </header>
 
   <div>
@@ -95,16 +95,16 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 
   <div class="cols">
     <section class="panel today" aria-labelledby="t-today">
-      <div class="kind">Measured today · 10:54 HST</div>
-      <div class="head"><h2 id="t-today">Today</h2><span class="chip fair">Light</span></div>
-      <p class="summary">No cumulus over the slope yet. The whole slope is in sun. Upslope has run since about 08:45 at a light 4 mph, and thermals seem light. Trades are holding the shear line crossing Kula Highway between Pukalani and Kamehameha Schools, with no trade air on the lower west slope.</p><div style="font-weight:600;font-size:.9rem;margin:10px 0 2px">Cloudbase so far, derived</div><div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted,#6b6b66);margin:2px 0 4px">
+      <div class="kind">Measured today · 11:07 HST</div>
+      <div class="head"><h2 id="t-today">Today</h2><span class="chip good">Moderate</span></div>
+      <p class="summary">No cumulus over the slope yet. The whole slope is in sun. Upslope has run since about 08:45 at a light 4 mph, and thermals seem moderate. Trades are holding the shear line crossing Kula Highway between Pukalani and Kamehameha Schools, with no trade air on the lower west slope.</p><div class="watch"><div class="kind">What to watch</div><ul><li>Base already high (about 5,800 ft) with moist air above it: on days like this it usually comes down 300 ft or more by mid-afternoon. <span class="pid">P6 · High base, likely to drop</span></li></ul></div><div style="font-weight:600;font-size:.9rem;margin:10px 0 2px">Cloudbase so far, derived</div><div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted,#6b6b66);margin:2px 0 4px">
 
 <span><span style="display:inline-block;width:16px;height:2px;background:#2a78d6;vertical-align:middle"></span> Derived (stations)</span></div>
 <div style="position:relative;width:100%;min-width:0;height:220px"><canvas id="livechart" role="img" aria-label="Derived cloudbase through the day"></canvas></div>
 <div class="sub">Derived from the stations every 15 minutes during the upslope.</div>
 <script>
 (function () {
-  var d = {"derived": [[540, 5890.0], [555, 6100.0], [570, 5810.0], [585, 6190.0], [600, 5920.0], [615, 5920.0], [630, 5740.0]], "forecast": [], "up": [540, 631], "nocu": null}, pt = function (a) { return {x: a[0], y: a[1]}; };
+  var d = {"derived": [[540, 5890.0], [555, 6100.0], [570, 5810.0], [585, 6190.0], [600, 5920.0], [615, 5920.0], [630, 5740.0], [645, 5760.0]], "forecast": [], "up": [540, 645], "nocu": null}, pt = function (a) { return {x: a[0], y: a[1]}; };
   var dark = matchMedia('(prefers-color-scheme: dark)').matches, muted = '#898781', grid = dark ? '#2c2c2a' : '#e1e0d9';
   var nocu = { id: 'nocu', beforeDatasetsDraw: function (c) { if (!d.nocu) return; var x = c.scales.x, a = c.chartArea, g = c.ctx,
     x0 = x.getPixelForValue(d.nocu[0]), x1 = x.getPixelForValue(d.nocu[1]);
@@ -138,13 +138,13 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 })();
 </script>
       <dl>
-        <dt>Thermals</dt><dd>Seem <strong>light</strong> as of 10:30<div class="sub">Kula Ag's last hour of air through the NAM sounding (thermal.py)</div></dd>
-        <dt>Derived<br>Cloudbase</dt><dd>No cumulus yet<div class="sub">They would form near about 5,700 ft, the condensation level derived from the stations; no cloud over the slope in the sunlight readings</div></dd>
-        <dt>Sun</dt><dd><span class="num">97%</span> of clear sky, lower Kula slope<div class="sub">Last hour, as of 10:30; average of Kula Ag 97%, Keokea 97%, Pulehu 98%</div></dd>
-        <dt>Shear line</dt><dd>Crossing Kula Highway between Pukalani and Kamehameha Schools<div class="sub">Last hour: trades at MECO Makawao Ave, upslope at MECO Pulehu Rd 2</div><div class="sub">Trades at the coast: Paia 076° at 20 mph</div></dd>
+        <dt>Thermals</dt><dd>Seem <strong>moderate</strong> as of 10:45<div class="sub">Kula Ag's last hour of air through the NAM sounding (thermal.py)</div></dd>
+        <dt>Derived<br>Cloudbase</dt><dd>No cumulus yet<div class="sub">They would form near about 5,800 ft, the condensation level derived from the stations; no cloud over the slope in the sunlight readings</div></dd>
+        <dt>Sun</dt><dd><span class="num">98%</span> of clear sky, lower Kula slope<div class="sub">Last hour, as of 10:45; average of Kula Ag 97%, Keokea 98%, Pulehu 99%</div></dd>
+        <dt>Shear line</dt><dd>Crossing Kula Highway between Pukalani and Kamehameha Schools<div class="sub">Last hour: trades at MECO Makawao Ave, upslope at MECO Pulehu Rd 2</div><div class="sub">Trades at the coast: Paia 077° at 20 mph</div></dd>
         
         <dt>Upslope</dt><dd>On since about <span class="num">08:45</span><div class="sub">Drainage ended about 08:15</div></dd>
-        <dt>Wind</dt><dd><span class="num">3 mph</span>, gusts to 10<div class="sub">Lower elevations, 10 stations, last hour</div></dd>
+        <dt>Wind</dt><dd><span class="num">3 mph</span>, gusts to 11<div class="sub">Lower elevations, 10 stations, last hour</div></dd>
       </dl>
     </section>
     <section class="panel tomorrow" aria-labelledby="t-tomorrow">
@@ -161,9 +161,9 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
   </div>
 
   <section class="block" aria-labelledby="t-ladder">
-    <h2 id="t-ladder">Sunlight up the slope, as of 10:30</h2>
+    <h2 id="t-ladder">Sunlight up the slope, as of 10:45</h2>
     <p>Share of clear-sky sunlight measured at each station over the last 60 minutes of readings. Stations under cloud read low; stations above its top read full sun.</p>
-    <div class="rows"><div class="row"><span>Summit</span><span class="elev">9,776</span><div class="bar "><span style="width:100%"></span></div><span class="pct">100%</span></div><div class="row"><span>Nene Nest</span><span class="elev">8,500</span><div class="bar "><span style="width:100%"></span></div><span class="pct">100%</span></div><div class="row"><span>Park HQ</span><span class="elev">6,926</span><div class="bar "><span style="width:100%"></span></div><span class="pct">100%</span></div><div class="base"><span class="lbl">Cloudbase now</span><span class="elev">5,700</span><div class="line"></div><span></span></div><div class="row"><span>Kula Ag</span><span class="elev">3,162</span><div class="bar "><span style="width:97%"></span></div><span class="pct">97%</span></div><div class="row"><span>Keokea</span><span class="elev">2,849</span><div class="bar "><span style="width:97%"></span></div><span class="pct">97%</span></div><div class="row"><span>Piiholo</span><span class="elev">2,090</span><div class="bar "><span style="width:100%"></span></div><span class="pct">100%</span></div><div class="row"><span>Pulehu</span><span class="elev">1,402</span><div class="bar "><span style="width:98%"></span></div><span class="pct">98%</span></div></div>
+    <div class="rows"><div class="row"><span>Summit</span><span class="elev">9,776</span><div class="bar "><span style="width:100%"></span></div><span class="pct">100%</span></div><div class="row"><span>Nene Nest</span><span class="elev">8,500</span><div class="bar "><span style="width:100%"></span></div><span class="pct">100%</span></div><div class="row"><span>Park HQ</span><span class="elev">6,926</span><div class="bar "><span style="width:100%"></span></div><span class="pct">100%</span></div><div class="base"><span class="lbl">Cloudbase now</span><span class="elev">5,800</span><div class="line"></div><span></span></div><div class="row"><span>Kula Ag</span><span class="elev">3,162</span><div class="bar "><span style="width:97%"></span></div><span class="pct">97%</span></div><div class="row"><span>Keokea</span><span class="elev">2,849</span><div class="bar "><span style="width:98%"></span></div><span class="pct">98%</span></div><div class="row"><span>Piiholo</span><span class="elev">2,090</span><div class="bar "><span style="width:100%"></span></div><span class="pct">100%</span></div><div class="row"><span>Pulehu</span><span class="elev">1,402</span><div class="bar "><span style="width:99%"></span></div><span class="pct">99%</span></div></div>
   </section>
 
   <section class="block" aria-labelledby="t-week">
@@ -255,7 +255,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 })();
 </script>
 <style>.stn{font:600 11px/1.2 var(--body);padding:1px 4px;background:rgba(255,255,255,.85);border:0;box-shadow:none;color:#17242f}.stn:before{display:none}</style>
-<!-- build problems: RAWS sun HKUL: ConnectTimeout: HTTPSConnectionPool(host='wrcc-archive.dri.edu', port=443): Max retries exceeded with url: /cgi-bin/wea_list2.pl (Caused by ConnectTimeoutError(<HTTPSConnection(host='wrcc-archive.dri.edu', port=443) at 0x7c84af8a8ef0), 'Connection to wrcc-archive.dri.edu timed out. (connect timeout=90)')); RAWS sun HKMH: ConnectTimeout: HTTPSConnectionPool(host='wrcc-archive.dri.edu', port=443): Max retries exceeded with url: /cgi-bin/wea_list2.pl (Caused by ConnectTimeoutError(<HTTPSConnection(host='wrcc-archive.dri.edu', port=443) at 0x7c84afc44680), 'Connection to wrcc-archive.dri.edu timed out. (connect timeout=90)')) -->
+<!-- build problems: RAWS sun HKUL: ConnectTimeout: HTTPSConnectionPool(host='wrcc-archive.dri.edu', port=443): Max retries exceeded with url: /cgi-bin/wea_list2.pl (Caused by ConnectTimeoutError(<HTTPSConnection(host='wrcc-archive.dri.edu', port=443) at 0x7e0288427680), 'Connection to wrcc-archive.dri.edu timed out. (connect timeout=90)')); RAWS sun HKMH: ConnectTimeout: HTTPSConnectionPool(host='wrcc-archive.dri.edu', port=443): Max retries exceeded with url: /cgi-bin/wea_list2.pl (Caused by ConnectTimeoutError(<HTTPSConnection(host='wrcc-archive.dri.edu', port=443) at 0x7e0288449940), 'Connection to wrcc-archive.dri.edu timed out. (connect timeout=90)')) -->
 <script>
 /* Catch up with a new build within ~2 minutes (Sam, 2026-10-17: "the page
    does not seem to autoupdate"). stations.json's "made" is the build time;
@@ -263,7 +263,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
    browser's 10-minute cached copy is bypassed. The 15-minute refresh stays
    as a backstop. */
 (function () {
-  var built = "2026-10-21T10:54";
+  var built = "2026-10-21T11:07";
   function check() {
     fetch("stations.json?" + Date.now(), {cache: "no-store"})
       .then(function (r) { return r.json(); })
