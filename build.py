@@ -1510,6 +1510,7 @@ def station_rows(obs: pd.DataFrame, lad: pd.DataFrame) -> list:
 # at 5000'"). Heights from Open-Meteo's elevation model, cached by the pair.
 SLOPE_END_FT = 5000
 SLOPE_END_FILE = HERE / "docs" / "slope_end.json"
+SLOPE_END_MAX_M = 8000
 
 
 def slope_end(a, o):
@@ -1525,13 +1526,26 @@ def slope_end(a, o):
     n = math.hypot(dx, dy)
     if n == 0:
         return None
-    pts = [(o[0] + dy / n * d / 110540, o[1] + dx / n / k * d / 111320) for d in range(150, 15001, 150)]
+    # Traps (Sam, 2026-10-21: "may be problematic under some conditions ...
+    # there should at least be a trap if it can't be found"): the line has to
+    # head up the mountain (east of the origin) and reach 5,000 ft within
+    # SLOPE_END_MAX_M; otherwise no extension, and the map ends at the origin.
+    if dx <= 0:
+        PROBLEMS.append("shear line points away from the mountain; no 5,000 ft end")
+        return None
+    pts = [(o[0] + dy / n * d / 110540, o[1] + dx / n / k * d / 111320)
+           for d in range(150, SLOPE_END_MAX_M + 1, 150)]
     r = requests.get("https://api.open-meteo.com/v1/elevation", timeout=30,
                      params={"latitude": ",".join(f"{p[0]:.5f}" for p in pts),
                              "longitude": ",".join(f"{p[1]:.5f}" for p in pts)})
     r.raise_for_status()
-    end = next(([round(p[0], 5), round(p[1], 5)] for p, e in zip(pts, r.json()["elevation"])
-                if e * 3.281 >= SLOPE_END_FT), None)
+    els = r.json().get("elevation") or []
+    if len(els) != len(pts):
+        raise ValueError("elevation lookup came back short")       # not cached; next build retries
+    end = next(([round(p[0], 5), round(p[1], 5)] for p, e in zip(pts, els)
+                if e is not None and e * 3.281 >= SLOPE_END_FT), None)
+    if end is None:
+        PROBLEMS.append("shear line does not reach 5,000 ft within 8 km of its origin")
     cache[key] = end
     SLOPE_END_FILE.write_text(json.dumps(cache), encoding="utf-8")
     return end
