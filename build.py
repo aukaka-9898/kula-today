@@ -1510,6 +1510,16 @@ TRACE_LOG = HERE / "docs" / "line_trace_log.json"
 LOW_BAND_FT = 2400           # coast to ~2,400 ft: Paia ... MECO Kula 2
 CORRIDOR_TOP_FT = 4500       # Crater Rd; above it the summit stations sit over the trade layer
 TRACE_NEAR_MI = 1.0
+# Trades proper, for the origin and the stations near the line (Sam, 10-21:
+# "Red Hill is not in the trades. 1. Note wind speed 2. Note direction is not
+# trades" -- 119-132 deg at 7-8 mph -- then: "There is no minimum speed for
+# trades, use a comparison to other 'true' trade reports. Same applies to
+# direction. Remember, under the shear the wind can be variable."). The true
+# trades are the low band north of the anchor; a station is in them when its
+# direction is within TRACE_DIR_DEG of their median and its speed at least
+# TRACE_SPEED_FRAC of theirs. The anchor's test stays any non-trade direction.
+TRACE_DIR_DEG = 30
+TRACE_SPEED_FRAC = 0.6
 
 
 def trace_line(rows: list) -> dict:
@@ -1526,7 +1536,12 @@ def trace_line(rows: list) -> dict:
             break
     if anchor is None:
         return {"found": False, "why": "no backwind in the low band" if seen else "no trades in the low band"}
-    up = [r for r in live if trades(r) and elev(anchor) < elev(r) <= CORRIDOR_TOP_FT]
+    ref = [r for r in low if r["lat"] > anchor["lat"] and trades(r)]
+    ref_dir = cv.mean_direction(pd.Series([r["dir"] for r in ref], dtype=float))
+    ref_mph = float(np.median([r["mph"] for r in ref]))
+    solid = lambda r: (abs((r["dir"] - ref_dir + 180) % 360 - 180) <= TRACE_DIR_DEG
+                       and r["mph"] >= TRACE_SPEED_FRAC * ref_mph)
+    up = [r for r in live if solid(r) and elev(anchor) < elev(r) <= CORRIDOR_TOP_FT]
     if not up:
         return {"found": False, "why": "no trades above the anchor", "anchor": anchor["name"]}
     # Highest; of stations within 300 ft of the highest, the southernmost --
@@ -1550,10 +1565,11 @@ def trace_line(rows: list) -> dict:
         if abs(off) * cv.MILES_PER_DEG > TRACE_NEAR_MI:
             continue
         side = "south" if off > 0 else "north"
-        fits = trades(r) == (side == "north")
+        fits = solid(r) if side == "north" else not trades(r)
         near.append({"name": r["name"], "side": side, "dir": r["dir"], "mph": r["mph"],
                      "miles": round(abs(off) * cv.MILES_PER_DEG, 2), "fits": fits})
-    return {"found": True, "anchor": anchor["name"], "anchor_dir": anchor["dir"],
+    return {"found": True, "trades": [round(ref_dir), round(ref_mph, 1)],
+            "anchor": anchor["name"], "anchor_dir": anchor["dir"],
             "anchor_ll": [a_lat, a_lon], "origin": origin["name"], "origin_dir": origin["dir"],
             "origin_ll": [o_lat, o_lon], "near": near}
 
