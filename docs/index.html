@@ -85,7 +85,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><div class="tag">Kula soaring briefing</div><h1>Kula Today</h1></div>
-    <div class="date">Updated Wed 21 Oct 2026 · 16:17 HST</div>
+    <div class="date">Updated Wed 21 Oct 2026 · 16:18 HST</div>
   </header>
 
   <div>
@@ -95,7 +95,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 
   <div class="cols">
     <section class="panel today" aria-labelledby="t-today">
-      <div class="kind">Measured today · 16:17 HST</div>
+      <div class="kind">Measured today · 16:18 HST</div>
       <div class="head"><h2 id="t-today">Today</h2><span class="chip warn">Flat</span></div>
       <p class="summary">Cloudbase has come down from its late-morning high and is edging down now. Kula Ag had mostly shade over the last hour; the cloud tops out between about 6,900 and 8,500 ft, with sun above it. The upslope is ending: the slope has nearly stopped gaining heat since about 15:15. Trades are holding the shear line crossing Kula Highway near Omaopio, with no trade air on the lower west slope.</p><div style="font-weight:600;font-size:.9rem;margin:10px 0 2px">Cloudbase so far, derived</div><div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted,#6b6b66);margin:2px 0 4px">
 
@@ -231,6 +231,23 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
           }
           pts.push([lat, -156.395 + i * (0.135 / 24)]);
         }
+        if (d.line.a && d.line.o) {
+          // The traced line itself, origin (trades, upslope end) to anchor
+          // (first backwind, low band), then on west into the central valley,
+          // curving south deeper in "for effect" (Sam, 2026-10-21).
+          var a = d.line.a, o = d.line.o, west = -156.46;
+          var k = Math.abs(o[1] - a[1]) > 0.005 ? (o[0] - a[0]) / (o[1] - a[1]) : 0;
+          k = Math.max(-0.5, Math.min(0.5, k));
+          pts = [];
+          for (var j = 0; j <= 16; j++) {
+            var g = j / 16;
+            pts.push([o[0] + (a[0] - o[0]) * g, o[1] + (a[1] - o[1]) * g]);
+          }
+          for (var j = 1; a[1] > west && j <= 16; j++) {
+            var g = j / 16, lon = a[1] - (a[1] - west) * g;
+            pts.push([a[0] + k * (lon - a[1]) - 0.014 * g * g, lon]);
+          }
+        }
         // The glow is 500 yards wide on the ground (Sam), so it scales with the zoom.
         var glow = L.polyline(pts, {color: "#e74c3c", opacity: 0.16, lineCap: "round", interactive: false}).addTo(map);
         function glowWidth() {
@@ -265,7 +282,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
    browser's 10-minute cached copy is bypassed. The 15-minute refresh stays
    as a backstop. */
 (function () {
-  var built = "2026-10-21T16:17";
+  var built = "2026-10-21T16:18";
   function check() {
     fetch("stations.json?" + Date.now(), {cache: "no-store"})
       .then(function (r) { return r.json(); })
