@@ -1518,8 +1518,8 @@ TRACE_NEAR_MI = 1.0
 # trades are the low band north of the anchor; a station is in them when its
 # direction is within TRACE_DIR_DEG of their median and its speed at least
 # TRACE_SPEED_FRAC of theirs. The anchor's test stays any non-trade direction.
-TRACE_DIR_DEG = 30
-TRACE_SPEED_FRAC = 0.6
+TRACE_DIR_DEG = 45
+TRACE_SPEED_FRAC = 0.5
 
 
 def trace_line(rows: list) -> dict:
@@ -1541,7 +1541,10 @@ def trace_line(rows: list) -> dict:
     ref_mph = float(np.median([r["mph"] for r in ref]))
     solid = lambda r: (abs((r["dir"] - ref_dir + 180) % 360 - 180) <= TRACE_DIR_DEG
                        and r["mph"] >= TRACE_SPEED_FRAC * ref_mph)
-    up = [r for r in live if solid(r) and elev(anchor) < elev(r) <= CORRIDOR_TOP_FT]
+    # East of the anchor (Sam, 2026-10-21: "For the origin, try highest station
+    # east of anchor").
+    up = [r for r in live if solid(r) and r["lon"] > anchor["lon"]
+          and elev(anchor) < elev(r) <= CORRIDOR_TOP_FT]
     if not up:
         return {"found": False, "why": "no trades above the anchor", "anchor": anchor["name"]}
     # Highest; of stations within 300 ft of the highest, the southernmost --
