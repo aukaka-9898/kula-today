@@ -1,22 +1,22 @@
 {
- "made": "2026-10-21 17:52",
+ "made": "2026-10-21 18:07",
  "flags": [
-  "Forecast base has run +495 ft against the derived base over 28 days (no correction).",
-  "Shear line: a stale station sat out of 62% of updates over the last week (the rule under review)."
+  "Forecast base has run +472 ft against the derived base over 29 days (no correction).",
+  "Shear line: a stale station sat out of 60% of updates over the last week (the rule under review)."
  ],
  "stats": {
-  "base_days": 28,
-  "base_mean": 495,
-  "base_raw_mean": 95,
-  "base_sd": 771,
-  "base_morning": 646,
-  "base_afternoon": 363,
-  "alert_days": 1,
+  "base_days": 29,
+  "base_mean": 472,
+  "base_raw_mean": 78,
+  "base_sd": 789,
+  "base_morning": 628,
+  "base_afternoon": 352,
+  "alert_days": 2,
   "alert_hits": 0,
   "intrusions_missed": 0,
-  "line_dropped_share_7d": 0.62,
-  "cam_puunianiau_cloud_min_days": 4,
-  "cam_redhill_cloud_min_days": 4,
-  "station_days": 34
+  "line_dropped_share_7d": 0.6,
+  "cam_puunianiau_cloud_min_days": 5,
+  "cam_redhill_cloud_min_days": 5,
+  "station_days": 35
  }
 }
