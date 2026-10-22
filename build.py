@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import html
 import json
+import math
 import os
 import sys
 import time
@@ -1490,6 +1491,80 @@ def write_station_map(obs: pd.DataFrame, lad: pd.DataFrame, now: datetime, pos=N
                              encoding="utf-8")
 
 
+# The traced line (Sam, 2026-10-21, "Shearline analysis needs work. New
+# plan."): (1) walk the lowest band north to south to the first backwind --
+# anything not in the trades, since in the shear the direction can read
+# "other" -- the anchor; (2) the highest station above it still in the
+# trades, the origin; (3) the line runs from anchor to origin, and odd
+# readings near it are expected and help confirm it. Logged beside the
+# ladder's bracket to compare, not on the page yet.
+TRACE_LOG = HERE / "docs" / "line_trace_log.json"
+LOW_BAND_FT = 2400           # coast to ~2,400 ft: Paia ... MECO Kula 2
+CORRIDOR_TOP_FT = 4500       # Crater Rd; above it the summit stations sit over the trade layer
+TRACE_NEAR_MI = 1.0
+
+
+def trace_line(rows: list) -> dict:
+    live = [r for r in rows if r.get("dir") is not None and r.get("mph") is not None]
+    trades = lambda r: cv._side(r["dir"]) == "trades"
+    elev = lambda r: r["elev_ft"] or 0
+    low = sorted((r for r in live if elev(r) <= LOW_BAND_FT), key=lambda r: -r["lat"])
+    anchor, seen = None, False
+    for r in low:
+        if trades(r):
+            seen = True
+        elif seen:
+            anchor = r
+            break
+    if anchor is None:
+        return {"found": False, "why": "no backwind in the low band" if seen else "no trades in the low band"}
+    up = [r for r in live if trades(r) and elev(anchor) < elev(r) <= CORRIDOR_TOP_FT]
+    if not up:
+        return {"found": False, "why": "no trades above the anchor", "anchor": anchor["name"]}
+    # Highest; of stations within 300 ft of the highest, the southernmost --
+    # Olinda Rd (4,021) and Waihou (4,011) both in the trades means the line
+    # passes south of Waihou.
+    top = max(elev(r) for r in up)
+    origin = min((r for r in up if elev(r) >= top - 300), key=lambda r: r["lat"])
+    # Stations near the line: which side of it they sit, and what they read.
+    (a_lat, a_lon), (o_lat, o_lon) = (anchor["lat"], anchor["lon"]), (origin["lat"], origin["lon"])
+    k = math.cos(math.radians(a_lat))
+    dx, dy = (o_lon - a_lon) * k, o_lat - a_lat
+    near = []
+    for r in live:
+        if r is anchor or r is origin:
+            continue
+        px, py = (r["lon"] - a_lon) * k, r["lat"] - a_lat
+        t = (px * dx + py * dy) / (dx * dx + dy * dy)
+        if not 0 <= t <= 1:
+            continue
+        off = (px * dy - py * dx) / math.hypot(dx, dy)       # > 0: south/right of anchor->origin
+        if abs(off) * cv.MILES_PER_DEG > TRACE_NEAR_MI:
+            continue
+        side = "south" if off > 0 else "north"
+        fits = trades(r) == (side == "north")
+        near.append({"name": r["name"], "side": side, "dir": r["dir"], "mph": r["mph"],
+                     "miles": round(abs(off) * cv.MILES_PER_DEG, 2), "fits": fits})
+    return {"found": True, "anchor": anchor["name"], "anchor_dir": anchor["dir"],
+            "anchor_ll": [a_lat, a_lon], "origin": origin["name"], "origin_dir": origin["dir"],
+            "origin_ll": [o_lat, o_lon], "near": near}
+
+
+def log_trace(now: datetime, pos) -> None:
+    today = f"{now:%Y-%m-%d}"
+    try:
+        log = json.loads(TRACE_LOG.read_text(encoding="utf-8"))
+        rows = json.loads(STATIONS_FILE.read_text(encoding="utf-8"))["stations"]
+    except Exception:
+        return
+    entries = log.get("entries", []) if log.get("date") == today else []
+    got = trace_line(rows)
+    got["t"] = f"{now:%H:%M}"
+    got["ladder"] = ([str(pos["north_of"]), str(pos["south_of"])] if pos and pos.get("found") else None)
+    entries.append(got)
+    TRACE_LOG.write_text(json.dumps({"date": today, "entries": entries}), encoding="utf-8")
+
+
 # -- the day in review -----------------------------------------------------------
 # Once the upslope is over the live rows describe the drainage, not the flying
 # day, so the Today panel shows the whole day instead and keeps it through the
@@ -2918,6 +2993,7 @@ def build() -> str:
             summary_html += live[0]
 
     safely(write_station_map, obs, lad if isinstance(lad, pd.DataFrame) else pd.DataFrame(), now, pos, west)
+    safely(log_trace, now, pos)
 
     entries = safely(log_line, now, pos) or []
     safely(log_cameras, now)
