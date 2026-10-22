@@ -1505,6 +1505,38 @@ def station_rows(obs: pd.DataFrame, lad: pd.DataFrame) -> list:
     return rows
 
 
+# The traced line carries on up the slope from its origin until it meets the
+# 5,000 ft contour (Sam, 2026-10-21: "Extend the origin to intersect the slope
+# at 5000'"). Heights from Open-Meteo's elevation model, cached by the pair.
+SLOPE_END_FT = 5000
+SLOPE_END_FILE = HERE / "docs" / "slope_end.json"
+
+
+def slope_end(a, o):
+    key = f"{a[0]:.4f},{a[1]:.4f},{o[0]:.4f},{o[1]:.4f}"
+    try:
+        cache = json.loads(SLOPE_END_FILE.read_text(encoding="utf-8"))
+    except Exception:
+        cache = {}
+    if key in cache:
+        return cache[key]
+    k = math.cos(math.radians(o[0]))
+    dx, dy = (o[1] - a[1]) * k, o[0] - a[0]
+    n = math.hypot(dx, dy)
+    if n == 0:
+        return None
+    pts = [(o[0] + dy / n * d / 110540, o[1] + dx / n / k * d / 111320) for d in range(150, 15001, 150)]
+    r = requests.get("https://api.open-meteo.com/v1/elevation", timeout=30,
+                     params={"latitude": ",".join(f"{p[0]:.5f}" for p in pts),
+                             "longitude": ",".join(f"{p[1]:.5f}" for p in pts)})
+    r.raise_for_status()
+    end = next(([round(p[0], 5), round(p[1], 5)] for p, e in zip(pts, r.json()["elevation"])
+                if e * 3.281 >= SLOPE_END_FT), None)
+    cache[key] = end
+    SLOPE_END_FILE.write_text(json.dumps(cache), encoding="utf-8")
+    return end
+
+
 def _write_map(rows: list, now: datetime, pos, west) -> None:
     # The shear line, drawn as a stylised stroke through the middle of the
     # bracket (Sam liked it with "a little artistic license"); none when the
@@ -1522,7 +1554,9 @@ def _write_map(rows: list, now: datetime, pos, west) -> None:
                 "west_lat": None,
                 # The traced line's ends, for the map to draw it as traced.
                 "a": pos["trace"]["anchor_ll"] if pos.get("traced") else None,
-                "o": pos["trace"]["origin_ll"] if pos.get("traced") else None}
+                "o": pos["trace"]["origin_ll"] if pos.get("traced") else None,
+                "e": safely(slope_end, pos["trace"]["anchor_ll"], pos["trace"]["origin_ll"])
+                     if pos.get("traced") else None}
         if west:
             west_end = line["mid"] - 0.006          # the template's plain west end
             line["west_lat"] = min(20.7953 - 0.005, west_end - 0.005)   # Sam: less bend
