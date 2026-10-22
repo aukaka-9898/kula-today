@@ -186,6 +186,23 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
           }
           pts.push([lat, -156.395 + i * (0.135 / 24)]);
         }
+        if (d.line.a && d.line.o) {
+          // The traced line itself, origin (trades, upslope end) to anchor
+          // (first backwind, low band), then on west into the central valley,
+          // curving south deeper in "for effect" (Sam, 2026-10-21).
+          var a = d.line.a, o = d.line.o, west = -156.46;
+          var k = Math.abs(o[1] - a[1]) > 0.005 ? (o[0] - a[0]) / (o[1] - a[1]) : 0;
+          k = Math.max(-0.5, Math.min(0.5, k));
+          pts = [];
+          for (var j = 0; j <= 16; j++) {
+            var g = j / 16;
+            pts.push([o[0] + (a[0] - o[0]) * g, o[1] + (a[1] - o[1]) * g]);
+          }
+          for (var j = 1; a[1] > west && j <= 16; j++) {
+            var g = j / 16, lon = a[1] - (a[1] - west) * g;
+            pts.push([a[0] + k * (lon - a[1]) - 0.014 * g * g, lon]);
+          }
+        }
         // The glow is 500 yards wide on the ground (Sam), so it scales with the zoom.
         var glow = L.polyline(pts, {color: "#e74c3c", opacity: 0.16, lineCap: "round", interactive: false}).addTo(map);
         function glowWidth() {

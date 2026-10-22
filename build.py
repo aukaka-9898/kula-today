@@ -1519,7 +1519,10 @@ def _write_map(rows: list, now: datetime, pos, west) -> None:
                 # south round the lower west slope, passing below Pulehu (Sam).
                 # Always south of where the line would otherwise end: once the
                 # line itself is south of Pulehu, "below Pulehu" bent it north.
-                "west_lat": None}
+                "west_lat": None,
+                # The traced line's ends, for the map to draw it as traced.
+                "a": pos["trace"]["anchor_ll"] if pos.get("traced") else None,
+                "o": pos["trace"]["origin_ll"] if pos.get("traced") else None}
         if west:
             west_end = line["mid"] - 0.006          # the template's plain west end
             line["west_lat"] = min(20.7953 - 0.005, west_end - 0.005)   # Sam: less bend
