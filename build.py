@@ -1216,11 +1216,31 @@ def best_split(lad: pd.DataFrame) -> dict:
             "as_of": f.observed_local.max(), "dropped": dropped}
 
 
+# Where the traced line meets Kula Highway (Pukalani-Omaopio-Waiakoa run
+# close to this longitude).
+KULA_HWY_LON = -156.333
+
+
 def line_now(obs: pd.DataFrame, now: datetime):
+    """The traced line (Sam, 2026-10-21: "build it"), as the page's bracket:
+    where the anchor->origin line crosses Kula Highway. The ladder's best split
+    stands in when the trace finds no line."""
     lad = smoothed_ladder(obs, now)
     if lad.empty:
         return None, lad
-    return best_split(lad), lad
+    tr = safely(trace_line, station_rows(obs, lad))
+    if not tr or not tr.get("found"):
+        got = best_split(lad)
+        if got.get("found"):
+            got["traced"] = False
+        return got, lad
+    (a_lat, a_lon), (o_lat, o_lon) = tr["anchor_ll"], tr["origin_ll"]
+    lat = (a_lat if o_lon == a_lon else
+           a_lat + (o_lat - a_lat) * (KULA_HWY_LON - a_lon) / (o_lon - a_lon))
+    return {"found": True, "north_lat": lat, "south_lat": lat,
+            "north_of": tr["origin"], "south_of": tr["anchor"], "traced": True, "trace": tr,
+            "landmarks": [], "in_shear": False, "span_miles": 0.0,
+            "as_of": lad.observed_local.max(), "dropped": 0}, lad
 
 
 # -- forecast ------------------------------------------------------------------
@@ -1447,6 +1467,11 @@ STATIONS_FILE = HERE / "docs" / "stations.json"
 
 
 def write_station_map(obs: pd.DataFrame, lad: pd.DataFrame, now: datetime, pos=None, west=None) -> None:
+    rows = station_rows(obs, lad)
+    _write_map(rows, now, pos, west)
+
+
+def station_rows(obs: pd.DataFrame, lad: pd.DataFrame) -> list:
     rows = []
     fresh = obs.observed.max() - pd.Timedelta("90min") if len(obs) else None
     for st in sampler.STATIONS + MAP_ONLY:
@@ -1477,6 +1502,10 @@ def write_station_map(obs: pd.DataFrame, lad: pd.DataFrame, now: datetime, pos=N
                  "dir": None if last is None else round(float(last.wind_dir)),
                  "mph": None if last is None else round(float(last.wind_mph)),
                  "at": None if last is None else f"{last.observed_local:%H:%M}"})
+    return rows
+
+
+def _write_map(rows: list, now: datetime, pos, west) -> None:
     # The shear line, drawn as a stylised stroke through the middle of the
     # bracket (Sam liked it with "a little artistic license"); none when the
     # page reports no line.
@@ -2844,8 +2873,10 @@ def build() -> str:
     # line text
     if pos and pos.get("found"):
         line_html = (f"{esc(_cap(line_between(pos['north_lat'], pos['south_lat'], pos['north_of'], pos['south_of'])))}"
-                     f"<div class=\"sub\">Last hour: trades at {esc(pos['north_of'])}, "
-                     f"upslope at {esc(pos['south_of'])}</div>")
+                     + (f"<div class=\"sub\">Traced from the backwind at {esc(pos['south_of'])} "
+                        f"up to the trades at {esc(pos['north_of'])}</div>" if pos.get("traced") else
+                        f"<div class=\"sub\">Last hour: trades at {esc(pos['north_of'])}, "
+                        f"upslope at {esc(pos['south_of'])}</div>"))
         if pos["north_lat"] <= NOT_FLYABLE_LAT:
             line_html += f'<div class="alert">{esc(NOT_FLYABLE)}</div>'
         paia = lad[lad.name == "Paia"]
