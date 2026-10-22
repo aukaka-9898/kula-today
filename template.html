@@ -175,11 +175,13 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
     fetch("stations.json?" + Date.now()).then(function (r) { return r.json(); }).then(function (d) {
       if (d.line) {
         var pts = [];
-        for (var i = 0; i <= 24; i++) {
+        // From f = -0.4 the line runs on west past Pulehu into the central valley
+        // (Sam, 2026-10-21), still curving south, more so deeper in.
+        for (var i = -10; i <= 24; i++) {
           var f = i / 24, lat = d.line.mid - 0.006 + 0.010 * f + 0.0025 * Math.sin(f * Math.PI);
           if (d.line.west_lat !== null && d.line.west_lat !== undefined && f < 0.4) {
             // west of Pukalani the line swings south below Pulehu
-            var w = Math.pow(1 - f / 0.4, 2);   // western 40%, steepening into the valley venturi (Sam)
+            var w = Math.min(Math.pow(1 - f / 0.4, 2), 2.25);   // western 40%, steepening into the valley venturi (Sam)
             lat = lat * (1 - w) + d.line.west_lat * w;
           }
           pts.push([lat, -156.395 + i * (0.135 / 24)]);

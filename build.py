@@ -71,7 +71,10 @@ RELEASE_FT = 3162                       # Kula Ag
 # monthly table was tried and judged not worth its upkeep (Sam,
 # 2026-10-13). A flat +400 is within ~150 ft most of the year and ~450 ft
 # high in spring. Revisit occasionally (scratchpad method: seasonal_poc.py).
-FORECAST_BASE_LOW_FT = 400
+# Off (Sam, 2026-10-21: "Let's get rid of the 400 ft correction and see what
+# happens"): over the 28 days to 10-21 the page ran +495 ft against the
+# derived base with it, +95 without.
+FORECAST_BASE_LOW_FT = 0
 WEBCAM = ("https://weathercams.faa.gov/map/-128.93458,33.06367,-103.99562,49.85195"
           "/cameraSite/931/details/camera/13415/full")
 STALE = pd.Timedelta("75min")
@@ -1151,6 +1154,11 @@ def smoothed_ladder(obs: pd.DataFrame, now: datetime) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+# Off (Sam, 2026-10-21, "Stale-stations, let's see what happens"): it sat a
+# station out of 62% of updates over the week to 10-21.
+STALE_RUNGS_SIT_OUT = False
+
+
 def best_split(lad: pd.DataFrame) -> dict:
     """The line where the most ladder stations agree: trades north of it,
     upslope south of it. Shear readings count for neither side.
@@ -1168,7 +1176,7 @@ def best_split(lad: pd.DataFrame) -> dict:
     # freshest: api.weather.gov runs ~50 min behind the Mesonet and FAA, so
     # "45 min behind the freshest" would have dropped most MECO and coast rungs.
     dropped = 0
-    if len(f) >= 4:
+    if STALE_RUNGS_SIT_OUT and len(f) >= 4:
         typical = f.observed_local.median()
         keep = f.observed_local > typical - pd.Timedelta("30min")
         dropped = int((~keep).sum())
@@ -2082,7 +2090,8 @@ def review_summary(now: datetime) -> None:
             stats.update(base_mean=round(m), base_raw_mean=round(raw), base_sd=round(float(err.std())))
             if abs(m) > 300:
                 flags.append(f"Forecast base has run {m:+.0f} ft against the derived base over {days} days "
-                             f"(the +{FORECAST_BASE_LOW_FT} ft correction included; without it {raw:+.0f}).")
+                             + (f"(the +{FORECAST_BASE_LOW_FT} ft correction included; without it {raw:+.0f})."
+                                if FORECAST_BASE_LOW_FT else "(no correction)."))
             am, pm = err[h.hour <= 11].mean(), err[h.hour >= 13].mean()
             stats.update(base_morning=round(float(am)), base_afternoon=round(float(pm)))
             if abs(am - pm) > 600:
