@@ -1208,6 +1208,12 @@ def morning_start(day) -> str:
     return f"{ts[int(np.argmax(cs >= 10))] + pd.Timedelta(minutes=50):%H:%M}"
 
 
+def camera_sees_cloud(now: datetime) -> bool:
+    """True once the Kekoa camera has called first cloud on the ridge today."""
+    log = json.loads(RIDGE_FILE.read_text(encoding="utf-8"))
+    return log.get("date") == f"{now:%Y-%m-%d}" and bool(log.get("first_cloud"))
+
+
 def log_ridge(now: datetime) -> None:
     """Read every Kekoa South frame in the feed not yet logged today."""
     today = f"{now:%Y-%m-%d}"
@@ -3045,6 +3051,13 @@ def build() -> str:
     base_label = "Derived<br>Cloudbase"
     cu = safely(first_cumulus, now) if up is not None else None
     cu_clear = bool(cu) and cu[0] == "clear"
+    # Never "No cumulus yet" while the camera sees cloud along the ridge (Sam,
+    # 2026-10-22: "What I want to avoid is the report saying no clouds yet
+    # when they are clearly visible"): the camera called first cloud within
+    # 8-17 min of Sam on 10-20/21/22; the stations' sky readings can lag.
+    safely(log_ridge, now)
+    if cu_clear and safely(camera_sees_cloud, now):
+        cu_clear = False
     if cu:
         cu_clear = settle("cu_clear", cu_clear, now)
     mc = safely(morning_cloud, obs, now) if up is None and 6 <= now.hour < 12 and len(obs) else None
@@ -3316,7 +3329,6 @@ def build() -> str:
 
     safely(write_station_map, obs, lad if isinstance(lad, pd.DataFrame) else pd.DataFrame(), now, pos, west)
     safely(log_trace, now, pos)
-    safely(log_ridge, now)
 
     entries = safely(log_line, now, pos) or []
     safely(log_cameras, now)
