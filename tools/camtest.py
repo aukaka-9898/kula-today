@@ -114,14 +114,33 @@ def column_heights(tilt: float) -> dict:
     return {x: {y: _anchor(g.terrain_at(x, y, tilt)[0]) for y in range(600, ROWS[1])} for x in COLS}
 
 
+# Why a frame gave no base: "top" when the edge it found was the skyline
+# (no cloud on the visible slope), "bright" when the backup was skipped.
+LAST_REASON = None
+SKYLINE_PX = 4        # an edge this close under the skyline is the ridge, not a base
+OVERCAST_BLUE = 20    # sky blue-minus-red at or below this: a grey, overcast sky
+
+
+def _skyline(heights: dict, x: int) -> int:
+    return min(r for r, v in heights[x].items() if v is not None)
+
+
+def _sky_blue(a_rgb) -> float:
+    s = a_rgb[80:300, 200:1700]
+    return float((s[..., 2] - s[..., 0]).mean())
+
+
 def camera_base(f: Path, heights: dict):
     """(base ft or None, spread ft). The cloud-to-slope edge read down seven
     columns; a real base meets the slope at one height across them, a cloud in
     front of the slope reads the terrain behind it and wanders. On 10-18 a
     spread over 600 ft caught the two worst frames (08:51, 09:08) and no good
     ones (Sam: "can the auto call on bad frames be filtered?")."""
-    a = np.asarray(Image.open(f).convert("L"), dtype=float)
-    hs = []
+    global LAST_REASON
+    LAST_REASON = None
+    rgb = np.asarray(Image.open(f).convert("RGB"), dtype=float)
+    a = rgb.mean(axis=2)
+    hs, top_edges = [], 0
     for x in COLS:
         col = a[ROWS[0]:ROWS[1], x - 6:x + 6].mean(axis=1)
         sm = np.convolve(col, np.ones(3) / 3, mode="same")
@@ -130,13 +149,28 @@ def camera_base(f: Path, heights: dict):
             continue
         thr = (top + bot) / 2
         i = next((k for k in range(5, len(sm)) if sm[k] < thr <= sm[k - 1]), None)
+        # The skyline (Sam, 2026-10-20: "there is no way it was 6,900" -- the
+        # base was well below the ridge; with the visible slope clear the only
+        # edge left was bright sky against the dark ridge).
+        if i is not None and ROWS[0] + i <= _skyline(heights, x) + SKYLINE_PX:
+            top_edges += 1
+            continue
         if i is not None and heights[x].get(ROWS[0] + i) is not None:
             hs.append(heights[x][ROWS[0] + i])
     if len(hs) >= 4:
         spread = float(np.percentile(hs, 75) - np.percentile(hs, 25))
         if spread <= MAX_SPREAD_FT:
             return round(float(np.median(hs)), -1), round(spread, -1)
-    # Fallback: where the slope stops being visible (slopevis.py).
+    if top_edges >= 4:
+        LAST_REASON = "top"
+        return None, None
+    # Fallback: where the slope stops being visible (slopevis.py) -- only
+    # under a grey sky. On bright days the sunlit slope reads brighter than
+    # the clear-day picture and the backup took it for cloud (4,100-4,700 ft
+    # all of 10-20, a high day).
+    if _sky_blue(rgb) > OVERCAST_BLUE:
+        LAST_REASON = "bright"
+        return None, None
     import slopevis
     v, _ = slopevis.base_bright(f, heights, thr=30)
     return (v if isinstance(v, float) else None), None
