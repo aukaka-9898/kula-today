@@ -1,16 +1,16 @@
 {
- "made": "2026-10-22 23:58",
+ "made": "2026-10-23 04:57",
  "flags": [
-  "Forecast base has run +451 ft against the derived base over 29 days (no correction).",
+  "Forecast base has run +474 ft against the derived base over 28 days (no correction).",
   "Shear line: a stale station sat out of 52% of updates over the last week (the rule under review)."
  ],
  "stats": {
-  "base_days": 29,
-  "base_mean": 451,
-  "base_raw_mean": 60,
-  "base_sd": 788,
-  "base_morning": 595,
-  "base_afternoon": 347,
+  "base_days": 28,
+  "base_mean": 474,
+  "base_raw_mean": 83,
+  "base_sd": 792,
+  "base_morning": 619,
+  "base_afternoon": 367,
   "alert_days": 2,
   "alert_hits": 0,
   "intrusions_missed": 0,
