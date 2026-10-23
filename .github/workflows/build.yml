@@ -44,7 +44,7 @@ jobs:
         with:
           python-version: "3.12"
 
-      - run: pip install numpy pandas requests
+      - run: pip install numpy pandas requests pillow
 
       # Model soundings kept between builds (Sam, 2026-10-19: archives should be
       # fetched only periodically). Each run restores the newest saved copy and

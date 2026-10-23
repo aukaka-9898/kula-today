@@ -1121,19 +1121,86 @@ KEKOA_PAGE = "https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/summar
 
 
 @functools.cache
-def read_kekoa() -> pd.DataFrame:
+def kekoa_site() -> dict:
     # The API answers 401 without the camera page as the referrer.
     r = requests.get(KEKOA_URL, params={"siteId": 931},
                      headers={**cv.HEAD, "Referer": KEKOA_PAGE}, timeout=30)
     r.raise_for_status()
+    return (r.json().get("payload") or {}).get("site", {})
+
+
+@functools.cache
+def read_kekoa() -> pd.DataFrame:
     rows = []
-    for o in (r.json().get("payload") or {}).get("site", {}).get("advisoryWeather") or []:
+    for o in kekoa_site().get("advisoryWeather") or []:
         if o.get("windDirDegrees") is None or o.get("windSpeedKnots") is None:
             continue
         rows.append({"observed": pd.Timestamp(o["observationDateTime"]).tz_convert(HST).tz_localize(None),
                      "wind_dir": float(o["windDirDegrees"]),
                      "wind_mph": float(o["windSpeedKnots"]) * 1.15078})
     return pd.DataFrame(rows)
+
+
+# Cloud on the ridge from the Kekoa South camera (Sam, 2026-10-22: "now that
+# the cam knows where the ridge is, it can see morning clouds there ... The
+# point being P1"). The ridgeline is found on the camera's clear-day image
+# (tools/kekoa_skyline.json); each frame counts cloud-coloured pixels (bright,
+# grey-white) in a band from 30 px above to 50 px below it, which leaves out
+# the foreground grass and high cloud in open sky. On the archived mornings
+# 10-18..22 it saw cloud on the ridge from 08:25 (10-18), 10:23 (10-20), 10:10
+# (10-21) and 08:44 (10-22). Before ~07:20 the sunrise glow over the ridge
+# reads as cloud, so the morning check starts at 07:30. Logged only for now.
+KEKOA_SOUTH = 13417
+RIDGE_FILE = HERE / "docs" / "ridge_cloud_log.json"
+RIDGE_CLOUD = 0.10            # share of the band that is cloud
+RIDGE_MORNING = ("07:30", "09:30")
+
+
+@functools.cache
+def _kekoa_skyline():
+    sky = {int(k): v for k, v in json.loads((HERE / "tools" / "kekoa_skyline.json").read_text()).items()}
+    xs = np.arange(300, 1301, 5)
+    return xs, np.interp(xs, sorted(sky), [sky[k] for k in sorted(sky)]).astype(int)
+
+
+def ridge_fraction(jpeg: bytes) -> float:
+    from PIL import Image
+    import io
+    a = np.asarray(Image.open(io.BytesIO(jpeg)).convert("RGB"), dtype=float)
+    br = a.mean(axis=2)
+    sat = (a.max(axis=2) - a.min(axis=2)) / np.maximum(a.max(axis=2), 1)
+    cl = (br > 165) & (sat < 0.18)
+    xs, sk = _kekoa_skyline()
+    n = t = 0
+    for x, s in zip(xs, sk):
+        c = cl[s - 30:s + 50, x]
+        n, t = n + int(c.sum()), t + c.size
+    return n / t
+
+
+def log_ridge(now: datetime) -> None:
+    """Read every Kekoa South frame in the feed not yet logged today."""
+    today = f"{now:%Y-%m-%d}"
+    try:
+        log = json.loads(RIDGE_FILE.read_text(encoding="utf-8"))
+    except Exception:
+        log = {}
+    if log.get("date") != today:
+        log = {"date": today, "points": {}}
+    cam = next(c for c in kekoa_site().get("cameras", []) if c.get("cameraId") == KEKOA_SOUTH)
+    for im in cam.get("currentImages") or []:
+        t = pd.Timestamp(im["imageDatetime"]).tz_convert(HST)
+        hm = f"{t:%H:%M}"
+        if f"{t:%Y-%m-%d}" != today or hm in log["points"] or not ("06:30" <= hm <= "18:30"):
+            continue
+        r = requests.get(im["imageUri"], timeout=60)
+        r.raise_for_status()
+        log["points"][hm] = round(ridge_fraction(r.content), 3)
+    pts = sorted((k, v) for k, v in log["points"].items() if k >= RIDGE_MORNING[0])
+    first = next((a[0] for a, b in zip(pts, pts[1:]) if a[1] >= RIDGE_CLOUD and b[1] >= RIDGE_CLOUD), None)
+    log["first_cloud"] = first
+    log["morning_ridge_cloud"] = bool(first and first <= RIDGE_MORNING[1])
+    RIDGE_FILE.write_text(json.dumps(log, sort_keys=True), encoding="utf-8")
 
 
 def _ladder_readings(sid: str, since: datetime) -> pd.DataFrame:
@@ -3202,6 +3269,7 @@ def build() -> str:
 
     safely(write_station_map, obs, lad if isinstance(lad, pd.DataFrame) else pd.DataFrame(), now, pos, west)
     safely(log_trace, now, pos)
+    safely(log_ridge, now)
 
     entries = safely(log_line, now, pos) or []
     safely(log_cameras, now)
