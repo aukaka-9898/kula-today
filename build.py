@@ -1384,8 +1384,14 @@ def line_now(obs: pd.DataFrame, now: datetime):
         got["silent_note"] = note
         return got, lad
     (a_lat, a_lon), (o_lat, o_lon) = tr["anchor_ll"], tr["origin_ll"]
-    lat = (a_lat if o_lon == a_lon else
-           a_lat + (o_lat - a_lat) * (KULA_HWY_LON - a_lon) / (o_lon - a_lon))
+    # No wild extrapolation: a line close to north-south (under 0.02 deg of
+    # longitude between its ends) is not projected to the highway, and the
+    # crossing stays within the line's own latitudes and the Kula corridor.
+    if abs(o_lon - a_lon) < 0.02:
+        lat = (a_lat + o_lat) / 2
+    else:
+        lat = a_lat + (o_lat - a_lat) * (KULA_HWY_LON - a_lon) / (o_lon - a_lon)
+    lat = min(max(lat, min(a_lat, o_lat) - 0.01, TRACE_SOUTH_LAT), max(a_lat, o_lat) + 0.01)
     return {"found": True, "north_lat": lat, "south_lat": lat,
             "north_of": tr["origin"], "south_of": tr["anchor"], "traced": True, "trace": tr,
             "landmarks": [], "in_shear": False, "span_miles": 0.0,
@@ -1773,13 +1779,18 @@ def trace_line(rows: list) -> dict:
     if anchor is None:
         return {"found": False, "why": "no backwind in the low band" if seen else "no trades in the low band"}
     ref = [r for r in low if r["lat"] > anchor["lat"] and trades(r)]
+    # Guards (2026-10-22, 17:07: with the MECO and coast silent the reference
+    # was Piiholo alone at 2 mph, Keokea's 1 mph "passed", and the line ran
+    # south to Ulupalakua).
+    if len(ref) < 2:
+        return {"found": False, "why": "too few stations in the trades to compare with", "anchor": anchor["name"]}
     ref_dir = cv.mean_direction(pd.Series([r["dir"] for r in ref], dtype=float))
     ref_mph = float(np.median([r["mph"] for r in ref]))
     solid = lambda r: (abs((r["dir"] - ref_dir + 180) % 360 - 180) <= TRACE_DIR_DEG
                        and r["mph"] >= TRACE_SPEED_FRAC * ref_mph)
     # East of the anchor (Sam, 2026-10-21: "For the origin, try highest station
     # east of anchor").
-    up = [r for r in live if solid(r) and r["lon"] > anchor["lon"]
+    up = [r for r in live if solid(r) and r["lon"] > anchor["lon"] and r["lat"] >= anchor["lat"]
           and elev(anchor) < elev(r) <= CORRIDOR_TOP_FT]
     if not up:
         return {"found": False, "why": "no trades above the anchor", "anchor": anchor["name"]}
