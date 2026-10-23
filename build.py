@@ -2477,6 +2477,40 @@ CALL_VOTES, CALL_NEEDED = 4, 3
 SETTLED: dict = {}
 
 
+# The same 3-of-4 settling for the live rows (Sam, 2026-10-22: items "settle
+# the thermal rating" and the "No cumulus yet" row): on 10-20 the measured
+# rating swung Strong <-> Moderate from 13:15 to 14:30, and the base row
+# flipped between "No cumulus yet" and a height in the late morning.
+SETTLE_FILE = HERE / "docs" / "settle_history.json"
+
+
+def settle(key: str, raw, now: datetime):
+    """The value to show for `key` today: switches to a new value only once it
+    has held for CALL_NEEDED of the last CALL_VOTES builds."""
+    if raw is None:
+        return raw
+    today = f"{now:%Y-%m-%d}"
+    try:
+        hist = json.loads(SETTLE_FILE.read_text(encoding="utf-8"))
+    except Exception:
+        hist = {}
+    if hist.get("date") != today:
+        hist = {"date": today}
+    h = hist.get(key) or {"recent": [], "shown": raw}
+    h["recent"] = (h["recent"] + [raw])[-CALL_VOTES:]
+    shown = h["shown"]
+    for v in dict.fromkeys(h["recent"]):
+        if v != shown and h["recent"].count(v) >= CALL_NEEDED:
+            shown = v
+    h["shown"] = shown
+    hist[key] = h
+    try:
+        SETTLE_FILE.write_text(json.dumps(hist), encoding="utf-8")
+    except Exception:
+        pass
+    return shown
+
+
 def settled_call(day, *args):
     key = f"{day}"
     if key in SETTLED:                      # Forecast panel and week table share a build
@@ -2897,6 +2931,8 @@ def build() -> str:
     base_label = "Derived<br>Cloudbase"
     cu = safely(first_cumulus, now) if up is not None else None
     cu_clear = bool(cu) and cu[0] == "clear"
+    if cu:
+        cu_clear = settle("cu_clear", cu_clear, now)
     mc = safely(morning_cloud, obs, now) if up is None and 6 <= now.hour < 12 and len(obs) else None
     global PHASE
     # Dew-morning phases: the base is always all stations; in phase 2 the
@@ -3068,6 +3104,7 @@ def build() -> str:
         shaded = side_best is not None and not in_shadow and side_best < 0.55
         if shaded:
             thermal_word = "Flat"
+        thermal_word = settle("thermal", thermal_word, now)
         therm_html = ((f"Seem <strong>{thermal_word.lower()}</strong> as of {newest:%H:%M}" if newest is not None
                        else f"Seem <strong>{thermal_word.lower()}</strong> at {hour:02d}:00")
                       + f"<div class=\"sub\">Kula Ag's last hour of air through the {model} sounding (thermal.py)"
