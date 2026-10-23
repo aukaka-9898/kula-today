@@ -1158,7 +1158,9 @@ def read_kekoa() -> pd.DataFrame:
 # after sunrise, so the morning check starts 50 min after it.
 KEKOA_SOUTH = 13417
 RIDGE_FILE = HERE / "docs" / "ridge_cloud_log.json"
-RIDGE_CLOUD = 0.10            # share of the band that is cloud (first clouds)
+RIDGE_CLOUD = 0.06            # share of the band that is cloud (first clouds); 0.06 matched
+                              # Sam's first-cumulus calls within 8-17 min on 10-20/21/22 (0.05 took
+                              # 10-20's altocumulus at 09:40; 0.10 ran up to 27 min late)
 RIDGE_BEHIND = 0.10           # share of columns with cloud behind the crest (P1)
 RIDGE_WINDOW_MIN = 50         # the check runs this long (Sam, 2026-10-22: "use the 50
                               # minute window" -- moves with sunrise, so winter keeps one)
