@@ -884,6 +884,45 @@ def net_radiation(now: datetime) -> pd.Series:
     return s.resample("15min").mean().dropna() if len(s) else s
 
 
+# The night's two signals for the morning (Sam, 2026-10-22, "add them"),
+# both at Kula Ag, 02:00-04:00. Tested on 1,019 nights (2022-26, against
+# history/days.csv): humidity >= 95% AND net radiation above -15 W/m2 (cloud
+# holding the slope's heat in) -> saturated start 49%, low day 57%, base ~700
+# ft lower (47 nights; base rates 4% / 20%). The deck without the humidity ->
+# normal start, low day 41%, base ~450 ft lower (76 nights). An evening deck
+# that clears by 02:00 means nothing (23% low). Humidity alone without the
+# deck is weak (11 nights) and gets no line.
+NIGHT_WET_RH = 95
+NIGHT_DECK_RNET = -15
+
+
+@functools.lru_cache(maxsize=2)
+def night_signals(day) -> dict | None:
+    rows = _retrying(mesonet.get)("/mesonet/db/measurements", location="hawaii",
+                                  station_ids="0119", var_ids="Rnet_1_Avg,RH_1_Avg",
+                                  start_date=f"{day}T02:00:00-10:00", end_date=f"{day}T04:00:00-10:00",
+                                  row_mode="json", limit=10000)
+    v = {}
+    for r in rows:
+        if r.get("value") is not None:
+            v.setdefault(r["variable"], []).append(float(r["value"]))
+    rn, rh = v.get("Rnet_1_Avg", []), v.get("RH_1_Avg", [])
+    if len(rn) < 18 or len(rh) < 18:
+        return None
+    return {"rnet": sum(rn) / len(rn), "rh": sum(rh) / len(rh)}
+
+
+def overnight_line(now: datetime) -> str | None:
+    if not 4 <= now.hour < 12:
+        return None
+    got = night_signals(now.date())
+    if not got or got["rnet"] <= NIGHT_DECK_RNET:
+        return None
+    if got["rh"] >= NIGHT_WET_RH:
+        return "The slope stayed saturated under cloud overnight: expect a wet, slow start and a lower base."
+    return "Cloud held over the slope overnight: expect a lower base."
+
+
 def _first_two(s: pd.Series):
     for a, b in zip(s.index[:-1], s.index[1:]):
         if s[a] and s[b]:
@@ -3085,6 +3124,9 @@ def build() -> str:
                    f"since {mc['since']:%H:%M} and it is still {mc['ka_rh']:.0f}% humid."
                    if mc.get("rise", 0) >= 1.5 else ".")
                 + (f" {said}" if said else ""))
+    night = safely(overnight_line, now) if up is None or now.hour < 12 else None
+    if night:
+        said = night + (f" {said}" if said else "")
     summary_html = f'<p class="summary">{esc(said)}</p>' if said else ""
     # The pattern vocabulary (patterns.py): situations the page recognises,
     # each shown with its ID so it can be found, changed or dropped there.
