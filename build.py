@@ -1216,6 +1216,7 @@ def best_split(lad: pd.DataFrame) -> dict:
             "as_of": f.observed_local.max(), "dropped": dropped}
 
 
+LINE_SILENT_WARN = 6
 # Where the traced line meets Kula Highway (Pukalani-Omaopio-Waiakoa run
 # close to this longitude).
 KULA_HWY_LON = -156.333
@@ -1228,11 +1229,19 @@ def line_now(obs: pd.DataFrame, now: datetime):
     lad = smoothed_ladder(obs, now)
     if lad.empty:
         return None, lad
-    tr = safely(trace_line, station_rows(obs, lad))
+    rows = station_rows(obs, lad)
+    tr = safely(trace_line, rows)
+    # How many corridor stations are silent (Sam, 2026-10-22: "Lots of stations
+    # not reporting today. Wreaked havoc with locating the shear" -- every
+    # station via api.weather.gov stopped at 03:20).
+    corridor = [r for r in rows if r["lat"] >= TRACE_SOUTH_LAT and (r.get("elev_ft") or 0) <= CORRIDOR_TOP_FT]
+    silent = [r["name"] for r in corridor if r.get("dir") is None]
+    note = (f"{len(silent)} of {len(corridor)} stations not reporting" if len(silent) >= LINE_SILENT_WARN else None)
     if not tr or not tr.get("found"):
         got = best_split(lad)
         if got.get("found"):
             got["traced"] = False
+        got["silent_note"] = note
         return got, lad
     (a_lat, a_lon), (o_lat, o_lon) = tr["anchor_ll"], tr["origin_ll"]
     lat = (a_lat if o_lon == a_lon else
@@ -1240,7 +1249,7 @@ def line_now(obs: pd.DataFrame, now: datetime):
     return {"found": True, "north_lat": lat, "south_lat": lat,
             "north_of": tr["origin"], "south_of": tr["anchor"], "traced": True, "trace": tr,
             "landmarks": [], "in_shear": False, "span_miles": 0.0,
-            "as_of": lad.observed_local.max(), "dropped": 0}, lad
+            "as_of": lad.observed_local.max(), "dropped": 0, "silent_note": note}, lad
 
 
 # -- forecast ------------------------------------------------------------------
@@ -1602,8 +1611,15 @@ TRACE_DIR_DEG = 45
 TRACE_SPEED_FRAC = 0.5
 
 
+# The Kula side only: on 2026-10-22, with the MECO and coastal stations silent,
+# the trace took Kahikinui and Upper Kahikinui (20.63-20.64 N, the south flank's
+# own easterlies) as the origin.
+TRACE_SOUTH_LAT = 20.69
+
+
 def trace_line(rows: list) -> dict:
-    live = [r for r in rows if r.get("dir") is not None and r.get("mph") is not None]
+    live = [r for r in rows if r.get("dir") is not None and r.get("mph") is not None
+            and r["lat"] >= TRACE_SOUTH_LAT]
     trades = lambda r: cv._side(r["dir"]) == "trades"
     elev = lambda r: r["elev_ft"] or 0
     low = sorted((r for r in live if elev(r) <= LOW_BAND_FT), key=lambda r: -r["lat"])
@@ -2937,6 +2953,9 @@ def build() -> str:
                           f"{p.wind_dir:03.0f}° at {p.wind_mph:.0f} mph</div>")
     elif pos:
         line_html = f"Not found<div class=\"sub\">{esc(pos.get('why', ''))}</div>"
+    if pos and pos.get("silent_note"):
+        line_html += (f'<div class="alert">{esc(pos["silent_note"])}: the line is less certain'
+                      + (" than usual" if pos.get("found") else "") + "</div>")
     else:
         line_html = "Unavailable"
     west = safely(west_intrusion, obs) if len(obs) else None
