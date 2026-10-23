@@ -1160,7 +1160,8 @@ KEKOA_SOUTH = 13417
 RIDGE_FILE = HERE / "docs" / "ridge_cloud_log.json"
 RIDGE_CLOUD = 0.10            # share of the band that is cloud (first clouds)
 RIDGE_BEHIND = 0.10           # share of columns with cloud behind the crest (P1)
-RIDGE_MORNING_END = "08:00"
+RIDGE_WINDOW_MIN = 50         # the check runs this long (Sam, 2026-10-22: "use the 50
+                              # minute window" -- moves with sunrise, so winter keeps one)
 
 
 @functools.cache
@@ -1229,8 +1230,9 @@ def log_ridge(now: datetime) -> None:
     pts = sorted((k, v) for k, v in log["points"].items() if k >= start)
     first = next((a[0] for a, b in zip(pts, pts[1:]) if a[1] >= RIDGE_CLOUD and b[1] >= RIDGE_CLOUD), None)
     log["first_cloud"] = first
-    early = {k: v for k, v in log["behind"].items() if start <= k <= RIDGE_MORNING_END}
-    log["morning_window"] = [start, RIDGE_MORNING_END]
+    end = f"{pd.Timestamp(f'{now.date()} {start}') + pd.Timedelta(minutes=RIDGE_WINDOW_MIN):%H:%M}"
+    early = {k: v for k, v in log["behind"].items() if start <= k <= end}
+    log["morning_window"] = [start, end]
     log["morning_ridge_cloud"] = (any(v >= RIDGE_BEHIND for v in early.values()) if early else None)
     RIDGE_FILE.write_text(json.dumps(log, sort_keys=True), encoding="utf-8")
 
