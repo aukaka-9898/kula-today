@@ -1148,12 +1148,19 @@ def read_kekoa() -> pd.DataFrame:
 # grey-white) in a band from 30 px above to 50 px below it, which leaves out
 # the foreground grass and high cloud in open sky. On the archived mornings
 # 10-18..22 it saw cloud on the ridge from 08:25 (10-18), 10:23 (10-20), 10:10
-# (10-21) and 08:44 (10-22). Before ~07:20 the sunrise glow over the ridge
-# reads as cloud, so the morning check starts at 07:30. Logged only for now.
+# (10-21) and 08:44 (10-22). Logged only for now.
+#
+# For P1 the cloud must sit BEHIND the crest: "score ridge clouds as those with
+# the silhouette of the ridge on them" (Sam, 2026-10-22) -- cloud just above
+# the crest with the ridge under it still dark. Kula's own cumulus forms in
+# front and hides the ridgeline (10-20 10:32). And only frames up to 08:00,
+# "before any Kula clouds form"; the sunrise glow reads as cloud for ~45 min
+# after sunrise, so the morning check starts 50 min after it.
 KEKOA_SOUTH = 13417
 RIDGE_FILE = HERE / "docs" / "ridge_cloud_log.json"
-RIDGE_CLOUD = 0.10            # share of the band that is cloud
-RIDGE_MORNING = ("07:30", "09:30")
+RIDGE_CLOUD = 0.10            # share of the band that is cloud (first clouds)
+RIDGE_BEHIND = 0.10           # share of columns with cloud behind the crest (P1)
+RIDGE_MORNING_END = "08:00"
 
 
 @functools.cache
@@ -1163,19 +1170,39 @@ def _kekoa_skyline():
     return xs, np.interp(xs, sorted(sky), [sky[k] for k in sorted(sky)]).astype(int)
 
 
-def ridge_fraction(jpeg: bytes) -> float:
+def _cloud_mask(jpeg: bytes):
     from PIL import Image
     import io
     a = np.asarray(Image.open(io.BytesIO(jpeg)).convert("RGB"), dtype=float)
-    br = a.mean(axis=2)
     sat = (a.max(axis=2) - a.min(axis=2)) / np.maximum(a.max(axis=2), 1)
-    cl = (br > 165) & (sat < 0.18)
+    return (a.mean(axis=2) > 165) & (sat < 0.18)
+
+
+def ridge_fraction(jpeg: bytes) -> float:
+    cl = _cloud_mask(jpeg)
     xs, sk = _kekoa_skyline()
     n = t = 0
     for x, s in zip(xs, sk):
         c = cl[s - 30:s + 50, x]
         n, t = n + int(c.sum()), t + c.size
     return n / t
+
+
+def ridge_behind(jpeg: bytes) -> float:
+    """Share of columns with cloud just above the crest and the ridge under
+    it still dark: cloud behind the ridge, its silhouette showing."""
+    cl = _cloud_mask(jpeg)
+    xs, sk = _kekoa_skyline()
+    hits = sum(1 for x, s in zip(xs, sk)
+               if cl[s - 30:s - 2, x].mean() >= 0.3 and cl[s + 2:s + 14, x].mean() < 0.2)
+    return hits / len(xs)
+
+
+def morning_start(day) -> str:
+    """50 minutes after the clear-sky sun at Kula passes 10 W/m2."""
+    ts = pd.date_range(pd.Timestamp(f"{day} 05:30").tz_localize(HST), periods=48, freq="5min")
+    cs = np.asarray(mesonet.clear_sky(ts))
+    return f"{ts[int(np.argmax(cs >= 10))] + pd.Timedelta(minutes=50):%H:%M}"
 
 
 def log_ridge(now: datetime) -> None:
@@ -1186,7 +1213,8 @@ def log_ridge(now: datetime) -> None:
     except Exception:
         log = {}
     if log.get("date") != today:
-        log = {"date": today, "points": {}}
+        log = {"date": today, "points": {}, "behind": {}}
+    log.setdefault("behind", {})
     cam = next(c for c in kekoa_site().get("cameras", []) if c.get("cameraId") == KEKOA_SOUTH)
     for im in cam.get("currentImages") or []:
         t = pd.Timestamp(im["imageDatetime"]).tz_convert(HST)
@@ -1196,10 +1224,14 @@ def log_ridge(now: datetime) -> None:
         r = requests.get(im["imageUri"], timeout=60)
         r.raise_for_status()
         log["points"][hm] = round(ridge_fraction(r.content), 3)
-    pts = sorted((k, v) for k, v in log["points"].items() if k >= RIDGE_MORNING[0])
+        log["behind"][hm] = round(ridge_behind(r.content), 3)
+    start = morning_start(now.date())
+    pts = sorted((k, v) for k, v in log["points"].items() if k >= start)
     first = next((a[0] for a, b in zip(pts, pts[1:]) if a[1] >= RIDGE_CLOUD and b[1] >= RIDGE_CLOUD), None)
     log["first_cloud"] = first
-    log["morning_ridge_cloud"] = bool(first and first <= RIDGE_MORNING[1])
+    early = {k: v for k, v in log["behind"].items() if start <= k <= RIDGE_MORNING_END}
+    log["morning_window"] = [start, RIDGE_MORNING_END]
+    log["morning_ridge_cloud"] = (any(v >= RIDGE_BEHIND for v in early.values()) if early else None)
     RIDGE_FILE.write_text(json.dumps(log, sort_keys=True), encoding="utf-8")
 
 
