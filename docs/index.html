@@ -85,7 +85,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><div class="tag">Kula soaring briefing</div><h1>Kula Today</h1></div>
-    <div class="date">Updated Thu 22 Oct 2026 · 18:22 HST</div>
+    <div class="date">Updated Thu 22 Oct 2026 · 18:37 HST</div>
   </header>
 
   <div>
@@ -95,17 +95,56 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 
   <div class="cols">
     <section class="panel today" aria-labelledby="t-today">
-      <div class="kind">Measured today · 18:22 HST</div>
-      <div class="head"><h2 id="t-today">Today</h2></div>
-      
+      <div class="kind">The day in review</div>
+      <div class="head"><h2 id="t-today">Today · Thu 22 Oct</h2><span class="chip warn">Flat</span></div>
+      <p class="summary">A flat day (forecast flat). Thermals stayed flat all day. The upslope ran from about 08:00 to about 15:30. A low day for October: the base stayed down near 4,000 ft (normal 4,500–5,400 ft). The evening before, the page called it normal, a miss. Most of the day the shear line was crossing Kula Highway near Kamehameha Schools; furthest north about 09:57, crossing Kula Highway between Pukalani and Omaopio; furthest south about 16:57, crossing Kula Highway near Ulupalakua.</p><div style="font-weight:600;font-size:.9rem;margin:10px 0 2px">Cloudbase, derived</div><div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted,#6b6b66);margin:2px 0 4px">
+
+<span><span style="display:inline-block;width:16px;height:2px;background:#2a78d6;vertical-align:middle"></span> Derived (stations)</span></div>
+<div style="position:relative;width:100%;min-width:0;height:220px"><canvas id="basechart" role="img" aria-label="Derived cloudbase through the day"></canvas></div>
+<div class="sub">Derived from the stations every 15 minutes during the upslope.</div>
+<script>
+(function () {
+  var d = {"derived": [[540, 4290.0], [555, 4670.0], [570, 4650.0], [585, 4650.0], [600, 4720.0], [615, 4560.0], [630, 4580.0], [645, 4890.0], [660, 4630.0], [675, 4430.0], [690, 4200.0], [705, 4000.0], [720, 3960.0], [735, 3900.0], [750, 3980.0], [765, 4010.0], [780, 4010.0], [795, 3870.0], [810, 3800.0], [825, 3800.0], [840, 3810.0], [855, 3940.0], [870, 3740.0], [885, 3560.0], [900, 3470.0], [915, 4140.0], [930, 3900.0], [945, 3700.0], [960, 3470.0]], "forecast": [], "up": [540, 930], "nocu": null}, pt = function (a) { return {x: a[0], y: a[1]}; };
+  var dark = matchMedia('(prefers-color-scheme: dark)').matches, muted = '#898781', grid = dark ? '#2c2c2a' : '#e1e0d9';
+  var nocu = { id: 'nocu', beforeDatasetsDraw: function (c) { if (!d.nocu) return; var x = c.scales.x, a = c.chartArea, g = c.ctx,
+    x0 = x.getPixelForValue(d.nocu[0]), x1 = x.getPixelForValue(d.nocu[1]);
+    g.save(); g.fillStyle = 'rgba(137,135,129,0.10)'; g.fillRect(x0, a.top, x1 - x0, a.bottom - a.top);
+    g.fillStyle = muted; g.font = '11px sans-serif'; g.textAlign = 'center';
+    g.fillText('No cumulus', (x0 + x1) / 2, a.top + (a.bottom - a.top) / 2); g.restore(); } };
+  var band = { id: 'band', beforeDatasetsDraw: function (c) { if (!d.up) return; var x = c.scales.x, a = c.chartArea, g = c.ctx;
+    g.save(); g.fillStyle = 'rgba(137,135,129,0.14)';
+    g.fillRect(x.getPixelForValue(d.up[0]), a.top, x.getPixelForValue(d.up[1]) - x.getPixelForValue(d.up[0]), a.bottom - a.top); g.restore(); } };
+  var hm = function (m) { return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); };
+  var ys = d.derived.map(function (a) { return a[1]; }).concat(d.forecast.map(function (a) { return a[1]; }));
+  var xs = [540, 960];
+  new Chart(document.getElementById('basechart'), {
+    type: 'line',
+    data: { datasets: [
+      { label: 'Derived', data: d.derived.map(pt), borderColor: '#2a78d6', borderWidth: 2, pointRadius: 0, tension: 0.3 },
+      { label: 'Forecast', data: d.forecast.map(pt), borderColor: '#eb6834', borderWidth: 2, borderDash: [6, 4], pointRadius: 3, pointBackgroundColor: '#eb6834', tension: 0.3 }
+    ] },
+    options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'nearest', axis: 'x', intersect: false },
+      plugins: { legend: { display: false }, tooltip: { callbacks: {
+        title: function (i) { return hm(i[0].parsed.x); },
+        label: function (i) { return i.dataset.label + ': ' + Math.round(i.parsed.y).toLocaleString() + ' ft'; } } } },
+      scales: {
+        x: { type: 'linear', min: xs[0], max: xs[1], ticks: { stepSize: 60, color: muted, callback: function (v) { return hm(v); } }, grid: { display: false } },
+        y: { min: Math.min(3500, Math.floor(Math.min.apply(null, ys) / 500) * 500),
+              max: Math.max(7000, Math.ceil(Math.max.apply(null, ys) / 500) * 500),
+              ticks: { stepSize: 500, color: muted, callback: function (v) { return v.toLocaleString(); } }, grid: { color: grid } }
+      } },
+    plugins: [nocu]
+  });
+})();
+</script>
       <dl>
-        <dt>Thermals</dt><dd>Unavailable<div class="sub">Kula Ag's readings did not come through this update</div></dd>
-        <dt>Derived<br>Cloudbase</dt><dd><span class="num">3,500–5,300 ft</span><div class="sub">Stations disagree; middle about 4,300 ft (11 stations, 03:20)</div></dd>
-        <dt>Sun</dt><dd>Unavailable</dd>
-        <dt>Shear line</dt><dd>No trade line (trades absent) (forecast)<div class="sub">Trades S (191°). Measured once the upslope sets in</div></dd>
+        <dt>Thermals</dt><dd><strong>Flat</strong> for the day, 10:00–14:00<div class="sub">Kula Ag's measured air through the NAM sounding (thermal.py); forecast was Flat</div></dd>
         
-        <dt>Upslope</dt><dd>No clear upslope today</dd>
-        <dt>Wind</dt><dd><span class="num">4 mph</span>, gusts to 9<div class="sub">Lower elevations, 10 stations, last hour</div></dd>
+        
+        <dt>Shear line</dt><dd>Crossing Kula Highway near Kamehameha Schools<div class="sub">Most of the day, 36 updates. Furthest south about 16:57: Crossing Kula Highway near Ulupalakua</div></dd>
+        
+        <dt>Upslope</dt><dd><span class="num">08:00</span> to about <span class="num">15:30</span></dd>
+        <dt>Wind</dt><dd><span class="num">3 mph</span>, gusts to 10<div class="sub">Lower elevations, during the upslope</div></dd>
       </dl>
     </section>
     <section class="panel tomorrow" aria-labelledby="t-tomorrow">
@@ -122,7 +161,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
   </div>
 
   <section class="block" aria-labelledby="t-ladder">
-    <h2 id="t-ladder">Sunlight up the slope, as of 17:45</h2>
+    <h2 id="t-ladder">Sunlight up the slope, as of 18:15</h2>
     <p>Share of clear-sky sunlight measured at each station over the last 60 minutes of readings. Stations under cloud read low; stations above its top read full sun. Late in the day the sun is low in the west, so a station under the deck can read full sun coming in under the deck's edge.</p>
     <div class="rows"><p>Unavailable.</p></div>
   </section>
@@ -237,7 +276,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 })();
 </script>
 <style>.stn{font:600 11px/1.2 var(--body);padding:1px 4px;background:rgba(255,255,255,.85);border:0;box-shadow:none;color:#17242f}.stn:before{display:none}</style>
-<!-- build problems: HCDP observations, using api.weather.gov: ConnectTimeout: HTTPSConnectionPool(host='api.hcdp.ikewai.org', port=443): Max retries exceeded with url: /mesonet/db/measurements?location=hawaii&station_ids=0115%2C0118%2C0144%2C0116%2C0119%2C0145%2C0151%2C0152%2C0153%2C0143&var_ids=Tair_1_Avg%2CRH_1_Avg%2CWS_1_Avg%2CWDrs_1_Avg%2CWS_1_Max&start_date=2026-10-22T00%3A00%3A00-10%3A00&row_mode=json&limit=100000 (Caused by ConnectTimeoutError(<HTTPSConnection(host='api.hcdp.ikewai.org', port=443) at 0x77051e4e99a0), 'Connection to api.hcdp.ikewai.org timed out. (connect timeout=20)')); Mesonet sun: ConnectTimeout: HTTPSConnectionPool(host='api.hcdp.ikewai.org', port=443): Max retries exceeded with url: /mesonet/db/measurements?location=hawaii&station_ids=0115%2C0118%2C0144%2C0116%2C0119%2C0145%2C0151%2C0152%2C0153&var_ids=SWin_1_Avg&start_date=2026-10-22T16%3A42%3A00-10%3A00&end_date=2026-10-22T18%3A22%3A00-10%3A00&row_mode=json&limit=100000 (Caused by ConnectTimeoutError(<HTTPSConnection(host='api.hcdp.ikewai.org', port=443) at 0x77050cce9160), 'Connection to api.hcdp.ikewai.org timed out. (connect timeout=20)')); sun ladder from 16:45 reused; sun_trend: ConnectTimeout: HTTPSConnectionPool(host='api.hcdp.ikewai.org', port=443): Max retries exceeded with url: /mesonet/db/measurements?location=hawaii&station_ids=0115%2C0118%2C0144%2C0116%2C0119%2C0145%2C0151%2C0152%2C0153&var_ids=SWin_1_Avg&start_date=2026-10-22T16%3A52%3A00-10%3A00&end_date=2026-10-22T18%3A22%3A00-10%3A00&row_mode=json&limit=100000 (Caused by ConnectTimeoutError(<HTTPSConnection(host='api.hcdp.ikewai.org', port=443) at 0x77050ccd31a0), 'Connection to api.hcdp.ikewai.org timed out. (connect timeout=20)')); summit_spill: ConnectTimeout: HTTPSConnectionPool(host='api.hcdp.ikewai.org', port=443): Max retries exceeded with url: /mesonet/db/measurements?location=hawaii&station_ids=0153&var_ids=RH_1_Avg%2CWDrs_1_Avg%2CWS_1_Avg&start_date=2026-10-22T07%3A00%3A00-10%3A00&end_date=2026-10-22T08%3A59%3A59-10%3A00&row_mode=json&limit=5000 (Caused by ConnectTimeoutError(<HTTPSConnection(host='api.hcdp.ikewai.org', port=443) at 0x77050ca728a0), 'Connection to api.hcdp.ikewai.org timed out. (connect timeout=20)')); day_review: UnboundLocalError: cannot access local variable 'derived' where it is not associated with a value -->
+<!-- build problems: none -->
 <script>
 /* Catch up with a new build within ~2 minutes (Sam, 2026-10-17: "the page
    does not seem to autoupdate"). stations.json's "made" is the build time;
@@ -245,7 +284,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
    browser's 10-minute cached copy is bypassed. The 15-minute refresh stays
    as a backstop. */
 (function () {
-  var built = "2026-10-22T18:22";
+  var built = "2026-10-22T18:37";
   function check() {
     fetch("stations.json?" + Date.now(), {cache: "no-store"})
       .then(function (r) { return r.json(); })
