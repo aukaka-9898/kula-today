@@ -1,15 +1,15 @@
 {
- "made": "2026-10-23 23:27",
+ "made": "2026-10-24 03:58",
  "flags": [
   "Shear line: a stale station sat out of 56% of updates over the last week (the rule under review)."
  ],
  "stats": {
-  "base_days": 29,
-  "base_mean": 478,
-  "base_raw_mean": 97,
-  "base_sd": 782,
-  "base_morning": 620,
-  "base_afternoon": 367,
+  "base_days": 28,
+  "base_mean": 504,
+  "base_raw_mean": 124,
+  "base_sd": 780,
+  "base_morning": 635,
+  "base_afternoon": 405,
   "alert_days": 2,
   "alert_hits": 0,
   "intrusions_missed": 0,
@@ -32,8 +32,8 @@
      1
     ]
    },
-   "camera_days": 0,
-   "derived_minus_camera": null,
+   "camera_days": 1,
+   "derived_minus_camera": -860.0,
    "pilots": false
   }
  }
