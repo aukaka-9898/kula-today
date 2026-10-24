@@ -1,7 +1,6 @@
 {
- "made": "2026-10-23 18:29",
+ "made": "2026-10-23 18:32",
  "flags": [
-  "Forecast base has run +478 ft against the derived base over 29 days (no correction).",
   "Shear line: a stale station sat out of 56% of updates over the last week (the rule under review)."
  ],
  "stats": {
@@ -17,6 +16,25 @@
   "line_dropped_share_7d": 0.56,
   "cam_puunianiau_cloud_min_days": 7,
   "cam_redhill_cloud_min_days": 7,
-  "station_days": 37
+  "station_days": 37,
+  "accuracy": {
+   "base_n": 0,
+   "base_within": 0,
+   "base_typical": null,
+   "base_bias": null,
+   "thermal_n": 4,
+   "thermal_right": 0,
+   "thermal_within_one": 3,
+   "thermal_bias": 1.25,
+   "rules": {
+    "B2": [
+     1,
+     1
+    ]
+   },
+   "camera_days": 0,
+   "derived_minus_camera": null,
+   "pilots": false
+  }
  }
 }
