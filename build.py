@@ -1442,11 +1442,40 @@ def trades_north_of(lad: pd.DataFrame, lat: float):
     return float(cv.mean_direction(north.wind_dir)), ", ".join(north.name)
 
 
+# The sanity check's trades: Molokai airport (Sam, 10-23: "Kahului is the
+# throat of the venturi so tends north. I'm thinking PHMK might be a good
+# proxy" ... "Use PHMK as a sanity check"). Upwind of Maui, in the open; at
+# 17:00 on 10-23 it read 050 with Lanai 040 and Paia 52 while Kahului and its
+# harbor read 017-020. The METAR from aviationweather.gov: api.weather.gov
+# serves airport obs with the wind blanked (10-23).
+TRADE_CHECK = "PHMK"
+METAR_URL = "https://aviationweather.gov/api/data/metar"
+TRADE_CHECK_MAX_AGE = timedelta(minutes=90)
+
+
+@functools.cache
+def molokai_trades():
+    """PHMK's wind direction if a recent report has a steady wind, else None."""
+    got = requests.get(METAR_URL, params={"ids": TRADE_CHECK, "format": "json"},
+                       headers=cv.HEAD, timeout=20).json()
+    if not got:
+        return None
+    m = got[0]
+    when = datetime.fromtimestamp(m["obsTime"], timezone.utc)
+    if (datetime.now(timezone.utc) - when > TRADE_CHECK_MAX_AGE
+            or not isinstance(m.get("wdir"), (int, float)) or not m.get("wspd")):
+        return None                                  # old, calm or variable
+    return float(m["wdir"])
+
+
 def line_sane(got: dict, lat: float, lad: pd.DataFrame) -> dict:
-    """No call south of Kula Ag unless the trades north of it come from the north."""
+    """No call south of Kula Ag unless the trades come from the north."""
     if lat >= KULA_AG_LAT:
         return got
-    d, where = trades_north_of(lad, lat)
+    d = safely(molokai_trades)
+    where = "Molokai"
+    if d is None:
+        d, where = trades_north_of(lad, lat)
     if d is not None and d <= LINE_SOUTH_MAX_DIR:
         return got
     seen = (f"the trades at {where} are from {d:.0f}°" if d is not None
