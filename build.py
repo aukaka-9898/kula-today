@@ -2352,6 +2352,102 @@ def log_call(day, base: str, thermal: str, now: datetime, base_ft=None) -> None:
     CALLS_LOG.write_text(json.dumps({k: log[k] for k in keep}, indent=0), encoding="utf-8")
 
 
+# Accuracy (Sam, 2026-10-23: "develop an accuracy number for base and
+# thermal. If pilot thermal reports are ever implemented they will govern").
+# The evening call against the day. Truth, best first: pilot reports
+# (docs/pilot_reports.csv: date, base_ft, thermal -- any day there overrides),
+# then for the base the Kekoa camera (3+ readings 11:00-14:00; within ~120 ft of
+# Sam's blind calls where derived ran 730 low, 10-23), then derived.
+PILOT_REPORTS = HERE / "docs" / "pilot_reports.csv"
+CAMERA_BASE_DAYS = 3
+ACCURACY_DAYS = 30
+BASE_WITHIN_FT = 500
+THERMAL_ORDER = {"Flat": 0, "Light": 1, "Moderate": 2, "Strong": 3, "Boom!": 3}
+
+
+def day_truth(day: str) -> dict:
+    """{'base': ft, 'base_from': ..., 'thermal': word, 'thermal_from': ...} for a past day."""
+    out = {}
+    try:
+        p = pd.read_csv(PILOT_REPORTS, dtype={"date": str})
+        p = p[p.date == day]
+        if "base_ft" in p and p.base_ft.notna().any():
+            out["base"], out["base_from"] = float(p.base_ft.mean()), "pilots"
+        if "thermal" in p and p.thermal.notna().any():
+            out["thermal"], out["thermal_from"] = p.thermal.dropna().mode().iloc[0], "pilots"
+    except (OSError, ValueError):
+        pass
+    if "base" not in out:
+        try:
+            c = pd.read_csv(CAMERA_BASE_LOG, dtype={"date": str})
+            v = c[(c.date == day) & c.time.between("11:00", "14:00")].camera_ft.dropna()
+            if len(v) >= CAMERA_BASE_DAYS:
+                out["base"], out["base_from"] = float(v.mean()), "camera"
+        except (OSError, ValueError):
+            pass
+    if "base" not in out:
+        try:
+            h = pd.read_csv(SCORE_HOURS, dtype={"date": str})
+            v = h[(h.date == day) & h.hour.between(11, 14)].derived.dropna()
+            if len(v) >= 2:
+                out["base"], out["base_from"] = float(v.mean()), "derived"
+        except (OSError, ValueError):
+            pass
+    if "thermal" not in out:
+        try:
+            d = pd.read_csv(SCORE_DAYS, dtype={"date": str, "word": str}, keep_default_na=False)
+            w = d[d.date == day].word
+            if len(w) and w.iloc[0]:
+                out["thermal"], out["thermal_from"] = w.iloc[0], "measured"
+        except (OSError, ValueError):
+            pass
+    return out
+
+
+def accuracy(now: datetime) -> dict:
+    """Over the last ACCURACY_DAYS days before today: base (n, within, typical
+    miss) and thermal (n, right, within one)."""
+    try:
+        calls = json.loads(CALLS_LOG.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+    first = f"{now.date() - timedelta(days=ACCURACY_DAYS)}"
+    base, therm, src = [], [], set()
+    for day, c in calls.items():
+        if not (first <= day < f"{now.date()}"):
+            continue
+        t = day_truth(day)
+        if c.get("ft") and "base" in t:
+            base.append(abs(c["ft"] - t["base"]))
+            src.add(t["base_from"])
+        f, m = THERMAL_ORDER.get(c.get("thermal")), THERMAL_ORDER.get(t.get("thermal"))
+        if f is not None and m is not None:
+            therm.append(abs(f - m))
+            src.add(t["thermal_from"])
+    return {"base_n": len(base), "base_within": sum(e <= BASE_WITHIN_FT for e in base),
+            "base_typical": round(float(np.mean(base)), -1) if base else None,
+            "thermal_n": len(therm), "thermal_right": sum(e == 0 for e in therm),
+            "thermal_within_one": sum(e <= 1 for e in therm), "pilots": "pilots" in src}
+
+
+def accuracy_line(now: datetime) -> str:
+    a = accuracy(now)
+    if not a or not (a["base_n"] or a["thermal_n"]):
+        return ""
+    parts = []
+    if a["base_n"]:
+        parts.append(f"cloudbase within {BASE_WITHIN_FT} ft on {a['base_within']} of {a['base_n']} days "
+                     f"(typical miss {a['base_typical']:,.0f} ft)")
+    else:
+        parts.append("cloudbase scored from 24 October (tested on 1,000 past days: within 500 ft on 2 days in 3)")
+    if a["thermal_n"]:
+        parts.append(f"thermals right on {a['thermal_right']} of {a['thermal_n']}, "
+                     f"within one step on {a['thermal_within_one']}")
+    src = "pilot reports where there are any, otherwise " if a["pilots"] else ""
+    return (f'<div class="sub">Accuracy, last {ACCURACY_DAYS} days, the evening call against the day: '
+            f"{'; '.join(parts)}. Scored against {src}the camera and stations.</div>")
+
+
 def rules_line() -> str:
     """A quiet line saying the rules are still being checked (monthly.py)."""
     st = rules.status()
@@ -3654,7 +3750,7 @@ def build() -> str:
         <dt>Sun</dt><dd><span class="num">{pct(r['sun'])}</span> of clear sky, 10:00–14:00 (GFS)<div class="sub">The model can't see the slope's own cumulus: when it says 90% or more, Kula has measured about 80%. Good flying days measure about 80%, overcast about 50%, socked in 20%.</div></dd>
         <dt>Shear line</dt><dd>{esc(line_t)}<div class="sub">Trades {esc(wind_t)}</div>{line_alert}</dd>
       </dl>
-      <div class="sub">Forecast as of {fc_made.astimezone(HST):%H:%M} HST</div>{rules_line()}"""
+      <div class="sub">Forecast as of {fc_made.astimezone(HST):%H:%M} HST</div>{rules_line()}{safely(accuracy_line, now) or ""}"""
         if tom > now.date():
             safely(log_call, tom, ("Low" if cat_head.startswith("Probably a low") else
                                    "May be high" if cat_head.startswith("May be a high") else
