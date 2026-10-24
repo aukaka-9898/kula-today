@@ -2361,7 +2361,9 @@ def log_call(day, base: str, thermal: str, now: datetime, base_ft=None) -> None:
 PILOT_REPORTS = HERE / "docs" / "pilot_reports.csv"
 ACC_MIN_DAYS = 10          # scored days before the review suggests anything
 ACC_MIN_RULE = 8           # firings before a rule's stated chance is questioned
-ACC_CAMERA_DAYS = 14       # camera days before suggesting the derived correction
+ACC_CAMERA_DAYS = 14       # camera days before suggesting the derived correction (a first fit;
+                           # refit each season)
+ACC_SEASONAL_FROM = datetime(2026, 12, 1).date()   # weekly digest until then, seasonal after
 RULE_SAID = {"B1": 0.80, "B2": 0.65, "B3": 0.50, "B4": 0.45}
 CAMERA_BASE_DAYS = 3
 ACCURACY_DAYS = 30
@@ -2712,9 +2714,21 @@ def review_summary(now: datetime) -> None:
                          "Suggest: restate its chance, or check it in the monthly rule run.")
     if a.get("camera_days", 0) >= ACC_CAMERA_DAYS:
         flags.append(f"Derived vs camera: {a['camera_days']} days with camera readings; derived ran "
-                     f"{a['derived_minus_camera']:+,.0f} ft against the camera at midday. Suggest: fit the "
-                     "derived correction (option 2) now.")
-    if now.weekday() == 0 and (a.get("base_n") or a.get("thermal_n")):
+                     f"{a['derived_minus_camera']:+,.0f} ft against the camera at midday. Suggest: fit a first "
+                     "derived correction (option 2), to be refitted each season.")
+    # Weekly only while the page is young (Sam, 10-23: weekly, two-weekly and
+    # monthly "of questionable value until seasonal"); from December the review
+    # is seasonal: the first week of Dec, Mar, Jun and Sep, the last 90 days.
+    s90 = safely(accuracy, now, 90) or {} if now.month in (3, 6, 9, 12) and now.day <= 7 else {}
+    if now.date() >= ACC_SEASONAL_FROM and (s90.get("base_n") or s90.get("thermal_n")):
+        flags.append("Seasonal accuracy, last 90 days: "
+                     + (f"cloudbase within {BASE_WITHIN_FT} ft on {s90['base_within']} of {s90['base_n']} days, "
+                        f"typical miss {s90['base_typical']:,.0f} ft, bias {s90['base_bias']:+,.0f}; " if s90.get("base_n") else "")
+                     + (f"thermals right on {s90['thermal_right']} of {s90['thermal_n']}, bias "
+                        f"{s90['thermal_bias']:+.1f} steps" if s90.get("thermal_n") else "")
+                     + ". Suggest for the new season: the forecast-air warming, the blend's month normals, "
+                       "the derived correction and the rules' stated chances.")
+    if now.date() < ACC_SEASONAL_FROM and now.weekday() == 0 and (a.get("base_n") or a.get("thermal_n")):
         flags.append("Weekly accuracy, last 30 days: "
                      + (f"cloudbase within {BASE_WITHIN_FT} ft on {a['base_within']} of {a['base_n']} days, "
                         f"typical miss {a['base_typical']:,.0f} ft; " if a.get("base_n") else "")
