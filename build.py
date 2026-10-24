@@ -1166,7 +1166,9 @@ RIDGE_BEHIND = 0.10           # share of columns with cloud behind the crest (P1
 # option 2" -- derived ran 730 ft under his blind calls on a high day while
 # the camera was within ~120 ft). Numbers only, nothing on the page, no images
 # kept: the record a derived correction will be fitted on once there are a
-# couple of weeks of varied days. tools/cambase.py reads the frame.
+# couple of weeks of varied days. tools/cambase.py reads the frame: the
+# cloud edge, then under a grey sky the slope against the clear-day picture
+# (tools/kekoa_clearday.jpg; Sam: "keep a clear day image").
 CAMERA_BASE_LOG = HERE / "docs" / "camera_base.csv"
 RIDGE_WINDOW_MIN = 50         # the check runs this long (Sam, 2026-10-22: "use the 50
                               # minute window" -- moves with sunrise, so winter keeps one)
@@ -1265,9 +1267,9 @@ def log_camera_base(day: str, hm: str, jpeg: bytes) -> None:
     import io, csv
     heights = _cam_heights()
     import cambase
-    rgb = np.asarray(Image.open(io.BytesIO(jpeg)).convert("RGB"), dtype=float)
-    base, spread, top = cambase.edge_base(rgb, heights)
-    why = "" if base is not None else "slope clear" if top >= 4 else "no edge"
+    im = Image.open(io.BytesIO(jpeg))
+    rgb = np.asarray(im.convert("RGB"), dtype=float)
+    base, spread, why = cambase.camera_base(rgb, heights, np.asarray(im.convert("L"), float))
     new = not CAMERA_BASE_LOG.exists()
     with CAMERA_BASE_LOG.open("a", newline="", encoding="utf-8") as f:
         w = csv.writer(f)

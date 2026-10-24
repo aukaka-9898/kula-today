@@ -139,8 +139,7 @@ def camera_base(f: Path, heights: dict):
     if cambase.sky_blue(rgb) > OVERCAST_BLUE:
         LAST_REASON = "bright"
         return None, None
-    import slopevis
-    v, _ = slopevis.base_bright(f, heights, thr=30)
+    v, _ = cambase.bright_base(np.asarray(Image.open(f).convert("L"), float), heights, thr=30)
     return (v if isinstance(v, float) else None), None
 
 

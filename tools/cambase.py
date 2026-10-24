@@ -60,3 +60,78 @@ def edge_base(rgb, heights: dict):
         if spread <= MAX_SPREAD_FT:
             return round(float(np.median(hs)), -1), round(spread, -1), top_edges
     return None, None, top_edges
+
+
+# The grey-sky backup (Sam, 2026-10-19: "The scale is the slope"): where the
+# slope stops being visible against the FAA clear-day picture
+# (kekoa_clearday.jpg, kept in the repo for this). Row by row up each column, a
+# row counts as covered when it is brighter than the clear-day slope by more
+# than the frame's own lowest rows are (lighting) plus thr. Only under a grey
+# sky: on bright days the sunlit slope reads brighter than the reference and
+# the backup took it for cloud (4,100-4,700 ft all of 10-20, a high day). It
+# reads the grey falling deck (10-19 15:20-15:55) the edge test calls sky,
+# ~250-350 ft high there.
+CLEARDAY = HERE / "kekoa_clearday.jpg"
+_REF = None
+
+
+def _ref():
+    global _REF
+    if _REF is None:
+        from PIL import Image
+        _REF = np.asarray(Image.open(CLEARDAY).convert("L"), float)
+    return _REF
+
+
+def clear_skyline(x: int) -> int:
+    """First row (from the top of the window) where the clear-day slope begins."""
+    col = _ref()[560:720, x - 4:x + 4].mean(axis=1)
+    sky = col[:15].mean()
+    for i, v in enumerate(col):
+        if v < sky - 25:
+            return 560 + i
+    return 600
+
+
+def bright_base(gray, heights: dict, thr=30, run=3, base_rows=15):
+    """(base ft, "below" or "above" or None, per-column results) from a
+    grayscale frame. Scan bottom up."""
+    ref = _ref()
+    res = []
+    for x in COLS:
+        top, bottom = clear_skyline(x) + 2, ROWS[1]
+        ex = {r: gray[r - 1:r + 2, x - 6:x + 7].mean() - ref[r - 1:r + 2, x - 6:x + 7].mean()
+              for r in range(top, bottom)}
+        rows = list(range(bottom - 1, top - 1, -1))
+        lift = float(np.median([ex[r] for r in rows[:base_rows]]))
+        cov = {r: ex[r] - lift > thr for r in rows}
+        if sum(cov[r] for r in rows[:6]) >= 4:
+            res.append("below"); continue
+        hit = next((rows[i] for i in range(len(rows) - run) if all(cov[rows[i + k]] for k in range(run))), None)
+        res.append("above" if hit is None else (heights[x].get(hit) or "above"))
+    nums = [v for v in res if isinstance(v, (int, float))]
+    if res.count("below") >= 4:
+        return "below", res
+    if res.count("above") >= 4:
+        return "above", res
+    if len(nums) < 3:
+        return None, res
+    spread = float(np.percentile(nums, 75) - np.percentile(nums, 25))
+    return (round(float(np.median(nums)), -1) if spread <= 600 else None), res
+
+
+def camera_base(rgb, heights: dict, gray=None):
+    """(base ft or None, spread ft or None, why): the edge reading, then the
+    grey-sky backup. why: "" (edge), "grey backup", "slope clear", "no edge",
+    "bright" (no edge, blue sky: backup skipped)."""
+    base, spread, top = edge_base(rgb, heights)
+    if base is not None:
+        return base, spread, ""
+    if top >= 4:
+        return None, None, "slope clear"
+    if sky_blue(rgb) > OVERCAST_BLUE:
+        return None, None, "bright"
+    if gray is None:                     # PIL's "L" weights, as the backup was tuned
+        gray = rgb @ np.array([0.299, 0.587, 0.114])
+    v, _ = bright_base(gray, heights, thr=30)
+    return (v, None, "grey backup") if isinstance(v, float) else (None, None, "no edge")
