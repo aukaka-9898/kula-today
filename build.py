@@ -278,6 +278,10 @@ def log_dropouts(now: datetime) -> None:
     rows = json.loads(STATIONS_FILE.read_text(encoding="utf-8"))["stations"]
     log["builds"] += 1
     log["hcdp_fail"] += "hcdp" in OUTAGES
+    # The fresh-machine re-runs (D, 10-24): how many, and how many got through.
+    if os.environ.get("KULA_RETRY") == "true":
+        log["retries"] = log.get("retries", 0) + 1
+        log["retry_ok"] = log.get("retry_ok", 0) + ("hcdp" not in OUTAGES)
     log["names"] = sorted(set(log["names"]) | {r["name"] for r in rows})
     for r in rows:
         if r.get("at"):
@@ -328,6 +332,8 @@ def dropout_sentence(now: datetime) -> str | None:
     parts += [f"{n} stopped at {t}" for t, n in stopped]
     if log.get("hcdp_fail"):
         parts.append(f"the Mesonet could not be reached on {log['hcdp_fail']} of {log['builds']} updates")
+    if log.get("retries"):
+        parts.append(f"a re-run on a fresh machine got through {log['retry_ok']} of {log['retries']} times")
     return ("Data gaps: " + "; ".join(parts) + ".") if parts else None
 
 
