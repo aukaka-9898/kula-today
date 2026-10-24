@@ -89,11 +89,9 @@ def make(day: str | None = None, n: int = 16) -> None:
     print(f"{len(key)} frames of {len(frames)} -> http://localhost:8767/{day}_camtest/test.html")
 
 
-COLS = (870, 890, 910, 930, 950, 970, 990)      # columns read across Sam's box
-MAX_SPREAD_FT = 600                               # wider = cloud in front of the slope
-
-
-ROWS = (590, 706)          # read window; extended down (Sam, 2026-10-19) to ~2,950 ft of slope
+# The edge reading itself lives in cambase.py, shared with the page build.
+from cambase import COLS, ROWS, MAX_SPREAD_FT, SKYLINE_PX, OVERCAST_BLUE  # noqa: E402
+import cambase  # noqa: E402
 # Below the pasture top the geometry reads high: Sam's pasture bottom (3,800 ft,
 # pixel ~1005, 677) comes out 4,050. Heights under 4,600 are stretched so the
 # two pasture landmarks land right; above 4,600 they already match Sam's calls.
@@ -117,17 +115,6 @@ def column_heights(tilt: float) -> dict:
 # Why a frame gave no base: "top" when the edge it found was the skyline
 # (no cloud on the visible slope), "bright" when the backup was skipped.
 LAST_REASON = None
-SKYLINE_PX = 4        # an edge this close under the skyline is the ridge, not a base
-OVERCAST_BLUE = 20    # sky blue-minus-red at or below this: a grey, overcast sky
-
-
-def _skyline(heights: dict, x: int) -> int:
-    return min(r for r, v in heights[x].items() if v is not None)
-
-
-def _sky_blue(a_rgb) -> float:
-    s = a_rgb[80:300, 200:1700]
-    return float((s[..., 2] - s[..., 0]).mean())
 
 
 def camera_base(f: Path, heights: dict):
@@ -139,28 +126,9 @@ def camera_base(f: Path, heights: dict):
     global LAST_REASON
     LAST_REASON = None
     rgb = np.asarray(Image.open(f).convert("RGB"), dtype=float)
-    a = rgb.mean(axis=2)
-    hs, top_edges = [], 0
-    for x in COLS:
-        col = a[ROWS[0]:ROWS[1], x - 6:x + 6].mean(axis=1)
-        sm = np.convolve(col, np.ones(3) / 3, mode="same")
-        top, bot = sm[:10].mean(), sm[-20:].mean()       # slope reference: the lowest rows
-        if top < 135 or top - bot < 40:          # blue sky above, or no clear edge
-            continue
-        thr = (top + bot) / 2
-        i = next((k for k in range(5, len(sm)) if sm[k] < thr <= sm[k - 1]), None)
-        # The skyline (Sam, 2026-10-20: "there is no way it was 6,900" -- the
-        # base was well below the ridge; with the visible slope clear the only
-        # edge left was bright sky against the dark ridge).
-        if i is not None and ROWS[0] + i <= _skyline(heights, x) + SKYLINE_PX:
-            top_edges += 1
-            continue
-        if i is not None and heights[x].get(ROWS[0] + i) is not None:
-            hs.append(heights[x][ROWS[0] + i])
-    if len(hs) >= 4:
-        spread = float(np.percentile(hs, 75) - np.percentile(hs, 25))
-        if spread <= MAX_SPREAD_FT:
-            return round(float(np.median(hs)), -1), round(spread, -1)
+    base, spread, top_edges = cambase.edge_base(rgb, heights)
+    if base is not None:
+        return base, spread
     if top_edges >= 4:
         LAST_REASON = "top"
         return None, None
@@ -168,7 +136,7 @@ def camera_base(f: Path, heights: dict):
     # under a grey sky. On bright days the sunlit slope reads brighter than
     # the clear-day picture and the backup took it for cloud (4,100-4,700 ft
     # all of 10-20, a high day).
-    if _sky_blue(rgb) > OVERCAST_BLUE:
+    if cambase.sky_blue(rgb) > OVERCAST_BLUE:
         LAST_REASON = "bright"
         return None, None
     import slopevis

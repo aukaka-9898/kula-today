@@ -53,6 +53,30 @@ def _capture(site: int, cam_id: int, archive: Path) -> int:
     return new
 
 
+# Keep a few days only (Sam, 2026-10-23: "lets not store a bunch of images.
+# Keep a few days at most for blind testing"). Dated archive folders older
+# than this go; so do the pictures in old test folders -- their keys and
+# answers stay, and the scores are in docs/camera_tests.csv.
+KEEP_DAYS = 4
+
+
+def prune(today=None) -> int:
+    import re, shutil
+    cut = f"{(today or datetime.now(HST).date()) - timedelta(days=KEEP_DAYS - 1)}"
+    gone = 0
+    for _, _, folder in CAMS:
+        for d in (ARCHIVE.parent / folder).glob("????-??-??"):
+            if d.is_dir() and re.fullmatch(r"\d{4}-\d\d-\d\d", d.name) and d.name < cut:
+                shutil.rmtree(d)
+                gone += 1
+    for d in ARCHIVE.parent.glob("????-??-??_*"):
+        if d.is_dir() and d.name[:10] < cut:
+            for f in d.glob("*.jpg"):
+                f.unlink()
+                gone += 1
+    return gone
+
+
 if __name__ == "__main__":
     n = capture()
-    print(f"{datetime.now(HST):%Y-%m-%d %H:%M} saved {n} new frames")
+    print(f"{datetime.now(HST):%Y-%m-%d %H:%M} saved {n} new frames, pruned {prune()}")

@@ -1162,6 +1162,12 @@ RIDGE_CLOUD = 0.06            # share of the band that is cloud (first clouds); 
                               # Sam's first-cumulus calls within 8-17 min on 10-20/21/22 (0.05 took
                               # 10-20's altocumulus at 09:40; 0.10 ran up to 27 min late)
 RIDGE_BEHIND = 0.10           # share of columns with cloud behind the crest (P1)
+# The camera's own base, logged beside derived (Sam, 2026-10-23: "implement
+# option 2" -- derived ran 730 ft under his blind calls on a high day while
+# the camera was within ~120 ft). Numbers only, nothing on the page, no images
+# kept: the record a derived correction will be fitted on once there are a
+# couple of weeks of varied days. tools/cambase.py reads the frame.
+CAMERA_BASE_LOG = HERE / "docs" / "camera_base.csv"
 RIDGE_WINDOW_MIN = 50         # the check runs this long (Sam, 2026-10-22: "use the 50
                               # minute window" -- moves with sunrise, so winter keeps one)
 
@@ -1234,6 +1240,8 @@ def log_ridge(now: datetime) -> None:
         r.raise_for_status()
         log["points"][hm] = round(ridge_fraction(r.content), 3)
         log["behind"][hm] = round(ridge_behind(r.content), 3)
+        if "07:00" <= hm <= "17:30":
+            safely(log_camera_base, today, hm, r.content)
     start = morning_start(now.date())
     pts = sorted((k, v) for k, v in log["points"].items() if k >= start)
     first = next((a[0] for a, b in zip(pts, pts[1:]) if a[1] >= RIDGE_CLOUD and b[1] >= RIDGE_CLOUD), None)
@@ -1243,6 +1251,47 @@ def log_ridge(now: datetime) -> None:
     log["morning_window"] = [start, end]
     log["morning_ridge_cloud"] = (any(v >= RIDGE_BEHIND for v in early.values()) if early else None)
     RIDGE_FILE.write_text(json.dumps(log, sort_keys=True), encoding="utf-8")
+
+
+@functools.cache
+def _cam_heights():
+    sys.path.insert(0, str(HERE / "tools"))
+    import cambase
+    return cambase.load_heights()
+
+
+def log_camera_base(day: str, hm: str, jpeg: bytes) -> None:
+    from PIL import Image
+    import io, csv
+    heights = _cam_heights()
+    import cambase
+    rgb = np.asarray(Image.open(io.BytesIO(jpeg)).convert("RGB"), dtype=float)
+    base, spread, top = cambase.edge_base(rgb, heights)
+    why = "" if base is not None else "slope clear" if top >= 4 else "no edge"
+    new = not CAMERA_BASE_LOG.exists()
+    with CAMERA_BASE_LOG.open("a", newline="", encoding="utf-8") as f:
+        w = csv.writer(f)
+        if new:
+            w.writerow(["date", "time", "camera_ft", "spread_ft", "why", "derived_ft"])
+        w.writerow([day, hm, base if base is not None else "", spread if spread is not None else "", why, ""])
+
+
+def fill_camera_derived(now: datetime) -> None:
+    """Today's camera rows get the chart's derived point within 8 minutes."""
+    if not CAMERA_BASE_LOG.exists():
+        return
+    c = pd.read_csv(CAMERA_BASE_LOG, dtype=str, keep_default_na=False)
+    dl = json.loads(DERIVED_LOG.read_text(encoding="utf-8"))
+    if dl.get("date") != f"{now:%Y-%m-%d}" or not dl.get("points"):
+        return
+    pts = {int(k): v[0] for k, v in dl["points"].items()}
+    todo = (c.date == dl["date"]) & (c.derived_ft == "")
+    for i in c.index[todo]:
+        m = int(c.at[i, "time"][:2]) * 60 + int(c.at[i, "time"][3:])
+        k = min(pts, key=lambda p: abs(p - m))
+        if abs(k - m) <= 8:
+            c.at[i, "derived_ft"] = f"{pts[k]:.0f}"
+    c.to_csv(CAMERA_BASE_LOG, index=False)
 
 
 def _ladder_readings(sid: str, since: datetime) -> pd.DataFrame:
@@ -3221,6 +3270,7 @@ def build() -> str:
     # when they are clearly visible"): the camera called first cloud within
     # 8-17 min of Sam on 10-20/21/22; the stations' sky readings can lag.
     safely(log_ridge, now)
+    safely(fill_camera_derived, now)
     if cu_clear and safely(camera_sees_cloud, now):
         cu_clear = False
     if cu:
