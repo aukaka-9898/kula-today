@@ -1448,38 +1448,43 @@ def trades_north_of(lad: pd.DataFrame, lat: float):
     return float(cv.mean_direction(north.wind_dir)), ", ".join(north.name)
 
 
-# The sanity check's trades: Molokai airport (Sam, 10-23: "Kahului is the
-# throat of the venturi so tends north. I'm thinking PHMK might be a good
-# proxy" ... "Use PHMK as a sanity check"). Upwind of Maui, in the open; at
-# 17:00 on 10-23 it read 050 with Lanai 040 and Paia 52 while Kahului and its
-# harbor read 017-020. The METAR from aviationweather.gov: api.weather.gov
-# serves airport obs with the wind blanked (10-23).
-TRADE_CHECK = "PHMK"
-METAR_URL = "https://aviationweather.gov/api/data/metar"
+# The sanity check's trades: Honolua, the Mesonet station near Lipoa Point on
+# West Maui's windward coast (Sam, 10-23: "use Honolua instead of Molokai";
+# before that PHMK -- Kahului "is the throat of the venturi so tends north").
+# The HCDP Mesonet the page already reads, so it is up when api.weather.gov
+# is not. Speed-weighted mean of its last hour; None if stale or calm.
+TRADE_CHECK = ("0133", "Honolua")
 TRADE_CHECK_MAX_AGE = timedelta(minutes=90)
+TRADE_CHECK_CALM_MS = 0.5
 
 
 @functools.cache
-def molokai_trades():
-    """PHMK's wind direction if a recent report has a steady wind, else None."""
-    got = requests.get(METAR_URL, params={"ids": TRADE_CHECK, "format": "json"},
-                       headers=cv.HEAD, timeout=20).json()
-    if not got:
+def honolua_trades():
+    now = datetime.now(timezone.utc)
+    rows = _retrying(mesonet.get)("/mesonet/db/measurements", location="hawaii",
+                                  station_ids=TRADE_CHECK[0], var_ids="WDrs_1_Avg,WSrs_1_Avg",
+                                  start_date=f"{now - timedelta(hours=1):%Y-%m-%dT%H:%M:%SZ}",
+                                  row_mode="json", limit=1000)
+    d = pd.DataFrame([r for r in rows if r.get("value") is not None])
+    if d.empty:
         return None
-    m = got[0]
-    when = datetime.fromtimestamp(m["obsTime"], timezone.utc)
-    if (datetime.now(timezone.utc) - when > TRADE_CHECK_MAX_AGE
-            or not isinstance(m.get("wdir"), (int, float)) or not m.get("wspd")):
-        return None                                  # old, calm or variable
-    return float(m["wdir"])
+    w = d.pivot_table(index="timestamp", columns="variable", values="value", aggfunc="first").dropna()
+    if w.empty or now - pd.Timestamp(w.index.max()).to_pydatetime() > TRADE_CHECK_MAX_AGE:
+        return None
+    w = w.astype(float)
+    if w.WSrs_1_Avg.mean() < TRADE_CHECK_CALM_MS:
+        return None
+    rad = np.deg2rad(w.WDrs_1_Avg)
+    u, v = (w.WSrs_1_Avg * np.sin(rad)).sum(), (w.WSrs_1_Avg * np.cos(rad)).sum()
+    return float(np.rad2deg(np.arctan2(u, v)) % 360)
 
 
 def line_sane(got: dict, lat: float, lad: pd.DataFrame) -> dict:
     """No call south of Kula Ag unless the trades come from the north."""
     if lat >= KULA_AG_LAT:
         return got
-    d = safely(molokai_trades)
-    where = "Molokai"
+    d = safely(honolua_trades)
+    where = TRADE_CHECK[1]
     if d is None:
         d, where = trades_north_of(lad, lat)
     if d is not None and d <= LINE_SOUTH_MAX_DIR:
