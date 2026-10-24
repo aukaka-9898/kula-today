@@ -257,6 +257,29 @@ def log_dropouts(now: datetime) -> None:
     DROPOUT_LOG.write_text(json.dumps(log), encoding="utf-8")
 
 
+# A large badge on the live Today panel when the readings are thin (Sam,
+# 2026-10-24: "The page needs a large badge on the today page" -- the NWS
+# mesonet frozen since 10-22, the Mesonet unreachable on half the builds).
+# Shown when under BADGE_MIN_SHARE of the stations have a reading in the last
+# 90 min, or the Mesonet could not be reached this update.
+BADGE_MIN_SHARE = 0.8
+
+
+def data_badge() -> str:
+    rows = json.loads(STATIONS_FILE.read_text(encoding="utf-8"))["stations"]
+    out = [r["name"] for r in rows if not r.get("at")]
+    hcdp = "hcdp" in OUTAGES
+    if not hcdp and len(out) < (1 - BADGE_MIN_SHARE) * len(rows):
+        return ""
+    sub = f"{len(rows) - len(out)} of {len(rows)} stations reporting"
+    if hcdp:
+        sub += "; the Mesonet could not be reached this update"
+    return (f'<div class="databadge"><div class="big">Limited data</div>'
+            f'<div>{esc(sub)}. Readings below rest on fewer stations than usual.</div>'
+            + (f'<div class="sub">Not reporting: {esc(", ".join(out))}</div>' if 0 < len(out) <= 6 else "")
+            + "</div>")
+
+
 def dropout_sentence(now: datetime) -> str | None:
     """'Data gaps: ...' for today's wrap-up, or None if nothing dropped out."""
     try:
@@ -3778,6 +3801,7 @@ def build() -> str:
     safely(write_station_map, obs, lad if isinstance(lad, pd.DataFrame) else pd.DataFrame(), now, pos, west)
     if 6 <= now.hour < 19:
         safely(log_dropouts, now)
+    badge_html = safely(data_badge) or ""
     safely(log_trace, now, pos)
 
     entries = safely(log_line, now, pos) or []
@@ -3804,7 +3828,8 @@ def build() -> str:
         today_kind = "The day in review"
         today_title = f"{'Today' if rd == now.date() else 'Yesterday'} · {rd:%a %d %b}"
         today_chip = rating_chip(review["word"])
-        summary_html = f'<p class="summary">{esc(review["summary"])}</p>' + review.get("chart", "")
+        badge_html = ""                                   # the wrap-up lists the day's gaps
+        summary_html =f'<p class="summary">{esc(review["summary"])}</p>' + review.get("chart", "")
         therm_html, line_html = review["therm"], review["line"]
         up_html, wind_html = review["up"], review["wind"]
         base_label, base_html, ceil_html = "Cloudbase", review.get("base", ""), ""
@@ -3930,7 +3955,7 @@ def build() -> str:
     return PAGE.substitute(
         updated=f"{now:%a %d %b %Y · %H:%M} HST", today_kind=today_kind, today_title=today_title,
         built=f"{now:%Y-%m-%dT%H:%M}",
-        today_chip=today_chip, summary=summary_html, base_label=base_label,
+        today_chip=today_chip, data_badge=badge_html, summary=summary_html, base_label=base_label,
         therm=therm_html, base=base_html, up=up_html, line=line_html,
         base_row=(f"<dt>{base_label}</dt><dd>{base_html}</dd>" if base_html else ""),
         sun_row=(f"<dt>Sun</dt><dd>{sun_html}</dd>" if sun_html is not None else ""),
