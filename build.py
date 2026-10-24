@@ -2275,7 +2275,15 @@ def _replace_day(path, rows: list, day: str) -> None:
 CALLS_LOG = HERE / "docs" / "calls_log.json"
 
 
-def log_call(day, base: str, thermal: str, now: datetime) -> None:
+def log_call_ft(day, key: str, v) -> None:
+    """The morning number (ft_am), overwritten each build until the upslope
+    starts, so the last one before it stands."""
+    log = json.loads(CALLS_LOG.read_text(encoding="utf-8"))
+    log.setdefault(f"{day}", {})[key] = v
+    CALLS_LOG.write_text(json.dumps(log, indent=0), encoding="utf-8")
+
+
+def log_call(day, base: str, thermal: str, now: datetime, base_ft=None) -> None:
     try:
         log = json.loads(CALLS_LOG.read_text(encoding="utf-8"))
     except Exception:
@@ -2287,8 +2295,8 @@ def log_call(day, base: str, thermal: str, now: datetime) -> None:
     old = log.get(f"{day}") or {}
     if str(old.get("made", "")) >= f"{day - timedelta(days=1)} 18:00":
         return
-    log[f"{day}"] = {"base": base, "rule": CALL_RULE.get(f"{day}"), "thermal": thermal,
-                     "made": f"{now:%Y-%m-%d %H:%M}"}
+    log[f"{day}"] = {**old, "base": base, "rule": CALL_RULE.get(f"{day}"), "thermal": thermal,
+                     "made": f"{now:%Y-%m-%d %H:%M}", "ft": base_ft}
     keep = sorted(log)[-120:]
     CALLS_LOG.write_text(json.dumps({k: log[k] for k in keep}, indent=0), encoding="utf-8")
 
@@ -2699,15 +2707,13 @@ def base_blend_fit(morning: bool = False):
     return norm.to_dict(), b, round(float(q[1] - q[0]) / 2, -1)
 
 
-def base_blend(day, air, level_before, morning: bool = False) -> str | None:
-    """'Likely around X ft, most days within Y ft either way.' or None.
-    level_before: the day before's midday base."""
+def base_blend(day, air, level_before, morning: bool = False):
+    """(ft, band) or None. level_before: the day before's midday base."""
     if not air or level_before is None:
         return None
     norm, b, band = base_blend_fit(morning)
     n = norm[day.month]
-    v = n + b @ [1, level_before - n, air["rh_5_7k"], air["rh_7_10k"]]
-    return f"Likely around {round(v, -2):,.0f} ft, most days within {band:,.0f} ft either way."
+    return round(float(n + b @ [1, level_before - n, air["rh_5_7k"], air["rh_7_10k"]]), -2), band
 
 
 def yesterday_level(now: datetime):
@@ -3069,7 +3075,20 @@ def day_review(obs, now, up, evening, rnet, word, model, fc_today, fc_pair, entr
             if cat and call.get("base"):
                 want = {"low": ("Low",), "high": ("May be high", "Leaning high")}.get(cat, ("Normal",))
                 said.append(f"The evening before, the page called it {call['base'].lower()}"
+                            + (f", about {call['ft']:,.0f} ft" if call.get("ft") else "")
                             + (", a hit." if call["base"] in want else ", a miss."))
+            # The numbers too, once the page gives one (Sam, 10-23: "Since a
+            # cloudbase number is being provided the recap needs to reflect it").
+            if mid and (call.get("ft") or call.get("ft_am")):
+                m = round(sum(mid) / len(mid), -2)
+                vs = lambda v: ("right on" if abs(m - v) < 100 else
+                                f"{abs(m - v):,.0f} ft {'higher' if m > v else 'lower'} than")
+                said.append(f"Midday the base averaged about {m:,.0f} ft"
+                            + (f", {vs(call['ft'])} the evening's number" if call.get("ft") else "")
+                            + (f"; the morning update said about {call['ft_am']:,.0f} ft"
+                               + (" and was right on" if abs(m - call["ft_am"]) < 100 else
+                                  f", off by {abs(m - call['ft_am']):,.0f} ft")
+                               if call.get("ft_am") else "") + ".")
 
     ld = line_day(entries)
     if ld:
@@ -3554,7 +3573,9 @@ def build() -> str:
         blend = safely(base_blend, tom, safely(airmass_noon, cap, tom) if cap else None,
                        safely(yesterday_level, now) if morning else lvl, morning)
         if blend:
-            cb_sub = f"{cb_sub} {blend}".strip()
+            cb_sub = f"{cb_sub} Likely around {blend[0]:,.0f} ft, most days within {blend[1]:,.0f} ft either way.".strip()
+            if morning:
+                safely(log_call_ft, tom, "ft_am", blend[0])
         # No summary paragraph (Sam, 2026-10-17: "the whole summary paragraph
         # is unnecessary"): the rows below say it. said_t is still worked out
         # but not shown.
@@ -3569,7 +3590,7 @@ def build() -> str:
             safely(log_call, tom, ("Low" if cb_head.startswith("Probably a low") else
                                    "May be high" if cb_head.startswith("May be a high") else
                                    "Leaning high" if cb_head == "Leaning high" else "Normal"),
-                   strength_word(r["thermal"]), now)
+                   strength_word(r["thermal"]), now, blend[0] if blend else None)
         for day, w in week.iterrows():
             if day < tom:
                 continue
