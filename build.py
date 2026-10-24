@@ -2644,6 +2644,10 @@ MONTH_BASE_RANGE = rules.MONTH_BASE_RANGE
 
 def _layer_rh(prof: pd.DataFrame, lo: float, hi: float) -> float:
     q = prof[(prof.height_ft >= lo) & (prof.height_ft <= hi)]
+    # BUFKIT writes a missing dewpoint as -9999 -- in very dry air (NAM 12Z
+    # 2026-02-26, 9,540 ft) -- which made the layer's humidity ~1e9 %, a moist
+    # "Low" signal on exactly the driest days. Skip those levels.
+    q = q[q.dewpoint_c > -100]
     rh = 100 * np.exp(17.625 * q.dewpoint_c / (243.04 + q.dewpoint_c) - 17.625 * q.temp_c / (243.04 + q.temp_c))
     return float(rh.mean())
 
