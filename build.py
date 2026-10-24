@@ -2754,9 +2754,9 @@ def review_summary(now: datetime) -> None:
     if a.get("thermal_n", 0) >= ACC_MIN_DAYS and abs(a["thermal_bias"]) >= 0.5:
         way = "strong" if a["thermal_bias"] > 0 else "weak"
         flags.append(f"Accuracy: the thermal forecast ran {abs(a['thermal_bias']):.1f} steps {way} over "
-                     f"{a['thermal_n']} days (right on {a['thermal_right']}). Suggest: "
-                     + (f"lower the forecast-air warming (now +{FORECAST_AIR_WARM_F:.0f} F)." if way == "strong"
-                        else f"raise the forecast-air warming (now +{FORECAST_AIR_WARM_F:.0f} F)."))
+                     f"{a['thermal_n']} days (right on {a['thermal_right']}). Suggest: set apart the days "
+                     "the sun forecast missed (no air setting fixes those), then backtest the forecast-air "
+                     f"warming (now +{FORECAST_AIR_WARM_F:.0f} F) at +0/+1/+2 F on the rest before changing it.")
     for rule, (hit, n) in sorted(a.get("rules", {}).items()):
         said = RULE_SAID.get(rule)
         if n >= ACC_MIN_RULE and said is not None and abs(hit / n - said) >= 0.2:
