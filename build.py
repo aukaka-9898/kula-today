@@ -1389,7 +1389,8 @@ def line_now(obs: pd.DataFrame, now: datetime):
         got = best_split(lad)
         if got.get("found"):
             got["traced"] = False
-            got = line_sane(got, (got["north_lat"] + got["south_lat"]) / 2, lad)
+            if note:
+                got = line_sane(got, (got["north_lat"] + got["south_lat"]) / 2, lad)
         got["silent_note"] = note
         return got, lad
     (a_lat, a_lon), (o_lat, o_lon) = tr["anchor_ll"], tr["origin_ll"]
@@ -1412,16 +1413,21 @@ def line_now(obs: pd.DataFrame, now: datetime):
            "north_of": tr["origin"], "south_of": tr["anchor"], "traced": True, "trace": tr,
            "landmarks": [], "in_shear": False, "span_miles": 0.0,
            "as_of": lad.observed_local.max(), "dropped": 0}
-    got = line_sane(got, lat, lad)
+    if note:
+        got = line_sane(got, lat, lad)
     got["silent_note"] = note
     return got, lad
 
 
-# A line traced more than this far off east-west is a no call (Sam, 10-23).
-# Good days traced 1-30 deg (10-21); the outage day 10-22 gave 34-87.
-LINE_EW_MAX_DEG = 35
+# A line traced more than this far off east-west is a no call (Sam, 10-23),
+# always on. Good days traced 1-30 deg (10-21); the outage day 10-22 gave
+# 34-87. 45, not 35 (Sam, "do both"): the angle is the anchor-origin chord,
+# so station layout, the line's west-end bend and a real tilt under northerly
+# trades or a moving line all add to it.
+LINE_EW_MAX_DEG = 45
 # South of Kula Ag "possible, but requires a strong north component to the
-# trades" (Sam, 10-23). The convergence fit (0.8 mi per 10 deg, 75 deg at
+# trades" (Sam, 10-23). A backstop only: checked when the silent-station note
+# is up (Sam: "Sanity check only applies with a lack of Kula data"). The convergence fit (0.8 mi per 10 deg, 75 deg at
 # Pukalani) only reaches Kula Ag near 10 deg; 30 (NNE) is the start value.
 KULA_AG_LAT = 20.7579
 LINE_SOUTH_MAX_DIR = 30
