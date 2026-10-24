@@ -229,6 +229,55 @@ def read_hcdp(start: datetime) -> dict[str, list]:
     return out
 
 
+# Data dropouts through the day, for the wrap-up (Sam, 2026-10-23: "The daily
+# wrap up should include any data dropouts"): each build notes which map
+# stations reported (first and last reading seen) and whether the Mesonet
+# could be reached at all.
+OUTAGES: set = set()
+DROPOUT_LOG = HERE / "docs" / "dropout_log.json"
+DROPOUT_STOPPED_BY = "16:00"    # a station last heard from before this "stopped"
+
+
+def log_dropouts(now: datetime) -> None:
+    today = f"{now:%Y-%m-%d}"
+    try:
+        log = json.loads(DROPOUT_LOG.read_text(encoding="utf-8"))
+    except Exception:
+        log = {}
+    if log.get("date") != today:
+        log = {"date": today, "builds": 0, "hcdp_fail": 0, "seen": {}, "names": []}
+    rows = json.loads(STATIONS_FILE.read_text(encoding="utf-8"))["stations"]
+    log["builds"] += 1
+    log["hcdp_fail"] += "hcdp" in OUTAGES
+    log["names"] = sorted(set(log["names"]) | {r["name"] for r in rows})
+    for r in rows:
+        if r.get("at"):
+            first, last = log["seen"].get(r["name"], [r["at"], r["at"]])
+            log["seen"][r["name"]] = [min(first, r["at"]), max(last, r["at"])]
+    DROPOUT_LOG.write_text(json.dumps(log), encoding="utf-8")
+
+
+def dropout_sentence(now: datetime) -> str | None:
+    """'Data gaps: ...' for today's wrap-up, or None if nothing dropped out."""
+    try:
+        log = json.loads(DROPOUT_LOG.read_text(encoding="utf-8"))
+    except Exception:
+        return None
+    if log.get("date") != f"{now:%Y-%m-%d}":
+        return None
+    never = [n for n in log["names"] if n not in log["seen"]]
+    stopped = sorted((v[1], n) for n, v in log["seen"].items() if v[1] < DROPOUT_STOPPED_BY)
+    parts = []
+    if never:
+        parts.append(f"no readings all day from {len(never)} station{'s' if len(never) > 1 else ''} ("
+                     + (", ".join(never) if len(never) <= 4 else ", ".join(never[:3]) + f" and {len(never) - 3} more")
+                     + ")")
+    parts += [f"{n} stopped at {t}" for t, n in stopped]
+    if log.get("hcdp_fail"):
+        parts.append(f"the Mesonet could not be reached on {log['hcdp_fail']} of {log['builds']} updates")
+    return ("Data gaps: " + "; ".join(parts) + ".") if parts else None
+
+
 def observations(now: datetime) -> pd.DataFrame:
     """Today's readings: Mesonet stations from HCDP, the rest and any HCDP gap
     from api.weather.gov."""
@@ -238,6 +287,7 @@ def observations(now: datetime) -> pd.DataFrame:
         hcdp = _retrying(read_hcdp)(midnight)
     except Exception as e:
         hcdp = {}
+        OUTAGES.add("hcdp")
         PROBLEMS.append(f"HCDP observations, using api.weather.gov: {type(e).__name__}: {e}")
     rows = []
     for st in sampler.STATIONS + MAP_ONLY:
@@ -3340,6 +3390,9 @@ def day_review(obs, now, up, evening, rnet, word, model, fc_today, fc_pair, entr
              if up is not None and len(obs) and got and got[1] else [])
     notes_html = ('<div class="watch"><div class="kind">What the day did</div><ul>'
                   + "".join(f"<li>{esc(n)}</li>" for n in notes) + "</ul></div>") if notes else ""
+    gaps = safely(dropout_sentence, now)
+    if gaps:
+        said.append(gaps)
     return {"date": f"{now:%Y-%m-%d}", "word": word, "summary": " ".join(said),
             "therm": therm, "base": chart_html, "notes": notes,
             "chart": notes_html + (chart if up is not None and len(obs) and got and got[1] else ""),
@@ -3723,6 +3776,8 @@ def build() -> str:
             summary_html += live[0]
 
     safely(write_station_map, obs, lad if isinstance(lad, pd.DataFrame) else pd.DataFrame(), now, pos, west)
+    if 6 <= now.hour < 19:
+        safely(log_dropouts, now)
     safely(log_trace, now, pos)
 
     entries = safely(log_line, now, pos) or []
