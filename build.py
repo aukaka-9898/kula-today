@@ -229,6 +229,35 @@ def read_hcdp(start: datetime) -> dict[str, list]:
     return out
 
 
+# The last good Mesonet fetch, reused when a build can't reach HCDP (Sam,
+# 2026-10-24, "Do A, not that it's really going to help much": since 10-23
+# about half the GitHub builds time out connecting). Kept beside the
+# soundings in the Actions cache, not in docs/ -- a day's readings committed
+# every 15 minutes would bloat the repo. Used only if under HCDP_REUSE_MAX old.
+HCDP_LAST = Path(os.environ.get("KULA_SOUNDING_CACHE", HERE / ".sounding")) / "hcdp_last.pkl"
+HCDP_REUSE_MAX = timedelta(minutes=30)
+HCDP_FROM = None          # when the reused fetch was made, for the badge
+
+
+def save_hcdp(got: dict, now: datetime) -> None:
+    import pickle
+    HCDP_LAST.parent.mkdir(parents=True, exist_ok=True)
+    HCDP_LAST.write_bytes(pickle.dumps({"made": now, "got": got}))
+
+
+def load_hcdp(now: datetime) -> dict:
+    global HCDP_FROM
+    import pickle
+    try:
+        saved = pickle.loads(HCDP_LAST.read_bytes())
+    except Exception:
+        return {}
+    if saved["made"].date() != now.date() or now - saved["made"] > HCDP_REUSE_MAX:
+        return {}
+    HCDP_FROM = saved["made"]
+    return saved["got"]
+
+
 # Data dropouts through the day, for the wrap-up (Sam, 2026-10-23: "The daily
 # wrap up should include any data dropouts"): each build notes which map
 # stations reported (first and last reading seen) and whether the Mesonet
@@ -273,7 +302,8 @@ def data_badge() -> str:
         return ""
     sub = f"{len(rows) - len(out)} of {len(rows)} stations reporting"
     if hcdp:
-        sub += "; the Mesonet could not be reached this update"
+        sub += ("; the Mesonet could not be reached this update" if HCDP_FROM is None else
+                f"; the Mesonet could not be reached, its readings are from the {HCDP_FROM:%H:%M} update")
     return (f'<div class="databadge"><div class="big">Limited data</div>'
             f'<div>{esc(sub)}. Readings below rest on fewer stations than usual.</div>'
             + (f'<div class="sub">Not reporting: {esc(", ".join(out))}</div>' if 0 < len(out) <= 6 else "")
@@ -308,10 +338,12 @@ def observations(now: datetime) -> pd.DataFrame:
     start = midnight.astimezone(timezone.utc)
     try:
         hcdp = _retrying(read_hcdp)(midnight)
+        safely(save_hcdp, hcdp, now)
     except Exception as e:
-        hcdp = {}
+        hcdp = load_hcdp(now)
         OUTAGES.add("hcdp")
-        PROBLEMS.append(f"HCDP observations, using api.weather.gov: {type(e).__name__}: {e}")
+        PROBLEMS.append(f"HCDP observations, using {'the last good fetch' if hcdp else 'api.weather.gov'}: "
+                        f"{type(e).__name__}: {e}")
     rows = []
     for st in sampler.STATIONS + MAP_ONLY:
         got = hcdp.get(st.id)
