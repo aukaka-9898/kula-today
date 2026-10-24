@@ -1389,7 +1389,7 @@ def line_now(obs: pd.DataFrame, now: datetime):
         got = best_split(lad)
         if got.get("found"):
             got["traced"] = False
-            got = line_sane(got, (got["north_lat"] + got["south_lat"]) / 2, now)
+            got = line_sane(got, (got["north_lat"] + got["south_lat"]) / 2, lad)
         got["silent_note"] = note
         return got, lad
     (a_lat, a_lon), (o_lat, o_lon) = tr["anchor_ll"], tr["origin_ll"]
@@ -1412,7 +1412,7 @@ def line_now(obs: pd.DataFrame, now: datetime):
            "north_of": tr["origin"], "south_of": tr["anchor"], "traced": True, "trace": tr,
            "landmarks": [], "in_shear": False, "span_miles": 0.0,
            "as_of": lad.observed_local.max(), "dropped": 0}
-    got = line_sane(got, lat, now)
+    got = line_sane(got, lat, lad)
     got["silent_note"] = note
     return got, lad
 
@@ -1427,30 +1427,32 @@ KULA_AG_LAT = 20.7579
 LINE_SOUTH_MAX_DIR = 30
 
 
-def trade_dir_today(now: datetime):
-    """Today's marine trade direction from the saved forecast, or None."""
-    try:
-        week = json.loads(FORECAST_FILE.read_text(encoding="utf-8"))["week"]
-    except (OSError, ValueError, KeyError):
-        return None
-    return next((w["dir_deg"] for w in week if w["day"] == f"{now.date()}"), None)
+def trades_north_of(lad: pd.DataFrame, lat: float):
+    """Measured trade direction north of the line: Paia when it reports,
+    else the mean of the ladder's trade stations north of it; None if none.
+    Measured, not the marine forecast (Sam, 10-23: "Don't use forecasts to
+    establish current conditions" -- on 10-23 the grid said 230 at 3 mph
+    while Paia read 52)."""
+    north = lad[(lad.lat > lat) & (lad.side == "trades")].dropna(subset=["wind_dir"])
+    if north.empty:
+        return None, None
+    paia = north[north.name == "Paia"]
+    if len(paia):
+        return float(paia.wind_dir.iloc[0]), "Paia"
+    return float(cv.mean_direction(north.wind_dir)), ", ".join(north.name)
 
 
-def line_sane(got: dict, lat: float, now: datetime) -> dict:
-    """No call south of Kula Ag unless today's trades come from the north."""
+def line_sane(got: dict, lat: float, lad: pd.DataFrame) -> dict:
+    """No call south of Kula Ag unless the trades north of it come from the north."""
     if lat >= KULA_AG_LAT:
         return got
-    d = trade_dir_today(now)
+    d, where = trades_north_of(lad, lat)
     if d is not None and d <= LINE_SOUTH_MAX_DIR:
         return got
-    if d is None:
-        today = "today's direction is unknown"
-    elif cv._side(d) == "trades":
-        today = f"today's are from {d:.0f}°"
-    else:
-        today = f"today's wind off the coast is from {d:.0f}°, not the trades"
+    seen = (f"the trades at {where} are from {d:.0f}°" if d is not None
+            else "no station north of it is in the trades")
     return {"found": False, "no_call": True,
-            "why": f"the stations put it south of Kula Ag, which takes trades from the north; {today}"}
+            "why": f"the stations put it south of Kula Ag, which takes trades from the north; {seen}"}
 
 
 # -- forecast ------------------------------------------------------------------
