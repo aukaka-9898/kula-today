@@ -9,12 +9,18 @@ on:
     # Hourly overnight, 19:07-05:07 HST, to keep the forecast current.
     - cron: "7 5-15 * * *"
   workflow_dispatch:
+    inputs:
+      retry:
+        description: "A re-run after the Mesonet could not be reached (no further re-run)"
+        type: boolean
+        default: false
   push:
     branches: [main]
     paths: ["build.py", "patterns.py", "rules.py", "template.html", ".github/workflows/build.yml"]
 
 permissions:
   contents: write
+  actions: write      # to start the fresh-machine re-run
 
 concurrency:
   group: build
@@ -81,3 +87,12 @@ jobs:
             sleep 5
           done
           exit 1
+
+      # D (Sam, 2026-10-24): when this machine could not reach the Mesonet,
+      # start one more build on a fresh machine -- a new runner, most likely a
+      # new address. Once only: the re-run itself never re-runs.
+      - name: Re-run on a fresh machine if the Mesonet was unreachable
+        if: ${{ hashFiles('.hcdp_failed') != '' && !inputs.retry }}
+        run: gh workflow run build.yml --ref main -f retry=true
+        env:
+          GH_TOKEN: ${{ github.token }}
