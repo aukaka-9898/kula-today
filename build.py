@@ -2359,6 +2359,10 @@ def log_call(day, base: str, thermal: str, now: datetime, base_ft=None) -> None:
 # then for the base the Kekoa camera (3+ readings 11:00-14:00; within ~120 ft of
 # Sam's blind calls where derived ran 730 low, 10-23), then derived.
 PILOT_REPORTS = HERE / "docs" / "pilot_reports.csv"
+ACC_MIN_DAYS = 10          # scored days before the review suggests anything
+ACC_MIN_RULE = 8           # firings before a rule's stated chance is questioned
+ACC_CAMERA_DAYS = 14       # camera days before suggesting the derived correction
+RULE_SAID = {"B1": 0.80, "B2": 0.65, "B3": 0.50, "B4": 0.45}
 CAMERA_BASE_DAYS = 3
 ACCURACY_DAYS = 30
 BASE_WITHIN_FT = 500
@@ -2404,30 +2408,53 @@ def day_truth(day: str) -> dict:
     return out
 
 
-def accuracy(now: datetime) -> dict:
+def day_derived(day: str):
+    try:
+        h = pd.read_csv(SCORE_HOURS, dtype={"date": str})
+    except (OSError, ValueError):
+        return None
+    v = h[(h.date == day) & h.hour.between(11, 14)].derived.dropna()
+    return float(v.mean()) if len(v) >= 2 else None
+
+
+def accuracy(now: datetime, days: int | None = None) -> dict:
     """Over the last ACCURACY_DAYS days before today: base (n, within, typical
     miss) and thermal (n, right, within one)."""
     try:
         calls = json.loads(CALLS_LOG.read_text(encoding="utf-8"))
     except Exception:
         return {}
-    first = f"{now.date() - timedelta(days=ACCURACY_DAYS)}"
-    base, therm, src = [], [], set()
+    first = f"{now.date() - timedelta(days=days or ACCURACY_DAYS)}"
+    base, therm, src, rules_rec, cam_gap = [], [], set(), {}, []
     for day, c in calls.items():
         if not (first <= day < f"{now.date()}"):
             continue
         t = day_truth(day)
         if c.get("ft") and "base" in t:
-            base.append(abs(c["ft"] - t["base"]))
+            base.append(c["ft"] - t["base"])
             src.add(t["base_from"])
+        if "base" in t and c.get("rule"):
+            cat = rules.category(t["base"], int(day[5:7]))
+            want = "low" if c["rule"] == "B1" else "high"
+            rules_rec.setdefault(c["rule"], []).append(cat == want)
+        if t.get("base_from") == "camera":
+            d = day_derived(day)
+            if d is not None:
+                cam_gap.append(d - t["base"])
         f, m = THERMAL_ORDER.get(c.get("thermal")), THERMAL_ORDER.get(t.get("thermal"))
         if f is not None and m is not None:
-            therm.append(abs(f - m))
+            therm.append(f - m)
             src.add(t["thermal_from"])
-    return {"base_n": len(base), "base_within": sum(e <= BASE_WITHIN_FT for e in base),
-            "base_typical": round(float(np.mean(base)), -1) if base else None,
+    ab = [abs(e) for e in base]
+    return {"base_n": len(base), "base_within": sum(e <= BASE_WITHIN_FT for e in ab),
+            "base_typical": round(float(np.mean(ab)), -1) if base else None,
+            "base_bias": round(float(np.mean(base)), -1) if base else None,
             "thermal_n": len(therm), "thermal_right": sum(e == 0 for e in therm),
-            "thermal_within_one": sum(e <= 1 for e in therm), "pilots": "pilots" in src}
+            "thermal_within_one": sum(abs(e) <= 1 for e in therm),
+            "thermal_bias": round(float(np.mean(therm)), 2) if therm else None,
+            "rules": {k: [sum(v), len(v)] for k, v in rules_rec.items()},
+            "camera_days": len(cam_gap), "derived_minus_camera": round(float(np.mean(cam_gap)), -1) if cam_gap else None,
+            "pilots": "pilots" in src}
 
 
 def accuracy_line(now: datetime) -> str:
@@ -2606,10 +2633,8 @@ def review_summary(now: datetime) -> None:
             err = h.fc_base - h.derived
             m, raw = float(err.mean()), float((h.fc_base_raw - h.derived).mean())
             stats.update(base_mean=round(m), base_raw_mean=round(raw), base_sd=round(float(err.std())))
-            if abs(m) > 300:
-                flags.append(f"Forecast base has run {m:+.0f} ft against the derived base over {days} days "
-                             + (f"(the +{FORECAST_BASE_LOW_FT} ft correction included; without it {raw:+.0f})."
-                                if FORECAST_BASE_LOW_FT else "(no correction)."))
+            # The hourly Open-Meteo base is no longer what the page shows (the
+            # number is the blend, 10-23); its drift stays in the stats only.
             am, pm = err[h.hour <= 11].mean(), err[h.hour >= 13].mean()
             stats.update(base_morning=round(float(am)), base_afternoon=round(float(pm)))
             if abs(am - pm) > 600:
@@ -2662,6 +2687,40 @@ def review_summary(now: datetime) -> None:
                          f"corrections miss the derived base by {st_err.abs().mean():.0f} ft typically, "
                          f"the page's Kula Ag + {FORECAST_BASE_LOW_FT} ft by {now_err.abs().mean():.0f} ft. "
                          "Ready to decide whether to switch.")
+    # Accuracy review (Sam, 2026-10-23: "add accuracy review and suggestions
+    # for periodic review"). Each flag fires only on enough days and says what
+    # to consider; nothing here changes the forecast.
+    a = safely(accuracy, now) or {}
+    stats["accuracy"] = a
+    if a.get("base_n", 0) >= ACC_MIN_DAYS:
+        if abs(a["base_bias"]) >= 250:
+            flags.append(f"Accuracy: the cloudbase number ran {a['base_bias']:+,.0f} ft against the day over "
+                         f"{a['base_n']} days. Suggest: refit the blend, or refit it on camera-corrected history.")
+        if a["base_within"] / a["base_n"] < 0.55:
+            flags.append(f"Accuracy: the cloudbase number was within {BASE_WITHIN_FT} ft on only {a['base_within']} "
+                         f"of {a['base_n']} days (tested at 2 in 3). Suggest: look at the misses for a pattern.")
+    if a.get("thermal_n", 0) >= ACC_MIN_DAYS and abs(a["thermal_bias"]) >= 0.5:
+        way = "strong" if a["thermal_bias"] > 0 else "weak"
+        flags.append(f"Accuracy: the thermal forecast ran {abs(a['thermal_bias']):.1f} steps {way} over "
+                     f"{a['thermal_n']} days (right on {a['thermal_right']}). Suggest: "
+                     + (f"lower the forecast-air warming (now +{FORECAST_AIR_WARM_F:.0f} F)." if way == "strong"
+                        else f"raise the forecast-air warming (now +{FORECAST_AIR_WARM_F:.0f} F)."))
+    for rule, (hit, n) in sorted(a.get("rules", {}).items()):
+        said = RULE_SAID.get(rule)
+        if n >= ACC_MIN_RULE and said is not None and abs(hit / n - said) >= 0.2:
+            flags.append(f"Accuracy: {rule} says {said:.0%} and was right on {hit} of {n} days ({hit / n:.0%}). "
+                         "Suggest: restate its chance, or check it in the monthly rule run.")
+    if a.get("camera_days", 0) >= ACC_CAMERA_DAYS:
+        flags.append(f"Derived vs camera: {a['camera_days']} days with camera readings; derived ran "
+                     f"{a['derived_minus_camera']:+,.0f} ft against the camera at midday. Suggest: fit the "
+                     "derived correction (option 2) now.")
+    if now.weekday() == 0 and (a.get("base_n") or a.get("thermal_n")):
+        flags.append("Weekly accuracy, last 30 days: "
+                     + (f"cloudbase within {BASE_WITHIN_FT} ft on {a['base_within']} of {a['base_n']} days, "
+                        f"typical miss {a['base_typical']:,.0f} ft; " if a.get("base_n") else "")
+                     + (f"thermals right on {a['thermal_right']} of {a['thermal_n']}, within one step on "
+                        f"{a['thermal_within_one']}" if a.get("thermal_n") else "")
+                     + (" (pilot reports included)." if a.get("pilots") else "."))
     # The monthly rule check's events, for a week after it runs (monthly.py).
     try:
         mr = json.loads((HERE / "docs" / "monthly_report.json").read_text(encoding="utf-8"))
