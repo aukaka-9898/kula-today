@@ -1389,9 +1389,17 @@ def line_now(obs: pd.DataFrame, now: datetime):
         got = best_split(lad)
         if got.get("found"):
             got["traced"] = False
+            got = line_sane(got, (got["north_lat"] + got["south_lat"]) / 2, now)
         got["silent_note"] = note
         return got, lad
     (a_lat, a_lon), (o_lat, o_lon) = tr["anchor_ll"], tr["origin_ll"]
+    # Sam, 2026-10-23: "The shear will only run generally east - west (not
+    # strictly). A major deviation from this should result in a no call
+    # (Ulupalakua makes no sense)." No ladder fallback: the stations disagree.
+    tilt = abs(math.degrees(math.atan2(o_lat - a_lat, (o_lon - a_lon) * math.cos(math.radians(a_lat)))))
+    if tilt > LINE_EW_MAX_DEG:
+        return {"found": False, "no_call": True, "silent_note": note,
+                "why": f"the stations put it running {tilt:.0f}° off east-west"}, lad
     # No wild extrapolation: a line close to north-south (under 0.02 deg of
     # longitude between its ends) is not projected to the highway, and the
     # crossing stays within the line's own latitudes and the Kula corridor.
@@ -1400,10 +1408,49 @@ def line_now(obs: pd.DataFrame, now: datetime):
     else:
         lat = a_lat + (o_lat - a_lat) * (KULA_HWY_LON - a_lon) / (o_lon - a_lon)
     lat = min(max(lat, min(a_lat, o_lat) - 0.01, TRACE_SOUTH_LAT), max(a_lat, o_lat) + 0.01)
-    return {"found": True, "north_lat": lat, "south_lat": lat,
-            "north_of": tr["origin"], "south_of": tr["anchor"], "traced": True, "trace": tr,
-            "landmarks": [], "in_shear": False, "span_miles": 0.0,
-            "as_of": lad.observed_local.max(), "dropped": 0, "silent_note": note}, lad
+    got = {"found": True, "north_lat": lat, "south_lat": lat,
+           "north_of": tr["origin"], "south_of": tr["anchor"], "traced": True, "trace": tr,
+           "landmarks": [], "in_shear": False, "span_miles": 0.0,
+           "as_of": lad.observed_local.max(), "dropped": 0}
+    got = line_sane(got, lat, now)
+    got["silent_note"] = note
+    return got, lad
+
+
+# A line traced more than this far off east-west is a no call (Sam, 10-23).
+# Good days traced 1-30 deg (10-21); the outage day 10-22 gave 34-87.
+LINE_EW_MAX_DEG = 35
+# South of Kula Ag "possible, but requires a strong north component to the
+# trades" (Sam, 10-23). The convergence fit (0.8 mi per 10 deg, 75 deg at
+# Pukalani) only reaches Kula Ag near 10 deg; 30 (NNE) is the start value.
+KULA_AG_LAT = 20.7579
+LINE_SOUTH_MAX_DIR = 30
+
+
+def trade_dir_today(now: datetime):
+    """Today's marine trade direction from the saved forecast, or None."""
+    try:
+        week = json.loads(FORECAST_FILE.read_text(encoding="utf-8"))["week"]
+    except (OSError, ValueError, KeyError):
+        return None
+    return next((w["dir_deg"] for w in week if w["day"] == f"{now.date()}"), None)
+
+
+def line_sane(got: dict, lat: float, now: datetime) -> dict:
+    """No call south of Kula Ag unless today's trades come from the north."""
+    if lat >= KULA_AG_LAT:
+        return got
+    d = trade_dir_today(now)
+    if d is not None and d <= LINE_SOUTH_MAX_DIR:
+        return got
+    if d is None:
+        today = "today's direction is unknown"
+    elif cv._side(d) == "trades":
+        today = f"today's are from {d:.0f}°"
+    else:
+        today = f"today's wind off the coast is from {d:.0f}°, not the trades"
+    return {"found": False, "no_call": True,
+            "why": f"the stations put it south of Kula Ag, which takes trades from the north; {today}"}
 
 
 # -- forecast ------------------------------------------------------------------
@@ -3154,12 +3201,13 @@ def build() -> str:
             line_html += (f"<div class=\"sub\">Trades at the coast: Paia "
                           f"{p.wind_dir:03.0f}° at {p.wind_mph:.0f} mph</div>")
     elif pos:
-        line_html = f"Not found<div class=\"sub\">{esc(pos.get('why', ''))}</div>"
+        line_html = (f"{'No call' if pos.get('no_call') else 'Not found'}"
+                     f"<div class=\"sub\">{esc(pos.get('why', ''))}</div>")
+    else:
+        line_html = "Unavailable"
     if pos and pos.get("silent_note"):
         line_html += (f'<div class="alert">{esc(pos["silent_note"])}: the line is less certain'
                       + (" than usual" if pos.get("found") else "") + "</div>")
-    else:
-        line_html = "Unavailable"
     west = safely(west_intrusion, obs) if len(obs) else None
     if west:
         line_html += f'<div class="alert">{esc(west)}; the line may be further south than shown</div>'
