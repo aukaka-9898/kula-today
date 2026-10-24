@@ -2667,6 +2667,39 @@ def airmass_noon(path, day) -> dict | None:
     return {"rh_5_7k": _layer_rh(prof[near], 5000, 7000), "rh_7_10k": _layer_rh(prof[near], 7000, 10000)}
 
 
+# Tomorrow's base as a number (Sam, 10-23: "refine Tomorrow's cloudbase").
+# Over ~1,000 history days, scored a year at a time on years it was not fitted
+# on: the month's normal, nudged by today's base and the model's humidity
+# aloft, missed by 430 ft typically against 557 for the normal alone and
+# 1,089 for the raw forecast. Open-Meteo's own base is left out: its bias
+# jumped between eras (+3,000 ft summer 2025, ~0 that winter, -400 now).
+# Refitted from the history files each build.
+@functools.cache
+def base_blend_fit():
+    d = pd.read_csv(HERE / "history" / "days.csv", parse_dates=["date"])[["date", "level"]].dropna()
+    a = pd.read_csv(HERE / "history" / "nam12_ahead.csv", parse_dates=["date"])
+    a = a[(a.lead == 1) & (a.rh_5_7k_12 <= 100) & (a.rh_7_10k_12 <= 100)]
+    x = d.merge(a[["date", "rh_5_7k_12", "rh_7_10k_12"]], on="date")
+    x["prev"] = x.date.map(dict(zip(d.date + pd.Timedelta(days=1), d.level)))
+    x = x.dropna(subset=["prev", "rh_5_7k_12", "rh_7_10k_12"])
+    norm = x.groupby(x.date.dt.month)["level"].median()
+    n = x.date.dt.month.map(norm)
+    A = np.column_stack([np.ones(len(x)), x.prev - n, x.rh_5_7k_12, x.rh_7_10k_12])
+    b, *_ = np.linalg.lstsq(A, x.level - n, rcond=None)
+    q = np.quantile(x.level - n - A @ b, [0.1, 0.9])
+    return norm.to_dict(), b, round(float(q[1] - q[0]) / 2, -1)
+
+
+def base_blend(day, air, level_today) -> str | None:
+    """'Likely around X ft, most days within Y ft either way.' or None."""
+    if not air or level_today is None:
+        return None
+    norm, b, band = base_blend_fit()
+    n = norm[day.month]
+    v = n + b @ [1, level_today - n, air["rh_5_7k"], air["rh_7_10k"]]
+    return f"Likely around {round(v, -2):,.0f} ft, most days within {band:,.0f} ft either way."
+
+
 def today_level(now: datetime):
     """Today's midday base so far (11:00-14:59 derived points), or None."""
     try:
@@ -3494,9 +3527,12 @@ def build() -> str:
         # afternoon shape was right less often than "always flat", and its
         # level lost to the season average. The base is a category instead.
         fc_hours = safely(forecast_base_hours, tom) or {}
-        cb_head, cb_sub = (safely(settled_call, tom, cap, fc_hours,
-                                  safely(today_level, now) if tom > now.date() else None, True)
+        lvl = safely(today_level, now) if tom > now.date() else None
+        cb_head, cb_sub = (safely(settled_call, tom, cap, fc_hours, lvl, True)
                            or (f"{am_pm(hours.get(tom))} ft", ""))
+        blend = safely(base_blend, tom, safely(airmass_noon, cap, tom) if cap else None, lvl)
+        if blend:
+            cb_sub = f"{cb_sub} {blend}".strip()
         # No summary paragraph (Sam, 2026-10-17: "the whole summary paragraph
         # is unnecessary"): the rows below say it. said_t is still worked out
         # but not shown.
