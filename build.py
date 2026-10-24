@@ -2675,10 +2675,19 @@ def airmass_noon(path, day) -> dict | None:
 # jumped between eras (+3,000 ft summer 2025, ~0 that winter, -400 now).
 # Refitted from the history files each build.
 @functools.cache
-def base_blend_fit():
+def base_blend_fit(morning: bool = False):
+    """Fit on history. Evening: the day-ahead run (nam12_ahead lead 1) and
+    today's base. Morning, before the upslope (Sam, 10-23: "the early Today
+    panel"): the overnight 12Z run (nam12) and yesterday's base -- 411 ft
+    typical miss against 430 the evening before. GOES at 06:00 added only
+    6 ft more and was skipped (Sam)."""
     d = pd.read_csv(HERE / "history" / "days.csv", parse_dates=["date"])[["date", "level"]].dropna()
-    a = pd.read_csv(HERE / "history" / "nam12_ahead.csv", parse_dates=["date"])
-    a = a[(a.lead == 1) & (a.rh_5_7k_12 <= 100) & (a.rh_7_10k_12 <= 100)]
+    if morning:
+        a = pd.read_csv(HERE / "history" / "nam12.csv", parse_dates=["date"])
+    else:
+        a = pd.read_csv(HERE / "history" / "nam12_ahead.csv", parse_dates=["date"])
+        a = a[a.lead == 1]
+    a = a[(a.rh_5_7k_12 <= 100) & (a.rh_7_10k_12 <= 100)]
     x = d.merge(a[["date", "rh_5_7k_12", "rh_7_10k_12"]], on="date")
     x["prev"] = x.date.map(dict(zip(d.date + pd.Timedelta(days=1), d.level)))
     x = x.dropna(subset=["prev", "rh_5_7k_12", "rh_7_10k_12"])
@@ -2690,14 +2699,25 @@ def base_blend_fit():
     return norm.to_dict(), b, round(float(q[1] - q[0]) / 2, -1)
 
 
-def base_blend(day, air, level_today) -> str | None:
-    """'Likely around X ft, most days within Y ft either way.' or None."""
-    if not air or level_today is None:
+def base_blend(day, air, level_before, morning: bool = False) -> str | None:
+    """'Likely around X ft, most days within Y ft either way.' or None.
+    level_before: the day before's midday base."""
+    if not air or level_before is None:
         return None
-    norm, b, band = base_blend_fit()
+    norm, b, band = base_blend_fit(morning)
     n = norm[day.month]
-    v = n + b @ [1, level_today - n, air["rh_5_7k"], air["rh_7_10k"]]
+    v = n + b @ [1, level_before - n, air["rh_5_7k"], air["rh_7_10k"]]
     return f"Likely around {round(v, -2):,.0f} ft, most days within {band:,.0f} ft either way."
+
+
+def yesterday_level(now: datetime):
+    """Yesterday's midday base (11:00-14:00 derived, from the scorecard), or None."""
+    try:
+        s = pd.read_csv(SCORE_HOURS, dtype={"date": str})
+    except Exception:
+        return None
+    v = s[(s.date == f"{now.date() - timedelta(days=1)}") & s.hour.between(11, 14)].derived.dropna()
+    return float(v.mean()) if len(v) else None
 
 
 def today_level(now: datetime):
@@ -3530,7 +3550,9 @@ def build() -> str:
         lvl = safely(today_level, now) if tom > now.date() else None
         cb_head, cb_sub = (safely(settled_call, tom, cap, fc_hours, lvl, True)
                            or (f"{am_pm(hours.get(tom))} ft", ""))
-        blend = safely(base_blend, tom, safely(airmass_noon, cap, tom) if cap else None, lvl)
+        morning = tom == now.date()
+        blend = safely(base_blend, tom, safely(airmass_noon, cap, tom) if cap else None,
+                       safely(yesterday_level, now) if morning else lvl, morning)
         if blend:
             cb_sub = f"{cb_sub} {blend}".strip()
         # No summary paragraph (Sam, 2026-10-17: "the whole summary paragraph
