@@ -87,7 +87,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><div class="tag">Kula soaring briefing</div><h1>Kula Today</h1></div>
-    <div class="date">Updated Sat 24 Oct 2026 · 11:18 HST</div>
+    <div class="date">Updated Sat 24 Oct 2026 · 11:20 HST</div>
   </header>
 
   <div>
@@ -97,7 +97,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 
   <div class="cols">
     <section class="panel today" aria-labelledby="t-today">
-      <div class="kind">Measured today · 11:18 HST</div>
+      <div class="kind">Measured today · 11:20 HST</div>
       <div class="head"><h2 id="t-today">Today</h2></div>
       <div class="databadge"><div class="big">Limited data</div><div>7 of 29 stations reporting. Readings below rest on fewer stations than usual.</div></div>
       <p class="summary">Today&#x27;s forecast: Thermals probably light. Trades from the NNE should put the shear line crossing Kula Highway near Omaopio.</p>
@@ -248,7 +248,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
    browser's 10-minute cached copy is bypassed. The 15-minute refresh stays
    as a backstop. */
 (function () {
-  var built = "2026-10-24T11:18";
+  var built = "2026-10-24T11:20";
   function check() {
     fetch("stations.json?" + Date.now(), {cache: "no-store"})
       .then(function (r) { return r.json(); })
