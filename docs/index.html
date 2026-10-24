@@ -85,7 +85,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><div class="tag">Kula soaring briefing</div><h1>Kula Today</h1></div>
-    <div class="date">Updated Fri 23 Oct 2026 · 18:11 HST</div>
+    <div class="date">Updated Fri 23 Oct 2026 · 18:12 HST</div>
   </header>
 
   <div>
@@ -152,7 +152,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
       <div class="head"><h2 id="t-tomorrow">Tomorrow · Sat 24 Oct</h2><span class="chip fair">Light</span></div>
       <dl>
         <dt>Thermals</dt><dd>Probably light<div class="sub">thermal.py on the forecast air (+3 F, it runs cool); within one category of the measured rating on every test day</div></dd>
-        <dt>Cloudbase</dt><dd>Probably a low day<div class="sub">Moist air aloft and a low forecast base both point to it: right about 8 times in 10. Likely around 4,500 ft, most days within 660 ft either way.</div></dd>
+        <dt>Cloudbase</dt><dd>Probably a low day<div class="sub">Moist air aloft and a low forecast base both point to it: 80% likely.</div></dd>
         <dt>Sun</dt><dd><span class="num">70%</span> of clear sky, 10:00–14:00 (GFS)<div class="sub">The model can't see the slope's own cumulus: when it says 90% or more, Kula has measured about 80%. Good flying days measure about 80%, overcast about 50%, socked in 20%.</div></dd>
         <dt>Shear line</dt><dd>Crossing Kula Highway near Omaopio<div class="sub">Trades NE (043°)</div></dd>
       </dl>
@@ -284,7 +284,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
    browser's 10-minute cached copy is bypassed. The 15-minute refresh stays
    as a backstop. */
 (function () {
-  var built = "2026-10-23T18:11";
+  var built = "2026-10-23T18:12";
   function check() {
     fetch("stations.json?" + Date.now(), {cache: "no-store"})
       .then(function (r) { return r.json(); })
