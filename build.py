@@ -2864,6 +2864,14 @@ def settled_call(day, *args):
     return SETTLED[key]
 
 
+CALL_CHANCE = {
+    "B1": "80% chance of a low day: moist air aloft and a low forecast base.",
+    "B2": "About 65% chance of a high day: dry air aloft after a high day today.",
+    "B3": "About 50% chance of a high day: a high base today and a high forecast.",
+    "B4": "About 45% chance of a high day: dry air aloft and a high forecast base.",
+}
+
+
 def cloudbase_call(day, path, fc_hours: dict, level_today, leaning=False) -> tuple[str, str]:
     """The day's base as a category, from the rules in rules.py (B1-B4).
     `leaning` allows B4, the weaker forecast-only high call, after B2 and B3
@@ -3126,7 +3134,20 @@ def day_review(obs, now, up, evening, rnet, word, model, fc_today, fc_pair, entr
             if cat and call.get("base"):
                 want = {"low": ("Low",), "high": ("May be high", "Leaning high")}.get(cat, ("Normal",))
                 said.append(f"The evening before, the page called it {call['base'].lower()}"
+                            + (f", about {call['ft']:,.0f} ft" if call.get("ft") else "")
                             + (", a hit." if call["base"] in want else ", a miss."))
+            # The numbers too, once the page gives one (Sam, 10-23: "Since a
+            # cloudbase number is being provided the recap needs to reflect it").
+            if mid and (call.get("ft") or call.get("ft_am")):
+                m = round(sum(mid) / len(mid), -2)
+                vs = lambda v: ("right on" if abs(m - v) < 100 else
+                                f"{abs(m - v):,.0f} ft {'higher' if m > v else 'lower'} than")
+                said.append(f"Midday the base averaged about {m:,.0f} ft"
+                            + (f", {vs(call['ft'])} the evening's number" if call.get("ft") else "")
+                            + (f"; the morning update said about {call['ft_am']:,.0f} ft"
+                               + (" and was right on" if abs(m - call["ft_am"]) < 100 else
+                                  f", off by {abs(m - call['ft_am']):,.0f} ft")
+                               if call.get("ft_am") else "") + ".")
 
     ld = line_day(entries)
     if ld:
@@ -3608,14 +3629,22 @@ def build() -> str:
         lvl = safely(today_level, now) if tom > now.date() else None
         cb_head, cb_sub = (safely(settled_call, tom, cap, fc_hours, lvl, True)
                            or (f"{am_pm(hours.get(tom))} ft", ""))
+        cat_head = cb_head
         morning = tom == now.date()
         blend = safely(base_blend, tom, safely(airmass_noon, cap, tom) if cap else None,
                        safely(yesterday_level, now) if morning else lvl, morning)
-        # Not shown (Sam, 10-23: the reason and the probability only); still
-        # logged with the call so it can be scored.
+        # The number is the headline (Sam, 10-23: "The verbal calls are not what
+        # I want. I want the number."); the rule, when one fires, becomes the
+        # chance of a low or high day under it. The category is still settled
+        # and logged for the week table and the scorecard.
         if blend:
             if morning:
                 safely(log_call_ft, tom, "ft_am", blend[0])
+            lo_m, hi_m = MONTH_BASE_RANGE[tom.month]
+            cb_sub = CALL_CHANCE.get(CALL_RULE.get(f"{tom}")) or f"Normal for {tom:%B} is {lo_m:,}–{hi_m:,} ft."
+            if CALL_RULE.get(f"{tom}") == "B4" and (tom - now.date()).days > 1:
+                cb_sub = cb_sub.replace("About 45%", "About 40%")
+            cb_head = f"About {blend[0]:,.0f} ft"
         # No summary paragraph (Sam, 2026-10-17: "the whole summary paragraph
         # is unnecessary"): the rows below say it. said_t is still worked out
         # but not shown.
@@ -3627,9 +3656,9 @@ def build() -> str:
       </dl>
       <div class="sub">Forecast as of {fc_made.astimezone(HST):%H:%M} HST</div>{rules_line()}"""
         if tom > now.date():
-            safely(log_call, tom, ("Low" if cb_head.startswith("Probably a low") else
-                                   "May be high" if cb_head.startswith("May be a high") else
-                                   "Leaning high" if cb_head == "Leaning high" else "Normal"),
+            safely(log_call, tom, ("Low" if cat_head.startswith("Probably a low") else
+                                   "May be high" if cat_head.startswith("May be a high") else
+                                   "Leaning high" if cat_head == "Leaning high" else "Normal"),
                    strength_word(r["thermal"]), now, blend[0] if blend else None)
         for day, w in week.iterrows():
             if day < tom:
