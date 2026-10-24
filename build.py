@@ -2880,18 +2880,18 @@ def cloudbase_call(day, path, fc_hours: dict, level_today, leaning=False) -> tup
         if rules.says("B1", f):
             CALL_RULE[f"{day}"] = "B1"
             return ("Probably a low day",
-                    "Moist air aloft and a low forecast base both point to it: right about 8 times in 10.")
+                    "Moist air aloft and a low forecast base both point to it: 80% likely.")
         if rules.says("B2", f):
             CALL_RULE[f"{day}"] = "B2"
-            return ("May be a high day", "Dry air aloft after a high day today: right about 2 times in 3.")
+            return ("May be a high day", "Dry air aloft after a high day today: about 65% likely.")
         if rules.says("B3", f):
             CALL_RULE[f"{day}"] = "B3"
-            return ("May be a high day", "High base today and a high forecast: right about half the time.")
+            return ("May be a high day", "High base today and a high forecast: about 50% likely.")
         if leaning and f["fc_level"] is not None and rules.says("B4", f):
             CALL_RULE[f"{day}"] = "B4"
             near = (day - datetime.now(HST).date()).days <= 1
-            return ("Leaning high", "Dry air aloft and a high forecast base: right "
-                    + ("a little under half the time." if near else "about 4 times in 10."))
+            return ("Leaning high", "Dry air aloft and a high forecast base: "
+                    + ("about 45% likely." if near else "about 40% likely."))
     return (f"Probably normal for {day:%B}, about {lo:,}–{hi:,} ft",
             "Most days the base levels off by mid-morning and holds. Nothing in the forecast points to "
             "a low or a high day.")
@@ -3126,20 +3126,7 @@ def day_review(obs, now, up, evening, rnet, word, model, fc_today, fc_pair, entr
             if cat and call.get("base"):
                 want = {"low": ("Low",), "high": ("May be high", "Leaning high")}.get(cat, ("Normal",))
                 said.append(f"The evening before, the page called it {call['base'].lower()}"
-                            + (f", about {call['ft']:,.0f} ft" if call.get("ft") else "")
                             + (", a hit." if call["base"] in want else ", a miss."))
-            # The numbers too, once the page gives one (Sam, 10-23: "Since a
-            # cloudbase number is being provided the recap needs to reflect it").
-            if mid and (call.get("ft") or call.get("ft_am")):
-                m = round(sum(mid) / len(mid), -2)
-                vs = lambda v: ("right on" if abs(m - v) < 100 else
-                                f"{abs(m - v):,.0f} ft {'higher' if m > v else 'lower'} than")
-                said.append(f"Midday the base averaged about {m:,.0f} ft"
-                            + (f", {vs(call['ft'])} the evening's number" if call.get("ft") else "")
-                            + (f"; the morning update said about {call['ft_am']:,.0f} ft"
-                               + (" and was right on" if abs(m - call["ft_am"]) < 100 else
-                                  f", off by {abs(m - call['ft_am']):,.0f} ft")
-                               if call.get("ft_am") else "") + ".")
 
     ld = line_day(entries)
     if ld:
@@ -3624,8 +3611,9 @@ def build() -> str:
         morning = tom == now.date()
         blend = safely(base_blend, tom, safely(airmass_noon, cap, tom) if cap else None,
                        safely(yesterday_level, now) if morning else lvl, morning)
+        # Not shown (Sam, 10-23: the reason and the probability only); still
+        # logged with the call so it can be scored.
         if blend:
-            cb_sub = f"{cb_sub} Likely around {blend[0]:,.0f} ft, most days within {blend[1]:,.0f} ft either way.".strip()
             if morning:
                 safely(log_call_ft, tom, "ft_am", blend[0])
         # No summary paragraph (Sam, 2026-10-17: "the whole summary paragraph
