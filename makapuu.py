@@ -295,7 +295,7 @@ def drop_outliers(cam: dict) -> list:
     Pali gap the camera sees cloud far beyond the crest and places it too low)."""
     import numpy as np
     out = []
-    segs = {n: s for n, s in cam["segments"].items() if s.get("base_ft")}
+    segs = {n: s for n, s in cam["segments"].items() if s.get("base_ft") and n != "Pali gap"}
     for n, s in segs.items():
         rest = [t["base_ft"] for m, t in segs.items() if m != n]
         if len(rest) >= 2 and s["base_ft"] < float(np.median(rest)) - OUTLIER_FT:
@@ -303,8 +303,26 @@ def drop_outliers(cam: dict) -> list:
     return out
 
 
+GAP_LOG = HERE / "docs" / "makapuu_gap.csv"
+
+
+def log_gap(now: datetime, cam: dict) -> None:
+    """The Pali gap's reading beside the shown stretches', for tracking only."""
+    import csv
+    import numpy as np
+    gap = cam["segments"].get("Pali gap", {})
+    shown = [s["base_ft"] for n, s in cam["segments"].items() if n != "Pali gap" and s.get("base_ft")]
+    new = not GAP_LOG.exists()
+    with open(GAP_LOG, "a", newline="", encoding="utf-8") as f:
+        w = csv.writer(f)
+        if new:
+            w.writerow(["date", "time", "gap_bound_ft", "gap_capped", "others_median_ft"])
+        w.writerow([f"{now:%Y-%m-%d}", f"{cam['at']:%H:%M}", gap.get("base_ft"), gap.get("capped"),
+                    round(float(np.median(shown)), -1) if shown else None])
+
+
 def cam_text(cam: dict) -> str:
-    capped = [n for n, s in cam["segments"].items() if s["capped"] >= CAP_SHARE]
+    capped = [n for n, s in cam["segments"].items() if s["capped"] >= CAP_SHARE and n != "Pali gap"]
     if capped:
         return "Cloud on the Koʻolau: " + ", ".join(capped) + "."
     if cam["base_ft"]:
@@ -320,7 +338,7 @@ def cam_text(cam: dict) -> str:
         # the lead from the stretches' own bounds, the same numbers the verdicts
         # use -- a frame-wide median beside per-stretch verdicts contradicted
         # itself ("below about 2,400 ft, clear of the whole ridge").
-        odd = drop_outliers(cam)
+        odd = drop_outliers(cam) + ["Pali gap"]          # the gap is tracked, never shown
         cam = {**cam, "segments": {n: s for n, s in cam["segments"].items() if n not in odd}}
         own = sorted(round(s["base_ft"], -2) for s in cam["segments"].values() if s.get("base_ft"))
         if own:
@@ -633,7 +651,10 @@ def write(now: datetime) -> None:
     cam = _try(crest_camera, now, problems=problems)
     cam_line = cam_text(cam) if cam else ""
     if cam:
-        problems += [f"camera outlier left out: {n} {cam['segments'][n]['base_ft']:,.0f} ft" for n in drop_outliers(cam)]
+        problems += [f"camera outlier left out: {n} {cam['segments'][n]['base_ft']:,.0f} ft"
+                     for n in drop_outliers(cam) if n != "Pali gap"]
+        if 8 <= now.hour <= 17:
+            _try(log_gap, now, cam, problems=problems)
     if cam_line:
         base_html = (f'{esc(cam_line)}'
                      f'<div class="sub">Kāneʻohe Bay camera, looking at the Koʻolau, the last 30 minutes to {cam["at"]:%H:%M}.'

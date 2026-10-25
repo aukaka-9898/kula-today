@@ -32,8 +32,13 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import koolaucam as kc  # noqa: E402
 
 # Segments of the crest in this view (x ranges, left to right).
-SEGMENTS = (("Greenwall", 170, 470), ("Konahuanui", 470, 640), ("Kāneʻohe crest", 640, 1260),
-            ("Kahaluʻu crest", 1260, 1730))
+SEGMENTS = (("Greenwall", 170, 470), ("Konahuanui", 470, 615), ("Pali gap", 615, 790),
+            ("Kāneʻohe crest", 790, 1260), ("Kahaluʻu crest", 1260, 1730))
+# The Nuʻuanu Pali gap (bearing 208-216, skyline 1,500-2,000 ft): through it
+# the camera sees cloud far beyond the crest and places it too low. Read and
+# logged, never shown (Sam, 10-25: "Continue to track the gap but there is
+# probably no reason to include it").
+TRACK_ONLY = ("Pali gap",)
 # The other two views from the same site (Sam 10-25: "build SE and NW ridge").
 # SE: "Waimānalo" from launch (x ~1097) to Puʻu o Kona (x ~1460), "Greenwall"
 # from Puʻu o Kona on (Sam's names); the antenna box at the right edge masked.
