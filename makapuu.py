@@ -360,13 +360,34 @@ SURFACE_POINT = (21.45, -157.763)    # Kaneohe (PHNG): open windward coast, the 
 RELEASE_FT = 20
 
 
+# Open-Meteo timed out on the 11:44 build (10-25) and the Details page lost
+# every forecast hour (Sam: "Makapu'u soundings are blank"). So: three tries,
+# and the last good answer kept beside the page as the fallback.
+SURFACE_CACHE = OUT / "surface_cache.json"
+
+
+def _surface_fetch() -> dict:
+    last = None
+    for attempt in range(3):
+        try:
+            r = requests.get("https://api.open-meteo.com/v1/forecast", timeout=30, params={
+                "latitude": SURFACE_POINT[0], "longitude": SURFACE_POINT[1],
+                "hourly": "temperature_2m,dew_point_2m", "temperature_unit": "fahrenheit",
+                "timezone": "Pacific/Honolulu", "forecast_days": 5})
+            return r.json()["hourly"]
+        except Exception as e:
+            last = e
+    raise last
+
+
 def surface_hours() -> dict:
-    r = requests.get("https://api.open-meteo.com/v1/forecast", timeout=60, params={
-        "latitude": SURFACE_POINT[0], "longitude": SURFACE_POINT[1],
-        "hourly": "temperature_2m,dew_point_2m", "temperature_unit": "fahrenheit",
-        "timezone": "Pacific/Honolulu", "forecast_days": 5}).json()["hourly"]
+    try:
+        h = _surface_fetch()
+        SURFACE_CACHE.write_text(json.dumps(h), encoding="utf-8")
+    except Exception:
+        h = json.loads(SURFACE_CACHE.read_text(encoding="utf-8"))   # the last good forecast
     return {datetime.fromisoformat(t).replace(tzinfo=HST): (a, b)
-            for t, a, b in zip(r["time"], r["temperature_2m"], r["dew_point_2m"]) if a is not None and b is not None}
+            for t, a, b in zip(h["time"], h["temperature_2m"], h["dew_point_2m"]) if a is not None and b is not None}
 
 
 def rrfs() -> dict:
@@ -637,8 +658,10 @@ def write_details(now: datetime) -> None:
     import thermal as th
     f = OUT / "details.json"
     try:
-        if now - datetime.fromisoformat(json.loads(f.read_text(encoding="utf-8"))["made"]) < DETAILS_MAX_AGE:
-            return
+        old = json.loads(f.read_text(encoding="utf-8"))
+        gaps = any("temp_f" not in v for k, v in old["surface"].items() if k >= f"{now:%Y-%m-%dT%H}")
+        if now - datetime.fromisoformat(old["made"]) < DETAILS_MAX_AGE and not gaps:
+            return                                       # fresh and complete; a gap refetches next build
     except Exception:
         pass
     days = [now.date(), now.date() + timedelta(days=1)]

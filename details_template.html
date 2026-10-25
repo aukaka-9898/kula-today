@@ -229,7 +229,11 @@ $style
     ["RRFS", "GFS", "RAOB"].forEach(function (k) { if (!d.sources[k]) Q('input[name="src"][value="' + k + '"]').disabled = true; });
     fillHours();
     var now = new Date(), key = now.toLocaleString("sv-SE", {timeZone: "Pacific/Honolulu"}).slice(0, 13).replace(" ", "T");
-    if (d.surface[key]) Q("#hour").value = key;
+    // Open on this hour, or the nearest hour that has surface air (a build that
+    // missed the forecast left some hours empty, 10-25).
+    var keys = Object.keys(d.surface).filter(function (k) { return d.surface[k].temp_f !== undefined; });
+    if (d.surface[key] && d.surface[key].temp_f !== undefined) Q("#hour").value = key;
+    else if (keys.length) Q("#hour").value = keys.filter(function (k) { return k >= key; })[0] || keys[keys.length - 1];
     all();
   }).catch(function () { Q("#o-src").textContent = "The thermal data could not be loaded."; });
   document.querySelectorAll('input[name="src"]').forEach(function (e) { e.onchange = draw; });
