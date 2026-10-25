@@ -1,5 +1,5 @@
 {
- "made": "2026-10-25 07:22",
+ "made": "2026-10-25 07:37",
  "flags": [
   "Shear line: a stale station sat out of 56% of updates over the last week (the rule under review)."
  ],
@@ -22,10 +22,10 @@
    "base_within": 0,
    "base_typical": 620.0,
    "base_bias": -620.0,
-   "thermal_n": 4,
-   "thermal_right": 0,
-   "thermal_within_one": 3,
-   "thermal_bias": 1.25,
+   "thermal_n": 5,
+   "thermal_right": 1,
+   "thermal_within_one": 4,
+   "thermal_bias": 1.0,
    "rules": {
     "B2": [
      1,
@@ -38,7 +38,7 @@
    },
    "camera_days": 1,
    "derived_minus_camera": -860.0,
-   "pilots": false
+   "pilots": true
   }
  }
 }
