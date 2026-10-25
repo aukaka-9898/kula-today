@@ -344,6 +344,7 @@ PAGE = """<!doctype html>
     <div><a class="homebtn" href="/">&larr; Home</a><div class="tag">Makapu&#8216;u soaring briefing</div><h1>Makapu&#8216;u Today</h1></div>
     <div class="date">Updated {updated}</div>
   </header>
+  <div class="databadge"><div class="big">Under construction</div></div>
   <div>
     <div class="cam"><iframe src="{webcam}" title="Makapuʻu webcam, live, looking northwest toward Waimānalo" loading="lazy"></iframe></div>
     <div class="camcap">Makapuʻu webcam, live, looking northwest. FAA WeatherCam. <a href="{webcam}" target="_blank" rel="noopener">Open full size</a></div>
