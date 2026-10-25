@@ -285,6 +285,24 @@ def crest_camera(now: datetime) -> dict | None:
             "at": newest, "frames": len(reads)}
 
 
+OUTLIER_FT = 400   # a stretch this far below the others' median is left out
+
+
+def drop_outliers(cam: dict) -> list:
+    """Stretches whose bound sits OUTLIER_FT below the median of the others --
+    left out of the lead and the verdicts (Sam, 10-25: the Kāneʻohe crest at
+    2,010 against 2,600-2,710 elsewhere "is an obvious outlier"; through the
+    Pali gap the camera sees cloud far beyond the crest and places it too low)."""
+    import numpy as np
+    out = []
+    segs = {n: s for n, s in cam["segments"].items() if s.get("base_ft")}
+    for n, s in segs.items():
+        rest = [t["base_ft"] for m, t in segs.items() if m != n]
+        if len(rest) >= 2 and s["base_ft"] < float(np.median(rest)) - OUTLIER_FT:
+            out.append(n)
+    return out
+
+
 def cam_text(cam: dict) -> str:
     capped = [n for n, s in cam["segments"].items() if s["capped"] >= CAP_SHARE]
     if capped:
@@ -302,6 +320,8 @@ def cam_text(cam: dict) -> str:
         # the lead from the stretches' own bounds, the same numbers the verdicts
         # use -- a frame-wide median beside per-stretch verdicts contradicted
         # itself ("below about 2,400 ft, clear of the whole ridge").
+        odd = drop_outliers(cam)
+        cam = {**cam, "segments": {n: s for n, s in cam["segments"].items() if n not in odd}}
         own = sorted(round(s["base_ft"], -2) for s in cam["segments"].values() if s.get("base_ft"))
         if own:
             lo, hi = own[0], own[-1]
@@ -612,6 +632,8 @@ def write(now: datetime) -> None:
         base = None                                      # gated: see BASE_FLOOR_FT
     cam = _try(crest_camera, now, problems=problems)
     cam_line = cam_text(cam) if cam else ""
+    if cam:
+        problems += [f"camera outlier left out: {n} {cam['segments'][n]['base_ft']:,.0f} ft" for n in drop_outliers(cam)]
     if cam_line:
         base_html = (f'{esc(cam_line)}'
                      f'<div class="sub">Kāneʻohe Bay camera, looking at the Koʻolau, the last 30 minutes to {cam["at"]:%H:%M}.'
