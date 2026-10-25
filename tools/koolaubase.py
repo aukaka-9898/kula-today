@@ -69,6 +69,14 @@ REACH_PX = 220             # how far above the crest a cloud bottom is looked fo
 # 4 or less. The first 8 rows over the skyline are haze and skipped; a
 # bottom needs 4 cloud rows in a row.
 HAZE_PX, RUN = 8, 4
+# Dark cloud down on the crest (Sam, 10-25: Konahuanui "is not clear. Cam shows
+# this" -- a dark grey base, ~120 brightness, sat on the summit and the bright-
+# cloud test looked past it). The frame's own clear sky beside it along the
+# ridge is the reference (Sam: "following the ridge a bit to the right shows
+# clear sky"): the strip 10-25 rows over the crest darker than the 75th
+# percentile of that strip within NEAR_PX either side by DARK_MARGIN = cloud
+# bottom at the crest.
+NEAR_PX, DARK_MARGIN = 200, 25
 CLOUD_BR, CLOUD_BRIGHT = 6, 140
 _GEOM: dict = {}
 
@@ -121,8 +129,10 @@ def read(rgb, view="sw"):
     selfref = VIEWS[view]["capped"] == "self"
     gray = rgb.mean(axis=2)
     sat = rgb.max(axis=2) - rgb.min(axis=2)
+    strip = np.array([gray[int(y0) - 25:int(y0) - 10, x - 3:x + 4].mean() for x, y0 in zip(cols, rows)])
+    ref = np.array([np.percentile(strip[np.abs(cols - x) <= NEAR_PX], 75) for x in cols])
     out = []
-    for x, y0, d, c, az in zip(cols, rows, dist, crest, azs):
+    for x, y0, d, c, az, st, rf in zip(cols, rows, dist, crest, azs, strip, ref):
         y0 = int(round(y0))
         sl = slice(x - 3, x + 4)
         grey = sat[y0 + BELOW[0]:y0 + BELOW[1], sl].mean() < CAP_SAT
@@ -134,7 +144,9 @@ def read(rgb, view="sw"):
             under = gray[y0 + BELOW[0]:y0 + BELOW[1], sl].mean() - clear[y0 + BELOW[0]:y0 + BELOW[1], sl].mean()
             capped = (under - lift > CAP_LIFT) and grey
         base = None
-        if not capped:
+        if not capped and st < rf - DARK_MARGIN:
+            base = height_ft(g, az, y0 - 10, d)          # dark cloud down to the crest
+        elif not capped:
             top, bot = max(0, y0 - REACH_PX), y0 - HAZE_PX
             colg = gray[top:bot, sl].mean(axis=1)[::-1]                    # upward from the crest
             br = (rgb[top:bot, sl, 2] - rgb[top:bot, sl, 0]).mean(axis=1)[::-1]
