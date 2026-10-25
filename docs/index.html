@@ -89,7 +89,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><a class="homebtn" href="/">&larr; Home</a><div class="tag">Kula soaring briefing</div><h1>Kula Today</h1></div>
-    <div class="date">Updated Sun 25 Oct 2026 · 09:14 HST</div>
+    <div class="date">Updated Sun 25 Oct 2026 · 09:22 HST</div>
   </header>
 
   <div>
@@ -99,9 +99,9 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 
   <div class="cols">
     <section class="panel today" aria-labelledby="t-today">
-      <div class="kind">Measured today · 09:14 HST</div>
+      <div class="kind">Measured today · 09:22 HST</div>
       <div class="head"><h2 id="t-today">Today</h2><span class="chip fair">Light</span></div>
-      <div class="databadge"><div class="big">Limited data</div><div>8 of 29 stations reporting; the Mesonet could not be reached, its readings are from the 09:12 update. Readings below rest on fewer stations than usual.</div></div>
+      <div class="databadge"><div class="big">Limited data</div><div>8 of 29 stations reporting. Readings below rest on fewer stations than usual.</div></div>
       <p class="summary">Today&#x27;s forecast: Thermals probably light. No trade line is expected. Upslope has not set in yet.</p>
       <dl>
         <dt>Thermals</dt><dd>Probably <strong>light</strong> (forecast)<div class="sub">thermal.py on the forecast air; measured rating just after 10:00</div></dd>
@@ -157,7 +157,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
     <p>Aloha,<br>Sam</p>
   </details>
 </div>
-<!-- build problems: HCDP observations, using the last good fetch: ConnectTimeout: HTTPSConnectionPool(host='api.hcdp.ikewai.org', port=443): Max retries exceeded with url: /mesonet/db/measurements?location=hawaii&station_ids=0115%2C0118%2C0144%2C0116%2C0119%2C0145%2C0151%2C0152%2C0153%2C0143&var_ids=Tair_1_Avg%2CRH_1_Avg%2CWS_1_Avg%2CWDrs_1_Avg%2CWS_1_Max&start_date=2026-10-25T00%3A00%3A00-10%3A00&row_mode=json&limit=100000 (Caused by ConnectTimeoutError(<HTTPSConnection(host='api.hcdp.ikewai.org', port=443) at 0x7e94dffb6e40), 'Connection to api.hcdp.ikewai.org timed out. (connect timeout=20)')); Mesonet sun: ConnectTimeout: HTTPSConnectionPool(host='api.hcdp.ikewai.org', port=443): Max retries exceeded with url: /mesonet/db/measurements?location=hawaii&station_ids=0115%2C0118%2C0144%2C0116%2C0119%2C0145%2C0151%2C0152%2C0153&var_ids=SWin_1_Avg&start_date=2026-10-25T07%3A34%3A00-10%3A00&end_date=2026-10-25T09%3A14%3A00-10%3A00&row_mode=json&limit=100000 (Caused by ConnectTimeoutError(<HTTPSConnection(host='api.hcdp.ikewai.org', port=443) at 0x7e94dfdeeb70), 'Connection to api.hcdp.ikewai.org timed out. (connect timeout=20)')); honolua_trades: ConnectTimeout: HTTPSConnectionPool(host='api.hcdp.ikewai.org', port=443): Max retries exceeded with url: /mesonet/db/measurements?location=hawaii&station_ids=0133&var_ids=WDrs_1_Avg%2CWSrs_1_Avg&start_date=2026-10-25T18%3A17%3A25Z&row_mode=json&limit=1000 (Caused by ConnectTimeoutError(<HTTPSConnection(host='api.hcdp.ikewai.org', port=443) at 0x7e94dfe04fb0), 'Connection to api.hcdp.ikewai.org timed out. (connect timeout=20)')); sun_trend: ConnectTimeout: HTTPSConnectionPool(host='api.hcdp.ikewai.org', port=443): Max retries exceeded with url: /mesonet/db/measurements?location=hawaii&station_ids=0115%2C0118%2C0144%2C0116%2C0119%2C0145%2C0151%2C0152%2C0153&var_ids=SWin_1_Avg&start_date=2026-10-25T07%3A44%3A00-10%3A00&end_date=2026-10-25T09%3A14%3A00-10%3A00&row_mode=json&limit=100000 (Caused by ConnectTimeoutError(<HTTPSConnection(host='api.hcdp.ikewai.org', port=443) at 0x7e94dfe98ef0), 'Connection to api.hcdp.ikewai.org timed out. (connect timeout=20)')); overnight_line: ConnectTimeout: HTTPSConnectionPool(host='api.hcdp.ikewai.org', port=443): Max retries exceeded with url: /mesonet/db/measurements?location=hawaii&station_ids=0119&var_ids=Rnet_1_Avg%2CRH_1_Avg&start_date=2026-10-25T02%3A00%3A00-10%3A00&end_date=2026-10-25T04%3A00%3A00-10%3A00&row_mode=json&limit=10000 (Caused by ConnectTimeoutError(<HTTPSConnection(host='api.hcdp.ikewai.org', port=443) at 0x7e94dfdedd60), 'Connection to api.hcdp.ikewai.org timed out. (connect timeout=20)')) -->
+<!-- build problems: none -->
 <script>
 /* Catch up with a new build within ~2 minutes (Sam, 2026-10-17: "the page
    does not seem to autoupdate"). stations.json's "made" is the build time;
@@ -165,7 +165,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
    browser's 10-minute cached copy is bypassed. The 15-minute refresh stays
    as a backstop. */
 (function () {
-  var built = "2026-10-25T09:14";
+  var built = "2026-10-25T09:22";
   function check() {
     fetch("stations.json?" + Date.now(), {cache: "no-store"})
       .then(function (r) { return r.json(); })

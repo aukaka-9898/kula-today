@@ -88,7 +88,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><a class="homebtn" href="/">&larr; Home</a><div class="tag">Makapu&#8216;u soaring briefing</div><h1>Makapu&#8216;u Today</h1></div>
-    <div class="date">Updated Sun 25 Oct 2026 · 09:21 HST</div>
+    <div class="date">Updated Sun 25 Oct 2026 · 09:22 HST</div>
   </header>
   <div class="databadge"><div class="big">Under construction</div></div>
   <div>
@@ -97,13 +97,13 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
   </div>
   <div class="cols">
     <section class="panel today" aria-labelledby="t-today">
-      <div class="kind">Now · 09:21 HST</div>
+      <div class="kind">Now · 09:22 HST</div>
       <div class="head"><h2 id="t-today">Today</h2><span class="chip fair">Caution</span></div>
       <dl>
         <dt>On the ridge</dt><dd><strong>Caution</strong><div class="sub">wind and gusts average 18 mph, over the 16 mph safe limit for this direction</div></dd>
         <dt>Wind</dt><dd><span class="num">NNE (030°) 15 mph, gusts 21</span><div class="sub">NWS forecast for this hour: Bellows not reporting since 22 Oct 03:15</div></dd>
         <dt>Return</dt><dd>More north than the ideal 050°: easier to get back from downrange, the primary LZ less ideal.</dd>
-        <dt>Crest base</dt><dd>Unavailable</dd>
+        <dt>Crest base</dt><dd><span class="num">About 3,200 ft</span>, above the crest downrange<div class="sub">Kaneohe's air at 08:57, lifted over the Ko&#8216;olau. Downrange only; it does not decide flyability. Kaneohe's ceilometer: clear below 12,000 ft.</div></dd>
       </dl>
       <div class="kind" style="color:var(--muted)">Rest of today (forecast)</div>
       <div class="tablewrap"><table class="hist"><thead><tr><th>Hour</th><th class="n">Wind, mph</th><th>Ridge</th></tr></thead><tbody><tr><td>10:00</td><td class="n">NNE 15 g21</td><td><span class="chip fair">Caution</span></td></tr><tr><td>11:00</td><td class="n">NNE 12 g15</td><td><span class="chip good">Flyable</span></td></tr><tr><td>12:00</td><td class="n">NNE 12 g15</td><td><span class="chip good">Flyable</span></td></tr><tr><td>13:00</td><td class="n">NNE 12 g15</td><td><span class="chip good">Flyable</span></td></tr><tr><td>14:00</td><td class="n">NNE 15 g21</td><td><span class="chip fair">Caution</span></td></tr><tr><td>15:00</td><td class="n">NNE 15 g21</td><td><span class="chip fair">Caution</span></td></tr><tr><td>16:00</td><td class="n">NNE 15 g21</td><td><span class="chip fair">Caution</span></td></tr><tr><td>17:00</td><td class="n">NNE 14 g18</td><td><span class="chip fair">Caution</span></td></tr><tr><td>18:00</td><td class="n">NNE 14 g18</td><td><span class="chip fair">Caution</span></td></tr></tbody></table></div>
@@ -127,10 +127,10 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
     <p><strong>Notice.</strong> Information only, provided as is, with no guarantee of accuracy or availability. This is not an official forecast. Every pilot is responsible for their own decision to fly.</p>
   </div>
 </div>
-<!-- build problems: kaneohe: JSONDecodeError: Expecting value: line 1 column 1 (char 0) -->
+<!-- build problems: none -->
 <script>
 (function () {
-  var built = "2026-10-25T09:21";
+  var built = "2026-10-25T09:22";
   function check() {
     fetch("summary.json?" + Date.now(), {cache: "no-store"}).then(function (r) { return r.json(); })
       .then(function (j) { if (j && j.built && j.built > built) location.replace(location.pathname + "?v=" + Date.now()); })
