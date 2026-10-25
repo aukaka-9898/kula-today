@@ -259,6 +259,44 @@ def load_hcdp(now: datetime) -> dict:
     return saved["got"]
 
 
+# The two RAWS reach NOAA's HADS directly as well as the NWS API, and HADS
+# had them again on 2026-10-25 while the API's mesonet feed stayed frozen
+# (Sam: "add the two"). Used only when the API has nothing for today. SHEF,
+# English units, UTC, hourly: TA air F, XR humidity %, US wind mph, UD
+# direction, UP peak wind mph.
+HADS_IDS = {"KLFH1": "AA10F12E", "KMEH1": "32BBF92C"}      # Kula 1, Kamehamenui 1
+HADS_URL = ("https://hads.ncep.noaa.gov/nexhads2/servlet/DecodedData"
+            "?sinceday=-1&hsa=nil&state=nil&nesdis_ids={nesdis}&of=1")
+
+
+def read_hads(st, since: datetime) -> list:
+    vals: dict = {}
+    for line in requests.get(HADS_URL.format(nesdis=HADS_IDS[st.id]), timeout=40).text.splitlines():
+        f = line.split("|")
+        if len(f) > 4 and f[2] in ("TA", "XR", "US", "UD", "UP"):
+            try:
+                t = (datetime.strptime(f[3], "%Y-%m-%d %H:%M").replace(tzinfo=timezone.utc)
+                     .astimezone(HST).replace(tzinfo=None))
+                vals.setdefault(t, {})[f[2]] = float(f[4])
+            except ValueError:
+                continue
+    out = []
+    for t, v in sorted(vals.items()):
+        if t < since.replace(tzinfo=None) or "TA" not in v or not 0 < v.get("XR", 0) <= 100:
+            continue
+        t_c = (v["TA"] - 32) * 5 / 9
+        rd = sampler.Reading(st, t, sampler.f32(v["TA"]), sampler.f32(sampler.net_round(
+            dewpoint_c(t_c, v["XR"]) * 9 / 5 + 32, 1)))
+        if "US" in v:
+            rd.wind_mph = sampler.f32(v["US"])
+            if "UD" in v:
+                rd.wind_dir = sampler.f32(v["UD"] % 360)
+        if "UP" in v:
+            rd.gust_mph = sampler.f32(v["UP"])
+        out.append(rd)
+    return out
+
+
 # Data dropouts through the day, for the wrap-up (Sam, 2026-10-23: "The daily
 # wrap up should include any data dropouts"): each build notes which map
 # stations reported (first and last reading seen) and whether the Mesonet
@@ -357,6 +395,8 @@ def observations(now: datetime) -> pd.DataFrame:
             except Exception as e:
                 fault = f"{type(e).__name__}: {e}"
                 time.sleep(2 * (attempt + 1))
+        if not got and st.id in HADS_IDS:
+            got = safely(read_hads, st, midnight) or got
         if got is None:
             PROBLEMS.append(f"no observations for {st.id} ({fault})")
             continue
