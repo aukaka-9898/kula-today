@@ -548,7 +548,7 @@ def write(now: datetime) -> None:
     ta = _try(air_day, air, surf, tom, problems=problems) if air else None
     aloft = ""
     if ta:
-        aloft = (f' Crest base about {ta["base_ft"]:,} ft' if ta["base_ft"] is not None else " ") +                 f', thermals {ta["word"].lower()}, inversion {inv_text(ta["inv"])[0].lower() + inv_text(ta["inv"])[1:]} (RRFS).'
+        aloft = (f' Downrange base about {ta["base_ft"]:,} ft' if ta["base_ft"] is not None else " ") +                 f', thermals {ta["word"].lower()}, inversion {inv_text(ta["inv"])[0].lower() + inv_text(ta["inv"])[1:]} (RRFS).'
     tom_html = (f'<p class="summary">{esc(tline)} Midday: {esc(wind_text(noon))}. '
                 f'{esc(return_note(noon["dir"]) if noon and noon.get("dir") is not None else "")}'
                 f'{esc(aloft)}</p>'
@@ -877,7 +877,7 @@ PAGE = """<!doctype html>
         <dt>On the ridge</dt><dd>{fly}</dd>
         <dt>Wind</dt><dd>{wind}</dd>
         {dirnote}
-        <dt>Crest base</dt><dd>{base}</dd>
+        <dt>Downrange base</dt><dd>{base}</dd>
         <dt>Thermals</dt><dd>{therm}</dd>
         <dt>Inversion</dt><dd>{inv}</dd>
       </dl>
@@ -893,14 +893,14 @@ PAGE = """<!doctype html>
   <section class="block" aria-labelledby="t-week">
     <h2 id="t-week">The week</h2>
     <div class="tablewrap"><table>
-      <thead><tr><th>Day</th><th>Midday wind</th><th>Best</th><th>Hours</th><th class="n">Crest base</th><th>Thermals</th></tr></thead>
+      <thead><tr><th>Day</th><th>Midday wind</th><th>Best</th><th>Hours</th><th class="n">Downrange base</th><th>Thermals</th></tr></thead>
       <tbody>{week}</tbody>
     </table></div>
-    <p>Rated hour by hour, 08:00–19:00, from the NWS forecast grid at Makapuʻu: wind from 0–70° only (east of 070° turbulence off Rabbit Island reaches launch), speed and gusts against the site's limits, under 10 mph is a run-off launch. Crest base and thermals from the RRFS sounding at Kaneohe, as far as it runs (about three days).</p>
+    <p>Rated hour by hour, 08:00–19:00, from the NWS forecast grid at Makapuʻu: wind from 0–70° only (east of 070° turbulence off Rabbit Island reaches launch), speed and gusts against the site's limits, under 10 mph is a run-off launch. Downrange base and thermals from the RRFS sounding at Kaneohe, as far as it runs (about three days).</p>
   </section>
   <a class="detailslink" href="details.html">Details: thermal profile and station map &rarr;</a>
   <div class="notes">
-    <p><strong>Where the numbers come from.</strong> Wind: Bellows (BELH1) via api.weather.gov, or the NWS forecast grid for the hour when Bellows is not reporting. Crest base: Kaneohe (PHNG) temperature and dew point via aviationweather.gov. Thermals, inversion and the forecast crest base: RRFS forecast soundings at Kaneohe (BUFKIT, Penn State). Limits: the Makapuʻu site table.</p>
+    <p><strong>Where the numbers come from.</strong> Wind: Bellows (BELH1) via api.weather.gov, or the NWS forecast grid for the hour when Bellows is not reporting. Downrange base: the Kāneʻohe Bay camera's view of the Koʻolau, and Kaneohe (PHNG) temperature and dew point via aviationweather.gov. Thermals, inversion and the forecast downrange base: RRFS forecast soundings at Kaneohe (BUFKIT, Penn State). Limits: the Makapuʻu site table.</p>
     <p><strong>Notice.</strong> Information only, provided as is, with no guarantee of accuracy or availability. This is not an official forecast. Every pilot is responsible for their own decision to fly.</p>
   </div>
 </div>
