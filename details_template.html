@@ -199,6 +199,7 @@ $style
              '<text x="' + (left ? l + 4 : W - rt - 4) + '" y="' + (Y(h) - 4) + '" text-anchor="' + (left ? "start" : "end") + '" style="fill:' + col + '">' + label + "</text>";
     }
     g += mark(C.lcl, "Cloudbase", "var(--sky)", false) + mark(C.use, "Top of useable lift", "var(--tawny)", true);
+    if (D.launch_ft) g += mark(D.launch_ft, "Launch", "var(--grass)", C.use > D.launch_ft - 400 && C.use < D.launch_ft + 400 ? false : true);
     g += '<text x="' + (l + 4) + '" y="' + (Y(lo) - 4) + '" style="fill:var(--grass)">Kula Ag</text>';
     g += '<clipPath id="plot"><rect x="' + l + '" y="0" width="' + (W - l - rt) + '" height="' + Hh + '"/></clipPath>';
     g += '<path clip-path="url(#plot)" d="' + path(function (x) { return x.td; }) + '" fill="none" stroke="#3f9d5a" stroke-width="2"/>';

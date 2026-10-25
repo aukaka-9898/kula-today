@@ -1886,6 +1886,9 @@ STATIONS_FILE = HERE / "docs" / "stations.json"
 DETAILS_FILE = HERE / "docs" / "details.json"
 DETAILS_HOURS = range(8, 17)
 DETAILS_TOP_FT = 20000
+# Launch, for the chart: Peter Fay's takeoff on 2026-10-23, GPS 1,434 m (Sam,
+# 10-25: "use Peter's launch elevation").
+KULA_LAUNCH_FT = 4700
 RAOB_URL = ("https://weather.uwyo.edu/wsgi/sounding?datetime={t:%Y-%m-%d %H}:00:00"
             "&id=91285&type=TEXT:CSV&src=BUFR")
 
@@ -1934,7 +1937,7 @@ def write_details(now: datetime, obs: pd.DataFrame) -> None:
     days = [now.date(), now.date() + timedelta(days=1)]
     wanted = [datetime.combine(d, datetime.min.time()).replace(hour=h, tzinfo=HST)
               for d in days for h in DETAILS_HOURS]
-    out = {"made": now.isoformat(), "release_ft": RELEASE_FT, "top_ft": 18000,
+    out = {"made": now.isoformat(), "release_ft": RELEASE_FT, "launch_ft": KULA_LAUNCH_FT, "top_ft": 18000,
            "bands": [[None if lim == float("-inf") else lim, w] for lim, w in th.TI_BANDS], "sources": {}, "surface": {}}
     for model in ("RRFS", "GFS"):
         try:
