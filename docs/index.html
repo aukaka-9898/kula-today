@@ -87,7 +87,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><div class="tag">Kula soaring briefing</div><h1>Kula Today</h1></div>
-    <div class="date">Updated Sat 24 Oct 2026 · 18:07 HST</div>
+    <div class="date">Updated Sat 24 Oct 2026 · 18:22 HST</div>
   </header>
 
   <div>
@@ -97,7 +97,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 
   <div class="cols">
     <section class="panel today" aria-labelledby="t-today">
-      <div class="kind">Measured today · 18:07 HST</div>
+      <div class="kind">Measured today · 18:22 HST</div>
       <div class="head"><h2 id="t-today">Today</h2></div>
       <div class="databadge"><div class="big">Limited data</div><div>7 of 29 stations reporting. Readings below rest on fewer stations than usual.</div></div>
       
@@ -120,12 +120,12 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
         <dt>Sun</dt><dd><span class="num">86%</span> of clear sky, 10:00–14:00 (GFS)<div class="sub">The model can't see the slope's own cumulus: when it says 90% or more, Kula has measured about 80%. Good flying days measure about 80%, overcast about 50%, socked in 20%.</div></dd>
         <dt>Shear line</dt><dd>Crossing Kula Highway at the middle Lower Kula Road junction<div class="sub">Trades NNE (023°)</div><div class="alert">The line is at Naalae Road or further south, where Kula is usually not flyable.</div></dd>
       </dl>
-      <div class="sub">Forecast as of 17:07 HST</div><div class="sub">Forecast rules last checked October 2026: all holding.</div><div class="sub">Accuracy, last 30 days, the evening call against the day: cloudbase scored from 24 October (tested on 1,000 past days: within 500 ft on 2 days in 3); thermals right on 0 of 4, within one step on 3. Scored against the camera and stations.</div>
+      <div class="sub">Forecast as of 18:22 HST</div><div class="sub">Forecast rules last checked October 2026: all holding.</div><div class="sub">Accuracy, last 30 days, the evening call against the day: cloudbase scored from 24 October (tested on 1,000 past days: within 500 ft on 2 days in 3); thermals right on 0 of 4, within one step on 3. Scored against the camera and stations.</div>
     </section>
   </div>
 
   <section class="block" aria-labelledby="t-ladder">
-    <h2 id="t-ladder">Sunlight up the slope, as of 17:45</h2>
+    <h2 id="t-ladder">Sunlight up the slope, as of 18:00</h2>
     <p>Share of clear-sky sunlight measured at each station over the last 60 minutes of readings. Stations under cloud read low; stations above its top read full sun. Late in the day the sun is low in the west, so a station under the deck can read full sun coming in under the deck's edge.</p>
     <div class="rows"><p>Unavailable.</p></div>
   </section>
@@ -248,7 +248,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
    browser's 10-minute cached copy is bypassed. The 15-minute refresh stays
    as a backstop. */
 (function () {
-  var built = "2026-10-24T18:07";
+  var built = "2026-10-24T18:22";
   function check() {
     fetch("stations.json?" + Date.now(), {cache: "no-store"})
       .then(function (r) { return r.json(); })
