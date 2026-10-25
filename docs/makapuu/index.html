@@ -91,16 +91,16 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><a class="homebtn" href="/">&larr; Home</a><div class="tag">Makapu&#8216;u soaring briefing</div><h1>Makapu&#8216;u Today</h1></div>
-    <div class="date">Updated Sun 25 Oct 2026 · 09:49 HST</div>
+    <div class="date">Updated Sun 25 Oct 2026 · 09:59 HST</div>
   </header>
   <div class="databadge"><div class="big">Under construction</div></div>
   <div>
-    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/588/details/camera/12153/full" title="Makapu&#8216;u webcam, live, looking northwest toward Waimānalo" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="camera.jpg?2026-10-25T09:49" alt=""></div>
+    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/588/details/camera/12153/full" title="Makapu&#8216;u webcam, live, looking northwest toward Waimānalo" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="camera.jpg?2026-10-25T09:59" alt=""></div>
     <div class="camcap">Makapu&#8216;u webcam, live, looking northwest. FAA WeatherCam. <a href="https://weathercams.faa.gov/cameras/state/HI/cameraSite/588/details/camera/12153/full" target="_blank" rel="noopener">Open full size</a></div>
   </div>
   <div class="cols">
     <section class="panel today" aria-labelledby="t-today">
-      <div class="kind">Now · 09:49 HST</div>
+      <div class="kind">Now · 09:59 HST</div>
       <div class="head"><h2 id="t-today">Today</h2><span class="chip fair">Light</span></div>
       <dl>
         <dt>On the ridge</dt><dd><strong>Light</strong><div class="sub">under 10 mph: run-off launch only, not recommended</div></dd>
@@ -136,7 +136,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <!-- build problems: surface_hours: ReadTimeout: HTTPSConnectionPool(host=&#x27;api.open-meteo.com&#x27;, port=443): Read timed out. (read timeout=60) -->
 <script>
 (function () {
-  var built = "2026-10-25T09:49";
+  var built = "2026-10-25T09:59";
   function check() {
     fetch("summary.json?" + Date.now(), {cache: "no-store"}).then(function (r) { return r.json(); })
       .then(function (j) { if (j && j.built && j.built > built) location.replace(location.pathname + "?v=" + Date.now()); })
