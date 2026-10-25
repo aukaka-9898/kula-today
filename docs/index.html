@@ -87,7 +87,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><div class="tag">Kula soaring briefing</div><h1>Kula Today</h1></div>
-    <div class="date">Updated Sat 24 Oct 2026 · 14:37 HST</div>
+    <div class="date">Updated Sat 24 Oct 2026 · 14:52 HST</div>
   </header>
 
   <div>
@@ -97,14 +97,14 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 
   <div class="cols">
     <section class="panel today" aria-labelledby="t-today">
-      <div class="kind">Measured today · 14:37 HST</div>
+      <div class="kind">Measured today · 14:52 HST</div>
       <div class="head"><h2 id="t-today">Today</h2></div>
       <div class="databadge"><div class="big">Limited data</div><div>9 of 29 stations reporting. Readings below rest on fewer stations than usual.</div></div>
       
       <dl>
         <dt>Thermals</dt><dd>Unavailable<div class="sub">Kula Ag's readings did not come through this update</div></dd>
         <dt>Derived<br>Cloudbase</dt><dd>Unavailable</dd>
-        <dt>Sun</dt><dd><span class="num">78%</span> of clear sky, lower Kula slope<div class="sub">Last hour, as of 14:15; average of Keokea 78%; Pulehu left out, in trade air</div></dd>
+        <dt>Sun</dt><dd><span class="num">76%</span> of clear sky, lower Kula slope<div class="sub">Last hour, as of 14:30; average of Keokea 76%; Pulehu left out, in trade air</div></dd>
         <dt>Shear line</dt><dd>Crossing Kula Highway near Omaopio (forecast)<div class="sub">Trades NNE (033°). Measured once the upslope sets in</div></dd>
         
         <dt>Upslope</dt><dd>No clear upslope today</dd>
@@ -125,9 +125,9 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
   </div>
 
   <section class="block" aria-labelledby="t-ladder">
-    <h2 id="t-ladder">Sunlight up the slope, as of 14:15</h2>
+    <h2 id="t-ladder">Sunlight up the slope, as of 14:30</h2>
     <p>Share of clear-sky sunlight measured at each station over the last 60 minutes of readings. Stations under cloud read low; stations above its top read full sun.</p>
-    <div class="rows"><div class="row"><span>Summit</span><span class="elev">9,776</span><div class="bar "><span style="width:100%"></span></div><span class="pct">100%</span></div><div class="row"><span>Nene Nest</span><span class="elev">8,500</span><div class="bar "><span style="width:100%"></span></div><span class="pct">100%</span></div><div class="row"><span>Park HQ</span><span class="elev">6,926</span><div class="bar "><span style="width:100%"></span></div><span class="pct">100%</span></div><div class="row"><span>Kamehamenui 1</span><span class="elev">6,601</span><div class="bar "><span style="width:60%"></span></div><span class="pct">60%</span></div><div class="row"><span>Kula 1</span><span class="elev">6,554</span><div class="bar "><span style="width:100%"></span></div><span class="pct">100%</span></div><div class="row"><span>Keokea</span><span class="elev">2,849</span><div class="bar "><span style="width:78%"></span></div><span class="pct">78%</span></div><div class="row"><span>Piiholo</span><span class="elev">2,090</span><div class="bar "><span style="width:89%"></span></div><span class="pct">89%</span></div><div class="row"><span>Pulehu</span><span class="elev">1,402</span><div class="bar "><span style="width:100%"></span></div><span class="pct">100%</span></div></div>
+    <div class="rows"><div class="row"><span>Summit</span><span class="elev">9,776</span><div class="bar "><span style="width:100%"></span></div><span class="pct">100%</span></div><div class="row"><span>Nene Nest</span><span class="elev">8,500</span><div class="bar "><span style="width:100%"></span></div><span class="pct">100%</span></div><div class="row"><span>Park HQ</span><span class="elev">6,926</span><div class="bar "><span style="width:96%"></span></div><span class="pct">96%</span></div><div class="row"><span>Kamehamenui 1</span><span class="elev">6,601</span><div class="bar "><span style="width:60%"></span></div><span class="pct">60%</span></div><div class="row"><span>Kula 1</span><span class="elev">6,554</span><div class="bar "><span style="width:100%"></span></div><span class="pct">100%</span></div><div class="row"><span>Keokea</span><span class="elev">2,849</span><div class="bar "><span style="width:76%"></span></div><span class="pct">76%</span></div><div class="row"><span>Piiholo</span><span class="elev">2,090</span><div class="bar "><span style="width:96%"></span></div><span class="pct">96%</span></div><div class="row"><span>Pulehu</span><span class="elev">1,402</span><div class="bar "><span style="width:100%"></span></div><span class="pct">100%</span></div></div>
   </section>
 
   <section class="block" aria-labelledby="t-week">
@@ -248,7 +248,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
    browser's 10-minute cached copy is bypassed. The 15-minute refresh stays
    as a backstop. */
 (function () {
-  var built = "2026-10-24T14:37";
+  var built = "2026-10-24T14:52";
   function check() {
     fetch("stations.json?" + Date.now(), {cache: "no-store"})
       .then(function (r) { return r.json(); })
