@@ -91,22 +91,22 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><a class="homebtn" href="/">&larr; Home</a><div class="tag">Makapu&#8216;u soaring briefing</div><h1>Makapu&#8216;u Today</h1></div>
-    <div class="date">Updated Sun 25 Oct 2026 · 10:22 HST</div>
+    <div class="date">Updated Sun 25 Oct 2026 · 10:33 HST</div>
   </header>
   <div class="databadge"><div class="big">Under construction</div></div>
   <div>
-    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/588/details/camera/12153/full" title="Makapu&#8216;u webcam, live, looking northwest toward Waimānalo" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="camera.jpg?2026-10-25T10:22" alt=""></div>
+    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/588/details/camera/12153/full" title="Makapu&#8216;u webcam, live, looking northwest toward Waimānalo" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="camera.jpg?2026-10-25T10:33" alt=""></div>
     <div class="camcap">Makapu&#8216;u webcam, live, looking northwest. FAA WeatherCam. <a href="https://weathercams.faa.gov/cameras/state/HI/cameraSite/588/details/camera/12153/full" target="_blank" rel="noopener">Open full size</a></div>
   </div>
   <div class="cols">
     <section class="panel today" aria-labelledby="t-today">
-      <div class="kind">Now · 10:22 HST</div>
-      <div class="head"><h2 id="t-today">Today</h2><span class="chip fair">Caution</span></div>
+      <div class="kind">Now · 10:33 HST</div>
+      <div class="head"><h2 id="t-today">Today</h2><span class="chip good">Flyable</span></div>
       <dl>
-        <dt>On the ridge</dt><dd><strong>Caution</strong><div class="sub">wind and gusts average 18 mph, over the 16 mph safe limit for this direction</div></dd>
-        <dt>Wind</dt><dd><span class="num">NNE (030°) 15 mph, gusts 21</span><div class="sub">NWS forecast for this hour: Bellows not reporting since 22 Oct 03:15</div></dd>
+        <dt>On the ridge</dt><dd><strong>Flyable</strong></dd>
+        <dt>Wind</dt><dd><span class="num">NNE (033°) 10 mph, gusts 13</span><div class="sub">Bellows, 10:15 (via NOAA HADS)</div></dd>
         <dt>Return</dt><dd>More north than the ideal 050°: easier to get back from downrange, the primary LZ less ideal.</dd>
-        <dt>Crest base</dt><dd><span class="num">About 2,100 ft</span>, cloud likely on the higher crest downrange<div class="sub">Condensation level of the air at He&#8216;eia (Kāne&#8216;ohe Bay shore) 2,100 ft (09:30); Kaneohe (PHNG) 3,200 ft (09:57). Downrange only; it does not decide flyability. Kaneohe's ceilometer: clear below 12,000 ft.</div></dd>
+        <dt>Crest base</dt><dd><span class="num">About 3,200 ft</span>, above the crest downrange<div class="sub">Condensation level of the air at Kaneohe (PHNG) 3,200 ft (09:57). Downrange only; it does not decide flyability. Kaneohe's ceilometer: clear below 12,000 ft.</div></dd>
         <dt>Thermals</dt><dd>Unavailable</dd>
         <dt>Inversion</dt><dd>Unavailable</dd>
       </dl>
@@ -136,7 +136,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <!-- build problems: surface_hours: ReadTimeout: HTTPSConnectionPool(host=&#x27;api.open-meteo.com&#x27;, port=443): Read timed out. (read timeout=60) -->
 <script>
 (function () {
-  var built = "2026-10-25T10:22";
+  var built = "2026-10-25T10:33";
   function check() {
     fetch("summary.json?" + Date.now(), {cache: "no-store"}).then(function (r) { return r.json(); })
       .then(function (j) { if (j && j.built && j.built > built) location.replace(location.pathname + "?v=" + Date.now()); })
