@@ -33,12 +33,15 @@ import koolaucam as kc  # noqa: E402
 
 # Segments of the crest in this view (x ranges, left to right).
 SEGMENTS = (("Greenwall", 170, 470), ("Konahuanui", 470, 640), ("Kāneʻohe crest", 640, 1260),
-            ("Kahaluʻu crest", 1260, 1880))
+            ("Kahaluʻu crest", 1260, 1730))
 # Columns never read: the cell tower and its antennas standing in front of the
 # crest (x ~1262-1345; Sam 10-25: "mask the tower" -- it read as cloud), and
 # the antennas at the left edge of the frame, which stand up past the crest to
 # x ~125 (Sam: "attenae on the right edge" -- "I meant the other right").
-MASK_X = ((0, 130), (1250, 1355))
+# Past the high point at x ~1720 (2,690 ft) the crest drops to ~2,100 ft at
+# the frame edge with farther ridges behind it: not read (Sam: "Omit that
+# section").
+MASK_X = ((0, 130), (1250, 1355), (1730, 1920))
 BELOW = (3, 16)            # rows under the skyline read for cloud on the crest
 LIGHT = (45, 70)           # rows under the skyline read for the frame's lighting
 CAP_LIFT = 30              # brighter than clear air by this, beyond the lighting change
