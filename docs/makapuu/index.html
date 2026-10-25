@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="refresh" content="900">
+<title>Makapu&#8216;u Today</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a morning briefing card -- live webcam, measured today beside the forecast, sunlight up the slope, then the week. */
+:root {
+  --bg: #f3f6f8; --surface: #ffffff; --ink: #17242f; --muted: #5a6b78; --rule: #d7e0e7;
+  --sky: #2b67a8; --grass: #5f8a2e; --tawny: #b88a1c; --shade: #7d8c98;
+  --good: #3f7d2c; --warn: #a8661a; --fair: #5a6b78;
+  --display: "IBM Plex Sans Condensed", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+  --body: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f171e; --surface: #16212b; --ink: #e4ecf2; --muted: #9aabb8; --rule: #2a3946;
+    --sky: #7fb2ea; --grass: #9cc46a; --tawny: #e0b84f; --shade: #6f808d;
+    --good: #8cc47a; --warn: #e3a45a; --fair: #9aabb8;
+    color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.55 var(--body); }
+.wrap { max-width: 980px; margin: 0 auto; padding-inline: 16px; padding-block: 20px 40px; display: grid; gap: 22px; }
+header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 16px; }
+h1 { font: 700 2.1rem/1.05 var(--display); letter-spacing: .01em; margin: 0; }
+.date { font: 500 .95rem var(--mono); color: var(--muted); }
+.tag { font: 600 .72rem var(--display); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.cam { border-radius: 10px; overflow: hidden; border: 1px solid var(--rule); background: var(--surface); }
+.cam iframe { display: block; width: 100%; aspect-ratio: 16 / 10; border: 0; }
+.camcap { font: .8rem var(--mono); color: var(--muted); padding-top: 6px; }
+.camcap a { color: var(--sky); }
+.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; }
+.panel { background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 18px 18px 16px; display: grid; gap: 12px; min-width: 0; align-content: start; }
+.panel h2, .block h2 { font: 700 1.25rem/1.1 var(--display); margin: 0; }
+.kind { font: 600 .72rem var(--display); letter-spacing: .12em; text-transform: uppercase; }
+.today .kind { color: var(--grass); }
+.tomorrow .kind { color: var(--sky); }
+.head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.chip { font: 600 .72rem var(--display); letter-spacing: .08em; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; border: 1px solid currentColor; white-space: nowrap; }
+.chip.good { color: var(--good); } .chip.warn { color: var(--warn); } .chip.fair { color: var(--fair); }
+dl { margin: 0; display: grid; grid-template-columns: max-content 1fr; gap: 8px 14px; }
+dt { font: 600 .74rem var(--display); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); padding-top: 3px; }
+dd { margin: 0; min-width: 0; }
+.num { font: 500 1rem var(--mono); font-variant-numeric: tabular-nums; }
+.sub { color: var(--muted); font-size: .86rem; }
+.summary { margin: 0; font-size: .92rem; line-height: 1.5; }
+.alert { color: var(--warn); font-size: .86rem; font-weight: 600; margin-top: 2px; }
+.databadge { border: 2px solid var(--warn); border-radius: 8px; padding: 10px 12px; display: grid; gap: 3px; font-size: .9rem; }
+.databadge .big { font: 700 1.5rem/1.1 var(--display); letter-spacing: .06em; text-transform: uppercase; color: var(--warn); }
+.block { background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 18px; display: grid; gap: 12px; min-width: 0; }
+.block p { margin: 0; max-width: 68ch; color: var(--muted); font-size: .92rem; }
+.rows { display: grid; gap: 6px; }
+.row, .base { display: grid; grid-template-columns: minmax(7.5rem, 11rem) 4.2rem 1fr 3.2rem; align-items: center; gap: 10px; font-size: .9rem; }
+.row .elev, .row .pct { font: .86rem var(--mono); font-variant-numeric: tabular-nums; color: var(--muted); text-align: right; }
+.bar { height: 12px; background: color-mix(in srgb, var(--shade) 22%, transparent); border-radius: 3px; overflow: hidden; }
+.bar span { display: block; height: 100%; background: var(--tawny); border-radius: 3px; }
+.bar.shaded span { background: var(--shade); }
+.base .line { border-top: 2px dashed var(--sky); }
+.base .lbl { font: 600 .74rem var(--display); letter-spacing: .1em; text-transform: uppercase; color: var(--sky); }
+.base .elev { font: .86rem var(--mono); color: var(--sky); text-align: right; }
+.tablewrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: .9rem; }
+th { font: 600 .72rem var(--display); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--rule); }
+td { padding: 7px 10px; border-bottom: 1px solid var(--rule); white-space: nowrap; }
+table.hist { font-size: .82rem; margin: 2px 0; } table.hist td, table.hist th { padding: 3px 6px; }
+td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.detailslink { font: 600 1rem var(--display); color: var(--sky); text-decoration: none; padding: 12px 16px; border: 1px solid var(--rule); border-radius: 10px; background: var(--surface); }
+.notes { font-size: .84rem; color: var(--muted); display: grid; gap: 6px; max-width: 75ch; }
+.notes p { margin: 0; }
+@media (max-width: 520px) {
+  h1 { font-size: 1.7rem; }
+  .row, .base { grid-template-columns: 6.6rem 3.6rem 1fr 2.8rem; gap: 7px; font-size: .82rem; }
+}
+</style><style>.cols > .panel { min-width: 0; } .watch { margin: 6px 0 10px; } .watch ul { margin: 4px 0 0 18px; padding: 0; } .watch li { margin: 3px 0; } .pid { font-size: .72rem; color: #898781; white-space: nowrap; }</style>
+<style>.back { color: var(--sky); text-decoration: none; font: 600 .95rem var(--display); }</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div><div class="tag"><a class="back" href="/">&larr; Hawai&#8216;i Free Flight</a></div><h1>Makapu&#8216;u Today</h1></div>
+    <div class="date">Updated Sun 25 Oct 2026 · 09:04 HST</div>
+  </header>
+  <div>
+    <div class="cam"><iframe src="https://weathercams.faa.gov/map/-158.09368,20.54805,-156.28094,22.06794/cameraSite/588/details/camera/12153/full" title="Makapu&#8216;u webcam, live, looking northwest toward Waimānalo" loading="lazy"></iframe></div>
+    <div class="camcap">Makapu&#8216;u webcam, live, looking northwest. FAA WeatherCam. <a href="https://weathercams.faa.gov/map/-158.09368,20.54805,-156.28094,22.06794/cameraSite/588/details/camera/12153/full" target="_blank" rel="noopener">Open full size</a></div>
+  </div>
+  <div class="cols">
+    <section class="panel today" aria-labelledby="t-today">
+      <div class="kind">Now · 09:04 HST</div>
+      <div class="head"><h2 id="t-today">Today</h2><span class="chip fair">Caution</span></div>
+      <dl>
+        <dt>On the ridge</dt><dd><strong>Caution</strong><div class="sub">wind and gusts average 18 mph, over the 16 mph safe limit for this direction</div></dd>
+        <dt>Wind</dt><dd><span class="num">NNE (030°) 15 mph, gusts 21</span><div class="sub">NWS forecast for this hour: Bellows not reporting since 22 Oct 03:15</div></dd>
+        <dt>Return</dt><dd>More north than the ideal 050°: easier to get back from downrange, the primary LZ less ideal.</dd>
+        <dt>Crest base</dt><dd><span class="num">About 3,200 ft</span>, above the crest downrange<div class="sub">Kaneohe's air at 08:57, lifted over the Ko&#8216;olau. Downrange only; it does not decide flyability. Kaneohe's ceilometer: clear below 12,000 ft.</div></dd>
+      </dl>
+      <div class="kind" style="color:var(--muted)">Rest of today (forecast)</div>
+      <div class="tablewrap"><table class="hist"><thead><tr><th>Hour</th><th class="n">Wind, mph</th><th>Ridge</th></tr></thead><tbody><tr><td>10:00</td><td class="n">NNE 15 g21</td><td><span class="chip fair">Caution</span></td></tr><tr><td>11:00</td><td class="n">NNE 12 g15</td><td><span class="chip good">Flyable</span></td></tr><tr><td>12:00</td><td class="n">NNE 12 g15</td><td><span class="chip good">Flyable</span></td></tr><tr><td>13:00</td><td class="n">NNE 12 g15</td><td><span class="chip good">Flyable</span></td></tr><tr><td>14:00</td><td class="n">NNE 15 g21</td><td><span class="chip fair">Caution</span></td></tr><tr><td>15:00</td><td class="n">NNE 15 g21</td><td><span class="chip fair">Caution</span></td></tr><tr><td>16:00</td><td class="n">NNE 15 g21</td><td><span class="chip fair">Caution</span></td></tr><tr><td>17:00</td><td class="n">NNE 14 g18</td><td><span class="chip fair">Caution</span></td></tr><tr><td>18:00</td><td class="n">NNE 14 g18</td><td><span class="chip fair">Caution</span></td></tr></tbody></table></div>
+    </section>
+    <section class="panel tomorrow" aria-labelledby="t-tomorrow">
+      <div class="kind">Forecast</div>
+      <div class="head"><h2 id="t-tomorrow">Tomorrow · Mon 26 Oct</h2><span class="chip good">Flyable</span></div>
+      <p class="summary">Flyable 14:00–19:00. Midday: NNE (020°) 8 mph, gusts 10. More north than the ideal 050°: easier to get back from downrange, the primary LZ less ideal.</p><div class="tablewrap"><table class="hist"><thead><tr><th>Hour</th><th class="n">Wind, mph</th><th>Ridge</th></tr></thead><tbody><tr><td>08:00</td><td class="n">NNE 7 g8</td><td><span class="chip fair">Light</span></td></tr><tr><td>09:00</td><td class="n">NNE 7 g8</td><td><span class="chip fair">Light</span></td></tr><tr><td>10:00</td><td class="n">NNE 7 g8</td><td><span class="chip fair">Light</span></td></tr><tr><td>11:00</td><td class="n">NNE 8 g10</td><td><span class="chip fair">Light</span></td></tr><tr><td>12:00</td><td class="n">NNE 8 g10</td><td><span class="chip fair">Light</span></td></tr><tr><td>13:00</td><td class="n">NNE 8 g10</td><td><span class="chip fair">Light</span></td></tr><tr><td>14:00</td><td class="n">NE 10 g14</td><td><span class="chip good">Flyable</span></td></tr><tr><td>15:00</td><td class="n">NE 10 g14</td><td><span class="chip good">Flyable</span></td></tr><tr><td>16:00</td><td class="n">NE 10 g14</td><td><span class="chip good">Flyable</span></td></tr><tr><td>17:00</td><td class="n">NE 10 g14</td><td><span class="chip good">Flyable</span></td></tr><tr><td>18:00</td><td class="n">NE 10 g14</td><td><span class="chip good">Flyable</span></td></tr></tbody></table></div>
+    </section>
+  </div>
+  <section class="block" aria-labelledby="t-week">
+    <h2 id="t-week">The week</h2>
+    <div class="tablewrap"><table>
+      <thead><tr><th>Day</th><th>Midday wind</th><th>Best</th><th>Hours</th></tr></thead>
+      <tbody><tr><td>Mon 26</td><td>NNE (020°) 8 mph, gusts 10</td><td><span class="chip good">Flyable</span></td><td>Flyable 14:00–19:00.</td></tr><tr><td>Tue 27</td><td>ENE (060°) 10 mph, gusts 14</td><td><span class="chip good">Flyable</span></td><td>Flyable 11:00–17:00; caution 17:00–19:00.</td></tr><tr><td>Wed 28</td><td>NE (050°) 8 mph, gusts 10</td><td><span class="chip fair">Caution</span></td><td>Caution 08:00–11:00. Light 11:00–19:00.</td></tr><tr><td>Thu 29</td><td>NE (050°) 6 mph, gusts 7</td><td><span class="chip good">Flyable</span></td><td>Flyable 17:00–19:00.</td></tr><tr><td>Fri 30</td><td>ENE (060°) 14 mph, gusts 18</td><td><span class="chip good">Flyable</span></td><td>Flyable 08:00–11:00; caution 11:00–19:00.</td></tr><tr><td>Sat 31</td><td>SE (140°) 6 mph, gusts 7</td><td><span class="chip warn">Not flyable</span></td><td>Not flyable in daylight.</td></tr></tbody>
+    </table></div>
+    <p>Rated hour by hour, 08:00–19:00, from the NWS forecast grid at Makapu&#8216;u: wind from 0–70° only (east of 070° turbulence off Rabbit Island reaches launch), speed and gusts against the site's limits, under 10 mph is a run-off launch.</p>
+  </section>
+  <div class="notes">
+    <p><strong>Where the numbers come from.</strong> Wind: Bellows (BELH1) via api.weather.gov, or the NWS forecast grid for the hour when Bellows is not reporting. Crest base: Kaneohe (PHNG) temperature and dew point via aviationweather.gov. Limits: the Makapu&#8216;u site table.</p>
+    <p><strong>Notice.</strong> Information only, provided as is, with no guarantee of accuracy or availability. This is not an official forecast. Every pilot is responsible for their own decision to fly.</p>
+  </div>
+</div>
+<!-- build problems: none -->
+<script>
+(function () {
+  var built = "2026-10-25T09:04";
+  function check() {
+    fetch("summary.json?" + Date.now(), {cache: "no-store"}).then(function (r) { return r.json(); })
+      .then(function (j) { if (j && j.built && j.built > built) location.replace(location.pathname + "?v=" + Date.now()); })
+      .catch(function () {});
+  }
+  setInterval(check, 120000);
+  document.addEventListener("visibilitychange", function () { if (!document.hidden) { check(); } });
+})();
+</script>
+</body>
+</html>
