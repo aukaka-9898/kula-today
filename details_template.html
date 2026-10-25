@@ -328,8 +328,17 @@ $style
           : '<div style="transform:rotate(' + rot + 'deg);color:' + c + ';font:700 22px/22px sans-serif;text-shadow:0 0 3px #fff">&#8593;</div>';
         var m = L.marker([s.lat, s.lon], {icon: L.divIcon({className: "", html: arrow, iconSize: [22, 22], iconAnchor: [11, 11]})}).addTo(map);
         m.bindTooltip(s.name, {permanent: true, direction: "right", offset: [8, 0], className: "stn"});
-        m.bindPopup("<b>" + s.name + "</b>" + (s.elev_ft ? " · " + s.elev_ft.toLocaleString() + " ft" : "") + "<br>" +
-          (s.dir === null ? "no wind reading" : "from " + s.dir + "° at " + s.mph + " mph, " + s.at));
+        var lines = [s.dir === null ? "Wind: no reading" :
+                     "Wind: from " + s.dir + "° at " + s.mph + " mph" + (s.gust !== undefined ? ", gusts " + s.gust : "") + " (" + s.at + ")"];
+        if (s.temp_f !== undefined) {
+          lines.push("Temperature: " + s.temp_f.toFixed(1) + " °F");
+          lines.push("Dew point: " + s.dew_f.toFixed(1) + " °F, humidity " + s.rh + "%");
+          lines.push("Condensation level: " + s.lcl_ft.toLocaleString() + " ft" + (s.air_at !== s.at ? " (" + s.air_at + ")" : ""));
+          if (s.suspect) lines.push("<i>Flagged: " + s.suspect + "</i>");
+        }
+        if (s.sun !== undefined) lines.push("Sun, last hour: " + Math.round(s.sun * 100) + "% of clear sky");
+        if (s.dir === null && s.temp_f === undefined) lines = ["No readings in the last 90 minutes"];
+        m.bindPopup("<b>" + s.name + "</b>" + (s.elev_ft ? " · " + s.elev_ft.toLocaleString() + " ft" : "") + "<br>" + lines.join("<br>"));
       });
     }).catch(function () {});
   }

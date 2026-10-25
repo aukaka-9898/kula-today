@@ -1989,22 +1989,42 @@ def write_details(now: datetime, obs: pd.DataFrame) -> None:
     DETAILS_FILE.write_text(json.dumps(out, separators=(",", ":")), encoding="utf-8")
 
 
-def write_station_map(obs: pd.DataFrame, lad: pd.DataFrame, now: datetime, pos=None, west=None) -> None:
-    rows = station_rows(obs, lad)
+def write_station_map(obs: pd.DataFrame, lad: pd.DataFrame, now: datetime, pos=None, west=None,
+                      sun=None) -> None:
+    rows = station_rows(obs, lad, sun or {})
     _write_map(rows, now, pos, west)
 
 
-def station_rows(obs: pd.DataFrame, lad: pd.DataFrame) -> list:
+def station_rows(obs: pd.DataFrame, lad: pd.DataFrame, sun: dict | None = None) -> list:
+    """The map's stations. "at" is the latest WIND reading (the badge and the
+    dropout log count by it); the rest is everything the station's latest
+    reading carries, for the popup (Sam, 2026-10-25: "provide all data on
+    station click")."""
+    sun = sun or {}
     rows = []
     fresh = obs.observed.max() - pd.Timedelta("90min") if len(obs) else None
     for st in sampler.STATIONS + MAP_ONLY:
-        o = obs[(obs.station_id == st.id)] if len(obs) else obs
-        o = o[o.observed >= fresh].dropna(subset=["wind_mph"]) if len(o) else o
+        o_all = obs[(obs.station_id == st.id)] if len(obs) else obs
+        o_all = o_all[o_all.observed >= fresh] if len(o_all) else o_all
+        o = o_all.dropna(subset=["wind_mph"]) if len(o_all) else o_all
         last = o.loc[o.observed.idxmax()] if len(o) else None
-        rows.append({"name": st.name, "lat": st.lat, "lon": st.lon, "elev_ft": int(st.elev_ft),
-                     "dir": None if last is None or pd.isna(last.wind_dir) else round(float(last.wind_dir)),
-                     "mph": None if last is None else round(float(last.wind_mph)),
-                     "at": None if last is None else f"{last.observed:%H:%M}"})
+        air = o_all.loc[o_all.observed.idxmax()] if len(o_all) else None
+        row = {"name": st.name, "lat": st.lat, "lon": st.lon, "elev_ft": int(st.elev_ft),
+               "dir": None if last is None or pd.isna(last.wind_dir) else round(float(last.wind_dir)),
+               "mph": None if last is None else round(float(last.wind_mph)),
+               "at": None if last is None else f"{last.observed:%H:%M}"}
+        if last is not None and not pd.isna(last.get("gust_mph")):
+            row["gust"] = round(float(last.gust_mph))
+        if air is not None:
+            t, d = float(air.temp_f), float(air.dew_f)
+            row.update({"temp_f": round(t, 1), "dew_f": round(d, 1),
+                        "rh": round(100 * math.exp(17.625 * ((d - 32) / 1.8) / (243.04 + (d - 32) / 1.8)
+                                                   - 17.625 * ((t - 32) / 1.8) / (243.04 + (t - 32) / 1.8))),
+                        "lcl_ft": round(float(air.lcl_ft), -1), "air_at": f"{air.observed:%H:%M}",
+                        "suspect": str(air.suspect or "")})
+        if sun.get(st.name) is not None:
+            row["sun"] = round(float(min(sun[st.name], 1.0)), 2)
+        rows.append(row)
     for name, (lat, lon) in COAST_POS.items():
         r = lad[lad.name == name] if len(lad) else lad
         last = r.iloc[0] if len(r) else None
@@ -3945,7 +3965,8 @@ def build() -> str:
         if live and live[1]:
             summary_html += live[0]
 
-    safely(write_station_map, obs, lad if isinstance(lad, pd.DataFrame) else pd.DataFrame(), now, pos, west)
+    safely(write_station_map, obs, lad if isinstance(lad, pd.DataFrame) else pd.DataFrame(), now, pos, west,
+           {n: v for n, _, v in ladder})
     safely(write_details, now, obs)
     if 6 <= now.hour < 19:
         safely(log_dropouts, now)
