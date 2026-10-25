@@ -35,8 +35,8 @@ BELLOWS = "BELH1"                    # Bellows AFS (HADS), 4.9 mi NW: "pretty go
 GRID = "https://api.weather.gov/gridpoints/HFO/162,145"
 METAR = "https://aviationweather.gov/api/data/metar?ids=PHNG&format=json&hours=3"
 OBS_MAX_AGE = timedelta(minutes=90)
-WEBCAM = ("https://weathercams.faa.gov/map/-158.09368,20.54805,-156.28094,22.06794"
-          "/cameraSite/588/details/camera/12153/full")     # Waimanalo (NW), the card's view (Sam)
+# Waimanalo (NW), the card's view (Sam). The /map/... address opened on North.
+WEBCAM = "https://weathercams.faa.gov/cameras/state/HI/cameraSite/588/details/camera/12153/full"
 CAMERA = (588, 12153)
 
 # Weather Guesser's Sites.xml for Makapu'u, mph, wind FROM: (from, to, safe

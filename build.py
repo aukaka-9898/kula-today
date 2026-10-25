@@ -75,8 +75,9 @@ RELEASE_FT = 3162                       # Kula Ag
 # happens"): over the 28 days to 10-21 the page ran +495 ft against the
 # derived base with it, +95 without.
 FORECAST_BASE_LOW_FT = 0
-WEBCAM = ("https://weathercams.faa.gov/map/-128.93458,33.06367,-103.99562,49.85195"
-          "/cameraSite/931/details/camera/13417/full")   # South, as on the home card (Sam, 2026-10-25)
+# The /cameras/state/HI/... form: the /map/... form ignored the camera and
+# opened on North (10-25). South, as on the home card (Sam, 2026-10-25).
+WEBCAM = "https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full"
 STALE = pd.Timedelta("75min")
 GOOD_VERDICTS = {"Moderate", "Strong", "Boom!"}
 
