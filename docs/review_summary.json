@@ -1,15 +1,15 @@
 {
- "made": "2026-10-24 23:45",
+ "made": "2026-10-25 04:18",
  "flags": [
   "Shear line: a stale station sat out of 56% of updates over the last week (the rule under review)."
  ],
  "stats": {
-  "base_days": 28,
-  "base_mean": 504,
-  "base_raw_mean": 124,
-  "base_sd": 780,
-  "base_morning": 635,
-  "base_afternoon": 405,
+  "base_days": 27,
+  "base_mean": 519,
+  "base_raw_mean": 139,
+  "base_sd": 783,
+  "base_morning": 654,
+  "base_afternoon": 409,
   "alert_days": 2,
   "alert_hits": 0,
   "intrusions_missed": 0,
@@ -18,10 +18,10 @@
   "cam_redhill_cloud_min_days": 7,
   "station_days": 37,
   "accuracy": {
-   "base_n": 0,
+   "base_n": 1,
    "base_within": 0,
-   "base_typical": null,
-   "base_bias": null,
+   "base_typical": 620.0,
+   "base_bias": -620.0,
    "thermal_n": 4,
    "thermal_right": 0,
    "thermal_within_one": 3,
@@ -29,6 +29,10 @@
    "rules": {
     "B2": [
      1,
+     1
+    ],
+    "B1": [
+     0,
      1
     ]
    },
