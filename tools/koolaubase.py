@@ -62,7 +62,10 @@ SELF_LIFT = 35             # "self": under-crest strip brighter than the slope b
 # Past the high point at x ~1720 (2,690 ft) the crest drops to ~2,100 ft at
 # the frame edge with farther ridges behind it: not read (Sam: "Omit that
 # section").
-MASK_X = ((0, 130), (1250, 1355), (1730, 1920))
+# Narrowed (Sam, 10-25: "a little too aggressive"): at the crest only the
+# tower's mast pole crosses the skyline (x ~1295-1310; the antenna arrays hang
+# below it), and the left-edge panel ends at x ~122.
+MASK_X = ((0, 124), (1290, 1315), (1730, 1920))
 VIEWS["sw"]["mask"] = MASK_X
 BELOW = (3, 16)            # rows under the skyline read for cloud on the crest
 LIGHT = (45, 70)           # rows under the skyline read for the frame's lighting
