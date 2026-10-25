@@ -603,6 +603,7 @@ def write(now: datetime) -> None:
     page = page.replace("ʻ", "&#8216;")
     (OUT / "index.html").write_text(page, encoding="utf-8")
     _try(write_station_map, now, k, problems=problems)
+    _try(log_parcels, now, k, air, cam, problems=problems)
     _try(write_details, now, problems=problems)
     (OUT / "details.html").write_text(details_page(now, built), encoding="utf-8")
     camera = _try(save_camera, problems=problems)
@@ -746,6 +747,91 @@ def write_details(now: datetime) -> None:
 
 def _lcl_ft(t_f, td_f) -> float:
     return round((t_f - td_f) / 1.8 * 125 * 3.28084, -1)
+
+
+# Which surface air makes the right parcel? (Sam, 10-25: Kaneohe "is in the
+# middle of a runway"; Moku o Loʻe "probably cooler than thermal sources at the
+# base of the ridge"; "HRRH1 may be a good station for temps as well. 078HI,
+# 067HE as well".) Each daytime build logs every candidate's air, and the base
+# and thermal index it gives through the Kaneohe RRFS sounding, beside the
+# camera's reading -- docs/makapuu_parcels.csv -- to be scored against the
+# camera and Sam's calls. Nonokio (067HE) logs once the NWS feed returns.
+PARCEL_LOG = HERE / "docs" / "makapuu_parcels.csv"
+
+
+def _parcel_candidates(now: datetime, k: dict | None) -> dict:
+    """{name: (T F, Td F or None, time)}"""
+    out = {}
+    if k and k.get("t_c") is not None:
+        out["Kaneohe runway"] = (k["t_c"] * 1.8 + 32, k["td_c"] * 1.8 + 32 if k.get("td_c") is not None else None, k["at"])
+    try:
+        got = hads_air("HRRH1")
+        if got:
+            t, tf, rh = got[-1]
+            out["Heeia"] = (tf, dew_f(tf, rh), t)
+    except Exception:
+        pass
+    try:
+        h = _hcdp_latest(now)
+        if "0533" in h:
+            t, v = h["0533"]
+            if "Tair_1_Avg" in v and 0 < v.get("RH_1_Avg", 0) <= 100:
+                tf = v["Tair_1_Avg"] * 1.8 + 32
+                out["Maunawili"] = (tf, dew_f(tf, v["RH_1_Avg"]), t)
+    except Exception:
+        pass
+    try:
+        p = requests.get("https://api.weather.gov/stations/067HE/observations/latest", headers=HEAD,
+                         timeout=30).json()["properties"]
+        t = datetime.fromisoformat(p["timestamp"]).astimezone(HST)
+        if now - t <= OBS_MAX_AGE and p["temperature"]["value"] is not None:
+            tf = p["temperature"]["value"] * 1.8 + 32
+            td = None if p["dewpoint"]["value"] is None else p["dewpoint"]["value"] * 1.8 + 32
+            out["Nonokio"] = (tf, td, t)
+    except Exception:
+        pass
+    try:
+        r = requests.get("https://pae-paha.pacioos.hawaii.edu/erddap/tabledap/aws_himb.json"
+                         "?time,air_temperature&time%3E=now-3hours", timeout=30).json()["table"]["rows"]
+        if r:
+            t = datetime.fromisoformat(r[-1][0].replace("Z", "+00:00")).astimezone(HST)
+            out["Moku o Loe"] = (r[-1][1] * 1.8 + 32, None, t)
+    except Exception:
+        pass
+    return out
+
+
+def log_parcels(now: datetime, k: dict | None, air: dict | None, cam: dict | None) -> None:
+    import csv
+    import thermal as th
+    if not 8 <= now.hour <= 17:
+        return
+    cands = _parcel_candidates(now, k)
+    prof = _profile(air, now.replace(minute=0, second=0, microsecond=0)) if air else None
+    td_coast = cands.get("Kaneohe runway", (None, None, None))[1]
+    new = not PARCEL_LOG.exists()
+    with open(PARCEL_LOG, "a", newline="", encoding="utf-8") as f:
+        w = csv.writer(f)
+        if new:
+            w.writerow(["date", "time", "station", "obs_time", "temp_f", "dew_f", "dew_from", "lcl_ft", "ti_c", "word",
+                        "camera", "camera_bound_ft"])
+        cam_txt = cam_text(cam) if cam else ""
+        bound = cam.get("base_ft") if cam else None
+        for name, (tf, td, t) in cands.items():
+            dew_from = "own"
+            if td is None and td_coast is not None:
+                td, dew_from = td_coast, "Kaneohe"                # Moku o Loʻe has no humidity
+            if td is None:
+                continue
+            lcl = round((tf - td) / 1.8 * 125 * 3.28084, -1)
+            ti = word = ""
+            if prof is not None:
+                c = th.parcel_curve(tf, td, RELEASE_FT, prof, top_ft=12000)
+                top = th.thermal_top(c, RELEASE_FT)
+                peak = float(c[c.height_ft <= top].ti_c.min())
+                ti, word = round(peak, 2), th.describe(peak)
+            w.writerow([f"{now:%Y-%m-%d}", f"{now:%H:%M}", name, f"{t:%H:%M}", round(tf, 1), round(td, 1), dew_from,
+                        lcl, ti, word, cam_txt, bound])
 
 
 def _hcdp_latest(now: datetime) -> dict:
