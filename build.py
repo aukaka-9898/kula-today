@@ -1874,6 +1874,118 @@ COAST_POS = {"Paia": (20.9380, -156.3478), "Hamakuapoko Rd": (20.9200, -156.3410
 STATIONS_FILE = HERE / "docs" / "stations.json"
 
 
+# The Details page (Sam, 2026-10-20 and 10-25): Weather Guesser's Thermal
+# Conditions tab for Kula. The build writes docs/details.json once an hour --
+# RRFS and GFS profiles (Kahului BUFKIT) for 08:00-16:00 today and tomorrow,
+# the latest 00Z Hilo balloon ("For Kula use ITO RAOB"), and Kula Ag's surface
+# air per hour -- and docs/details.html does thermal.py's arithmetic in the
+# browser on whatever temperature the viewer dials in. No live fetches from
+# the page (Sam: "No live fetch other than scheduled"). The dew point is not
+# a choice, as in Weather Guesser: Kula Ag measured for hours gone, its
+# forecast for hours ahead; none when Kula Ag is out.
+DETAILS_FILE = HERE / "docs" / "details.json"
+DETAILS_HOURS = range(8, 17)
+DETAILS_TOP_FT = 20000
+RAOB_URL = ("https://weather.uwyo.edu/wsgi/sounding?datetime={t:%Y-%m-%d %H}:00:00"
+            "&id=91285&type=TEXT:CSV&src=BUFR")
+
+
+def _levels(prof: pd.DataFrame) -> list:
+    p = prof[prof.height_ft <= DETAILS_TOP_FT].sort_values("height_ft")
+    return [[round(float(r.height_ft)), round(float(r.pres), 1), round(float(r.temp_c), 2),
+             round(float(r.dewpoint_c), 2),
+             None if pd.isna(getattr(r, "wind_dir", None)) else round(float(r.wind_dir)),
+             None if pd.isna(getattr(r, "wind_kt", None)) else round(float(r.wind_kt))]
+            for r in p.itertuples() if r.dewpoint_c > -100]
+
+
+def hilo_raob(now: datetime):
+    """The newest 00Z Hilo ascent: (UTC time, levels every 100 ft)."""
+    day = now.astimezone(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+    for back in range(3):
+        t = day - timedelta(days=back)
+        r = requests.get(RAOB_URL.format(t=t), timeout=60)
+        if r.status_code != 200 or not r.text.startswith("time,"):
+            continue
+        from io import StringIO
+        d = pd.read_csv(StringIO(r.text), skipinitialspace=True)
+        d.columns = ["time", "lon", "lat", "pres", "z_m", "temp_c", "dewpoint_c", "ice", "rh", "rhi",
+                     "w", "wind_dir", "wind_ms"][:len(d.columns)]
+        d = d.dropna(subset=["z_m", "temp_c", "dewpoint_c"]).sort_values("z_m").drop_duplicates("z_m")
+        if len(d) < 50:
+            continue
+        hts = np.arange(0, DETAILS_TOP_FT + 1, 100.0)
+        z = d.z_m.to_numpy() * 3.28084
+        prof = pd.DataFrame({"height_ft": hts,
+                             **{c: np.interp(hts, z, d[c].to_numpy()) for c in ("pres", "temp_c", "dewpoint_c")},
+                             "wind_dir": d.wind_dir.to_numpy()[np.clip(np.searchsorted(z, hts), 0, len(z) - 1)],
+                             "wind_kt": np.interp(hts, z, d.wind_ms.to_numpy() * 1.94384)})
+        return t, _levels(prof[hts <= z.max()])
+    return None, []
+
+
+def write_details(now: datetime, obs: pd.DataFrame) -> None:
+    try:
+        old = json.loads(DETAILS_FILE.read_text(encoding="utf-8"))
+        if now - datetime.fromisoformat(old["made"]) < FORECAST_MAX_AGE:
+            return
+    except Exception:
+        pass
+    days = [now.date(), now.date() + timedelta(days=1)]
+    wanted = [datetime.combine(d, datetime.min.time()).replace(hour=h, tzinfo=HST)
+              for d in days for h in DETAILS_HOURS]
+    out = {"made": now.isoformat(), "release_ft": RELEASE_FT, "top_ft": 18000,
+           "bands": [[None if lim == float("-inf") else lim, w] for lim, w in th.TI_BANDS], "sources": {}, "surface": {}}
+    for model in ("RRFS", "GFS"):
+        try:
+            path = sd.fetch(model)
+            got = sd.profiles(path, model)
+        except Exception as e:
+            PROBLEMS.append(f"details {model}: {type(e).__name__}: {e}")
+            continue
+        hours = {}
+        for w in wanted:
+            t = pd.Timestamp(w).tz_convert("UTC")
+            near = min(got, key=lambda k: abs((k - t).total_seconds()))
+            if abs((near - t).total_seconds()) <= 5400:
+                hours[f"{w:%Y-%m-%dT%H}"] = _levels(got[near])
+        out["sources"][model] = {"run": f"{sd.run_time(path):%Y-%m-%d %H}Z",
+                                 "where": "Kahului (PHOG) BUFKIT", "hours": hours}
+    t, lv = safely(hilo_raob, now) or (None, [])
+    if lv:
+        out["sources"]["RAOB"] = {"run": f"{t:%Y-%m-%d %H}Z", "where": "Hilo (ITO) balloon, 91285",
+                                  "levels": lv}
+    # Kula Ag's surface air per hour: measured where the hour is done, forecast after.
+    ka = obs[obs.station_id == "001HI"].dropna(subset=["temp_f", "dew_f"]) if len(obs) else obs
+    meas = ka.groupby(ka.observed.dt.floor("h"))[["temp_f", "dew_f"]].mean() if len(ka) else pd.DataFrame()
+    yest = {}
+    try:
+        y0 = datetime.combine(now.date() - timedelta(days=1), datetime.min.time())
+        for r in read_hcdp(y0).get("001HI", []):
+            if r.observed.date() == y0.date() and r.observed.hour in DETAILS_HOURS:
+                yest.setdefault(r.observed.hour, []).append(float(r.temp_f))
+    except Exception as e:
+        PROBLEMS.append(f"details yesterday: {type(e).__name__}")
+    fc = safely(cv.slope_parcel)
+    for w in wanted:
+        key, row = f"{w:%Y-%m-%dT%H}", {}
+        hour_t = pd.Timestamp(w.replace(tzinfo=None))
+        if hour_t + pd.Timedelta("1h") <= pd.Timestamp(now.replace(tzinfo=None)) and hour_t in meas.index:
+            m = meas.loc[hour_t]
+            row = {"temp_f": round(float(m.temp_f), 1), "dew_f": round(float(m.dew_f), 1),
+                   "from": "Kula Ag, measured"}
+        elif fc is not None:
+            f = fc[(fc.day == w.date()) & (fc.hour == w.hour)]
+            if len(f):
+                row = {"temp_f": round(float(f.temp_f.iloc[0]) + FORECAST_AIR_WARM_F, 1),
+                       "dew_f": round(float(f.dewpoint_f.iloc[0]), 1),
+                       "from": f"Kula Ag forecast (Open-Meteo, air +{FORECAST_AIR_WARM_F:.0f} F)"}
+        if w.date() == now.date() and w.hour in yest:
+            row["yesterday_f"] = round(float(np.mean(yest[w.hour])), 1)
+        out["surface"][key] = row
+    DETAILS_FILE.write_text(json.dumps(out, separators=(",", ":")), encoding="utf-8")
+
+
 def write_station_map(obs: pd.DataFrame, lad: pd.DataFrame, now: datetime, pos=None, west=None) -> None:
     rows = station_rows(obs, lad)
     _write_map(rows, now, pos, west)
@@ -3831,6 +3943,7 @@ def build() -> str:
             summary_html += live[0]
 
     safely(write_station_map, obs, lad if isinstance(lad, pd.DataFrame) else pd.DataFrame(), now, pos, west)
+    safely(write_details, now, obs)
     if 6 <= now.hour < 19:
         safely(log_dropouts, now)
     badge_html = safely(data_badge) or ""
@@ -3984,7 +4097,7 @@ def build() -> str:
             out += '<div class="row">' + chunk
         ladder_html = out
 
-    return PAGE.substitute(
+    v = dict(
         updated=f"{now:%a %d %b %Y · %H:%M} HST", today_kind=today_kind, today_title=today_title,
         built=f"{now:%Y-%m-%dT%H:%M}",
         today_chip=today_chip, data_badge=badge_html, summary=summary_html, base_label=base_label,
@@ -4008,12 +4121,28 @@ def build() -> str:
                      if sun_hour and sun_hour.hour >= 15 else ""),
         webcam=WEBCAM,
         diag=("; ".join(PROBLEMS) or "none").replace("--", "-").replace(">", ")"))
+    DETAILS_PARTS.update(v)
+    return PAGE.substitute(**v)
 
 
 PAGE = Template((HERE / "template.html").read_text(encoding="utf-8"))
+# The Details page shares the main page's look: its <style> blocks are lifted
+# from template.html rather than copied, so the two cannot drift.
+DETAILS_PAGE = Template((HERE / "details_template.html").read_text(encoding="utf-8"))
+DETAILS_PARTS: dict = {}
+
+
+def details_page() -> str:
+    raw = (HERE / "template.html").read_text(encoding="utf-8")
+    style = "".join("<style>" + part.split("</style>")[0] + "</style>" for part in raw.split("<style>")[1:])
+    v = DETAILS_PARTS
+    return DETAILS_PAGE.substitute(style=style, updated=v.get("updated", ""), built=v.get("built", ""),
+                                   ladder=v.get("ladder", "<p>Unavailable.</p>"),
+                                   ladder_hour=v.get("ladder_hour", "not yet"), ladder_note=v.get("ladder_note", ""))
 
 if __name__ == "__main__":
     out = HERE / "docs" / "index.html"
     out.parent.mkdir(exist_ok=True)
     out.write_text(build(), encoding="utf-8")
     print("wrote", out)
+    (HERE / "docs" / "details.html").write_text(details_page(), encoding="utf-8")
