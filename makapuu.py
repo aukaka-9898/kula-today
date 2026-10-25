@@ -451,10 +451,12 @@ def write(now: datetime) -> None:
     wind_html = (f'<span class="num">{esc(wind_text(w))}</span><div class="sub">{esc(src)}</div>') if w else "Unavailable"
     dir_html = esc(return_note(w["dir"])) if w and w.get("dir") is not None else ""
 
-    # The base on the range: the shore air at Heʻeia leads -- the inflow the
-    # trades lift over the Koʻolau -- then Kaneohe's METAR.
+    # The base on the range from the air: Kaneohe's METAR. Heʻeia's shore air
+    # read ~2,100 ft while the camera showed the crest clear with bases above
+    # 3,000 (10-25; Sam: "Maybe we should drop Heeia") -- dropped here and from
+    # the Details surface air; it stays on the station map.
     airs = []
-    for code in ("HRRH1",):
+    for code in ():
         got = _try(hads_air, code, problems=problems) or []
         if got and now - got[-1][0] <= OBS_MAX_AGE + timedelta(minutes=30):
             t, tf, rh = got[-1]
@@ -468,7 +470,7 @@ def write(now: datetime) -> None:
     if cam_line:
         base_html = (f'{esc(cam_line)}'
                      f'<div class="sub">Kāneʻohe Bay camera, looking at the Koʻolau, {cam["at"]:%H:%M}.'
-                     + (f" The air at Heʻeia would condense at about {base:,} ft." if base is not None else "")
+                     + (f" Kaneohe's air would condense at about {base:,} ft." if base is not None else "")
                      + " Downrange only; it does not decide flyability.</div>")
     elif base is not None:
         if base < CREST_LOW_FT:
@@ -670,15 +672,6 @@ def write_details(now: datetime) -> None:
     except Exception:
         meas = {}
     meas_from = {h: "Kaneohe, measured" for h in meas}
-    try:
-        by: dict = {}
-        for t, tf, rh in hads_air("HRRH1"):
-            by.setdefault(t.replace(minute=0, second=0, microsecond=0), []).append((tf, dew_f(tf, rh)))
-        for h, v in by.items():
-            meas[h] = (sum(a for a, _ in v) / len(v), sum(b for _, b in v) / len(v))
-            meas_from[h] = "Heʻeia, measured"
-    except Exception:
-        pass
     try:
         fc = surface_hours()
     except Exception:
