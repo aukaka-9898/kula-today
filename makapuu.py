@@ -133,7 +133,11 @@ HADS_BELLOWS = ("https://hads.ncep.noaa.gov/nexhads2/servlet/DecodedData"
 
 def bellows_hads() -> dict | None:
     vals: dict = {}
-    for line in requests.get(HADS_BELLOWS, timeout=40).text.splitlines():
+    r = requests.get(HADS_BELLOWS, timeout=40, headers={"User-Agent": "KulaToday (Makapuu page)"})
+    r.raise_for_status()
+    if BELLOWS not in r.text:
+        raise ValueError(f"HADS answered without Bellows: {r.text[:80]!r}")
+    for line in r.text.splitlines():
         f = line.split("|")
         if len(f) > 4 and f[1] == BELLOWS and f[2] in ("US", "UD", "UP", "TA"):
             try:
@@ -149,6 +153,9 @@ def bellows_hads() -> dict | None:
     return {"dir": v.get("UD"), "mph": v["US"], "gust": v.get("UP"), "temp_f": v.get("TA"), "at": t}
 
 
+BELLOWS_PROBLEMS: list = []
+
+
 def bellows_now(now: datetime):
     """(reading, time of the newest one): NWS API first, then HADS."""
     t = None
@@ -162,7 +169,11 @@ def bellows_now(now: datetime):
             return {"dir": p["windDirection"]["value"], "mph": mph, "gust": gust, "at": t, "via": "NWS"}, t
     except Exception:
         pass
-    h = bellows_hads()
+    h = None
+    try:
+        h = bellows_hads()
+    except Exception as e:
+        BELLOWS_PROBLEMS.append(f"HADS Bellows: {type(e).__name__}: {e}")
     if h and now - h["at"] <= OBS_MAX_AGE:
         return {**h, "via": "HADS"}, h["at"]
     return None, max(x for x in (t, h["at"] if h else None) if x) if (t or h) else None
@@ -379,6 +390,7 @@ def write(now: datetime) -> None:
     problems: list = []
     grid = _try(grid_hours, problems=problems) or {}
     got = _try(bellows_now, now, problems=problems)
+    problems += BELLOWS_PROBLEMS
     obs, obs_t = got if got else (None, None)
     k = _try(kaneohe, problems=problems)
     air = _try(rrfs, problems=problems)
