@@ -122,15 +122,50 @@ def grid_hours() -> dict:
     return {t: {"dir": d.get(t), "mph": s.get(t), "gust": g.get(t), "sky": sky.get(t)} for t in sorted(s)}
 
 
+# Bellows also reaches NOAA's HADS (its GOES relay) directly, and HADS kept
+# it when the NWS API froze (Sam noticed Weather Guesser still reading it,
+# 2026-10-25). SHEF codes, English units, UTC: US wind mph, UD direction
+# degrees, UP peak wind mph, TA air F. No dew point. Posts in GOES batches,
+# so the newest value can be most of an hour old.
+HADS_BELLOWS = ("https://hads.ncep.noaa.gov/nexhads2/servlet/DecodedData"
+                "?sinceday=-1&hsa=nil&state=nil&nesdis_ids=B14036D2&of=1")
+
+
+def bellows_hads() -> dict | None:
+    vals: dict = {}
+    for line in requests.get(HADS_BELLOWS, timeout=40).text.splitlines():
+        f = line.split("|")
+        if len(f) > 4 and f[1] == BELLOWS and f[2] in ("US", "UD", "UP", "TA"):
+            try:
+                t = datetime.strptime(f[3], "%Y-%m-%d %H:%M").replace(tzinfo=timezone.utc).astimezone(HST)
+                vals.setdefault(t, {})[f[2]] = float(f[4])
+            except ValueError:
+                continue
+    full = [t for t, v in vals.items() if "US" in v]
+    if not full:
+        return None
+    t = max(full)
+    v = vals[t]
+    return {"dir": v.get("UD"), "mph": v["US"], "gust": v.get("UP"), "temp_f": v.get("TA"), "at": t}
+
+
 def bellows_now(now: datetime):
-    r = requests.get(f"https://api.weather.gov/stations/{BELLOWS}/observations/latest", headers=HEAD, timeout=30)
-    p = r.json()["properties"]
-    t = datetime.fromisoformat(p["timestamp"]).astimezone(HST)
-    if now - t > OBS_MAX_AGE or p["windSpeed"]["value"] is None:
-        return None, t
-    mph = p["windSpeed"]["value"] * 0.621371
-    gust = None if p["windGust"]["value"] is None else p["windGust"]["value"] * 0.621371
-    return {"dir": p["windDirection"]["value"], "mph": mph, "gust": gust, "at": t}, t
+    """(reading, time of the newest one): NWS API first, then HADS."""
+    t = None
+    try:
+        r = requests.get(f"https://api.weather.gov/stations/{BELLOWS}/observations/latest", headers=HEAD, timeout=30)
+        p = r.json()["properties"]
+        t = datetime.fromisoformat(p["timestamp"]).astimezone(HST)
+        if now - t <= OBS_MAX_AGE and p["windSpeed"]["value"] is not None:
+            mph = p["windSpeed"]["value"] * 0.621371
+            gust = None if p["windGust"]["value"] is None else p["windGust"]["value"] * 0.621371
+            return {"dir": p["windDirection"]["value"], "mph": mph, "gust": gust, "at": t, "via": "NWS"}, t
+    except Exception:
+        pass
+    h = bellows_hads()
+    if h and now - h["at"] <= OBS_MAX_AGE:
+        return {**h, "via": "HADS"}, h["at"]
+    return None, max(x for x in (t, h["at"] if h else None) if x) if (t or h) else None
 
 
 def kaneohe() -> dict | None:
@@ -318,7 +353,7 @@ def write(now: datetime) -> None:
 
     # --- Today: the ridge now
     if obs:
-        w, src = obs, f'Bellows, {obs["at"]:%H:%M}'
+        w, src = obs, f'Bellows, {obs["at"]:%H:%M}' + (" (via NOAA HADS)" if obs.get("via") == "HADS" else "")
     elif grid.get(hour_now):
         w = grid[hour_now]
         src = ("NWS forecast for this hour: Bellows not reporting"
@@ -433,7 +468,7 @@ LIHUE_RAOB = ("https://weather.uwyo.edu/wsgi/sounding?datetime={t:%Y-%m-%d %H}:0
               "&id=91165&type=TEXT:CSV&src=BUFR")
 # The map's stations: (feed, id, name, lat, lon, elev ft). The NWS mesonet
 # ones (Bellows and the HECO stations) are frozen since 2026-10-22.
-MAP_STATIONS = [("nws", "BELH1", "Bellows", 21.3667, -157.7167, 39),
+MAP_STATIONS = [("bellows", "BELH1", "Bellows", 21.3667, -157.7167, 39),
                 ("nws", "065HE", "HECO Mokuhano", 21.2963, -157.66798, 60),
                 ("nws", "067HE", "HECO Nonokio", 21.33861, -157.71167, 42),
                 ("nws", "134HE", "HECO Kuluanui Rd", 21.30071, -157.70012, 580),
@@ -600,6 +635,16 @@ def write_station_map(now: datetime, k: dict | None) -> None:
                             row["gust"] = round(v("windGust") * 0.621371)
                     if v("temperature") is not None and v("dewpoint") is not None:
                         air(row, v("temperature") * 1.8 + 32, v("dewpoint") * 1.8 + 32, t)
+            elif feed == "bellows":
+                b, last = bellows_now(now)
+                if b:
+                    row.update(dir=None if b["dir"] is None else round(b["dir"]), mph=round(b["mph"]), at=f'{b["at"]:%H:%M}')
+                    if b.get("gust") is not None:
+                        row["gust"] = round(b["gust"])
+                    if b.get("temp_f") is not None:
+                        row["temp_f_only"] = round(b["temp_f"], 1)
+                elif last:
+                    row["last"] = f"{last:%d %b %H:%M}"
             elif feed == "metar" and metar:
                 t = datetime.fromtimestamp(metar["obsTime"], timezone.utc).astimezone(HST)
                 if metar.get("wspd") is not None:
