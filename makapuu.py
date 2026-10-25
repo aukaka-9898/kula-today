@@ -294,6 +294,20 @@ def cam_text(cam: dict) -> str:
     return "The ridge is clear, with no cloud base in view above it."
 
 
+MOKU_MAX_AGE = timedelta(hours=3)        # PacIOOS posts hourly, ~2 h behind
+
+
+def moku_temp(now: datetime):
+    """(air temperature C, time) at Moku o Loʻe, or None if over MOKU_MAX_AGE old."""
+    r = requests.get("https://pae-paha.pacioos.hawaii.edu/erddap/tabledap/aws_himb.json"
+                     "?time,air_temperature&time%3E=now-6hours", timeout=45).json()["table"]["rows"]
+    rows = [x for x in r if x[1] is not None]
+    if not rows:
+        return None
+    t = datetime.fromisoformat(rows[-1][0].replace("Z", "+00:00")).astimezone(HST)
+    return (rows[-1][1], t) if now - t <= MOKU_MAX_AGE else None
+
+
 def crest_base(k: dict) -> int | None:
     """Condensation level of Kaneohe's open-coast air: where the trades
     lifted over the Koʻolau condense. 125 m per degree C of spread."""
@@ -539,6 +553,13 @@ def write(now: datetime) -> None:
         if got and now - got[-1][0] <= OBS_MAX_AGE + timedelta(minutes=30):
             t, tf, rh = got[-1]
             airs.append((HADS_AIR[code][1], lcl_msl(tf, dew_f(tf, rh), HADS_AIR[code][2]), t))
+    # Moku o Loʻe's temperature (the bay, marine air) with Kaneohe's dew point
+    # leads: Kaneohe's temperature is the runway's (Sam, 10-25: "Seems like moku
+    # o loe is preferred over kaneohe"; first readings within ~200 ft under the
+    # camera's limit, the runway ~500 ft over). Kaneohe's own air is the fallback.
+    mk = _try(moku_temp, now, problems=problems)
+    if mk and k and k.get("td_c") is not None:
+        airs.append(("Moku o Loʻe", int(round((mk[0] - k["td_c"]) * 125 * 3.28084, -2)), mk[1]))
     kb = crest_base(k)
     if kb is not None:
         airs.append(("Kaneohe (PHNG)", kb, k["at"]))
@@ -551,7 +572,7 @@ def write(now: datetime) -> None:
     if cam_line:
         base_html = (f'{esc(cam_line)}'
                      f'<div class="sub">Kāneʻohe Bay camera, looking at the Koʻolau, the last 30 minutes to {cam["at"]:%H:%M}.'
-                     + (f" Kaneohe's air would condense at about {base:,} ft." if base is not None else "")
+                     + (f" {airs[0][0]}'s air would condense at about {base:,} ft." if base is not None else "")
                      + "</div>")
     elif base is not None:
         if base < CREST_LOW_FT:
