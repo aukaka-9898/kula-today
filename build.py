@@ -4158,8 +4158,8 @@ def build() -> str:
 SUMMARY_FILE = HERE / "docs" / "summary.json"
 HOME_CAMERA = 13417          # Kekoa South (Sam, 2026-10-25)
 # Cards for sites still being built get their picture from this build too,
-# until they have builds of their own: (FAA site, camera, file under docs/).
-OTHER_CARD_CAMERAS = [(588, 12153, "cameras/makapuu.jpg")]   # Makapuʻu, looking NW (Sam, 10-25)
+# until they have pages of their own: (FAA site, camera, file under docs/).
+OTHER_CARD_CAMERAS: list = []        # Makapuʻu's moved to makapuu.py (10-25)
 
 
 def write_summary(v: dict, now: datetime) -> None:
@@ -4215,3 +4215,10 @@ if __name__ == "__main__":
     out.write_text(build(), encoding="utf-8")
     print("wrote", out)
     (HERE / "docs" / "details.html").write_text(details_page(), encoding="utf-8")
+    # The second site, its own module (Sam, 2026-10-25); a failure there must
+    # never cost Kula its page.
+    try:
+        import makapuu
+        makapuu.write(datetime.now(HST))
+    except Exception as e:
+        print("makapuu:", type(e).__name__, e)
