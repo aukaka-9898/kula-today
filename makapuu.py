@@ -521,7 +521,7 @@ def write(now: datetime) -> None:
         base_html = (f'{esc(cam_line)}'
                      f'<div class="sub">Kāneʻohe Bay camera, looking at the Koʻolau, {cam["at"]:%H:%M}.'
                      + (f" Kaneohe's air would condense at about {base:,} ft." if base is not None else "")
-                     + " Downrange only; it does not decide flyability.</div>")
+                     + "</div>")
     elif base is not None:
         if base < CREST_LOW_FT:
             cap = f"below the crest behind Waimānalo ({CREST_LOW_FT:,}–{CREST_HIGH_FT:,} ft): cloud on the Koʻolau likely"
@@ -533,12 +533,11 @@ def write(now: datetime) -> None:
         ceil = layers or ("clear below 12,000 ft" if k and (k.get("cover") or "").startswith(("CLR", "SKC")) else "")
         each = "; ".join(f"{n} {b:,} ft ({t:%H:%M})" for n, b, t in airs)
         base_html = (f'<span class="num">About {base:,} ft</span>, {esc(cap)}'
-                     f'<div class="sub">Condensation level of the air at {esc(each)}. '
-                     f'Downrange only; it does not decide flyability.'
+                     f'<div class="sub">Condensation level of the air at {esc(each)}.'
                      + (f" Kaneohe's ceilometer: {esc(ceil)}." if ceil else "") + "</div>")
     elif gated:
         base_html = ('<strong>Low</strong><div class="sub">Kaneohe\'s air would condense under launch height: '
-                     'wet air at the coast. Downrange only; it does not decide flyability.</div>')
+                     'wet air at the coast.</div>')
     else:
         base_html = "Unavailable"
 
