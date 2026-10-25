@@ -368,6 +368,17 @@ def save_camera() -> str | None:
 # crest base, the way the measured one uses Kaneohe's METAR. The inversion
 # is the sounding's (sounding.inversion), at 14:00.
 THERMAL_HOURS = (10, 14)
+# A base under launch is not a number to fly by: on rainy days Open-Meteo's
+# near-saturated surface air gave 200-400 ft (Sam, 10-25: "Need to gate
+# absurd base calls"). Shown as "Low" instead.
+BASE_FLOOR_FT = LAUNCH_FT
+
+
+def base_label(ft) -> str:
+    if ft is None:
+        return "–"
+    return "Low" if ft < BASE_FLOOR_FT else f"{ft:,}"
+
 INVERSION_BAND = (1000, 12000)
 SURFACE_POINT = (21.45, -157.763)    # Kaneohe (PHNG): open windward coast, the inflow
 RELEASE_FT = 20
@@ -501,6 +512,9 @@ def write(now: datetime) -> None:
     if kb is not None:
         airs.append(("Kaneohe (PHNG)", kb, k["at"]))
     base = airs[0][1] if airs else None
+    gated = base is not None and base < BASE_FLOOR_FT
+    if gated:
+        base = None                                      # gated: see BASE_FLOOR_FT
     cam = _try(crest_camera, now, problems=problems)
     cam_line = cam_text(cam) if cam else ""
     if cam_line:
@@ -522,6 +536,9 @@ def write(now: datetime) -> None:
                      f'<div class="sub">Condensation level of the air at {esc(each)}. '
                      f'Downrange only; it does not decide flyability.'
                      + (f" Kaneohe's ceilometer: {esc(ceil)}." if ceil else "") + "</div>")
+    elif gated:
+        base_html = ('<strong>Low</strong><div class="sub">Kaneohe\'s air would condense under launch height: '
+                     'wet air at the coast. Downrange only; it does not decide flyability.</div>')
     else:
         base_html = "Unavailable"
 
@@ -548,7 +565,8 @@ def write(now: datetime) -> None:
     ta = _try(air_day, air, surf, tom, problems=problems) if air else None
     aloft = ""
     if ta:
-        aloft = (f' Downrange base about {ta["base_ft"]:,} ft' if ta["base_ft"] is not None else " ") +                 f', thermals {ta["word"].lower()}, inversion {inv_text(ta["inv"])[0].lower() + inv_text(ta["inv"])[1:]} (RRFS).'
+        aloft = ((f' Downrange base low (under launch)' if ta["base_ft"] < BASE_FLOOR_FT else
+                  f' Downrange base about {ta["base_ft"]:,} ft') if ta["base_ft"] is not None else " ") +                 f', thermals {ta["word"].lower()}, inversion {inv_text(ta["inv"])[0].lower() + inv_text(ta["inv"])[1:]} (RRFS).'
     tom_html = (f'<p class="summary">{esc(tline)} Midday: {esc(wind_text(noon))}. '
                 f'{esc(return_note(noon["dir"]) if noon and noon.get("dir") is not None else "")}'
                 f'{esc(aloft)}</p>'
@@ -565,7 +583,7 @@ def write(now: datetime) -> None:
         da = _try(air_day, air, surf, d, problems=problems) if air else None
         week += (f"<tr><td>{d:%a %d}</td><td>{esc(wind_text(mid))}</td><td>{chip(bw)}</td>"
                  f"<td>{esc(line)}</td>"
-                 f'<td class="n">{"–" if not da or da["base_ft"] is None else format(da["base_ft"], ",")}</td>'
+                 f'<td class="n">{base_label(da["base_ft"]) if da else "–"}</td>'
                  f'<td>{"–" if not da else esc(da["word"])}</td></tr>')
 
     summary = (f"Now: {word.lower() if w else 'no wind reading'}"
