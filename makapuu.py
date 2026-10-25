@@ -177,13 +177,12 @@ def kaneohe() -> dict | None:
             "at": datetime.fromtimestamp(m["obsTime"], timezone.utc).astimezone(HST)}
 
 
-# Two more HADS stations for the air (Sam, 2026-10-25): Heʻeia NERR on the
-# shore of Kāneʻohe Bay -- "useful for dewpoint and temp. useless for wind" --
-# and the Oʻahu Forest NWR RAWS at ~1,550 ft in the Koʻolau above Kahaluʻu --
-# "useful for cloudbase. Wind direction seems way off". So neither one's wind
-# is used or shown. (nesdis, name, elevation ft)
-HADS_AIR = {"HRRH1": ("3B052656", "Heʻeia (Kāneʻohe Bay shore)", 0),
-            "OFRH1": ("8379F6FA", "Oʻahu Forest NWR, Koʻolau", 1550)}
+# One more HADS station for the air (Sam, 2026-10-25): Heʻeia NERR on the
+# shore of Kāneʻohe Bay -- "useful for dewpoint and temp. useless for wind",
+# so its wind is neither used nor shown. The Oʻahu Forest NWR RAWS (OFRH1,
+# ~1,550 ft above Kahaluʻu) was tried and dropped the same day: "behind the
+# ridge. Not usable" (it read the base 3,500 ft). (nesdis, name, elevation ft)
+HADS_AIR = {"HRRH1": ("3B052656", "Heʻeia (Kāneʻohe Bay shore)", 0)}
 
 
 def hads_air(nwsli: str) -> list:
@@ -403,11 +402,9 @@ def write(now: datetime) -> None:
     dir_html = esc(return_note(w["dir"])) if w and w.get("dir") is not None else ""
 
     # The base on the range: the shore air at Heʻeia leads -- the inflow the
-    # trades lift over the Koʻolau. The Koʻolau RAWS's own air led first and
-    # read 3,500 ft on 10-25 (Sam: "way too high"; a forest RAWS in the sun
-    # reads warm and dry), so it is listed beside the others, not used.
+    # trades lift over the Koʻolau -- then Kaneohe's METAR.
     airs = []
-    for code in ("HRRH1", "OFRH1"):
+    for code in ("HRRH1",):
         got = _try(hads_air, code, problems=problems) or []
         if got and now - got[-1][0] <= OBS_MAX_AGE + timedelta(minutes=30):
             t, tf, rh = got[-1]
@@ -523,7 +520,6 @@ MAP_STATIONS = [("bellows", "BELH1", "Bellows", 21.3667, -157.7167, 39),
                 ("nws", "134HE", "HECO Kuluanui Rd", 21.30071, -157.70012, 580),
                 ("metar", "PHNG", "Kaneohe (PHNG)", 21.45389, -157.76556, 16),
                 ("hads-air", "HRRH1", "Heʻeia NERR", 21.4314, -157.8153, 0),
-                ("hads-air", "OFRH1", "Oʻahu Forest NWR RAWS", 21.4775, -157.9369, 1550),
                 ("hcdp", "0531", "Kaluanui Ridge", 21.30491, -157.70302, 784),
                 ("hcdp", "0533", "Maunawili", 21.36827, -157.76272, 46)]
 
