@@ -87,7 +87,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><div class="tag">Kula soaring briefing</div><h1>Kula Today</h1></div>
-    <div class="date">Updated Sat 24 Oct 2026 · 16:22 HST</div>
+    <div class="date">Updated Sat 24 Oct 2026 · 16:37 HST</div>
   </header>
 
   <div>
@@ -97,14 +97,14 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 
   <div class="cols">
     <section class="panel today" aria-labelledby="t-today">
-      <div class="kind">Measured today · 16:22 HST</div>
+      <div class="kind">Measured today · 16:37 HST</div>
       <div class="head"><h2 id="t-today">Today</h2></div>
-      <div class="databadge"><div class="big">Limited data</div><div>7 of 29 stations reporting. Readings below rest on fewer stations than usual.</div></div>
+      <div class="databadge"><div class="big">Limited data</div><div>7 of 29 stations reporting; the Mesonet could not be reached, its readings are from the 16:22 update. Readings below rest on fewer stations than usual.</div></div>
       
       <dl>
         <dt>Thermals</dt><dd>Unavailable<div class="sub">Kula Ag's readings did not come through this update</div></dd>
         <dt>Derived<br>Cloudbase</dt><dd>Unavailable</dd>
-        <dt>Sun</dt><dd><span class="num">85%</span> of clear sky, lower Kula slope<div class="sub">Last hour, as of 16:00; average of Keokea 85%; Pulehu left out, in trade air</div></dd>
+        <dt>Sun</dt><dd>Unavailable</dd>
         <dt>Shear line</dt><dd>Crossing Kula Highway near Omaopio (forecast)<div class="sub">Trades NNE (033°). Measured once the upslope sets in</div></dd>
         
         <dt>Upslope</dt><dd>No clear upslope today</dd>
@@ -125,9 +125,9 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
   </div>
 
   <section class="block" aria-labelledby="t-ladder">
-    <h2 id="t-ladder">Sunlight up the slope, as of 16:00</h2>
+    <h2 id="t-ladder">Sunlight up the slope, as of 16:37</h2>
     <p>Share of clear-sky sunlight measured at each station over the last 60 minutes of readings. Stations under cloud read low; stations above its top read full sun. Late in the day the sun is low in the west, so a station under the deck can read full sun coming in under the deck's edge.</p>
-    <div class="rows"><div class="row"><span>Summit</span><span class="elev">9,776</span><div class="bar "><span style="width:91%"></span></div><span class="pct">91%</span></div><div class="row"><span>Nene Nest</span><span class="elev">8,500</span><div class="bar "><span style="width:97%"></span></div><span class="pct">97%</span></div><div class="row"><span>Park HQ</span><span class="elev">6,926</span><div class="bar "><span style="width:86%"></span></div><span class="pct">86%</span></div><div class="row"><span>Kamehamenui 1</span><span class="elev">6,601</span><div class="bar "><span style="width:61%"></span></div><span class="pct">61%</span></div><div class="row"><span>Kula 1</span><span class="elev">6,554</span><div class="bar "><span style="width:69%"></span></div><span class="pct">69%</span></div><div class="row"><span>Keokea</span><span class="elev">2,849</span><div class="bar "><span style="width:85%"></span></div><span class="pct">85%</span></div><div class="row"><span>Piiholo</span><span class="elev">2,090</span><div class="bar "><span style="width:77%"></span></div><span class="pct">77%</span></div><div class="row"><span>Pulehu</span><span class="elev">1,402</span><div class="bar "><span style="width:89%"></span></div><span class="pct">89%</span></div></div>
+    <div class="rows"><div class="row"><span>Kamehamenui 1</span><span class="elev">6,601</span><div class="bar "><span style="width:61%"></span></div><span class="pct">61%</span></div><div class="row"><span>Kula 1</span><span class="elev">6,554</span><div class="bar "><span style="width:69%"></span></div><span class="pct">69%</span></div></div>
   </section>
 
   <section class="block" aria-labelledby="t-week">
@@ -240,7 +240,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 })();
 </script>
 <style>.stn{font:600 11px/1.2 var(--body);padding:1px 4px;background:rgba(255,255,255,.85);border:0;box-shadow:none;color:#17242f}.stn:before{display:none}</style>
-<!-- build problems: none -->
+<!-- build problems: HCDP observations, using the last good fetch: ConnectTimeout: HTTPSConnectionPool(host='api.hcdp.ikewai.org', port=443): Max retries exceeded with url: /mesonet/db/measurements?location=hawaii&station_ids=0115%2C0118%2C0144%2C0116%2C0119%2C0145%2C0151%2C0152%2C0153%2C0143&var_ids=Tair_1_Avg%2CRH_1_Avg%2CWS_1_Avg%2CWDrs_1_Avg%2CWS_1_Max&start_date=2026-10-24T00%3A00%3A00-10%3A00&row_mode=json&limit=100000 (Caused by ConnectTimeoutError(<HTTPSConnection(host='api.hcdp.ikewai.org', port=443) at 0x70b1f09dbbf0), 'Connection to api.hcdp.ikewai.org timed out. (connect timeout=20)')); Mesonet sun: ConnectTimeout: HTTPSConnectionPool(host='api.hcdp.ikewai.org', port=443): Max retries exceeded with url: /mesonet/db/measurements?location=hawaii&station_ids=0115%2C0118%2C0144%2C0116%2C0119%2C0145%2C0151%2C0152%2C0153&var_ids=SWin_1_Avg&start_date=2026-10-24T14%3A57%3A00-10%3A00&end_date=2026-10-24T16%3A37%3A00-10%3A00&row_mode=json&limit=100000 (Caused by ConnectTimeoutError(<HTTPSConnection(host='api.hcdp.ikewai.org', port=443) at 0x70b1f0875670), 'Connection to api.hcdp.ikewai.org timed out. (connect timeout=20)')); honolua_trades: ConnectTimeout: HTTPSConnectionPool(host='api.hcdp.ikewai.org', port=443): Max retries exceeded with url: /mesonet/db/measurements?location=hawaii&station_ids=0133&var_ids=WDrs_1_Avg%2CWSrs_1_Avg&start_date=2026-10-25T01%3A40%3A06Z&row_mode=json&limit=1000 (Caused by ConnectTimeoutError(<HTTPSConnection(host='api.hcdp.ikewai.org', port=443) at 0x70b1f09ee180), 'Connection to api.hcdp.ikewai.org timed out. (connect timeout=20)')); sun_trend: ConnectTimeout: HTTPSConnectionPool(host='api.hcdp.ikewai.org', port=443): Max retries exceeded with url: /mesonet/db/measurements?location=hawaii&station_ids=0115%2C0118%2C0144%2C0116%2C0119%2C0145%2C0151%2C0152%2C0153&var_ids=SWin_1_Avg&start_date=2026-10-24T15%3A07%3A00-10%3A00&end_date=2026-10-24T16%3A37%3A00-10%3A00&row_mode=json&limit=100000 (Caused by ConnectTimeoutError(<HTTPSConnection(host='api.hcdp.ikewai.org', port=443) at 0x70b1f0709bb0), 'Connection to api.hcdp.ikewai.org timed out. (connect timeout=20)')); summit_spill: ConnectTimeout: HTTPSConnectionPool(host='api.hcdp.ikewai.org', port=443): Max retries exceeded with url: /mesonet/db/measurements?location=hawaii&station_ids=0153&var_ids=RH_1_Avg%2CWDrs_1_Avg%2CWS_1_Avg&start_date=2026-10-24T07%3A00%3A00-10%3A00&end_date=2026-10-24T08%3A59%3A59-10%3A00&row_mode=json&limit=5000 (Caused by ConnectTimeoutError(<HTTPSConnection(host='api.hcdp.ikewai.org', port=443) at 0x70b1f070b560), 'Connection to api.hcdp.ikewai.org timed out. (connect timeout=20)')) -->
 <script>
 /* Catch up with a new build within ~2 minutes (Sam, 2026-10-17: "the page
    does not seem to autoupdate"). stations.json's "made" is the build time;
@@ -248,7 +248,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
    browser's 10-minute cached copy is bypassed. The 15-minute refresh stays
    as a backstop. */
 (function () {
-  var built = "2026-10-24T16:22";
+  var built = "2026-10-24T16:37";
   function check() {
     fetch("stations.json?" + Date.now(), {cache: "no-store"})
       .then(function (r) { return r.json(); })
