@@ -670,7 +670,7 @@ PAGE = """<!doctype html>
   </header>
   <div class="databadge"><div class="big">Under construction</div></div>
   <div>
-    <div class="cam"><iframe src="{webcam}" title="Makapuʻu webcam, live, looking northwest toward Waimānalo" loading="lazy"></iframe></div>
+    <div class="cam"><iframe src="{webcam}" title="Makapuʻu webcam, live, looking northwest toward Waimānalo" onload="setTimeout(function(){{var c=document.getElementById('camcover');if(c){{c.style.opacity=0;setTimeout(function(){{c.remove()}},700)}}}},3500)"></iframe><img id="camcover" src="camera.jpg?{built}" alt=""></div>
     <div class="camcap">Makapuʻu webcam, live, looking northwest. FAA WeatherCam. <a href="{webcam}" target="_blank" rel="noopener">Open full size</a></div>
   </div>
   <div class="cols">
