@@ -298,10 +298,19 @@ def cam_text(cam: dict) -> str:
         for n, s in cam["segments"].items():
             if s.get("base_ft") and s.get("crest_max_ft"):
                 (clear if s["base_ft"] >= s["crest_max_ft"] + 200 else down).append(n)
-        # Plain wording (Sam, 10-25: "down to the tops" was "very awkward").
-        text = f"Cloud base below about {b:,.0f} ft"
+        # Plain wording (Sam, 10-25: "down to the tops" was "very awkward"), and
+        # the lead from the stretches' own bounds, the same numbers the verdicts
+        # use -- a frame-wide median beside per-stretch verdicts contradicted
+        # itself ("below about 2,400 ft, clear of the whole ridge").
+        own = sorted(round(s["base_ft"], -2) for s in cam["segments"].values() if s.get("base_ft"))
+        if own:
+            lo, hi = own[0], own[-1]
+            span = f"{lo:,.0f} ft" if lo == hi else f"{lo:,.0f}–{hi:,.0f} ft"
+            text = f"Cloud base no higher than about {span} along the ridge"
+        else:
+            text = f"Cloud base no higher than about {b:,.0f} ft"
         if clear and not down:
-            return text + ", clear of the whole ridge."
+            return text + "; the whole ridge is clear beneath it."
         if down and not clear:
             return text + "; the ridge tops reach into it."
         if clear and down:
