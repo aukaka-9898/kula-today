@@ -70,7 +70,6 @@ jobs:
           KULAMODEL: ${{ github.workspace }}/KulaModel
           HCDP_API_TOKEN: ${{ secrets.HCDP_API_TOKEN }}
           KULA_SOUNDING_CACHE: ${{ github.workspace }}/.sounding
-          KULA_RETRY: ${{ inputs.retry }}
 
       - name: Prune old soundings
         run: find .sounding -type f -mtime +3 -delete 2>/dev/null || true
