@@ -12,6 +12,10 @@ USGS 10 m (OpenTopoData ned10m, 100 points a request), cached in koolaucam_dem.j
     python tools/koolaucam.py fit      # skyline match, writes koolaucam_geom.json
     python tools/koolaucam.py check    # draws the model skyline on the frame
 """
+# Landmarks in the frame. Konahuanui: the highest point, 3,015 ft at bearing
+# 204, 7.8 km, x ~545. "Greenwall" (Sam's name, 2026-10-25): the crest east of
+# Konahuanui -- left of it in this SW view -- bearings ~185-200, ~2,000-2,300 ft,
+# ~10 km, x ~170-470 (the fit is weakest toward the left edge).
 import json
 import math
 import os
