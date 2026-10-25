@@ -222,6 +222,44 @@ def lcl_msl(t_f: float, td_f: float, elev_ft: float) -> int:
     return int(round((t_f - td_f) / 1.8 * 125 * 3.28084 + elev_ft, -2))
 
 
+# The Koʻolau seen from the Kāneʻohe Bay camera (FAA site 760, SW view;
+# tools/koolaubase.py). Cloud ON the crest is a solid reading; a cloud bottom
+# above the crest is placed at the crest's distance, and cumulus drift in front
+# of the range, so it is an upper limit. Sam's wording, 10-25: "Clouds are
+# above the ridge and below about 3,300".
+CAP_SHARE = 0.3                # a stretch counts as capped with this share of its columns
+CAMERA_MAX_AGE = timedelta(minutes=40)
+
+
+def crest_camera(now: datetime) -> dict | None:
+    import sys
+    from io import BytesIO
+    import numpy as np
+    from PIL import Image
+    sys.path.insert(0, str(HERE / "tools"))
+    import koolaubase
+    j = requests.get("https://weathercams.faa.gov/api/summary", params={"siteId": 760}, timeout=30,
+                     headers={"Referer": "https://weathercams.faa.gov/cameras/state/HI/cameraSite/760/summary"}).json()
+    cam = next(c for c in j["payload"]["site"]["cameras"] if c["cameraId"] == 12784)
+    im = max(cam["currentImages"], key=lambda x: x["imageDatetime"])
+    t = datetime.fromisoformat(im["imageDatetime"].replace("Z", "+00:00")).astimezone(HST)
+    if now - t > CAMERA_MAX_AGE:
+        return None
+    rgb = np.asarray(Image.open(BytesIO(requests.get(im["imageUri"], timeout=30).content)).convert("RGB"), float)
+    if rgb.mean() < 60:
+        return None                                    # too dark to read
+    return {**koolaubase.read(rgb), "at": t}
+
+
+def cam_text(cam: dict) -> str:
+    capped = [n for n, s in cam["segments"].items() if s["capped"] >= CAP_SHARE]
+    if capped:
+        return "Cloud on the Koʻolau: " + ", ".join(capped) + "."
+    if cam["base_ft"]:
+        return f"Clouds are above the ridge and below about {round(cam['base_ft'], -2):,.0f} ft."
+    return "The ridge is clear, with no cloud base in view above it."
+
+
 def crest_base(k: dict) -> int | None:
     """Condensation level of Kaneohe's open-coast air: where the trades
     lifted over the Koʻolau condense. 125 m per degree C of spread."""
@@ -425,7 +463,14 @@ def write(now: datetime) -> None:
     if kb is not None:
         airs.append(("Kaneohe (PHNG)", kb, k["at"]))
     base = airs[0][1] if airs else None
-    if base is not None:
+    cam = _try(crest_camera, now, problems=problems)
+    cam_line = cam_text(cam) if cam else ""
+    if cam_line:
+        base_html = (f'{esc(cam_line)}'
+                     f'<div class="sub">Kāneʻohe Bay camera, looking at the Koʻolau, {cam["at"]:%H:%M}.'
+                     + (f" The air at Heʻeia would condense at about {base:,} ft." if base is not None else "")
+                     + " Downrange only; it does not decide flyability.</div>")
+    elif base is not None:
         if base < CREST_LOW_FT:
             cap = f"below the crest behind Waimānalo ({CREST_LOW_FT:,}–{CREST_HIGH_FT:,} ft): cloud on the Koʻolau likely"
         elif base < CREST_HIGH_FT:
