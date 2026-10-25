@@ -311,7 +311,7 @@ def cam_text(cam: dict) -> str:
             text = f"Cloud base no higher than about {b:,.0f} ft"
         # Sam, 10-25: "'Greenwall is clear' is sufficient", "High points are in
         # clouds", "Keep Konahuanui as a landmark" -- Greenwall and Konahuanui by
-        # name, the other stretches as "the high points".
+        # name, the other stretches as "lower peaks" (Sam: "Konahuanui and lower peaks").
         named = [n for n in ("Greenwall", "Konahuanui") if n in cam["segments"]]
         cl = [n for n in named if n in clear]
         dn = [n for n in named if n in down]
@@ -322,8 +322,8 @@ def cam_text(cam: dict) -> str:
         if cl:
             parts.append(f"{_and(cl)} {'is' if len(cl) == 1 else 'are'} clear")
         if dn or others_down:
-            who = _and(dn + (["the high points"] if others_down else [])) if dn else "the high points"
-            parts.append(f"{who} {'are' if (len(dn) + others_down) != 1 or who == 'the high points' else 'is'} in clouds")
+            who = _and(dn + (["lower peaks"] if others_down else [])) if dn else "lower peaks"
+            parts.append(f"{who} {'are' if (len(dn) + others_down) != 1 or who == 'lower peaks' else 'is'} in clouds")
         return text + ". " + _cap("; ".join(parts)) + "."
     return "The ridge is clear, with no cloud base in view above it."
 
