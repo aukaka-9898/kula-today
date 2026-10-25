@@ -15,7 +15,8 @@ from pathlib import Path
 ARCHIVE = Path("E:/dev/WX/KulaModel/review/camera_archive")
 # (site, camera, archive folder): Kekoa South for the slope near Kula; Kaheawa
 # Southeast (West Maui, 2026-10-20) sees Haleakala side-on, shoreline to summit.
-CAMS = ((931, 13417, "camera_archive"), (881, 13230, "camera_archive_kaheawa"))
+CAMS = ((931, 13417, "camera_archive"), (881, 13230, "camera_archive_kaheawa"),
+        (760, 12784, "camera_archive_kaneohe_sw"))   # the Koʻolau for Makapuʻu's crest base (Sam, 2026-10-25)
 URL = "https://weathercams.faa.gov/api/summary?siteId={site}"
 PAGE = "https://weathercams.faa.gov/cameras/state/HI/cameraSite/{site}/summary"
 HST = timezone(timedelta(hours=-10))
