@@ -74,6 +74,7 @@ td { padding: 7px 10px; border-bottom: 1px solid var(--rule); white-space: nowra
 table.hist { font-size: .82rem; margin: 2px 0; } table.hist td, table.hist th { padding: 3px 6px; }
 td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: tabular-nums; }
 .detailslink { font: 600 1rem var(--display); color: var(--sky); text-decoration: none; padding: 12px 16px; border: 1px solid var(--rule); border-radius: 10px; background: var(--surface); }
+.homebtn { display: inline-block; font: 600 .82rem var(--display); letter-spacing: .06em; text-transform: uppercase; color: var(--sky); text-decoration: none; border: 1px solid var(--sky); border-radius: 999px; padding: 3px 12px; margin-bottom: 8px; }
 .notes { font-size: .84rem; color: var(--muted); display: grid; gap: 6px; max-width: 75ch; }
 .notes p { margin: 0; }
 @media (max-width: 520px) {
@@ -87,7 +88,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <body>
 <div class="wrap">
   <header>
-    <div><div class="tag">Kula soaring briefing</div><h1>Kula Today</h1></div>
+    <div><a class="homebtn" href="/">&larr; Home</a><div class="tag">Kula soaring briefing</div><h1>Kula Today</h1></div>
     <div class="date">Updated $updated</div>
   </header>
 

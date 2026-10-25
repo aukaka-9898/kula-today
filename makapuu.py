@@ -341,7 +341,7 @@ PAGE = """<!doctype html>
 <body>
 <div class="wrap">
   <header>
-    <div><div class="tag"><a class="back" href="/">&larr; Hawai&#8216;i Free Flight</a></div><h1>Makapu&#8216;u Today</h1></div>
+    <div><a class="homebtn" href="/">&larr; Home</a><div class="tag">Makapu&#8216;u soaring briefing</div><h1>Makapu&#8216;u Today</h1></div>
     <div class="date">Updated {updated}</div>
   </header>
   <div>
