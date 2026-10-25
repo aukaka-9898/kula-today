@@ -34,6 +34,9 @@ import koolaucam as kc  # noqa: E402
 # Segments of the crest in this view (x ranges, left to right).
 SEGMENTS = (("Greenwall", 170, 470), ("Konahuanui", 470, 640), ("Kāneʻohe crest", 640, 1260),
             ("Kahaluʻu crest", 1260, 1880))
+# Columns never read: the cell tower and its antennas standing in front of the
+# crest (x ~1262-1345; Sam 10-25: "mask the tower" -- it read as cloud).
+MASK_X = ((1250, 1355),)
 BELOW = (3, 16)            # rows under the skyline read for cloud on the crest
 LIGHT = (45, 70)           # rows under the skyline read for the frame's lighting
 CAP_LIFT = 30              # brighter than clear air by this, beyond the lighting change
@@ -69,7 +72,7 @@ def geometry():
         az_col = np.interp(cols, xs[o], dz[o])
         dist = np.array([sky[min(sky, key=lambda a: abs(a - z))][2] for z in az_col])
         crest = np.array([sky[min(sky, key=lambda a: abs(a - z))][1] for z in az_col])
-        ok = np.abs(model_y - rows) < 25
+        ok = (np.abs(model_y - rows) < 25) & ~np.any([(cols >= a) & (cols <= b) for a, b in MASK_X], axis=0)
         _GEOM = (g, cols[ok], rows[ok], dist[ok], crest[ok], az_col[ok], clear)
     return _GEOM
 
