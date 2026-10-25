@@ -36,6 +36,9 @@ h1 { font: 700 2.1rem/1.05 var(--display); letter-spacing: .01em; margin: 0; }
 .tag { font: 600 .72rem var(--display); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
 .cam { border-radius: 10px; overflow: hidden; border: 1px solid var(--rule); background: var(--surface); }
 .cam iframe { display: block; width: 100%; aspect-ratio: 16 / 10; border: 0; }
+.cam { position: relative; }
+#camcover { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; background: #1b1b1b; transition: opacity .6s; animation: camfade .6s 12s forwards; }
+@keyframes camfade { to { opacity: 0; visibility: hidden; } }
 .camcap { font: .8rem var(--mono); color: var(--muted); padding-top: 6px; }
 .camcap a { color: var(--sky); }
 .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; }
@@ -88,16 +91,16 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><a class="homebtn" href="/">&larr; Home</a><div class="tag">Makapu&#8216;u soaring briefing</div><h1>Makapu&#8216;u Today</h1></div>
-    <div class="date">Updated Sun 25 Oct 2026 · 09:33 HST</div>
+    <div class="date">Updated Sun 25 Oct 2026 · 09:34 HST</div>
   </header>
   <div class="databadge"><div class="big">Under construction</div></div>
   <div>
-    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/588/details/camera/12153/full" title="Makapu&#8216;u webcam, live, looking northwest toward Waimānalo" loading="lazy"></iframe></div>
+    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/588/details/camera/12153/full" title="Makapu&#8216;u webcam, live, looking northwest toward Waimānalo" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="camera.jpg?2026-10-25T09:34" alt=""></div>
     <div class="camcap">Makapu&#8216;u webcam, live, looking northwest. FAA WeatherCam. <a href="https://weathercams.faa.gov/cameras/state/HI/cameraSite/588/details/camera/12153/full" target="_blank" rel="noopener">Open full size</a></div>
   </div>
   <div class="cols">
     <section class="panel today" aria-labelledby="t-today">
-      <div class="kind">Now · 09:33 HST</div>
+      <div class="kind">Now · 09:34 HST</div>
       <div class="head"><h2 id="t-today">Today</h2><span class="chip fair">Caution</span></div>
       <dl>
         <dt>On the ridge</dt><dd><strong>Caution</strong><div class="sub">wind and gusts average 18 mph, over the 16 mph safe limit for this direction</div></dd>
@@ -133,7 +136,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <!-- build problems: none -->
 <script>
 (function () {
-  var built = "2026-10-25T09:33";
+  var built = "2026-10-25T09:34";
   function check() {
     fetch("summary.json?" + Date.now(), {cache: "no-store"}).then(function (r) { return r.json(); })
       .then(function (j) { if (j && j.built && j.built > built) location.replace(location.pathname + "?v=" + Date.now()); })

@@ -36,6 +36,9 @@ h1 { font: 700 2.1rem/1.05 var(--display); letter-spacing: .01em; margin: 0; }
 .tag { font: 600 .72rem var(--display); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
 .cam { border-radius: 10px; overflow: hidden; border: 1px solid var(--rule); background: var(--surface); }
 .cam iframe { display: block; width: 100%; aspect-ratio: 16 / 10; border: 0; }
+.cam { position: relative; }
+#camcover { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; background: #1b1b1b; transition: opacity .6s; animation: camfade .6s 12s forwards; }
+@keyframes camfade { to { opacity: 0; visibility: hidden; } }
 .camcap { font: .8rem var(--mono); color: var(--muted); padding-top: 6px; }
 .camcap a { color: var(--sky); }
 .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; }
@@ -89,17 +92,18 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><a class="homebtn" href="/">&larr; Home</a><div class="tag">Kula soaring briefing</div><h1>Kula Today</h1></div>
-    <div class="date">Updated Sun 25 Oct 2026 · 09:31 HST</div>
+    <div class="date">Updated Sun 25 Oct 2026 · 09:33 HST</div>
   </header>
 
   <div>
-    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" title="Red Hill webcam, live, looking south along the Kula slope" loading="lazy"></iframe></div>
+    <!-- The FAA viewer shows its station list before it opens the camera; the latest frame covers that until it has (Sam, 2026-10-25). -->
+    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" title="Red Hill webcam, live, looking south along the Kula slope" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="camera.jpg?2026-10-25T09:33" alt=""></div>
     <div class="camcap">Red Hill webcam, live. FAA WeatherCam (Kekoa). <a href="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" target="_blank" rel="noopener">Open full size</a></div>
   </div>
 
   <div class="cols">
     <section class="panel today" aria-labelledby="t-today">
-      <div class="kind">Measured today · 09:31 HST</div>
+      <div class="kind">Measured today · 09:33 HST</div>
       <div class="head"><h2 id="t-today">Today</h2><span class="chip fair">Light</span></div>
       <div class="databadge"><div class="big">Limited data</div><div>8 of 29 stations reporting. Readings below rest on fewer stations than usual.</div></div>
       <p class="summary">Today&#x27;s forecast: Thermals probably light. No trade line is expected. Upslope has not set in yet.</p>
@@ -165,7 +169,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
    browser's 10-minute cached copy is bypassed. The 15-minute refresh stays
    as a backstop. */
 (function () {
-  var built = "2026-10-25T09:31";
+  var built = "2026-10-25T09:33";
   function check() {
     fetch("stations.json?" + Date.now(), {cache: "no-store"})
       .then(function (r) { return r.json(); })
