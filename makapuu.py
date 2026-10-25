@@ -227,6 +227,76 @@ def save_camera() -> str | None:
     return f"camera.jpg?{when:%Y%m%d%H%M}"
 
 
+# The air aloft (Sam, 10-25: yes to RRFS): the RRFS BUFKIT point at Kaneohe
+# (phng, windward, Penn State, ~3.5 days). Thermals by thermal.py as for Kula:
+# a parcel of SURFACE air lifted dry through the sounding, Weather Guesser's
+# words from the peak index. The parcel is Open-Meteo's surface forecast at
+# Kaneohe, as Kula's is Open-Meteo at Kula Ag -- not the sounding's own lowest
+# level, which is the air it is compared with (index 0 by construction; the
+# first run read Flat every day). The same surface air gives the forecast
+# crest base, the way the measured one uses Kaneohe's METAR. The inversion
+# is the sounding's (sounding.inversion), at 14:00.
+THERMAL_HOURS = (10, 14)
+INVERSION_BAND = (1000, 12000)
+SURFACE_POINT = (21.45, -157.763)    # Kaneohe (PHNG): open windward coast, the inflow
+RELEASE_FT = 20
+
+
+def surface_hours() -> dict:
+    r = requests.get("https://api.open-meteo.com/v1/forecast", timeout=60, params={
+        "latitude": SURFACE_POINT[0], "longitude": SURFACE_POINT[1],
+        "hourly": "temperature_2m,dew_point_2m", "temperature_unit": "fahrenheit",
+        "timezone": "Pacific/Honolulu", "forecast_days": 5}).json()["hourly"]
+    return {datetime.fromisoformat(t).replace(tzinfo=HST): (a, b)
+            for t, a, b in zip(r["time"], r["temperature_2m"], r["dew_point_2m"]) if a is not None and b is not None}
+
+
+def rrfs() -> dict:
+    import sounding as sd
+    path = sd.fetch("RRFS", station="phng")
+    return {"run": sd.run_time(path), "profiles": sd.profiles(path, "RRFS")}
+
+
+def _profile(air: dict, when: datetime):
+    import pandas as pd
+    t = pd.Timestamp(when).tz_convert("UTC")
+    near = min(air["profiles"], key=lambda k: abs((k - t).total_seconds()))
+    return air["profiles"][near] if abs((near - t).total_seconds()) <= 5400 else None
+
+
+def air_day(air: dict, surf: dict, day) -> dict | None:
+    """{word, ti, usable_ft, base_ft, inv} for a day: the RRFS profiles with
+    Open-Meteo's surface air at Kaneohe as the parcel."""
+    import numpy as np
+    import sounding as sd
+    import thermal as th
+    at = lambda h: datetime.combine(day, datetime.min.time()).replace(hour=h, tzinfo=HST)
+    peaks, usable = [], []
+    for h in range(THERMAL_HOURS[0], THERMAL_HOURS[1] + 1):
+        prof, sa = _profile(air, at(h)), surf.get(at(h))
+        if prof is None or sa is None:
+            continue
+        c = th.parcel_curve(sa[0], sa[1], RELEASE_FT, prof, top_ft=12000)
+        top = th.thermal_top(c, RELEASE_FT)
+        work = c[c.height_ft <= top]
+        peaks.append(float(work.ti_c.min()))
+        soar = work[work.ti_c <= th.TI_BANDS[0][0]]
+        usable.append(float(soar.height_ft.iloc[-1]) if len(soar) else RELEASE_FT)
+    if not peaks:
+        return None
+    aft, noon = _profile(air, at(14)), surf.get(at(12))
+    ti = float(np.mean(peaks))
+    return {"word": th.describe(ti), "ti": ti, "usable_ft": float(np.median(usable)),
+            "base_ft": None if noon is None else int(round((noon[0] - noon[1]) / 1.8 * 125 * 3.28084, -2)),
+            "inv": None if aft is None else sd.inversion(aft, floor_ft=INVERSION_BAND[0], ceiling_ft=INVERSION_BAND[1])}
+
+
+def inv_text(inv) -> str:
+    if not inv:
+        return f"None between {INVERSION_BAND[0]:,} and {INVERSION_BAND[1]:,} ft"
+    return f'About {round(inv["base_ft"], -2):,.0f} ft (+{inv["warming_f"]:.1f} °F)'
+
+
 def _try(fn, *a, problems: list):
     try:
         return fn(*a)
@@ -242,6 +312,8 @@ def write(now: datetime) -> None:
     got = _try(bellows_now, now, problems=problems)
     obs, obs_t = got if got else (None, None)
     k = _try(kaneohe, problems=problems)
+    air = _try(rrfs, problems=problems)
+    surf = _try(surface_hours, problems=problems) or {}
     hour_now = now.replace(minute=0, second=0, microsecond=0)
 
     # --- Today: the ridge now
@@ -277,6 +349,18 @@ def write(now: datetime) -> None:
     else:
         base_html = "Unavailable"
 
+    today_air = _try(air_day, air, surf, now.date(), problems=problems) if air else None
+    if today_air:
+        therm_html = (f'Probably <strong>{esc(today_air["word"].lower())}</strong> (forecast)'
+                      f'<div class="sub">RRFS at Kaneohe, run {air["run"]:%d %H}Z: thermal index '
+                      f'{today_air["ti"]:.1f} °C, 10:00–14:00 (surface air: Open-Meteo at Kaneohe); '
+                      + (f'useable lift to about {round(today_air["usable_ft"], -2):,.0f} ft. '
+                         if today_air["usable_ft"] > RELEASE_FT + 300 else "no useable lift. ")
+                      + 'Useful, not critical, at Makapuʻu.</div>')
+        inv_html = f'{esc(inv_text(today_air["inv"]))}<div class="sub">RRFS at Kaneohe, 14:00: the trade lid</div>'
+    else:
+        therm_html = inv_html = "Unavailable"
+
     rest = [(t, grid[t]) for t in sorted(grid) if t.date() == now.date() and t.hour in DAY_HOURS and t > hour_now]
     rest_html = hour_table(rest) if rest else '<span class="sub">Nothing left of today\'s daylight.</span>'
 
@@ -285,8 +369,13 @@ def write(now: datetime) -> None:
     trows = [(t, grid[t]) for t in sorted(grid) if t.date() == tom and t.hour in DAY_HOURS]
     tword, tline = day_line([(t, rate(v["dir"], v["mph"], v["gust"])[0]) for t, v in trows]) if trows else ("", "")
     noon = grid.get(datetime.combine(tom, datetime.min.time()).replace(hour=12, tzinfo=HST))
+    ta = _try(air_day, air, surf, tom, problems=problems) if air else None
+    aloft = ""
+    if ta:
+        aloft = (f' Crest base about {ta["base_ft"]:,} ft' if ta["base_ft"] is not None else " ") +                 f', thermals {ta["word"].lower()}, inversion {inv_text(ta["inv"])[0].lower() + inv_text(ta["inv"])[1:]} (RRFS).'
     tom_html = (f'<p class="summary">{esc(tline)} Midday: {esc(wind_text(noon))}. '
-                f'{esc(return_note(noon["dir"]) if noon and noon.get("dir") is not None else "")}</p>'
+                f'{esc(return_note(noon["dir"]) if noon and noon.get("dir") is not None else "")}'
+                f'{esc(aloft)}</p>'
                 + hour_table(trows)) if trows else "<p>No forecast available.</p>"
 
     week = ""
@@ -297,8 +386,11 @@ def write(now: datetime) -> None:
             continue
         bw, line = day_line([(t, rate(v["dir"], v["mph"], v["gust"])[0]) for t, v in rows])
         mid = grid.get(datetime.combine(d, datetime.min.time()).replace(hour=12, tzinfo=HST))
+        da = _try(air_day, air, surf, d, problems=problems) if air else None
         week += (f"<tr><td>{d:%a %d}</td><td>{esc(wind_text(mid))}</td><td>{chip(bw)}</td>"
-                 f"<td>{esc(line)}</td></tr>")
+                 f"<td>{esc(line)}</td>"
+                 f'<td class="n">{"–" if not da or da["base_ft"] is None else format(da["base_ft"], ",")}</td>'
+                 f'<td>{"–" if not da else esc(da["word"])}</td></tr>')
 
     summary = (f"Now: {word.lower() if w else 'no wind reading'}"
                + (f", {wind_text(w)}" if w else "") + (" (forecast, Bellows out)." if w and not obs else ".")
@@ -310,7 +402,7 @@ def write(now: datetime) -> None:
     page = PAGE.format(style=style, updated=f"{now:%a %d %b %Y · %H:%M} HST", webcam=WEBCAM,
                        kind=f"Now · {now:%H:%M} HST", chip=today_chip, fly=fly_html, wind=wind_html,
                        dirnote=(f"<dt>Return</dt><dd>{dir_html}</dd>" if dir_html else ""),
-                       base=base_html, rest=rest_html, tom_title=f"Tomorrow · {tom:%a %d %b}",
+                       base=base_html, therm=therm_html, inv=inv_html, rest=rest_html, tom_title=f"Tomorrow · {tom:%a %d %b}",
                        tom_chip=chip(tword) if tword else "", tomorrow=tom_html, week=week, built=built,
                        diag=esc("; ".join(problems) or "none").replace("--", "-"))
     # IBM Plex has no ʻokina (U+02BB); its fallback glyph stands apart from the
@@ -358,6 +450,8 @@ PAGE = """<!doctype html>
         <dt>Wind</dt><dd>{wind}</dd>
         {dirnote}
         <dt>Crest base</dt><dd>{base}</dd>
+        <dt>Thermals</dt><dd>{therm}</dd>
+        <dt>Inversion</dt><dd>{inv}</dd>
       </dl>
       <div class="kind" style="color:var(--muted)">Rest of today (forecast)</div>
       {rest}
@@ -371,13 +465,13 @@ PAGE = """<!doctype html>
   <section class="block" aria-labelledby="t-week">
     <h2 id="t-week">The week</h2>
     <div class="tablewrap"><table>
-      <thead><tr><th>Day</th><th>Midday wind</th><th>Best</th><th>Hours</th></tr></thead>
+      <thead><tr><th>Day</th><th>Midday wind</th><th>Best</th><th>Hours</th><th class="n">Crest base</th><th>Thermals</th></tr></thead>
       <tbody>{week}</tbody>
     </table></div>
-    <p>Rated hour by hour, 08:00–19:00, from the NWS forecast grid at Makapuʻu: wind from 0–70° only (east of 070° turbulence off Rabbit Island reaches launch), speed and gusts against the site's limits, under 10 mph is a run-off launch.</p>
+    <p>Rated hour by hour, 08:00–19:00, from the NWS forecast grid at Makapuʻu: wind from 0–70° only (east of 070° turbulence off Rabbit Island reaches launch), speed and gusts against the site's limits, under 10 mph is a run-off launch. Crest base and thermals from the RRFS sounding at Kaneohe, as far as it runs (about three days).</p>
   </section>
   <div class="notes">
-    <p><strong>Where the numbers come from.</strong> Wind: Bellows (BELH1) via api.weather.gov, or the NWS forecast grid for the hour when Bellows is not reporting. Crest base: Kaneohe (PHNG) temperature and dew point via aviationweather.gov. Limits: the Makapuʻu site table.</p>
+    <p><strong>Where the numbers come from.</strong> Wind: Bellows (BELH1) via api.weather.gov, or the NWS forecast grid for the hour when Bellows is not reporting. Crest base: Kaneohe (PHNG) temperature and dew point via aviationweather.gov. Thermals, inversion and the forecast crest base: RRFS forecast soundings at Kaneohe (BUFKIT, Penn State). Limits: the Makapuʻu site table.</p>
     <p><strong>Notice.</strong> Information only, provided as is, with no guarantee of accuracy or availability. This is not an official forecast. Every pilot is responsible for their own decision to fly.</p>
   </div>
 </div>
@@ -400,5 +494,8 @@ PAGE = """<!doctype html>
 
 
 if __name__ == "__main__":
+    import os
+    import sys
+    sys.path.insert(0, os.environ.get("KULAMODEL", str(HERE.parent / "KulaModel")))
     write(datetime.now(HST))
     print("wrote", OUT / "index.html")
