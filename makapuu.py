@@ -643,6 +643,7 @@ def write(now: datetime) -> None:
     (OUT / "index.html").write_text(page, encoding="utf-8")
     _try(write_station_map, now, k, problems=problems)
     _try(log_parcels, now, k, air, cam, problems=problems)
+    problems += [f"parcel {p}" for p in PARCEL_PROBLEMS]
     _try(write_details, now, problems=problems)
     (OUT / "details.html").write_text(details_page(now, built), encoding="utf-8")
     camera = _try(save_camera, problems=problems)
@@ -796,6 +797,7 @@ def _lcl_ft(t_f, td_f) -> float:
 # camera's reading -- docs/makapuu_parcels.csv -- to be scored against the
 # camera and Sam's calls. Nonokio (067HE) logs once the NWS feed returns.
 PARCEL_LOG = HERE / "docs" / "makapuu_parcels.csv"
+PARCEL_PROBLEMS: list = []              # why a candidate's air was missing, into the page's problems
 
 
 def _parcel_candidates(now: datetime, k: dict | None) -> dict:
@@ -808,8 +810,8 @@ def _parcel_candidates(now: datetime, k: dict | None) -> dict:
         if got:
             t, tf, rh = got[-1]
             out["Heeia"] = (tf, dew_f(tf, rh), t)
-    except Exception:
-        pass
+    except Exception as e:
+        PARCEL_PROBLEMS.append(f"{type(e).__name__}: {str(e)[:60]}")
     try:
         h = _hcdp_latest(now)
         if "0533" in h:
@@ -817,8 +819,8 @@ def _parcel_candidates(now: datetime, k: dict | None) -> dict:
             if "Tair_1_Avg" in v and 0 < v.get("RH_1_Avg", 0) <= 100:
                 tf = v["Tair_1_Avg"] * 1.8 + 32
                 out["Maunawili"] = (tf, dew_f(tf, v["RH_1_Avg"]), t)
-    except Exception:
-        pass
+    except Exception as e:
+        PARCEL_PROBLEMS.append(f"{type(e).__name__}: {str(e)[:60]}")
     try:
         p = requests.get("https://api.weather.gov/stations/067HE/observations/latest", headers=HEAD,
                          timeout=30).json()["properties"]
@@ -827,16 +829,16 @@ def _parcel_candidates(now: datetime, k: dict | None) -> dict:
             tf = p["temperature"]["value"] * 1.8 + 32
             td = None if p["dewpoint"]["value"] is None else p["dewpoint"]["value"] * 1.8 + 32
             out["Nonokio"] = (tf, td, t)
-    except Exception:
-        pass
+    except Exception as e:
+        PARCEL_PROBLEMS.append(f"{type(e).__name__}: {str(e)[:60]}")
     try:
         r = requests.get("https://pae-paha.pacioos.hawaii.edu/erddap/tabledap/aws_himb.json"
-                         "?time,air_temperature&time%3E=now-3hours", timeout=30).json()["table"]["rows"]
+                         "?time,air_temperature&time%3E=now-6hours", timeout=45).json()["table"]["rows"]
         if r:
             t = datetime.fromisoformat(r[-1][0].replace("Z", "+00:00")).astimezone(HST)
             out["Moku o Loe"] = (r[-1][1] * 1.8 + 32, None, t)
-    except Exception:
-        pass
+    except Exception as e:
+        PARCEL_PROBLEMS.append(f"{type(e).__name__}: {str(e)[:60]}")
     return out
 
 
