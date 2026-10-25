@@ -550,8 +550,7 @@ def write(now: datetime) -> None:
     cam_line = cam_text(cam) if cam else ""
     if cam_line:
         base_html = (f'{esc(cam_line)}'
-                     f'<div class="sub">Kāneʻohe Bay camera, looking at the Koʻolau: '
-                     f'{cam["frames"]} frame{"s" if cam["frames"] > 1 else ""} to {cam["at"]:%H:%M}, last 30 minutes.'
+                     f'<div class="sub">Kāneʻohe Bay camera, looking at the Koʻolau, the last 30 minutes to {cam["at"]:%H:%M}.'
                      + (f" Kaneohe's air would condense at about {base:,} ft." if base is not None else "")
                      + "</div>")
     elif base is not None:
