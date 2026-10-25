@@ -402,11 +402,12 @@ def write(now: datetime) -> None:
     wind_html = (f'<span class="num">{esc(wind_text(w))}</span><div class="sub">{esc(src)}</div>') if w else "Unavailable"
     dir_html = esc(return_note(w["dir"])) if w and w.get("dir") is not None else ""
 
-    # The base on the range: the Koʻolau RAWS's own air lifted to condensation
-    # (on the range, "useful for cloudbase"), then the shore air at Heʻeia,
-    # then Kaneohe's METAR. All are shown; the first one present leads.
+    # The base on the range: the shore air at Heʻeia leads -- the inflow the
+    # trades lift over the Koʻolau. The Koʻolau RAWS's own air led first and
+    # read 3,500 ft on 10-25 (Sam: "way too high"; a forest RAWS in the sun
+    # reads warm and dry), so it is listed beside the others, not used.
     airs = []
-    for code in ("OFRH1", "HRRH1"):
+    for code in ("HRRH1", "OFRH1"):
         got = _try(hads_air, code, problems=problems) or []
         if got and now - got[-1][0] <= OBS_MAX_AGE + timedelta(minutes=30):
             t, tf, rh = got[-1]
