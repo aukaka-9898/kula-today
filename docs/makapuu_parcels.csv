@@ -12,3 +12,7 @@ date,time,station,obs_time,temp_f,dew_f,dew_from,lcl_ft,ti_c,word,camera,camera_
 2026-10-25,13:11,Heeia,12:30,79.2,71.3,own,1820.0,-2.32,Flat,"Clouds are above the ridge and below about 2,500 ft.",2500.0
 2026-10-25,13:11,Maunawili,13:00,77.7,69.3,own,1900.0,-1.24,Flat,"Clouds are above the ridge and below about 2,500 ft.",2500.0
 2026-10-25,13:11,Moku o Loe,11:00,77.4,66.9,Kaneohe,2380.0,0.1,Flat,"Clouds are above the ridge and below about 2,500 ft.",2500.0
+2026-10-25,13:12,Kaneohe runway,12:57,80.1,66.9,own,2990.0,-2.35,Flat,"Clouds are above the ridge and below about 2,500 ft.",2500.0
+2026-10-25,13:12,Heeia,12:30,79.2,71.3,own,1820.0,-2.32,Flat,"Clouds are above the ridge and below about 2,500 ft.",2500.0
+2026-10-25,13:12,Maunawili,13:00,77.7,69.3,own,1900.0,-1.24,Flat,"Clouds are above the ridge and below about 2,500 ft.",2500.0
+2026-10-25,13:12,Moku o Loe,11:00,77.4,66.9,Kaneohe,2380.0,0.1,Flat,"Clouds are above the ridge and below about 2,500 ft.",2500.0
