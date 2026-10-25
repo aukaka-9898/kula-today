@@ -31,7 +31,7 @@ $style
         <label><input type="radio" name="clock" value="local" checked> HST</label>
         <label><input type="radio" name="clock" value="utc"> UTC</label>
       </fieldset>
-      <fieldset><legend>Temperature at Kula Ag</legend>
+      <fieldset><legend>Temperature at <span class="sitelbl">Kula Ag</span></legend>
         <input id="temp" type="number" step="1" inputmode="numeric">
         <label><input type="radio" name="tu" value="F" checked> &deg;F</label>
         <label><input type="radio" name="tu" value="C"> &deg;C</label>
@@ -72,6 +72,7 @@ $style
 (function () {
   var D = null, Q = function (s) { return document.querySelector(s); };
   var DRY = 2.9871, STEP = 100;
+  function LBL() { return (D && D.surface_label) || "Kula Ag"; }
   function sel(n) { return Q('input[name="' + n + '"]:checked').value; }
   function mixr(t, p) { var e = 6.112 * Math.exp(17.67 * t / (t + 243.5)); return 0.622 * e / (p - e); }
   function vtemp(t, td, p) { return (t + 273.15) * (1 + 0.608 * mixr(td, p)) - 273.15; }
@@ -138,7 +139,7 @@ $style
     if (r.temp_f === undefined) { Q("#temp").value = ""; return; }
     Q("#temp").value = sel("tu") === "C" ? Math.round(fToC(r.temp_f)) : Math.round(r.temp_f);
     var y = r.yesterday_f;
-    Q("#yest").textContent = y === undefined ? "Yesterday at this hour: no Kula Ag reading" :
+    Q("#yest").textContent = y === undefined ? "Yesterday at this hour: no " + LBL() + " reading" :
       "Yesterday at this hour: " + (sel("tu") === "C" ? fToC(y).toFixed(1) + " °C" : y.toFixed(1) + " °F");
     Q("#useyest").disabled = y === undefined;
   }
@@ -167,7 +168,7 @@ $style
     Q("#o-top").textContent = "Parcel stops rising at " + n(Math.floor(H(top) / 100) * 100) + HU();
     var tb = Q("#invtab tbody"); tb.innerHTML = "";
     var inv = inversions(L);
-    if (!inv.length) tb.innerHTML = '<tr><td colspan="3">None between Kula Ag and ' + n(H(D.top_ft)) + HU() + "</td></tr>";
+    if (!inv.length) tb.innerHTML = '<tr><td colspan="3">None between ' + LBL() + ' and ' + n(H(D.top_ft)) + HU() + "</td></tr>";
     inv.forEach(function (v) {
       tb.insertAdjacentHTML("beforeend", "<tr><td>" + n(H(v.base)) + HU() + '</td><td class="n">' + n(H(v.top)) + HU() +
         '</td><td class="n">+' + (sel("tu") === "C" ? (v.warm / 1.8).toFixed(1) + " °C" : v.warm.toFixed(1) + " °F") + "</td></tr>");
@@ -180,7 +181,7 @@ $style
     // Drawn to 12,000 ft, the reach of a Kula flight (the numbers above are
     // worked to 18,000); the temperature axis fits the air and the parcel, and
     // a dew point drier than that runs off the left edge.
-    var lo = D.release_ft, hi = 12000, c = C.c.filter(function (x) { return x.h <= hi; });
+    var lo = D.release_ft, hi = D.chart_top || 12000, c = C.c.filter(function (x) { return x.h <= hi; });
     var tmin = Math.min.apply(null, c.map(function (x) { return Math.min(x.tve, x.tvp); })) - 6;
     var tmax = Math.max.apply(null, c.map(function (x) { return Math.max(x.tve, x.tvp); })) + 2;
     function X(t) { return l + (t - tmin) / (tmax - tmin) * (W - l - rt); }
@@ -200,7 +201,7 @@ $style
     }
     g += mark(C.lcl, "Cloudbase", "var(--sky)", false) + mark(C.use, "Top of useable lift", "var(--tawny)", true);
     if (D.launch_ft) g += mark(D.launch_ft, "Launch", "var(--grass)", C.use > D.launch_ft - 400 && C.use < D.launch_ft + 400 ? false : true);
-    g += '<text x="' + (l + 4) + '" y="' + (Y(lo) - 4) + '" style="fill:var(--grass)">Kula Ag</text>';
+    g += '<text x="' + (l + 4) + '" y="' + (Y(lo) - 4) + '" style="fill:var(--grass)">' + LBL() + '</text>';
     g += '<clipPath id="plot"><rect x="' + l + '" y="0" width="' + (W - l - rt) + '" height="' + Hh + '"/></clipPath>';
     g += '<path clip-path="url(#plot)" d="' + path(function (x) { return x.td; }) + '" fill="none" stroke="#3f9d5a" stroke-width="2"/>';
     g += '<path d="' + path(function (x) { return x.tve; }) + '" fill="none" stroke="#c0392b" stroke-width="2"/>';
@@ -223,7 +224,8 @@ $style
   function all() { setTemp(); draw(); }
   fetch("details.json?" + Date.now(), {cache: "no-store"}).then(function (r) { return r.json(); }).then(function (d) {
     D = d;
-    if (d.sources.RAOB) Q("#raoblbl").textContent = "Hilo balloon " + d.sources.RAOB.run.slice(11) + " " + d.sources.RAOB.run.slice(5, 10);
+    document.querySelectorAll(".sitelbl").forEach(function (e) { e.textContent = LBL(); });
+    if (d.sources.RAOB) Q("#raoblbl").textContent = (d.raob_label || "Hilo balloon") + " " + d.sources.RAOB.run.slice(11) + " " + d.sources.RAOB.run.slice(5, 10);
     ["RRFS", "GFS", "RAOB"].forEach(function (k) { if (!d.sources[k]) Q('input[name="src"][value="' + k + '"]').disabled = true; });
     fillHours();
     var now = new Date(), key = now.toLocaleString("sv-SE", {timeZone: "Pacific/Honolulu"}).slice(0, 13).replace(" ", "T");

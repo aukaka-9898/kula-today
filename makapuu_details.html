@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Makapuʻu Details</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+{style}
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div><a class="homebtn" href="/">&larr; Home</a> <a class="homebtn" href="./">&larr; Makapuʻu Today</a><h1>Makapuʻu Details</h1></div>
+    <div class="date">Updated {updated}</div>
+  </header>
+  <div class="databadge"><div class="big">Under construction</div></div>
+<!--THERMAL-->
+  <section class="block" id="stationmap">
+    <h2>Station map</h2>
+    <p>The stations around Makapuʻu. Arrows fly with the wind. Tap a station for its latest reading. Bellows and the HECO stations come through the NWS feed, which has been frozen since 22 October.</p>
+    <div id="map" style="height:460px;border-radius:8px;border:1px solid var(--rule)"></div>
+  </section>
+</div>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+/* Makapuʻu's station map (makapuu.py writes stations.json beside this page). */
+(function () {
+  var map = L.map("map", {scrollWheelZoom: false}).setView([21.36, -157.715], 11);
+  L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}", {
+    maxZoom: 16, attribution: "Tiles &copy; Esri &mdash; Esri, HERE, Garmin, USGS, NGA, EPA, USDA, NPS"}).addTo(map);
+  L.circleMarker([21.3204, -157.6788], {radius: 6, color: "#c0392b", weight: 2, fillOpacity: 0.6}).addTo(map)
+    .bindTooltip("Launch", {permanent: true, direction: "left", className: "stn"});
+  fetch("stations.json?" + Date.now()).then(function (r) { return r.json(); }).then(function (d) {
+    d.stations.forEach(function (s) {
+      var ok = s.dir !== null && s.mph, rot = ok ? (s.dir + 180) % 360 : 0;
+      var arrow = ok ? '<div style="transform:rotate(' + rot + 'deg);color:#1f6fb2;font:700 22px/22px sans-serif;text-shadow:0 0 3px #fff">&#8593;</div>'
+                     : '<div style="width:10px;height:10px;border-radius:50%;background:#7d8c98;border:2px solid #fff"></div>';
+      var m = L.marker([s.lat, s.lon], {icon: L.divIcon({className: "", html: arrow, iconSize: [22, 22], iconAnchor: [11, 11]})}).addTo(map);
+      m.bindTooltip(s.name, {permanent: true, direction: "right", offset: [8, 0], className: "stn"});
+      var lines = [];
+      if (s.mph !== null) lines.push("Wind: " + (s.dir === null ? "variable" : "from " + s.dir + "°") + " at " + s.mph + " mph" + (s.gust !== undefined ? ", gusts " + s.gust : "") + " (" + s.at + ")");
+      if (s.temp_f !== undefined) {
+        lines.push("Temperature: " + s.temp_f.toFixed(1) + " °F");
+        lines.push("Dew point: " + s.dew_f.toFixed(1) + " °F, humidity " + s.rh + "%");
+        lines.push("Condensation level: " + s.lcl_ft.toLocaleString() + " ft");
+      }
+      if (!lines.length) lines.push(s.last ? "No readings since " + s.last : "No recent readings");
+      m.bindPopup("<b>" + s.name + "</b>" + (s.elev_ft ? " · " + s.elev_ft.toLocaleString() + " ft" : "") + "<br>" + lines.join("<br>"));
+    });
+  }).catch(function () {});
+})();
+</script>
+<style>.stn{font:600 11px/1.2 var(--body);padding:1px 4px;background:rgba(255,255,255,.85);border:0;box-shadow:none;color:#17242f}.stn:before{display:none}</style>
+</body>
+</html>

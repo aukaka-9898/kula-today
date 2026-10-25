@@ -409,12 +409,244 @@ def write(now: datetime) -> None:
     # letters, so the visible text uses the left quote instead.
     page = page.replace("ʻ", "&#8216;")
     (OUT / "index.html").write_text(page, encoding="utf-8")
+    _try(write_station_map, now, k, problems=problems)
+    _try(write_details, now, problems=problems)
+    (OUT / "details.html").write_text(details_page(now, built), encoding="utf-8")
     camera = _try(save_camera, problems=problems)
     (OUT / "summary.json").write_text(json.dumps({
         "site": "Makapuu", "title": "Makapu‘u Today", "page": "kula-today/makapuu/", "built": built,
         "updated": f"{now:%a %d %b %Y · %H:%M} HST", "kind": f"Now · {now:%H:%M} HST",
         "chip": {"class": RATING_CLASS.get(word, "fair"), "word": word} if w and not night else None,
         "summary": summary, "limited": not obs, "camera": camera}), encoding="utf-8")
+
+
+# ---------------------------------------------------------------- Details page
+# Like Kula's (Sam, 2026-10-25: "detail page for Makapuu"): the thermal
+# conditions section -- the same page code as Kula Details, fed by this site's
+# details.json -- and a station map. RRFS and GFS at Kaneohe (phng), and the
+# Lihue balloon, which Weather Guesser uses for Oʻahu sites. The viewer picks
+# the temperature; the dew point is Kaneohe's: measured for hours gone,
+# Open-Meteo's forecast for hours ahead.
+DETAILS_HOURS = range(8, 17)
+DETAILS_MAX_AGE = timedelta(minutes=60)
+LIHUE_RAOB = ("https://weather.uwyo.edu/wsgi/sounding?datetime={t:%Y-%m-%d %H}:00:00"
+              "&id=91165&type=TEXT:CSV&src=BUFR")
+# The map's stations: (feed, id, name, lat, lon, elev ft). The NWS mesonet
+# ones (Bellows and the HECO stations) are frozen since 2026-10-22.
+MAP_STATIONS = [("nws", "BELH1", "Bellows", 21.3667, -157.7167, 39),
+                ("nws", "065HE", "HECO Mokuhano", 21.2963, -157.66798, 60),
+                ("nws", "067HE", "HECO Nonokio", 21.33861, -157.71167, 42),
+                ("nws", "134HE", "HECO Kuluanui Rd", 21.30071, -157.70012, 580),
+                ("metar", "PHNG", "Kaneohe (PHNG)", 21.45389, -157.76556, 16),
+                ("hcdp", "0531", "Kaluanui Ridge", 21.30491, -157.70302, 784),
+                ("hcdp", "0533", "Maunawili", 21.36827, -157.76272, 46)]
+
+
+def _levels(prof, top_ft=20000) -> list:
+    p = prof[prof.height_ft <= top_ft].sort_values("height_ft")
+    return [[round(float(r.height_ft)), round(float(r.pres), 1), round(float(r.temp_c), 2), round(float(r.dewpoint_c), 2),
+             None if r.wind_dir != r.wind_dir else round(float(r.wind_dir)),
+             None if r.wind_kt != r.wind_kt else round(float(r.wind_kt))]
+            for r in p.itertuples() if r.dewpoint_c > -100]
+
+
+def lihue_raob(now: datetime):
+    """The newest 00Z Lihue ascent, every 100 ft: (UTC time, levels)."""
+    from io import StringIO
+    import numpy as np
+    import pandas as pd
+    day = now.astimezone(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+    for back in range(3):
+        t = day - timedelta(days=back)
+        r = requests.get(LIHUE_RAOB.format(t=t), timeout=60)
+        if r.status_code != 200 or not r.text.startswith("time,"):
+            continue
+        d = pd.read_csv(StringIO(r.text), skipinitialspace=True)
+        d.columns = ["time", "lon", "lat", "pres", "z_m", "temp_c", "dewpoint_c", "ice", "rh", "rhi",
+                     "w", "wind_dir", "wind_ms"][:len(d.columns)]
+        d = d.dropna(subset=["z_m", "temp_c", "dewpoint_c"]).sort_values("z_m").drop_duplicates("z_m")
+        if len(d) < 50:
+            continue
+        z = d.z_m.to_numpy() * 3.28084
+        hts = np.arange(0, min(20000, z.max()) + 1, 100.0)
+        idx = np.clip(np.searchsorted(z, hts), 0, len(z) - 1)
+        prof = pd.DataFrame({"height_ft": hts,
+                             **{c: np.interp(hts, z, d[c].to_numpy()) for c in ("pres", "temp_c", "dewpoint_c")},
+                             "wind_dir": d.wind_dir.to_numpy()[idx], "wind_kt": d.wind_ms.to_numpy()[idx] * 1.94384})
+        return t, _levels(prof)
+    return None, []
+
+
+def metar_hours(hours: int = 40) -> dict:
+    """Kaneohe's measured air by HST hour: {hour: (T F, Td F)}, hourly means."""
+    rows = requests.get(METAR.replace("hours=3", f"hours={hours}"), timeout=30).json()
+    out: dict = {}
+    for m in rows:
+        if m.get("temp") is None or m.get("dewp") is None:
+            continue
+        t = datetime.fromtimestamp(m["obsTime"], timezone.utc).astimezone(HST)
+        out.setdefault(t.replace(minute=0, second=0, microsecond=0), []).append(
+            (m["temp"] * 9 / 5 + 32, m["dewp"] * 9 / 5 + 32))
+    return {k: (sum(a for a, _ in v) / len(v), sum(b for _, b in v) / len(v)) for k, v in out.items()}
+
+
+def write_details(now: datetime) -> None:
+    import pandas as pd
+    import sounding as sd
+    import thermal as th
+    f = OUT / "details.json"
+    try:
+        if now - datetime.fromisoformat(json.loads(f.read_text(encoding="utf-8"))["made"]) < DETAILS_MAX_AGE:
+            return
+    except Exception:
+        pass
+    days = [now.date(), now.date() + timedelta(days=1)]
+    wanted = [datetime.combine(d, datetime.min.time()).replace(hour=h, tzinfo=HST) for d in days for h in DETAILS_HOURS]
+    out = {"made": now.isoformat(), "release_ft": RELEASE_FT, "launch_ft": LAUNCH_FT, "top_ft": 18000,
+           "chart_top": 10000, "surface_label": "Kaneohe", "raob_label": "Lihue balloon",
+           "bands": [[None if lim == float("-inf") else lim, w] for lim, w in th.TI_BANDS],
+           "sources": {}, "surface": {}}
+    for model in ("RRFS", "GFS"):
+        try:
+            path = sd.fetch(model, station="phng")
+            got = sd.profiles(path, model)
+        except Exception:
+            continue
+        hours = {}
+        for w in wanted:
+            t = pd.Timestamp(w).tz_convert("UTC")
+            near = min(got, key=lambda k: abs((k - t).total_seconds()))
+            if abs((near - t).total_seconds()) <= 5400:
+                hours[f"{w:%Y-%m-%dT%H}"] = _levels(got[near])
+        out["sources"][model] = {"run": f"{sd.run_time(path):%Y-%m-%d %H}Z", "where": "Kaneohe (PHNG) BUFKIT",
+                                 "hours": hours}
+    try:
+        t, lv = lihue_raob(now)
+        if lv:
+            out["sources"]["RAOB"] = {"run": f"{t:%Y-%m-%d %H}Z", "where": "Lihue (LIH) balloon, 91165", "levels": lv}
+    except Exception:
+        pass
+    try:
+        meas = metar_hours()
+    except Exception:
+        meas = {}
+    try:
+        fc = surface_hours()
+    except Exception:
+        fc = {}
+    for w in wanted:
+        row = {}
+        if w + timedelta(hours=1) <= now and w in meas:
+            row = {"temp_f": round(meas[w][0], 1), "dew_f": round(meas[w][1], 1), "from": "Kaneohe, measured"}
+        elif w in fc:
+            row = {"temp_f": round(fc[w][0], 1), "dew_f": round(fc[w][1], 1), "from": "Kaneohe forecast (Open-Meteo)"}
+        y = w - timedelta(days=1)
+        if w.date() == now.date() and y in meas:
+            row["yesterday_f"] = round(meas[y][0], 1)
+        out["surface"][f"{w:%Y-%m-%dT%H}"] = row
+    f.write_text(json.dumps(out, separators=(",", ":")), encoding="utf-8")
+
+
+def _lcl_ft(t_f, td_f) -> float:
+    return round((t_f - td_f) / 1.8 * 125 * 3.28084, -1)
+
+
+def _hcdp_latest(now: datetime) -> dict:
+    """{station id: (time, {variable: value})} for the map's Mesonet stations."""
+    import mesonet
+    got = mesonet.get("/mesonet/db/measurements", location="hawaii", station_ids="0531,0533",
+                      var_ids="Tair_1_Avg,RH_1_Avg,WS_1_Avg,WS_1_Max,WDrs_1_Avg",
+                      start_date=(now - timedelta(hours=2)).strftime("%Y-%m-%dT%H:%M:%S-10:00"),
+                      row_mode="json", limit=5000)
+    by: dict = {}
+    for r in got:
+        if r.get("value") is None:
+            continue
+        t = datetime.fromisoformat(r["timestamp"].replace("Z", "+00:00")).astimezone(HST)
+        by.setdefault(r["station_id"], {}).setdefault(t, {})[r["variable"]] = float(r["value"])
+    return {sid: (max(v), v[max(v)]) for sid, v in by.items()}
+
+
+def write_station_map(now: datetime, k: dict | None) -> None:
+    import math
+    try:
+        hcdp = _hcdp_latest(now)
+    except Exception:
+        hcdp = {}
+    try:
+        metar = max(requests.get(METAR, timeout=30).json(), key=lambda r: r["obsTime"])
+    except Exception:
+        metar = None
+
+    def air(row, tf, df, t):
+        row.update(temp_f=round(tf, 1), dew_f=round(df, 1), lcl_ft=_lcl_ft(tf, df) + row["elev_ft"],   # above sea level
+                   air_at=f"{t:%H:%M}")
+
+    rows = []
+    for feed, sid, name, lat, lon, elev in MAP_STATIONS:
+        row = {"name": name, "lat": lat, "lon": lon, "elev_ft": elev, "dir": None, "mph": None, "at": None}
+        try:
+            if feed == "nws":
+                p = requests.get(f"https://api.weather.gov/stations/{sid}/observations/latest",
+                                 headers=HEAD, timeout=30).json()["properties"]
+                t = datetime.fromisoformat(p["timestamp"]).astimezone(HST)
+                v = lambda key: p[key]["value"]
+                if now - t > OBS_MAX_AGE:
+                    row["last"] = f"{t:%d %b %H:%M}"
+                else:
+                    if v("windSpeed") is not None:
+                        row.update(dir=v("windDirection"), mph=round(v("windSpeed") * 0.621371), at=f"{t:%H:%M}")
+                        if v("windGust") is not None:
+                            row["gust"] = round(v("windGust") * 0.621371)
+                    if v("temperature") is not None and v("dewpoint") is not None:
+                        air(row, v("temperature") * 1.8 + 32, v("dewpoint") * 1.8 + 32, t)
+            elif feed == "metar" and metar:
+                t = datetime.fromtimestamp(metar["obsTime"], timezone.utc).astimezone(HST)
+                if metar.get("wspd") is not None:
+                    row.update(dir=None if metar.get("wdir") in (None, "VRB") else metar["wdir"],
+                               mph=round(metar["wspd"] * 1.15078), at=f"{t:%H:%M}")
+                if metar.get("wgst"):
+                    row["gust"] = round(metar["wgst"] * 1.15078)
+                if metar.get("temp") is not None and metar.get("dewp") is not None:
+                    air(row, metar["temp"] * 1.8 + 32, metar["dewp"] * 1.8 + 32, t)
+            elif feed == "hcdp" and sid in hcdp:
+                t, v = hcdp[sid]
+                if "WS_1_Avg" in v:
+                    row.update(dir=None if "WDrs_1_Avg" not in v else round(v["WDrs_1_Avg"] % 360),
+                               mph=round(v["WS_1_Avg"] * 2.23694), at=f"{t:%H:%M}")
+                    if "WS_1_Max" in v:
+                        row["gust"] = round(v["WS_1_Max"] * 2.23694)
+                if "Tair_1_Avg" in v and 0 < v.get("RH_1_Avg", 0) <= 100:
+                    tc, rh = v["Tair_1_Avg"], v["RH_1_Avg"]
+                    g = math.log(rh / 100) + 17.625 * tc / (243.04 + tc)
+                    dc = 243.04 * g / (17.625 - g)
+                    air(row, tc * 1.8 + 32, dc * 1.8 + 32, t)
+        except Exception:
+            pass
+        if row.get("temp_f") is not None:
+            a, b = (row["temp_f"] - 32) / 1.8, (row["dew_f"] - 32) / 1.8
+            row["rh"] = round(100 * math.exp(17.625 * b / (243.04 + b) - 17.625 * a / (243.04 + a)))
+        rows.append(row)
+    (OUT / "stations.json").write_text(json.dumps({"built": f"{now:%Y-%m-%dT%H:%M}", "stations": rows}),
+                                       encoding="utf-8")
+
+
+def details_page(now: datetime, built: str) -> str:
+    raw = (HERE / "template.html").read_text(encoding="utf-8")
+    style = "".join("<style>" + part.split("</style>")[0] + "</style>" for part in raw.split("<style>")[1:])
+    kd = (HERE / "details_template.html").read_text(encoding="utf-8")
+    a = kd.index('  <section class="block" aria-labelledby="t-thermal">')
+    b = kd.index('  <section class="block" aria-labelledby="t-ladder">')
+    intro = ("<p>The air over Makapuʻu from a forecast sounding at Kaneohe or the Lihue balloon, with a parcel "
+             "of Kaneohe's surface air lifted dry through it: the arithmetic behind the Thermals row on the main "
+             "page. Pick the source and hour, then dial in the temperature you expect. The dew point is not a "
+             "choice: Kaneohe measured for hours already gone, its forecast for hours ahead.</p>")
+    thermal = re.sub(r"<p>The air above Kula.*?</p>", lambda m: intro, kd[a:b], count=1, flags=re.S)
+    thermal = thermal.replace('<span id="raoblbl">Hilo balloon</span>', '<span id="raoblbl">Lihue balloon</span>')
+    page = (HERE / "makapuu_details.html").read_text(encoding="utf-8").replace("{style}", style).replace("{updated}", f"{now:%a %d %b %Y · %H:%M} HST") \
+        .replace("<!--THERMAL-->", thermal)
+    return page.replace("ʻ", "&#8216;")
+
 
 
 PAGE = """<!doctype html>
@@ -470,6 +702,7 @@ PAGE = """<!doctype html>
     </table></div>
     <p>Rated hour by hour, 08:00–19:00, from the NWS forecast grid at Makapuʻu: wind from 0–70° only (east of 070° turbulence off Rabbit Island reaches launch), speed and gusts against the site's limits, under 10 mph is a run-off launch. Crest base and thermals from the RRFS sounding at Kaneohe, as far as it runs (about three days).</p>
   </section>
+  <a class="detailslink" href="details.html">Details: thermal profile and station map &rarr;</a>
   <div class="notes">
     <p><strong>Where the numbers come from.</strong> Wind: Bellows (BELH1) via api.weather.gov, or the NWS forecast grid for the hour when Bellows is not reporting. Crest base: Kaneohe (PHNG) temperature and dew point via aviationweather.gov. Thermals, inversion and the forecast crest base: RRFS forecast soundings at Kaneohe (BUFKIT, Penn State). Limits: the Makapuʻu site table.</p>
     <p><strong>Notice.</strong> Information only, provided as is, with no guarantee of accuracy or availability. This is not an official forecast. Every pilot is responsible for their own decision to fly.</p>

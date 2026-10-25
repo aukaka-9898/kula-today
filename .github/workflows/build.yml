@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: ["build.py", "patterns.py", "rules.py", "template.html", "details_template.html", "makapuu.py", ".github/workflows/build.yml"]
+    paths: ["build.py", "patterns.py", "rules.py", "template.html", "details_template.html", "makapuu.py", "makapuu_details.html", ".github/workflows/build.yml"]
 
 permissions:
   contents: write
