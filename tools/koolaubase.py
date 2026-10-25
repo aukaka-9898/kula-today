@@ -66,6 +66,7 @@ SELF_LIFT = 35             # "self": under-crest strip brighter than the slope b
 # tower's mast pole crosses the skyline (x ~1295-1310; the antenna arrays hang
 # below it), and the left-edge panel ends at x ~122.
 MASK_X = ((0, 124), (1290, 1315), (1730, 1920))
+TOWER_ZONE = (1250, 1355)
 VIEWS["sw"]["mask"] = MASK_X
 BELOW = (3, 16)            # rows under the skyline read for cloud on the crest
 LIGHT = (45, 70)           # rows under the skyline read for the frame's lighting
@@ -112,6 +113,11 @@ def geometry(view="sw"):
         az_col = np.interp(cols, xs[o], dz[o])
         dist = np.array([sky[min(sky, key=lambda a: abs(a - z))][2] for z in az_col])
         crest = np.array([sky[min(sky, key=lambda a: abs(a - z))][1] for z in az_col])
+        # Beside the tower the white antenna arrays just under the crest make a
+        # stronger edge than the skyline in the clear frame; there the crest
+        # row comes from the terrain model instead.
+        tz = (cols >= TOWER_ZONE[0]) & (cols <= TOWER_ZONE[1]) if view == "sw" else np.zeros(len(cols), bool)
+        rows = np.where(tz, model_y, rows)
         ok = (np.abs(model_y - rows) < 25) & ~np.any([(cols >= a) & (cols <= b) for a, b in MASK], axis=0)
         # Scallops: the windward Koʻolau is a row of amphitheatre valley heads
         # between spur ridges; in this view each is a U-shaped sag in the
