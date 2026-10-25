@@ -49,5 +49,12 @@
 "thermal": "Flat",
 "made": "2026-10-24 18:07",
 "ft": null
+},
+"2026-10-26": {
+"base": "Normal",
+"rule": null,
+"thermal": "Moderate",
+"made": "2026-10-25 12:03",
+"ft": null
 }
 }

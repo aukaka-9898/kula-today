@@ -89,7 +89,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><a class="homebtn" href="/">&larr; Home</a> <a class="homebtn" href="./">&larr; Makapu&#8216;u Today</a><h1>Makapu&#8216;u Details</h1></div>
-    <div class="date">Updated Sun 25 Oct 2026 · 12:01 HST</div>
+    <div class="date">Updated Sun 25 Oct 2026 · 12:03 HST</div>
   </header>
   <div class="databadge"><div class="big">Under construction</div></div>
   <section class="block" aria-labelledby="t-thermal">
@@ -304,7 +304,11 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
     ["RRFS", "GFS", "RAOB"].forEach(function (k) { if (!d.sources[k]) Q('input[name="src"][value="' + k + '"]').disabled = true; });
     fillHours();
     var now = new Date(), key = now.toLocaleString("sv-SE", {timeZone: "Pacific/Honolulu"}).slice(0, 13).replace(" ", "T");
-    if (d.surface[key]) Q("#hour").value = key;
+    // Open on this hour, or the nearest hour that has surface air (a build that
+    // missed the forecast left some hours empty, 10-25).
+    var keys = Object.keys(d.surface).filter(function (k) { return d.surface[k].temp_f !== undefined; });
+    if (d.surface[key] && d.surface[key].temp_f !== undefined) Q("#hour").value = key;
+    else if (keys.length) Q("#hour").value = keys.filter(function (k) { return k >= key; })[0] || keys[keys.length - 1];
     all();
   }).catch(function () { Q("#o-src").textContent = "The thermal data could not be loaded."; });
   document.querySelectorAll('input[name="src"]').forEach(function (e) { e.onchange = draw; });
