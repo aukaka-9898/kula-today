@@ -4157,13 +4157,18 @@ def build() -> str:
 # camera id; None = no picture), saved small and overwritten each build.
 SUMMARY_FILE = HERE / "docs" / "summary.json"
 HOME_CAMERA = 13417          # Kekoa South (Sam, 2026-10-25)
+# Cards for sites still being built get their picture from this build too,
+# until they have builds of their own: (FAA site, camera, file under docs/).
+OTHER_CARD_CAMERAS = [(588, 12153, "cameras/makapuu.jpg")]   # Makapuʻu, looking NW (Sam, 10-25)
 
 
 def write_summary(v: dict, now: datetime) -> None:
     import re
     summ = re.search(r'<p class="summary">(.*?)</p>', v.get("summary", ""), re.S)
     chip_m = re.search(r'class="chip (\w+)">([^<]*)<', v.get("today_chip", ""))
-    camera = safely(save_home_camera) if HOME_CAMERA else None
+    camera = safely(save_home_camera, 931, HOME_CAMERA, "camera.jpg") if HOME_CAMERA else None
+    for site, cam, name in OTHER_CARD_CAMERAS:
+        safely(save_home_camera, site, cam, name)
     out = {"site": "Kula", "title": "Kula Today", "page": "kula-today/", "built": v.get("built"),
            "updated": v.get("updated"), "kind": v.get("today_kind"), "heading": v.get("today_title"),
            "chip": None if not chip_m else {"class": chip_m.group(1), "word": chip_m.group(2)},
@@ -4172,18 +4177,21 @@ def write_summary(v: dict, now: datetime) -> None:
     SUMMARY_FILE.write_text(json.dumps(out), encoding="utf-8")
 
 
-def save_home_camera() -> str | None:
+def save_home_camera(site: int, camera: int, name: str) -> str | None:
     from io import BytesIO
     from PIL import Image
-    j = requests.get(KEKOA_URL, params={"siteId": 931}, headers={"Referer": KEKOA_PAGE}, timeout=30).json()
-    cam = next(c for c in j["payload"]["site"]["cameras"] if c["cameraId"] == HOME_CAMERA)
+    j = requests.get(KEKOA_URL, params={"siteId": site}, timeout=30,
+                     headers={"Referer": f"https://weathercams.faa.gov/cameras/state/HI/cameraSite/{site}/summary"}).json()
+    cam = next(c for c in j["payload"]["site"]["cameras"] if c["cameraId"] == camera)
     im = max(cam["currentImages"], key=lambda x: x["imageDatetime"])
     raw = requests.get(im["imageUri"], timeout=30).content
     pic = Image.open(BytesIO(raw)).convert("RGB")
     pic.thumbnail((800, 450))
-    pic.save(HERE / "docs" / "camera.jpg", quality=80)
+    out = HERE / "docs" / name
+    out.parent.mkdir(exist_ok=True)
+    pic.save(out, quality=80)
     when = datetime.fromisoformat(im["imageDatetime"].replace("Z", "+00:00")).astimezone(HST)
-    return f"camera.jpg?{when:%Y%m%d%H%M}"
+    return f"{name}?{when:%Y%m%d%H%M}"
 
 
 PAGE = Template((HERE / "template.html").read_text(encoding="utf-8"))
