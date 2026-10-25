@@ -38,17 +38,25 @@ VIEWS = {"sw": {"dem": "koolaucam_dem.json", "geom": "koolaucam_geom.json", "cle
                 "start": (225, 100)},
          "se": {"dem": "koolaucam_se_dem.json", "geom": "koolaucam_se_geom.json", "clear": "kaneohe_se_clearday.jpg",
                 "az": (90.0, 200.0), "dists": (300, 20001, 300), "band": (620, 765), "cols": (1060, 1800),
-                "start": (140, 95)}}
+                "start": (140, 95)},
+         # NW looks up the coast to Kualoa (Puʻukānehoalani 1,722 ft, 9 mi); the
+         # crest runs x ~20-1100, ocean to the right. FAA's clear-day picture
+         # is the skyline reference (crest clear, sunrise light -- geometry only;
+         # Sam 10-25); its label marker at x ~990 is skipped.
+         "nw": {"dem": "koolaucam_nw_dem.json", "geom": "koolaucam_nw_geom.json", "clear": "faa_clearday_12785.jpg",
+                "az": (250.0, 360.0), "dists": (300, 25001, 300), "band": (630, 775), "cols": (20, 1100),
+                "start": (315, 90), "skip": ((960, 1020),), "dark_below": 120, "mast_m": 40.0}}
 
 
 def use(view: str):
-    global VIEW, DEM, GEOM, CLEARDAY, AZ, DISTS, BAND, COLS, START
+    global VIEW, DEM, GEOM, CLEARDAY, AZ, DISTS, BAND, COLS, START, SKIP, DARK_BELOW, MAST
     v = VIEWS[view]
     VIEW = view
     DEM, GEOM, CLEARDAY = (os.path.join(HERE, v[k]) for k in ("dem", "geom", "clear"))
     AZ = np.arange(v["az"][0], v["az"][1] + 0.01, 1.0)
     DISTS = np.arange(*v["dists"])
-    BAND, COLS, START = v["band"], v["cols"], v["start"]
+    BAND, COLS, START, SKIP = v["band"], v["cols"], v["start"], v.get("skip", ())
+    DARK_BELOW, MAST = v.get("dark_below"), v.get("mast_m")      # MAST: held, not fitted
 
 
 use("sw")
@@ -100,11 +108,17 @@ def image_skyline(gray, top=None, bottom=None):
     the largest downward brightness drop in the band where the crest sits."""
     top, bottom = top or BAND[0], bottom or BAND[1]
     cols = np.arange(COLS[0], COLS[1], 8)
+    cols = np.array([c for c in cols if not any(a <= c <= b for a, b in SKIP)])
     rows = []
     for x in cols:
         col = gray[top:bottom, x - 3:x + 4].mean(axis=1)
         sm = np.convolve(col, np.ones(5) / 5, mode="same")
         d = sm[:-4] - sm[4:]
+        if DARK_BELOW:
+            # The crest is the edge with dark ridge under it: sunrise-lit cloud
+            # just above the crest makes stronger edges of its own (NW, FAA frame).
+            below = np.array([sm[i + 6:i + 16].mean() if i + 16 <= len(sm) else 999 for i in range(len(d))])
+            d = np.where(below < DARK_BELOW, d, -999)
         rows.append(top + int(np.argmax(d[3:-3])) + 5)
     return cols, np.array(rows, float)
 
@@ -153,7 +167,7 @@ def fit():
 
     def resid(p):
         g = dict(zip(("bearing", "hfov", "tilt", "roll", "k1"), p[:5]))
-        sky = model_skyline(ELEV_FT / 3.28084 + p[5], dem)
+        sky = model_skyline(ELEV_FT / 3.28084 + (MAST if MAST is not None else p[5]), dem)
         az = np.array(list(sky)); ang = np.array([v[0] for v in sky.values()])
         dense = np.arange(az[0], az[-1], 0.05)
         xs, ys = project(dense, np.interp(dense, az, ang), g)
@@ -177,7 +191,7 @@ def fit():
                 best = (c, p)
     p = best[1]
     r = resid(p)
-    g = {"bearing": p[0], "hfov": p[1], "tilt": p[2], "roll": p[3], "k1": p[4], "mast_m": p[5],
+    g = {"bearing": p[0], "hfov": p[1], "tilt": p[2], "roll": p[3], "k1": p[4], "mast_m": MAST if MAST is not None else p[5],
          "rms_px": float(np.sqrt(np.mean(r ** 2))), "median_abs_px": float(np.median(np.abs(r)))}
     json.dump({k: round(float(v), 4) for k, v in g.items()}, open(GEOM, "w"), indent=1)
     print(json.dumps({k: round(float(v), 3) for k, v in g.items()}))

@@ -34,6 +34,18 @@ import koolaucam as kc  # noqa: E402
 # Segments of the crest in this view (x ranges, left to right).
 SEGMENTS = (("Greenwall", 170, 470), ("Konahuanui", 470, 640), ("Kāneʻohe crest", 640, 1260),
             ("Kahaluʻu crest", 1260, 1730))
+# The other two views from the same site (Sam 10-25: "build SE and NW ridge").
+# SE: "Waimānalo" from launch (x ~1097) to Puʻu o Kona (x ~1460), "Greenwall"
+# from Puʻu o Kona on (Sam's names); the antenna box at the right edge masked.
+# NW: up the coast to Kualoa (Puʻukānehoalani, x ~990); names provisional.
+# NW's reference is FAA's sunrise picture, so its capped test compares the
+# strip under the crest with the slope lower in the SAME frame ("self").
+VIEWS = {"sw": {"camera": 12784, "segments": SEGMENTS, "mask": None, "capped": "clear"},
+         "se": {"camera": 12783, "segments": (("Waimānalo", 1097, 1460), ("Greenwall", 1460, 1800)),
+                "mask": ((0, 1090), (1800, 1920)), "capped": "clear"},
+         "nw": {"camera": 12785, "segments": (("Up the coast", 20, 900), ("Kualoa", 900, 1100)),
+                "mask": ((955, 1025), (1100, 1920)), "capped": "self"}}
+SELF_LIFT = 35             # "self": under-crest strip brighter than the slope below by this
 # Columns never read: the cell tower and its antennas standing in front of the
 # crest (x ~1262-1345; Sam 10-25: "mask the tower" -- it read as cloud), and
 # the antennas at the left edge of the frame, which stand up past the crest to
@@ -42,6 +54,7 @@ SEGMENTS = (("Greenwall", 170, 470), ("Konahuanui", 470, 640), ("Kāneʻohe cres
 # the frame edge with farther ridges behind it: not read (Sam: "Omit that
 # section").
 MASK_X = ((0, 130), (1250, 1355), (1730, 1920))
+VIEWS["sw"]["mask"] = MASK_X
 BELOW = (3, 16)            # rows under the skyline read for cloud on the crest
 LIGHT = (45, 70)           # rows under the skyline read for the frame's lighting
 CAP_LIFT = 30              # brighter than clear air by this, beyond the lighting change
@@ -53,15 +66,16 @@ REACH_PX = 220             # how far above the crest a cloud bottom is looked fo
 # bottom needs 4 cloud rows in a row.
 HAZE_PX, RUN = 8, 4
 CLOUD_BR, CLOUD_BRIGHT = 6, 140
-_GEOM = None
+_GEOM: dict = {}
 
 
-def geometry():
+def geometry(view="sw"):
     """(geom, columns, clear-air skyline rows, crest distance m, crest ft) where
     the detected clear-air skyline agrees with the terrain model."""
-    global _GEOM
-    if _GEOM is None:
+    if view not in _GEOM:
         from PIL import Image
+        kc.use(view)
+        MASK = VIEWS[view]["mask"]
         g = json.load(open(kc.GEOM))
         clear = np.asarray(Image.open(kc.CLEARDAY).convert("L"), float)
         cols, rows = kc.image_skyline(clear)
@@ -77,9 +91,10 @@ def geometry():
         az_col = np.interp(cols, xs[o], dz[o])
         dist = np.array([sky[min(sky, key=lambda a: abs(a - z))][2] for z in az_col])
         crest = np.array([sky[min(sky, key=lambda a: abs(a - z))][1] for z in az_col])
-        ok = (np.abs(model_y - rows) < 25) & ~np.any([(cols >= a) & (cols <= b) for a, b in MASK_X], axis=0)
-        _GEOM = (g, cols[ok], rows[ok], dist[ok], crest[ok], az_col[ok], clear)
-    return _GEOM
+        ok = (np.abs(model_y - rows) < 25) & ~np.any([(cols >= a) & (cols <= b) for a, b in MASK], axis=0)
+        _GEOM[view] = (g, cols[ok], rows[ok], dist[ok], crest[ok], az_col[ok], clear)
+    kc.use(view)
+    return _GEOM[view]
 
 
 def angle_at(g, az, y):
@@ -96,18 +111,24 @@ def height_ft(g, az, y, dist_m):
     return (cam + dist_m * math.tan(a) + dist_m ** 2 / (2 * kc.R) * 0.87) * 3.28084
 
 
-def read(rgb):
+def read(rgb, view="sw"):
     """{columns: [...], segments: {name: {capped share, base ft}}, base_ft, capped}."""
-    g, cols, rows, dist, crest, azs, clear = geometry()
+    g, cols, rows, dist, crest, azs, clear = geometry(view)
+    selfref = VIEWS[view]["capped"] == "self"
     gray = rgb.mean(axis=2)
     sat = rgb.max(axis=2) - rgb.min(axis=2)
     out = []
     for x, y0, d, c, az in zip(cols, rows, dist, crest, azs):
         y0 = int(round(y0))
         sl = slice(x - 3, x + 4)
-        lift = gray[y0 + LIGHT[0]:y0 + LIGHT[1], sl].mean() - clear[y0 + LIGHT[0]:y0 + LIGHT[1], sl].mean()
-        under = gray[y0 + BELOW[0]:y0 + BELOW[1], sl].mean() - clear[y0 + BELOW[0]:y0 + BELOW[1], sl].mean()
-        capped = (under - lift > CAP_LIFT) and sat[y0 + BELOW[0]:y0 + BELOW[1], sl].mean() < CAP_SAT
+        grey = sat[y0 + BELOW[0]:y0 + BELOW[1], sl].mean() < CAP_SAT
+        if selfref:
+            under = gray[y0 + BELOW[0]:y0 + BELOW[1], sl].mean() - gray[y0 + LIGHT[0]:y0 + LIGHT[1], sl].mean()
+            capped = under > SELF_LIFT and grey
+        else:
+            lift = gray[y0 + LIGHT[0]:y0 + LIGHT[1], sl].mean() - clear[y0 + LIGHT[0]:y0 + LIGHT[1], sl].mean()
+            under = gray[y0 + BELOW[0]:y0 + BELOW[1], sl].mean() - clear[y0 + BELOW[0]:y0 + BELOW[1], sl].mean()
+            capped = (under - lift > CAP_LIFT) and grey
         base = None
         if not capped:
             top, bot = max(0, y0 - REACH_PX), y0 - HAZE_PX
@@ -120,7 +141,7 @@ def read(rgb):
         out.append({"x": int(x), "crest_ft": round(c), "capped": bool(capped),
                     "base_ft": None if base is None else round(base, -1)})
     segs = {}
-    for name, a, b in SEGMENTS:
+    for name, a, b in VIEWS[view]["segments"]:
         part = [o for o in out if a <= o["x"] < b]
         if not part:
             continue
@@ -135,42 +156,42 @@ def read(rgb):
             "base_ft": round(float(np.median(bases)), -1) if len(bases) >= 5 else None}
 
 
-def annotate(rgb, res, path):
+def annotate(rgb, res, path, view="sw"):
     from PIL import Image, ImageDraw
-    g, cols, rows, *_ = geometry()
+    g, cols, rows, *_ = geometry(view)
     im = Image.fromarray(rgb.astype("uint8"))
     dr = ImageDraw.Draw(im)
     for o, y0 in zip(res["columns"], rows):
         col = (255, 60, 60) if o["capped"] else (255, 255, 0)
         dr.ellipse([o["x"] - 3, y0 - 3, o["x"] + 3, y0 + 3], fill=col)
     for name, s in res["segments"].items():
-        x = next(a for n, a, b in SEGMENTS if n == name)
+        x = next(a for n, a, b in VIEWS[view]["segments"] if n == name)
         dr.text((x + 4, 560), f"{name}: capped {s['capped']:.0%}" + (f", base {s['base_ft']:,.0f}" if s["base_ft"] else ""),
                 fill=(255, 255, 255))
     im.save(path)
 
 
-def live(out_dir):
+def live(out_dir, view="sw"):
     import camcapture as cc
     from io import BytesIO
     from PIL import Image
     from datetime import datetime
     j = json.loads(cc.get(cc.URL.format(site=760), cc.PAGE.format(site=760)))
-    cam = next(c for c in j["payload"]["site"]["cameras"] if c["cameraId"] == 12784)
+    cam = next(c for c in j["payload"]["site"]["cameras"] if c["cameraId"] == VIEWS[view]["camera"])
     for im in sorted(cam["currentImages"], key=lambda x: x["imageDatetime"]):
         t = datetime.fromisoformat(im["imageDatetime"].replace("Z", "+00:00")).astimezone(cc.HST)
         rgb = np.asarray(Image.open(BytesIO(cc.get(im["imageUri"]))).convert("RGB"), float)
         if rgb.mean() < 40:
             continue                                   # night
-        res = read(rgb)
+        res = read(rgb, view)
         print(f"{t:%H:%M}  capped {res['capped']:.0%}  base {res['base_ft']}  " +
               "  ".join(f"{n}: {s['capped']:.0%}/{s['base_ft']}" for n, s in res["segments"].items()))
-        annotate(rgb, res, os.path.join(out_dir, f"{t:%H%M}.jpg"))
+        annotate(rgb, res, os.path.join(out_dir, f"{view}_{t:%H%M}.jpg"), view)
 
 
 if __name__ == "__main__":
     if sys.argv[1] == "live":
-        live(sys.argv[2])
+        live(sys.argv[2], sys.argv[3] if len(sys.argv) > 3 else "sw")
     else:
         from PIL import Image
         rgb = np.asarray(Image.open(sys.argv[1]).convert("RGB"), float)
