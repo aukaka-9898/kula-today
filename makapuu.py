@@ -298,15 +298,21 @@ def cam_text(cam: dict) -> str:
         for n, s in cam["segments"].items():
             if s.get("base_ft") and s.get("crest_max_ft"):
                 (clear if s["base_ft"] >= s["crest_max_ft"] + 200 else down).append(n)
-        text = f"Cloud bottoms below about {b:,.0f} ft"
+        # Plain wording (Sam, 10-25: "down to the tops" was "very awkward").
+        text = f"Cloud base below about {b:,.0f} ft"
         if clear and not down:
-            return text + ", above the whole ridge."
+            return text + ", clear of the whole ridge."
         if down and not clear:
-            return text + ", down to the ridge tops."
+            return text + "; the ridge tops reach into it."
         if clear and down:
-            return text + f": clear above {_and(clear)}; down to the tops along {_and(down)}."
+            return (text + f". {_cap(_and(clear))} {'is' if len(clear) == 1 else 'are'} clear beneath it; "
+                    f"{_and(down)} reach{'es' if len(down) == 1 else ''} into it.")
         return text + "."
     return "The ridge is clear, with no cloud base in view above it."
+
+
+def _cap(t: str) -> str:
+    return t[:1].upper() + t[1:]
 
 
 def _and(names: list) -> str:
