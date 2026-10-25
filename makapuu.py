@@ -628,6 +628,8 @@ def write(now: datetime) -> None:
                + (f", {wind_text(w)}" if w else "") + (" (forecast, Bellows out)." if w and not obs else ".")
                + (f" Tomorrow: {tline}" if tline else ""))
 
+    _try(log_parcels, now, k, air, cam, problems=problems)      # before the page, so its problems show
+    problems += [f"parcel {p}" for p in PARCEL_PROBLEMS]
     raw = (HERE / "template.html").read_text(encoding="utf-8")
     style = "".join("<style>" + part.split("</style>")[0] + "</style>" for part in raw.split("<style>")[1:])
     built = f"{now:%Y-%m-%dT%H:%M}"
@@ -642,8 +644,6 @@ def write(now: datetime) -> None:
     page = page.replace("ʻ", "&#8216;")
     (OUT / "index.html").write_text(page, encoding="utf-8")
     _try(write_station_map, now, k, problems=problems)
-    _try(log_parcels, now, k, air, cam, problems=problems)
-    problems += [f"parcel {p}" for p in PARCEL_PROBLEMS]
     _try(write_details, now, problems=problems)
     (OUT / "details.html").write_text(details_page(now, built), encoding="utf-8")
     camera = _try(save_camera, problems=problems)
