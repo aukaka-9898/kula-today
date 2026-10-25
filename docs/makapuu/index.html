@@ -91,27 +91,27 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><a class="homebtn" href="/">&larr; Home</a><div class="tag">Makapu&#8216;u soaring briefing</div><h1>Makapu&#8216;u Today</h1></div>
-    <div class="date">Updated Sun 25 Oct 2026 · 11:53 HST</div>
+    <div class="date">Updated Sun 25 Oct 2026 · 12:01 HST</div>
   </header>
   <div class="databadge"><div class="big">Under construction</div></div>
   <div>
-    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/588/details/camera/12153/full" title="Makapu&#8216;u webcam, live, looking northwest toward Waimānalo" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="camera.jpg?2026-10-25T11:53" alt=""></div>
+    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/588/details/camera/12153/full" title="Makapu&#8216;u webcam, live, looking northwest toward Waimānalo" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="camera.jpg?2026-10-25T12:01" alt=""></div>
     <div class="camcap">Makapu&#8216;u webcam, live, looking northwest. FAA WeatherCam. <a href="https://weathercams.faa.gov/cameras/state/HI/cameraSite/588/details/camera/12153/full" target="_blank" rel="noopener">Open full size</a></div>
   </div>
   <div class="cols">
     <section class="panel today" aria-labelledby="t-today">
-      <div class="kind">Now · 11:53 HST</div>
+      <div class="kind">Now · 12:01 HST</div>
       <div class="head"><h2 id="t-today">Today</h2><span class="chip fair">Light</span></div>
       <dl>
         <dt>On the ridge</dt><dd><strong>Light</strong><div class="sub">under 10 mph: run-off launch only, not recommended</div></dd>
         <dt>Wind</dt><dd><span class="num">NNE (017°) 7 mph, gusts 13</span><div class="sub">Bellows, 11:15 (via NOAA HADS)</div></dd>
         <dt>Return</dt><dd>More north than the ideal 050°: easier to get back from downrange, the primary LZ less ideal.</dd>
-        <dt>Crest base</dt><dd>Clouds are above the ridge and below about 2,500 ft.<div class="sub">Kāne&#8216;ohe Bay camera, looking at the Ko&#8216;olau, 11:49. Kaneohe's air would condense at about 2,700 ft. Downrange only; it does not decide flyability.</div></dd>
+        <dt>Crest base</dt><dd>Clouds are above the ridge and below about 2,600 ft.<div class="sub">Kāne&#8216;ohe Bay camera, looking at the Ko&#8216;olau, 11:58. Kaneohe's air would condense at about 2,700 ft. Downrange only; it does not decide flyability.</div></dd>
         <dt>Thermals</dt><dd>Unavailable</dd>
         <dt>Inversion</dt><dd>Unavailable</dd>
       </dl>
       <div class="kind" style="color:var(--muted)">Rest of today (forecast)</div>
-      <div class="tablewrap"><table class="hist"><thead><tr><th>Hour</th><th class="n">Wind, mph</th><th>Ridge</th></tr></thead><tbody><tr><td>12:00</td><td class="n">NNE 12 g15</td><td><span class="chip good">Flyable</span></td></tr><tr><td>13:00</td><td class="n">NNE 12 g15</td><td><span class="chip good">Flyable</span></td></tr><tr><td>14:00</td><td class="n">NNE 15 g21</td><td><span class="chip fair">Caution</span></td></tr><tr><td>15:00</td><td class="n">NNE 15 g21</td><td><span class="chip fair">Caution</span></td></tr><tr><td>16:00</td><td class="n">NNE 15 g21</td><td><span class="chip fair">Caution</span></td></tr><tr><td>17:00</td><td class="n">NNE 14 g18</td><td><span class="chip fair">Caution</span></td></tr><tr><td>18:00</td><td class="n">NNE 14 g18</td><td><span class="chip fair">Caution</span></td></tr></tbody></table></div>
+      <div class="tablewrap"><table class="hist"><thead><tr><th>Hour</th><th class="n">Wind, mph</th><th>Ridge</th></tr></thead><tbody><tr><td>13:00</td><td class="n">NNE 12 g15</td><td><span class="chip good">Flyable</span></td></tr><tr><td>14:00</td><td class="n">NNE 15 g21</td><td><span class="chip fair">Caution</span></td></tr><tr><td>15:00</td><td class="n">NNE 15 g21</td><td><span class="chip fair">Caution</span></td></tr><tr><td>16:00</td><td class="n">NNE 15 g21</td><td><span class="chip fair">Caution</span></td></tr><tr><td>17:00</td><td class="n">NNE 14 g18</td><td><span class="chip fair">Caution</span></td></tr><tr><td>18:00</td><td class="n">NNE 14 g18</td><td><span class="chip fair">Caution</span></td></tr></tbody></table></div>
     </section>
     <section class="panel tomorrow" aria-labelledby="t-tomorrow">
       <div class="kind">Forecast</div>
@@ -136,7 +136,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <!-- build problems: surface_hours: ReadTimeout: HTTPSConnectionPool(host=&#x27;api.open-meteo.com&#x27;, port=443): Read timed out. (read timeout=60) -->
 <script>
 (function () {
-  var built = "2026-10-25T11:53";
+  var built = "2026-10-25T12:01";
   function check() {
     fetch("summary.json?" + Date.now(), {cache: "no-store"}).then(function (r) { return r.json(); })
       .then(function (j) { if (j && j.built && j.built > built) location.replace(location.pathname + "?v=" + Date.now()); })
