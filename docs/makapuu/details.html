@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Makapu&#8216;u Details</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a morning briefing card -- live webcam, measured today beside the forecast, sunlight up the slope, then the week. */
+:root {
+  --bg: #f3f6f8; --surface: #ffffff; --ink: #17242f; --muted: #5a6b78; --rule: #d7e0e7;
+  --sky: #2b67a8; --grass: #5f8a2e; --tawny: #b88a1c; --shade: #7d8c98;
+  --good: #3f7d2c; --warn: #a8661a; --fair: #5a6b78;
+  --display: "IBM Plex Sans Condensed", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+  --body: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f171e; --surface: #16212b; --ink: #e4ecf2; --muted: #9aabb8; --rule: #2a3946;
+    --sky: #7fb2ea; --grass: #9cc46a; --tawny: #e0b84f; --shade: #6f808d;
+    --good: #8cc47a; --warn: #e3a45a; --fair: #9aabb8;
+    color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.55 var(--body); }
+.wrap { max-width: 980px; margin: 0 auto; padding-inline: 16px; padding-block: 20px 40px; display: grid; gap: 22px; }
+header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 16px; }
+h1 { font: 700 2.1rem/1.05 var(--display); letter-spacing: .01em; margin: 0; }
+.date { font: 500 .95rem var(--mono); color: var(--muted); }
+.tag { font: 600 .72rem var(--display); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.cam { border-radius: 10px; overflow: hidden; border: 1px solid var(--rule); background: var(--surface); }
+.cam iframe { display: block; width: 100%; aspect-ratio: 16 / 10; border: 0; }
+.camcap { font: .8rem var(--mono); color: var(--muted); padding-top: 6px; }
+.camcap a { color: var(--sky); }
+.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; }
+.panel { background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 18px 18px 16px; display: grid; gap: 12px; min-width: 0; align-content: start; }
+.panel h2, .block h2 { font: 700 1.25rem/1.1 var(--display); margin: 0; }
+.kind { font: 600 .72rem var(--display); letter-spacing: .12em; text-transform: uppercase; }
+.today .kind { color: var(--grass); }
+.tomorrow .kind { color: var(--sky); }
+.head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.chip { font: 600 .72rem var(--display); letter-spacing: .08em; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; border: 1px solid currentColor; white-space: nowrap; }
+.chip.good { color: var(--good); } .chip.warn { color: var(--warn); } .chip.fair { color: var(--fair); }
+dl { margin: 0; display: grid; grid-template-columns: max-content 1fr; gap: 8px 14px; }
+dt { font: 600 .74rem var(--display); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); padding-top: 3px; }
+dd { margin: 0; min-width: 0; }
+.num { font: 500 1rem var(--mono); font-variant-numeric: tabular-nums; }
+.sub { color: var(--muted); font-size: .86rem; }
+.summary { margin: 0; font-size: .92rem; line-height: 1.5; }
+.alert { color: var(--warn); font-size: .86rem; font-weight: 600; margin-top: 2px; }
+.databadge { border: 2px solid var(--warn); border-radius: 8px; padding: 10px 12px; display: grid; gap: 3px; font-size: .9rem; }
+.databadge .big { font: 700 1.5rem/1.1 var(--display); letter-spacing: .06em; text-transform: uppercase; color: var(--warn); }
+.block { background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 18px; display: grid; gap: 12px; min-width: 0; }
+.block p { margin: 0; max-width: 68ch; color: var(--muted); font-size: .92rem; }
+.rows { display: grid; gap: 6px; }
+.row, .base { display: grid; grid-template-columns: minmax(7.5rem, 11rem) 4.2rem 1fr 3.2rem; align-items: center; gap: 10px; font-size: .9rem; }
+.row .elev, .row .pct { font: .86rem var(--mono); font-variant-numeric: tabular-nums; color: var(--muted); text-align: right; }
+.bar { height: 12px; background: color-mix(in srgb, var(--shade) 22%, transparent); border-radius: 3px; overflow: hidden; }
+.bar span { display: block; height: 100%; background: var(--tawny); border-radius: 3px; }
+.bar.shaded span { background: var(--shade); }
+.base .line { border-top: 2px dashed var(--sky); }
+.base .lbl { font: 600 .74rem var(--display); letter-spacing: .1em; text-transform: uppercase; color: var(--sky); }
+.base .elev { font: .86rem var(--mono); color: var(--sky); text-align: right; }
+.tablewrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: .9rem; }
+th { font: 600 .72rem var(--display); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--rule); }
+td { padding: 7px 10px; border-bottom: 1px solid var(--rule); white-space: nowrap; }
+table.hist { font-size: .82rem; margin: 2px 0; } table.hist td, table.hist th { padding: 3px 6px; }
+td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.detailslink { font: 600 1rem var(--display); color: var(--sky); text-decoration: none; padding: 12px 16px; border: 1px solid var(--rule); border-radius: 10px; background: var(--surface); }
+.homebtn { display: inline-block; font: 600 .82rem var(--display); letter-spacing: .06em; text-transform: uppercase; color: var(--sky); text-decoration: none; border: 1px solid var(--sky); border-radius: 999px; padding: 3px 12px; margin-bottom: 8px; }
+.notes { font-size: .84rem; color: var(--muted); display: grid; gap: 6px; max-width: 75ch; }
+.notes p { margin: 0; }
+@media (max-width: 520px) {
+  h1 { font-size: 1.7rem; }
+  .row, .base { grid-template-columns: 6.6rem 3.6rem 1fr 2.8rem; gap: 7px; font-size: .82rem; }
+}
+</style><style>.cols > .panel { min-width: 0; } .watch { margin: 6px 0 10px; } .watch ul { margin: 4px 0 0 18px; padding: 0; } .watch li { margin: 3px 0; } .pid { font-size: .72rem; color: #898781; white-space: nowrap; }</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div><a class="homebtn" href="/">&larr; Home</a> <a class="homebtn" href="./">&larr; Makapu&#8216;u Today</a><h1>Makapu&#8216;u Details</h1></div>
+    <div class="date">Updated Sun 25 Oct 2026 · 09:33 HST</div>
+  </header>
+  <div class="databadge"><div class="big">Under construction</div></div>
+  <section class="block" aria-labelledby="t-thermal">
+    <h2 id="t-thermal">Thermal conditions</h2>
+    <p>The air over Makapu&#8216;u from a forecast sounding at Kaneohe or the Lihue balloon, with a parcel of Kaneohe's surface air lifted dry through it: the arithmetic behind the Thermals row on the main page. Pick the source and hour, then dial in the temperature you expect. The dew point is not a choice: Kaneohe measured for hours already gone, its forecast for hours ahead.</p>
+    <div class="ctl">
+      <fieldset><legend>Source</legend>
+        <label><input type="radio" name="src" value="RRFS" checked> RRFS</label>
+        <label><input type="radio" name="src" value="GFS"> GFS</label>
+        <label><input type="radio" name="src" value="RAOB"> <span id="raoblbl">Lihue balloon</span></label>
+      </fieldset>
+      <fieldset><legend>Time</legend>
+        <select id="hour"></select>
+        <label><input type="radio" name="clock" value="local" checked> HST</label>
+        <label><input type="radio" name="clock" value="utc"> UTC</label>
+      </fieldset>
+      <fieldset><legend>Temperature at <span class="sitelbl">Kula Ag</span></legend>
+        <input id="temp" type="number" step="1" inputmode="numeric">
+        <label><input type="radio" name="tu" value="F" checked> &deg;F</label>
+        <label><input type="radio" name="tu" value="C"> &deg;C</label>
+        <button id="useyest" type="button" disabled>Use yesterday</button>
+        <div class="sub" id="yest"></div>
+      </fieldset>
+      <fieldset><legend>Heights</legend>
+        <label><input type="radio" name="hu" value="ft" checked> feet</label>
+        <label><input type="radio" name="hu" value="m"> metres</label>
+      </fieldset>
+    </div>
+    <div class="out">
+      <div><div class="k">Thermals</div><div class="v" id="o-word">&ndash;</div><div class="sub" id="o-ti"></div></div>
+      <div><div class="k">Cloudbase</div><div class="v" id="o-base">&ndash;</div><div class="sub" id="o-dew"></div></div>
+      <div><div class="k">Top of useable lift</div><div class="v" id="o-use">&ndash;</div><div class="sub" id="o-top"></div></div>
+    </div>
+    <div class="sub" id="o-src"></div>
+    <div class="chartwrap"><svg id="prof" viewBox="0 0 640 520" role="img" aria-label="Temperature profile"></svg><div id="tip" class="tip" hidden></div></div>
+    <div class="sub">Red: the air (virtual temperature). Green: its dew point. Dashed: the lifted parcel. Tap the chart for the values at a height.</div>
+    <div class="tablewrap"><table id="invtab"><thead><tr><th>Inversion base</th><th class="n">Top</th><th class="n">Warming</th></tr></thead><tbody></tbody></table></div>
+  </section>
+<style>
+.ctl { display: flex; flex-wrap: wrap; gap: 10px 14px; }
+.ctl fieldset { border: 1px solid var(--rule); border-radius: 8px; padding: 6px 10px 8px; margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; font-size: .9rem; }
+.ctl legend { font: 600 .72rem var(--display); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); padding: 0 4px; }
+.ctl input[type=number] { width: 4.5rem; font: 500 1rem var(--mono); padding: 3px 6px; background: var(--bg); color: var(--ink); border: 1px solid var(--rule); border-radius: 6px; }
+.ctl select, .ctl button { font: 500 .9rem var(--body); padding: 3px 8px; background: var(--bg); color: var(--ink); border: 1px solid var(--rule); border-radius: 6px; }
+.ctl .sub { flex-basis: 100%; }
+.out { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }
+.out .k { font: 600 .74rem var(--display); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.out .v { font: 600 1.35rem var(--mono); font-variant-numeric: tabular-nums; }
+.chartwrap { position: relative; }
+#prof { width: 100%; height: auto; display: block; background: var(--bg); border: 1px solid var(--rule); border-radius: 8px; }
+#prof text { font: 14px var(--mono); fill: var(--muted); }
+.tip { position: absolute; background: var(--surface); border: 1px solid var(--rule); border-radius: 6px; padding: 6px 8px; font: .8rem/1.4 var(--mono); white-space: pre; pointer-events: none; }
+</style>
+<script>
+(function () {
+  var D = null, Q = function (s) { return document.querySelector(s); };
+  var DRY = 2.9871, STEP = 100;
+  function LBL() { return (D && D.surface_label) || "Kula Ag"; }
+  function sel(n) { return Q('input[name="' + n + '"]:checked').value; }
+  function mixr(t, p) { var e = 6.112 * Math.exp(17.67 * t / (t + 243.5)); return 0.622 * e / (p - e); }
+  function vtemp(t, td, p) { return (t + 273.15) * (1 + 0.608 * mixr(td, p)) - 273.15; }
+  function fToC(f) { return (f - 32) * 5 / 9; }
+  function cToF(c) { return c * 9 / 5 + 32; }
+  function levels() {
+    var s = D.sources[sel("src")];
+    if (!s) return null;
+    return s.levels || s.hours[Q("#hour").value] || null;
+  }
+  function env(L, h) {
+    var i = 1;
+    while (i < L.length - 1 && L[i][0] < h) i++;
+    var a = L[i - 1], b = L[i], f = b[0] === a[0] ? 0 : (h - a[0]) / (b[0] - a[0]);
+    f = Math.max(0, Math.min(1, f));
+    return {p: a[1] + (b[1] - a[1]) * f, t: a[2] + (b[2] - a[2]) * f, td: a[3] + (b[3] - a[3]) * f};
+  }
+  function word(ti) {
+    for (var i = 0; i < D.bands.length; i++) { var lim = D.bands[i][0]; if (lim === null || ti > lim) return D.bands[i][1]; }
+    return D.bands[D.bands.length - 1][1];
+  }
+  // thermal.py's parcel_curve: dry all the way up, virtual temperatures.
+  function curve(L, surfF, dewF) {
+    var R = D.release_ft, sc = fToC(surfF), dc = fToC(dewF), ws = mixr(dc, env(L, R).p);
+    var out = [], sat = false;
+    for (var h = R; h <= D.top_ft; h += STEP) {
+      var e = env(L, h), tp = sc - DRY * (h - R) / 1000;
+      if (!sat && mixr(tp, e.p) <= ws) sat = true;
+      var tvp = (tp + 273.15) * (1 + 0.608 * ws) - 273.15, tve = vtemp(e.t, e.td, e.p);
+      out.push({h: h, p: e.p, t: e.t, td: e.td, tvp: tvp, tve: tve, ti: tve - tvp, sat: sat});
+    }
+    return out;
+  }
+  // sounding.py's inversion runs: rising temperature, runs under 300 ft apart merged, >= 0.5 F.
+  function inversions(L) {
+    var p = L.filter(function (r) { return r[0] >= D.release_ft - 3000 && r[0] <= D.top_ft; }), runs = [], i = 1;
+    while (i < p.length) {
+      if (p[i][2] > p[i - 1][2]) { var j = i; while (j + 1 < p.length && p[j + 1][2] > p[j][2]) j++; runs.push([i - 1, j]); i = j + 1; } else i++;
+    }
+    var m = [];
+    runs.forEach(function (r) { if (m.length && p[r[0]][0] - p[m[m.length - 1][1]][0] <= 300) m[m.length - 1][1] = r[1]; else m.push(r.slice()); });
+    return m.map(function (r) { return {base: p[r[0]][0], top: p[r[1]][0], warm: (p[r[1]][2] - p[r[0]][2]) * 1.8}; })
+            .filter(function (v) { return v.warm >= 0.5; });
+  }
+  function H(ft) { return sel("hu") === "m" ? Math.round(ft / 3.28084) : Math.round(ft); }
+  function HU() { return sel("hu") === "m" ? " m" : " ft"; }
+  function Tdisp(c) { return sel("tu") === "C" ? c.toFixed(1) + " °C" : cToF(c).toFixed(1) + " °F"; }
+  function n(v) { return v.toLocaleString(); }
+  function stamp(key) {
+    var d = new Date(key + ":00:00-10:00");
+    if (sel("clock") === "utc") return d.toISOString().slice(5, 13).replace("T", " ") + "Z";
+    return d.toLocaleDateString("en-US", {weekday: "short", timeZone: "Pacific/Honolulu"}) + " " + key.slice(11, 13) + ":00";
+  }
+  function fillHours() {
+    var keep = Q("#hour").value, s = Q("#hour");
+    s.innerHTML = "";
+    Object.keys(D.surface).forEach(function (k) {
+      var o = document.createElement("option"); o.value = k; o.textContent = stamp(k); s.appendChild(o);
+    });
+    if (keep) s.value = keep;
+  }
+  function setTemp() {
+    var r = D.surface[Q("#hour").value] || {};
+    if (r.temp_f === undefined) { Q("#temp").value = ""; return; }
+    Q("#temp").value = sel("tu") === "C" ? Math.round(fToC(r.temp_f)) : Math.round(r.temp_f);
+    var y = r.yesterday_f;
+    Q("#yest").textContent = y === undefined ? "Yesterday at this hour: no " + LBL() + " reading" :
+      "Yesterday at this hour: " + (sel("tu") === "C" ? fToC(y).toFixed(1) + " °C" : y.toFixed(1) + " °F");
+    Q("#useyest").disabled = y === undefined;
+  }
+  var C = null;
+  function draw() {
+    var L = levels(), r = D.surface[Q("#hour").value] || {}, src = D.sources[sel("src")];
+    var tv = parseFloat(Q("#temp").value);
+    Q("#o-src").textContent = src ? src.where + ", " + (src.levels ? "launched " + src.run : "run " + src.run) : "This source is not available right now.";
+    if (!L || isNaN(tv) || r.dew_f === undefined) {
+      ["#o-word", "#o-base", "#o-use"].forEach(function (k) { Q(k).textContent = "–"; });
+      Q("#o-dew").textContent = r.dew_f === undefined ? "No surface dew point available" : "";
+      Q("#o-ti").textContent = ""; Q("#o-top").textContent = ""; Q("#prof").innerHTML = ""; return;
+    }
+    var surfF = sel("tu") === "C" ? cToF(tv) : tv;
+    var c = curve(L, surfF, r.dew_f), top = null, i;
+    for (i = 0; i < c.length; i++) if (c[i].ti >= 0) { top = c[i].h; break; }
+    if (top === null) top = c[c.length - 1].h;
+    var work = c.filter(function (x) { return x.h <= top; }), peak = Math.min.apply(null, work.map(function (x) { return x.ti; }));
+    var soar = work.filter(function (x) { return x.ti <= D.bands[0][0]; }), use = soar.length ? soar[soar.length - 1].h : D.release_ft;
+    var wet = c.filter(function (x) { return x.sat; }), lcl = wet.length ? wet[0].h : null;
+    Q("#o-word").textContent = word(peak);
+    Q("#o-ti").textContent = "Thermal index " + peak.toFixed(1) + " °C at its strongest";
+    Q("#o-base").textContent = lcl === null ? "above " + n(H(D.top_ft)) + HU() : n(Math.floor(H(lcl) / 100) * 100) + HU();
+    Q("#o-dew").textContent = "Dew point " + Tdisp(fToC(r.dew_f)) + ", " + r.from;
+    Q("#o-use").textContent = use <= D.release_ft ? "None" : n(Math.floor(H(use) / 100) * 100) + HU();
+    Q("#o-top").textContent = "Parcel stops rising at " + n(Math.floor(H(top) / 100) * 100) + HU();
+    var tb = Q("#invtab tbody"); tb.innerHTML = "";
+    var inv = inversions(L);
+    if (!inv.length) tb.innerHTML = '<tr><td colspan="3">None between ' + LBL() + ' and ' + n(H(D.top_ft)) + HU() + "</td></tr>";
+    inv.forEach(function (v) {
+      tb.insertAdjacentHTML("beforeend", "<tr><td>" + n(H(v.base)) + HU() + '</td><td class="n">' + n(H(v.top)) + HU() +
+        '</td><td class="n">+' + (sel("tu") === "C" ? (v.warm / 1.8).toFixed(1) + " °C" : v.warm.toFixed(1) + " °F") + "</td></tr>");
+    });
+    C = {c: c, lcl: lcl, use: use, top: top};
+    chart();
+  }
+  function chart() {
+    var svg = Q("#prof"), W = 640, Hh = 520, l = 52, rt = 14, tp = 12, bt = 34;
+    // Drawn to 12,000 ft, the reach of a Kula flight (the numbers above are
+    // worked to 18,000); the temperature axis fits the air and the parcel, and
+    // a dew point drier than that runs off the left edge.
+    var lo = D.release_ft, hi = D.chart_top || 12000, c = C.c.filter(function (x) { return x.h <= hi; });
+    var tmin = Math.min.apply(null, c.map(function (x) { return Math.min(x.tve, x.tvp); })) - 6;
+    var tmax = Math.max.apply(null, c.map(function (x) { return Math.max(x.tve, x.tvp); })) + 2;
+    function X(t) { return l + (t - tmin) / (tmax - tmin) * (W - l - rt); }
+    function Y(h) { return tp + (1 - (h - lo) / (hi - lo)) * (Hh - tp - bt); }
+    function path(f) { return c.map(function (x, i) { return (i ? "L" : "M") + X(f(x)).toFixed(1) + " " + Y(x.h).toFixed(1); }).join(" "); }
+    var css = getComputedStyle(document.documentElement), ink = css.getPropertyValue("--muted"), rule = css.getPropertyValue("--rule");
+    var g = "";
+    for (var h = Math.ceil(lo / 2000) * 2000; h <= hi; h += 2000)
+      g += '<line x1="' + l + '" x2="' + (W - rt) + '" y1="' + Y(h) + '" y2="' + Y(h) + '" stroke="' + rule + '"/><text x="' + (l - 6) + '" y="' + (Y(h) + 4) + '" text-anchor="end">' + n(H(h)) + "</text>";
+    var step = sel("tu") === "C" ? 5 : 9;
+    for (var t = Math.ceil(tmin / step) * step; t <= tmax; t += step)
+      g += '<text x="' + X(t) + '" y="' + (Hh - bt + 16) + '" text-anchor="middle">' + (sel("tu") === "C" ? t : Math.round(cToF(t))) + "</text>";
+    function mark(h, label, col, left) {
+      if (h === null || h <= lo || h > hi) return "";
+      return '<line x1="' + l + '" x2="' + (W - rt) + '" y1="' + Y(h) + '" y2="' + Y(h) + '" stroke="' + col + '" stroke-dasharray="3 4"/>' +
+             '<text x="' + (left ? l + 4 : W - rt - 4) + '" y="' + (Y(h) - 4) + '" text-anchor="' + (left ? "start" : "end") + '" style="fill:' + col + '">' + label + "</text>";
+    }
+    g += mark(C.lcl, "Cloudbase", "var(--sky)", false) + mark(C.use, "Top of useable lift", "var(--tawny)", true);
+    if (D.launch_ft) g += mark(D.launch_ft, "Launch", "var(--grass)", C.use > D.launch_ft - 400 && C.use < D.launch_ft + 400 ? false : true);
+    g += '<text x="' + (l + 4) + '" y="' + (Y(lo) - 4) + '" style="fill:var(--grass)">' + LBL() + '</text>';
+    g += '<clipPath id="plot"><rect x="' + l + '" y="0" width="' + (W - l - rt) + '" height="' + Hh + '"/></clipPath>';
+    g += '<path clip-path="url(#plot)" d="' + path(function (x) { return x.td; }) + '" fill="none" stroke="#3f9d5a" stroke-width="2"/>';
+    g += '<path d="' + path(function (x) { return x.tve; }) + '" fill="none" stroke="#c0392b" stroke-width="2"/>';
+    g += '<path d="' + path(function (x) { return x.tvp; }) + '" fill="none" stroke="' + ink + '" stroke-width="1.6" stroke-dasharray="6 5"/>';
+    g += '<text x="' + ((l + W - rt) / 2) + '" y="' + (Hh - 4) + '" text-anchor="middle">' + (sel("tu") === "C" ? "°C" : "°F") + "</text>";
+    svg.innerHTML = g;
+    svg.onclick = function (ev) {
+      var b = svg.getBoundingClientRect(), y = (ev.clientY - b.top) * Hh / b.height;
+      var h = lo + (1 - (y - tp) / (Hh - tp - bt)) * (hi - lo), best = c[0];
+      c.forEach(function (x) { if (Math.abs(x.h - h) < Math.abs(best.h - h)) best = x; });
+      var rh = 100 * Math.exp(17.625 * best.td / (243.04 + best.td) - 17.625 * best.t / (243.04 + best.t));
+      var tip = Q("#tip");
+      tip.textContent = "Height        " + n(H(best.h)) + HU() + "\nThermal index " + best.ti.toFixed(1) + " °C\nTemperature   " + Tdisp(best.t) +
+                        "\nDew point     " + Tdisp(best.td) + "\nHumidity      " + Math.round(rh) + "%";
+      tip.hidden = false;
+      tip.style.left = Math.min(ev.clientX - b.left + 12, b.width - 190) + "px";
+      tip.style.top = (ev.clientY - b.top + 12) + "px";
+    };
+  }
+  function all() { setTemp(); draw(); }
+  fetch("details.json?" + Date.now(), {cache: "no-store"}).then(function (r) { return r.json(); }).then(function (d) {
+    D = d;
+    document.querySelectorAll(".sitelbl").forEach(function (e) { e.textContent = LBL(); });
+    if (d.sources.RAOB) Q("#raoblbl").textContent = (d.raob_label || "Hilo balloon") + " " + d.sources.RAOB.run.slice(11) + " " + d.sources.RAOB.run.slice(5, 10);
+    ["RRFS", "GFS", "RAOB"].forEach(function (k) { if (!d.sources[k]) Q('input[name="src"][value="' + k + '"]').disabled = true; });
+    fillHours();
+    var now = new Date(), key = now.toLocaleString("sv-SE", {timeZone: "Pacific/Honolulu"}).slice(0, 13).replace(" ", "T");
+    if (d.surface[key]) Q("#hour").value = key;
+    all();
+  }).catch(function () { Q("#o-src").textContent = "The thermal data could not be loaded."; });
+  document.querySelectorAll('input[name="src"]').forEach(function (e) { e.onchange = draw; });
+  document.querySelectorAll('input[name="hu"]').forEach(function (e) { e.onchange = draw; });
+  document.querySelectorAll('input[name="clock"]').forEach(function (e) { e.onchange = function () { fillHours(); }; });
+  document.querySelectorAll('input[name="tu"]').forEach(function (e) {
+    e.onchange = function () {
+      var v = parseFloat(Q("#temp").value);
+      if (!isNaN(v)) Q("#temp").value = Math.round(sel("tu") === "C" ? fToC(v) : cToF(v));
+      draw();
+    };
+  });
+  Q("#hour").onchange = all;
+  Q("#temp").oninput = draw;
+  Q("#useyest").onclick = function () {
+    var y = (D.surface[Q("#hour").value] || {}).yesterday_f;
+    if (y !== undefined) { Q("#temp").value = Math.round(sel("tu") === "C" ? fToC(y) : y); draw(); }
+  };
+})();
+</script>
+
+
+  <section class="block" id="stationmap">
+    <h2>Station map</h2>
+    <p>The stations around Makapu&#8216;u. Arrows fly with the wind. Tap a station for its latest reading. Bellows and the HECO stations come through the NWS feed, which has been frozen since 22 October.</p>
+    <div id="map" style="height:460px;border-radius:8px;border:1px solid var(--rule)"></div>
+  </section>
+</div>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+/* Makapu&#8216;u's station map (makapuu.py writes stations.json beside this page). */
+(function () {
+  var map = L.map("map", {scrollWheelZoom: false}).setView([21.36, -157.715], 11);
+  L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}", {
+    maxZoom: 16, attribution: "Tiles &copy; Esri &mdash; Esri, HERE, Garmin, USGS, NGA, EPA, USDA, NPS"}).addTo(map);
+  L.circleMarker([21.3204, -157.6788], {radius: 6, color: "#c0392b", weight: 2, fillOpacity: 0.6}).addTo(map)
+    .bindTooltip("Launch", {permanent: true, direction: "left", className: "stn"});
+  fetch("stations.json?" + Date.now()).then(function (r) { return r.json(); }).then(function (d) {
+    d.stations.forEach(function (s) {
+      var ok = s.dir !== null && s.mph, rot = ok ? (s.dir + 180) % 360 : 0;
+      var arrow = ok ? '<div style="transform:rotate(' + rot + 'deg);color:#1f6fb2;font:700 22px/22px sans-serif;text-shadow:0 0 3px #fff">&#8593;</div>'
+                     : '<div style="width:10px;height:10px;border-radius:50%;background:#7d8c98;border:2px solid #fff"></div>';
+      var m = L.marker([s.lat, s.lon], {icon: L.divIcon({className: "", html: arrow, iconSize: [22, 22], iconAnchor: [11, 11]})}).addTo(map);
+      m.bindTooltip(s.name, {permanent: true, direction: "right", offset: [8, 0], className: "stn"});
+      var lines = [];
+      if (s.mph !== null) lines.push("Wind: " + (s.dir === null ? "variable" : "from " + s.dir + "°") + " at " + s.mph + " mph" + (s.gust !== undefined ? ", gusts " + s.gust : "") + " (" + s.at + ")");
+      if (s.temp_f !== undefined) {
+        lines.push("Temperature: " + s.temp_f.toFixed(1) + " °F");
+        lines.push("Dew point: " + s.dew_f.toFixed(1) + " °F, humidity " + s.rh + "%");
+        lines.push("Condensation level: " + s.lcl_ft.toLocaleString() + " ft");
+      }
+      if (!lines.length) lines.push(s.last ? "No readings since " + s.last : "No recent readings");
+      m.bindPopup("<b>" + s.name + "</b>" + (s.elev_ft ? " · " + s.elev_ft.toLocaleString() + " ft" : "") + "<br>" + lines.join("<br>"));
+    });
+  }).catch(function () {});
+})();
+</script>
+<style>.stn{font:600 11px/1.2 var(--body);padding:1px 4px;background:rgba(255,255,255,.85);border:0;box-shadow:none;color:#17242f}.stn:before{display:none}</style>
+</body>
+</html>
