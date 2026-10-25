@@ -36,9 +36,9 @@ SEGMENTS = (("Greenwall", 170, 470), ("Konahuanui", 470, 640), ("Kāneʻohe cres
             ("Kahaluʻu crest", 1260, 1880))
 # Columns never read: the cell tower and its antennas standing in front of the
 # crest (x ~1262-1345; Sam 10-25: "mask the tower" -- it read as cloud), and
-# the antennas at both edges of the frame (Sam: "attenae on the right edge";
-# the equipment at the left edge stands up past the crest to x ~125).
-MASK_X = ((0, 130), (1250, 1355), (1820, 1920))
+# the antennas at the left edge of the frame, which stand up past the crest to
+# x ~125 (Sam: "attenae on the right edge" -- "I meant the other right").
+MASK_X = ((0, 130), (1250, 1355))
 BELOW = (3, 16)            # rows under the skyline read for cloud on the crest
 LIGHT = (45, 70)           # rows under the skyline read for the frame's lighting
 CAP_LIFT = 30              # brighter than clear air by this, beyond the lighting change
