@@ -26,14 +26,32 @@ import numpy as np
 import requests
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-DEM = os.path.join(HERE, "koolaucam_dem.json")
-GEOM = os.path.join(HERE, "koolaucam_geom.json")
-CLEARDAY = os.path.join(HERE, "kaneohe_clearday.jpg")
 LAT0, LON0, ELEV_FT = 21.42245, -157.75706, 562
 W, H = 1920, 1080
 R = 6371000.0
-AZ = np.arange(160.0, 290.01, 1.0)
-DISTS = np.arange(300, 15001, 300)
+# The views from the Kaneohe Bay site (all at the same place). SW first (the
+# default, unchanged files); SE looks down the range to Waimānalo and
+# Makapuʻu, its crest 6-17 km off (Sam, 10-25: "SE view"); only the columns
+# where the pali stands against the sky are read (left of x ~1060 is sea).
+VIEWS = {"sw": {"dem": "koolaucam_dem.json", "geom": "koolaucam_geom.json", "clear": "kaneohe_clearday.jpg",
+                "az": (160.0, 290.0), "dists": (300, 15001, 300), "band": (600, 760), "cols": (40, 1880),
+                "start": (225, 100)},
+         "se": {"dem": "koolaucam_se_dem.json", "geom": "koolaucam_se_geom.json", "clear": "kaneohe_se_clearday.jpg",
+                "az": (90.0, 200.0), "dists": (300, 20001, 300), "band": (620, 765), "cols": (1060, 1800),
+                "start": (140, 95)}}
+
+
+def use(view: str):
+    global VIEW, DEM, GEOM, CLEARDAY, AZ, DISTS, BAND, COLS, START
+    v = VIEWS[view]
+    VIEW = view
+    DEM, GEOM, CLEARDAY = (os.path.join(HERE, v[k]) for k in ("dem", "geom", "clear"))
+    AZ = np.arange(v["az"][0], v["az"][1] + 0.01, 1.0)
+    DISTS = np.arange(*v["dists"])
+    BAND, COLS, START = v["band"], v["cols"], v["start"]
+
+
+use("sw")
 
 
 def dest(lat, lon, az, d):
@@ -46,8 +64,9 @@ def dest(lat, lon, az, d):
 def profiles() -> dict:
     dem = json.load(open(DEM)) if os.path.exists(DEM) else {}
     todo = [a for a in AZ if f"{a:.1f}" not in dem]
-    for i in range(0, len(todo), 2):                     # two bearings (100 points) a request
-        pair = todo[i:i + 2]
+    per = max(1, 100 // len(DISTS))                       # bearings a request (100 points at most)
+    for i in range(0, len(todo), per):
+        pair = todo[i:i + per]
         pts = [dest(LAT0, LON0, a, d) for a in pair for d in DISTS]
         for attempt in range(5):
             r = requests.get("https://api.opentopodata.org/v1/ned10m", timeout=60,
@@ -76,10 +95,11 @@ def model_skyline(cam_m: float, dem: dict):
     return out
 
 
-def image_skyline(gray, top=600, bottom=760):
+def image_skyline(gray, top=None, bottom=None):
     """Per column, the row where the bright sky gives way to the dark range:
     the largest downward brightness drop in the band where the crest sits."""
-    cols = np.arange(40, W - 40, 8)
+    top, bottom = top or BAND[0], bottom or BAND[1]
+    cols = np.arange(COLS[0], COLS[1], 8)
     rows = []
     for x in cols:
         col = gray[top:bottom, x - 3:x + 4].mean(axis=1)
@@ -146,8 +166,8 @@ def fit():
     # no scipy on this PC, so a small simplex of our own.
     cost = lambda p: float(np.sum(2 * 36 * (np.sqrt(1 + (resid(p) / 6) ** 2) - 1)))
     best = None
-    for b0 in (222, 225, 228):
-        for h0 in (95, 105):
+    for b0 in (START[0] - 3, START[0], START[0] + 3):
+        for h0 in (START[1] - 5, START[1] + 5):
             # tilt start from the row offset at zero tilt (about 14 px a degree)
             off = float(np.nanmedian(resid(np.array([b0, h0, 0.0, 0.0, -0.1, 0.0]))))
             p = nelder_mead(cost, np.array([b0, h0, -off / 14.0, 0.0, -0.1, 0.0]),
@@ -183,6 +203,8 @@ def check(out_path):
 
 
 if __name__ == "__main__":
+    use(sys.argv[2] if len(sys.argv) > 2 and sys.argv[1] == "fit" else
+        sys.argv[3] if len(sys.argv) > 3 else "sw")
     if sys.argv[1:2] == ["fit"]:
         fit()
     elif sys.argv[1:2] == ["check"]:
