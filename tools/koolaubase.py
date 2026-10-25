@@ -153,7 +153,8 @@ def read(rgb, view="sw"):
         bases = [o["base_ft"] for o in part if o["base_ft"] is not None]
         segs[name] = {"capped": round(cap, 2), "n": len(part),
                       "base_ft": round(float(np.median(bases)), -1) if len(bases) >= 3 else None,
-                      "crest_ft": round(float(np.median([o["crest_ft"] for o in part])), -1)}
+                      "crest_ft": round(float(np.median([o["crest_ft"] for o in part])), -1),
+                      "crest_max_ft": round(float(max(o["crest_ft"] for o in part)), -1)}
     caps = [o for o in out if o["capped"]]
     bases = [o["base_ft"] for o in out if o["base_ft"] is not None]
     return {"columns": out, "segments": segs, "capped": round(len(caps) / max(len(out), 1), 2),

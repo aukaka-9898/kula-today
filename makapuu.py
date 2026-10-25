@@ -278,7 +278,7 @@ def crest_camera(now: datetime) -> dict | None:
         bases = [g["base_ft"] for g in got if g["base_ft"]]
         segs[name] = {"capped": round(float(np.mean([g["capped"] for g in got])), 2),
                       "base_ft": round(float(np.median(bases)), -1) if bases else None,
-                      "crest_ft": got[-1]["crest_ft"]}
+                      "crest_ft": got[-1]["crest_ft"], "crest_max_ft": got[-1].get("crest_max_ft")}
     bases = [r["base_ft"] for r in reads if r["base_ft"]]
     return {"segments": segs, "capped": round(float(np.mean([r["capped"] for r in reads])), 2),
             "base_ft": round(float(np.median(bases)), -1) if bases else None,
@@ -290,8 +290,28 @@ def cam_text(cam: dict) -> str:
     if capped:
         return "Cloud on the Koʻolau: " + ", ".join(capped) + "."
     if cam["base_ft"]:
-        return f"Clouds are above the ridge and below about {round(cam['base_ft'], -2):,.0f} ft."
+        # Each stretch's own cloud bottoms against its own tops (terrain model)
+        # -- Sam, 10-25: "Above the ridge in places ... Use the DEM to provide a
+        # better blurb". Clear above = bottoms 200 ft or more over the tops.
+        b = round(cam["base_ft"], -2)
+        clear, down = [], []
+        for n, s in cam["segments"].items():
+            if s.get("base_ft") and s.get("crest_max_ft"):
+                (clear if s["base_ft"] >= s["crest_max_ft"] + 200 else down).append(n)
+        text = f"Cloud bottoms below about {b:,.0f} ft"
+        if clear and not down:
+            return text + ", above the whole ridge."
+        if down and not clear:
+            return text + ", down to the ridge tops."
+        if clear and down:
+            return text + f": clear above {_and(clear)}; down to the tops along {_and(down)}."
+        return text + "."
     return "The ridge is clear, with no cloud base in view above it."
+
+
+def _and(names: list) -> str:
+    names = [f"the {x}" if x.endswith("crest") else x for x in names]
+    return names[0] if len(names) == 1 else ", ".join(names[:-1]) + " and " + names[-1]
 
 
 MOKU_MAX_AGE = timedelta(hours=3)        # PacIOOS posts hourly, ~2 h behind
