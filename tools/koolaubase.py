@@ -41,8 +41,9 @@ SEGMENTS = (("Greenwall", 170, 470), ("Konahuanui", 470, 640), ("Kāneʻohe cres
 # NW's reference is FAA's sunrise picture, so its capped test compares the
 # strip under the crest with the slope lower in the SAME frame ("self").
 # SE judged NOT USABLE (Sam, 10-25): the Waimānalo crest is 9 miles off and
-# low, and cloud just above it can't be told from cloud beyond it. Kept for
-# reference only; the page uses SW (and NW if Sam approves).
+# low, and cloud just above it can't be told from cloud beyond it. NW dropped
+# too (Sam: "about 50% of NW is usable. You are picking up the finger out to
+# Kualoa as the crest"). Both kept for reference only; the page uses SW.
 VIEWS = {"sw": {"camera": 12784, "segments": SEGMENTS, "mask": None, "capped": "clear"},
          "se": {"camera": 12783, "segments": (("Waimānalo", 1097, 1460), ("Greenwall", 1460, 1800)),
                 "mask": ((0, 1090), (1800, 1920)), "capped": "clear"},
