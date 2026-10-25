@@ -177,6 +177,41 @@ def kaneohe() -> dict | None:
             "at": datetime.fromtimestamp(m["obsTime"], timezone.utc).astimezone(HST)}
 
 
+# Two more HADS stations for the air (Sam, 2026-10-25): Heʻeia NERR on the
+# shore of Kāneʻohe Bay -- "useful for dewpoint and temp. useless for wind" --
+# and the Oʻahu Forest NWR RAWS at ~1,550 ft in the Koʻolau above Kahaluʻu --
+# "useful for cloudbase. Wind direction seems way off". So neither one's wind
+# is used or shown. (nesdis, name, elevation ft)
+HADS_AIR = {"HRRH1": ("3B052656", "Heʻeia (Kāneʻohe Bay shore)", 0),
+            "OFRH1": ("8379F6FA", "Oʻahu Forest NWR, Koʻolau", 1550)}
+
+
+def hads_air(nwsli: str) -> list:
+    """[(time HST, T F, RH %)] for the last day, oldest first."""
+    nesdis = HADS_AIR[nwsli][0]
+    vals: dict = {}
+    for line in requests.get(HADS_BELLOWS.replace("B14036D2", nesdis), timeout=40).text.splitlines():
+        f = line.split("|")
+        if len(f) > 4 and f[1] == nwsli and f[2] in ("TA", "XR"):
+            try:
+                t = datetime.strptime(f[3], "%Y-%m-%d %H:%M").replace(tzinfo=timezone.utc).astimezone(HST)
+                vals.setdefault(t, {})[f[2]] = float(f[4])
+            except ValueError:
+                continue
+    return [(t, v["TA"], v["XR"]) for t, v in sorted(vals.items()) if "TA" in v and 0 < v.get("XR", 0) <= 100]
+
+
+def dew_f(t_f: float, rh: float) -> float:
+    import math
+    tc = (t_f - 32) / 1.8
+    g = math.log(rh / 100) + 17.625 * tc / (243.04 + tc)
+    return 243.04 * g / (17.625 - g) * 1.8 + 32
+
+
+def lcl_msl(t_f: float, td_f: float, elev_ft: float) -> int:
+    return int(round((t_f - td_f) / 1.8 * 125 * 3.28084 + elev_ft, -2))
+
+
 def crest_base(k: dict) -> int | None:
     """Condensation level of Kaneohe's open-coast air: where the trades
     lifted over the Koʻolau condense. 125 m per degree C of spread."""
@@ -367,7 +402,19 @@ def write(now: datetime) -> None:
     wind_html = (f'<span class="num">{esc(wind_text(w))}</span><div class="sub">{esc(src)}</div>') if w else "Unavailable"
     dir_html = esc(return_note(w["dir"])) if w and w.get("dir") is not None else ""
 
-    base = crest_base(k)
+    # The base on the range: the Koʻolau RAWS's own air lifted to condensation
+    # (on the range, "useful for cloudbase"), then the shore air at Heʻeia,
+    # then Kaneohe's METAR. All are shown; the first one present leads.
+    airs = []
+    for code in ("OFRH1", "HRRH1"):
+        got = _try(hads_air, code, problems=problems) or []
+        if got and now - got[-1][0] <= OBS_MAX_AGE + timedelta(minutes=30):
+            t, tf, rh = got[-1]
+            airs.append((HADS_AIR[code][1], lcl_msl(tf, dew_f(tf, rh), HADS_AIR[code][2]), t))
+    kb = crest_base(k)
+    if kb is not None:
+        airs.append(("Kaneohe (PHNG)", kb, k["at"]))
+    base = airs[0][1] if airs else None
     if base is not None:
         if base < CREST_LOW_FT:
             cap = f"below the crest behind Waimānalo ({CREST_LOW_FT:,}–{CREST_HIGH_FT:,} ft): cloud on the Koʻolau likely"
@@ -375,10 +422,11 @@ def write(now: datetime) -> None:
             cap = "cloud likely on the higher crest downrange"
         else:
             cap = "above the crest downrange"
-        layers = ", ".join(f'{c["cover"]} {c["base"]:,} ft' for c in k["clouds"] if c.get("base"))
-        ceil = layers or ("clear below 12,000 ft" if (k.get("cover") or "").startswith(("CLR", "SKC")) else "")
+        layers = ", ".join(f'{c["cover"]} {c["base"]:,} ft' for c in k["clouds"] if c.get("base")) if k else ""
+        ceil = layers or ("clear below 12,000 ft" if k and (k.get("cover") or "").startswith(("CLR", "SKC")) else "")
+        each = "; ".join(f"{n} {b:,} ft ({t:%H:%M})" for n, b, t in airs)
         base_html = (f'<span class="num">About {base:,} ft</span>, {esc(cap)}'
-                     f'<div class="sub">Kaneohe\'s air at {k["at"]:%H:%M}, lifted over the Koʻolau. '
+                     f'<div class="sub">Condensation level of the air at {esc(each)}. '
                      f'Downrange only; it does not decide flyability.'
                      + (f" Kaneohe's ceilometer: {esc(ceil)}." if ceil else "") + "</div>")
     else:
@@ -473,6 +521,8 @@ MAP_STATIONS = [("bellows", "BELH1", "Bellows", 21.3667, -157.7167, 39),
                 ("nws", "067HE", "HECO Nonokio", 21.33861, -157.71167, 42),
                 ("nws", "134HE", "HECO Kuluanui Rd", 21.30071, -157.70012, 580),
                 ("metar", "PHNG", "Kaneohe (PHNG)", 21.45389, -157.76556, 16),
+                ("hads-air", "HRRH1", "Heʻeia NERR", 21.4314, -157.8153, 0),
+                ("hads-air", "OFRH1", "Oʻahu Forest NWR RAWS", 21.4775, -157.9369, 1550),
                 ("hcdp", "0531", "Kaluanui Ridge", 21.30491, -157.70302, 784),
                 ("hcdp", "0533", "Maunawili", 21.36827, -157.76272, 46)]
 
@@ -565,6 +615,16 @@ def write_details(now: datetime) -> None:
         meas = metar_hours()
     except Exception:
         meas = {}
+    meas_from = {h: "Kaneohe, measured" for h in meas}
+    try:
+        by: dict = {}
+        for t, tf, rh in hads_air("HRRH1"):
+            by.setdefault(t.replace(minute=0, second=0, microsecond=0), []).append((tf, dew_f(tf, rh)))
+        for h, v in by.items():
+            meas[h] = (sum(a for a, _ in v) / len(v), sum(b for _, b in v) / len(v))
+            meas_from[h] = "Heʻeia, measured"
+    except Exception:
+        pass
     try:
         fc = surface_hours()
     except Exception:
@@ -572,7 +632,7 @@ def write_details(now: datetime) -> None:
     for w in wanted:
         row = {}
         if w + timedelta(hours=1) <= now and w in meas:
-            row = {"temp_f": round(meas[w][0], 1), "dew_f": round(meas[w][1], 1), "from": "Kaneohe, measured"}
+            row = {"temp_f": round(meas[w][0], 1), "dew_f": round(meas[w][1], 1), "from": meas_from[w]}
         elif w in fc:
             row = {"temp_f": round(fc[w][0], 1), "dew_f": round(fc[w][1], 1), "from": "Kaneohe forecast (Open-Meteo)"}
         y = w - timedelta(days=1)
@@ -645,6 +705,12 @@ def write_station_map(now: datetime, k: dict | None) -> None:
                         row["temp_f_only"] = round(b["temp_f"], 1)
                 elif last:
                     row["last"] = f"{last:%d %b %H:%M}"
+            elif feed == "hads-air":
+                got = hads_air(sid)
+                if got:
+                    t, tf, rh = got[-1]
+                    air(row, tf, dew_f(tf, rh), t)
+                    row["no_wind"] = True
             elif feed == "metar" and metar:
                 t = datetime.fromtimestamp(metar["obsTime"], timezone.utc).astimezone(HST)
                 if metar.get("wspd") is not None:

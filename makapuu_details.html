@@ -48,6 +48,7 @@
         lines.push("Condensation level: " + s.lcl_ft.toLocaleString() + " ft");
       }
       if (s.temp_f_only !== undefined) lines.push("Temperature: " + s.temp_f_only.toFixed(1) + " °F (no dew point)");
+      if (s.no_wind) lines.push("Wind not used (unreliable here)");
       if (!lines.length) lines.push(s.last ? "No readings since " + s.last : "No recent readings");
       m.bindPopup("<b>" + s.name + "</b>" + (s.elev_ft ? " · " + s.elev_ft.toLocaleString() + " ft" : "") + "<br>" + lines.join("<br>"));
     });
