@@ -36,8 +36,12 @@ GRID = "https://api.weather.gov/gridpoints/HFO/162,145"
 METAR = "https://aviationweather.gov/api/data/metar?ids=PHNG&format=json&hours=3"
 OBS_MAX_AGE = timedelta(minutes=90)
 # Waimanalo (NW), the card's view (Sam). The /map/... address opened on North.
-WEBCAM = "https://weathercams.faa.gov/cameras/state/HI/cameraSite/588/details/camera/12153/full"
-CAMERA = (588, 12153)
+# Main picture: the Kāneʻohe Bay SE camera, sharp and wide over the range
+# toward Makapuʻu; the Makapuʻu NW camera (closer, but its lens needs
+# cleaning) is linked under it (Sam, 10-25: option 2).
+WEBCAM = "https://weathercams.faa.gov/cameras/state/HI/cameraSite/760/details/camera/12783/full"
+CAMERA = (760, 12783)
+WEBCAM_LAUNCH = "https://weathercams.faa.gov/cameras/state/HI/cameraSite/588/details/camera/12153/full"
 
 # Weather Guesser's Sites.xml for Makapu'u, mph, wind FROM: (from, to, safe
 # max, caution max). 66-70 is caution only. 71 and round: not flyable --
@@ -740,7 +744,7 @@ def write(now: datetime) -> None:
     raw = (HERE / "template.html").read_text(encoding="utf-8")
     style = "".join("<style>" + part.split("</style>")[0] + "</style>" for part in raw.split("<style>")[1:])
     built = f"{now:%Y-%m-%dT%H:%M}"
-    page = PAGE.format(style=style, updated=f"{now:%a %d %b %Y · %H:%M} HST", webcam=WEBCAM,
+    page = PAGE.format(style=style, updated=f"{now:%a %d %b %Y · %H:%M} HST", webcam=WEBCAM, webcam_launch=WEBCAM_LAUNCH,
                        kind=f"Now · {now:%H:%M} HST", chip=today_chip, fly=fly_html, wind=wind_html,
                        dirnote="",
                        base=base_html + (f'<div class="downret">{dir_html}</div>' if dir_html else ""), therm=therm_html, inv=inv_html, rest=rest_html, tom_title=f"Tomorrow · {tom:%a %d %b}",
@@ -1117,8 +1121,8 @@ PAGE = """<!doctype html>
   </header>
   <div class="databadge"><div class="big">Under construction</div></div>
   <div>
-    <div class="cam"><iframe src="{webcam}" title="Makapuʻu webcam, live, looking northwest toward Waimānalo" onload="setTimeout(function(){{var c=document.getElementById('camcover');if(c){{c.style.opacity=0;setTimeout(function(){{c.remove()}},700)}}}},3500)"></iframe><img id="camcover" src="camera.jpg?{built}" alt=""></div>
-    <div class="camcap">Makapuʻu webcam, live, looking northwest. FAA WeatherCam. <a href="{webcam}" target="_blank" rel="noopener">Open full size</a></div>
+    <div class="cam"><iframe src="{webcam}" title="Kāneʻohe Bay webcam, live, looking southeast down the Koʻolau toward Makapuʻu" onload="setTimeout(function(){{var c=document.getElementById('camcover');if(c){{c.style.opacity=0;setTimeout(function(){{c.remove()}},700)}}}},3500)"></iframe><img id="camcover" src="camera.jpg?{built}" alt=""></div>
+    <div class="camcap">Kāneʻohe Bay webcam, live, looking southeast down the Koʻolau to Makapuʻu. FAA WeatherCam. <a href="{webcam}" target="_blank" rel="noopener">Open full size</a> · <a href="{webcam_launch}" target="_blank" rel="noopener">Makapuʻu camera, at the point</a></div>
   </div>
   <div class="cols">
     <section class="panel today" aria-labelledby="t-today">
