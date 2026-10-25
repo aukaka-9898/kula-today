@@ -4146,7 +4146,44 @@ def build() -> str:
         webcam=WEBCAM,
         diag=("; ".join(PROBLEMS) or "none").replace("--", "-").replace(">", ")"))
     DETAILS_PARTS.update(v)
+    safely(write_summary, v, now)
     return PAGE.substitute(**v)
+
+
+# The site's card for the Hawaiʻi Free Flight home page (Sam, 2026-10-25,
+# option 1: a home page at aukaka-9898.github.io, one card per site). Each
+# site writes docs/summary.json; the home page reads it from the same origin.
+# The card's camera frame is the one direction Sam picks (HOME_CAMERA, an FAA
+# camera id; None = no picture), saved small and overwritten each build.
+SUMMARY_FILE = HERE / "docs" / "summary.json"
+HOME_CAMERA = None
+
+
+def write_summary(v: dict, now: datetime) -> None:
+    import re
+    summ = re.search(r'<p class="summary">(.*?)</p>', v.get("summary", ""), re.S)
+    chip_m = re.search(r'class="chip (\w+)">([^<]*)<', v.get("today_chip", ""))
+    camera = safely(save_home_camera) if HOME_CAMERA else None
+    out = {"site": "Kula", "title": "Kula Today", "page": "kula-today/", "built": v.get("built"),
+           "updated": v.get("updated"), "kind": v.get("today_kind"), "heading": v.get("today_title"),
+           "chip": None if not chip_m else {"class": chip_m.group(1), "word": chip_m.group(2)},
+           "summary": re.sub(r"\s+", " ", html.unescape(re.sub(r"<[^>]+>", "", summ.group(1)))).strip() if summ else "",
+           "limited": bool(v.get("data_badge")), "camera": camera}
+    SUMMARY_FILE.write_text(json.dumps(out), encoding="utf-8")
+
+
+def save_home_camera() -> str | None:
+    from io import BytesIO
+    from PIL import Image
+    j = requests.get(KEKOA_URL, params={"siteId": 931}, headers={"Referer": KEKOA_PAGE}, timeout=30).json()
+    cam = next(c for c in j["payload"]["site"]["cameras"] if c["cameraId"] == HOME_CAMERA)
+    im = max(cam["currentImages"], key=lambda x: x["imageDatetime"])
+    raw = requests.get(im["imageUri"], timeout=30).content
+    pic = Image.open(BytesIO(raw)).convert("RGB")
+    pic.thumbnail((800, 450))
+    pic.save(HERE / "docs" / "camera.jpg", quality=80)
+    when = datetime.fromisoformat(im["imageDatetime"].replace("Z", "+00:00")).astimezone(HST)
+    return f"camera.jpg?{when:%Y%m%d%H%M}"
 
 
 PAGE = Template((HERE / "template.html").read_text(encoding="utf-8"))
