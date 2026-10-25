@@ -133,9 +133,14 @@ HADS_BELLOWS = ("https://hads.ncep.noaa.gov/nexhads2/servlet/DecodedData"
 
 def bellows_hads() -> dict | None:
     vals: dict = {}
-    r = requests.get(HADS_BELLOWS, timeout=40, headers={"User-Agent": "KulaToday (Makapuu page)"})
-    r.raise_for_status()
-    if BELLOWS not in r.text:
+    # HADS sometimes answers GitHub with an empty page (12:22 10-25): three tries.
+    for attempt in range(3):
+        r = requests.get(HADS_BELLOWS, timeout=40, headers={"User-Agent": "KulaToday (Makapuu page)"})
+        if r.ok and BELLOWS in r.text:
+            break
+        import time
+        time.sleep(5 * (attempt + 1))
+    else:
         raise ValueError(f"HADS answered without Bellows: {r.text[:80]!r}")
     for line in r.text.splitlines():
         f = line.split("|")
@@ -154,6 +159,7 @@ def bellows_hads() -> dict | None:
 
 
 BELLOWS_PROBLEMS: list = []
+BELLOWS_LAST = OUT / "bellows_last.json"
 
 
 def bellows_now(now: datetime):
@@ -172,8 +178,15 @@ def bellows_now(now: datetime):
     h = None
     try:
         h = bellows_hads()
+        if h:
+            BELLOWS_LAST.write_text(json.dumps({**h, "at": h["at"].isoformat()}), encoding="utf-8")
     except Exception as e:
         BELLOWS_PROBLEMS.append(f"HADS Bellows: {type(e).__name__}: {e}")
+        try:                                             # the last good HADS reading
+            c = json.loads(BELLOWS_LAST.read_text(encoding="utf-8"))
+            h = {**c, "at": datetime.fromisoformat(c["at"])}
+        except Exception:
+            pass
     if h and now - h["at"] <= OBS_MAX_AGE:
         return {**h, "via": "HADS"}, h["at"]
     return None, max(x for x in (t, h["at"] if h else None) if x) if (t or h) else None
@@ -461,8 +474,10 @@ def write(now: datetime) -> None:
         w, src = obs, f'Bellows, {obs["at"]:%H:%M}' + (" (via NOAA HADS)" if obs.get("via") == "HADS" else "")
     elif grid.get(hour_now):
         w = grid[hour_now]
-        src = ("NWS forecast for this hour: Bellows not reporting"
-               + (f" since {obs_t:%d %b %H:%M}" if obs_t else ""))
+        # Say what actually failed: Bellows itself, or only the feeds this update.
+        src = ("NWS forecast for this hour: no Bellows reading came through this update"
+               if obs_t and now - obs_t <= timedelta(hours=6) or BELLOWS_PROBLEMS else
+               "NWS forecast for this hour: Bellows not reporting" + (f" since {obs_t:%d %b %H:%M}" if obs_t else ""))
     else:
         w, src = None, "No wind available"
     word, why = rate(w["dir"], w["mph"], w["gust"]) if w else ("Unknown", "")
