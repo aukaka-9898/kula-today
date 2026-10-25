@@ -76,7 +76,7 @@ RELEASE_FT = 3162                       # Kula Ag
 # derived base with it, +95 without.
 FORECAST_BASE_LOW_FT = 0
 WEBCAM = ("https://weathercams.faa.gov/map/-128.93458,33.06367,-103.99562,49.85195"
-          "/cameraSite/931/details/camera/13415/full")
+          "/cameraSite/931/details/camera/13417/full")   # South, as on the home card (Sam, 2026-10-25)
 STALE = pd.Timedelta("75min")
 GOOD_VERDICTS = {"Moderate", "Strong", "Boom!"}
 
