@@ -89,7 +89,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><a class="homebtn" href="/">&larr; Home</a> <a class="homebtn" href="./">&larr; Makapu&#8216;u Today</a><h1>Makapu&#8216;u Details</h1></div>
-    <div class="date">Updated Sun 25 Oct 2026 · 09:44 HST</div>
+    <div class="date">Updated Sun 25 Oct 2026 · 09:45 HST</div>
   </header>
   <div class="databadge"><div class="big">Under construction</div></div>
   <section class="block" aria-labelledby="t-thermal">
@@ -329,7 +329,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 
   <section class="block" id="stationmap">
     <h2>Station map</h2>
-    <p>The stations around Makapu&#8216;u. Arrows fly with the wind. Tap a station for its latest reading. Bellows and the HECO stations come through the NWS feed, which has been frozen since 22 October.</p>
+    <p>The stations around Makapu&#8216;u. Arrows fly with the wind. Tap a station for its latest reading. The HECO stations come through the NWS feed, which has been frozen since 22 October; Bellows comes through NOAA's HADS relay meanwhile.</p>
     <div id="map" style="height:460px;border-radius:8px;border:1px solid var(--rule)"></div>
   </section>
 </div>
@@ -357,6 +357,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
         lines.push("Dew point: " + s.dew_f.toFixed(1) + " °F, humidity " + s.rh + "%");
         lines.push("Condensation level: " + s.lcl_ft.toLocaleString() + " ft");
       }
+      if (s.temp_f_only !== undefined) lines.push("Temperature: " + s.temp_f_only.toFixed(1) + " °F (no dew point)");
       if (!lines.length) lines.push(s.last ? "No readings since " + s.last : "No recent readings");
       m.bindPopup("<b>" + s.name + "</b>" + (s.elev_ft ? " · " + s.elev_ft.toLocaleString() + " ft" : "") + "<br>" + lines.join("<br>"));
     });
