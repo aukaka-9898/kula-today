@@ -374,6 +374,16 @@ THERMAL_HOURS = (10, 14)
 BASE_FLOOR_FT = LAUNCH_FT
 
 
+# Light days are often thermal days at Makapuʻu (Sam, 10-25: "Rare, but we are
+# coming into the season"), so a Light rating carries the thermal call when it
+# is better than Flat. (The thermal call also hints at bumpiness -- Sam: for
+# pilots to weigh, not to display.)
+def thermal_day(ridge_word: str, thermal_word: str | None) -> str:
+    if ridge_word == "Light" and thermal_word and thermal_word not in ("Flat", "unknown"):
+        return f"Thermals probably {thermal_word.lower()}: possibly a thermal day."
+    return ""
+
+
 def base_label(ft) -> str:
     if ft is None:
         return "–"
@@ -553,6 +563,10 @@ def write(now: datetime) -> None:
     else:
         therm_html = inv_html = "Unavailable"
 
+    note = thermal_day(word, today_air["word"] if today_air else None) if w else ""
+    if note:
+        fly_html += f'<div class="alert">{esc(note)}</div>'
+
     rest = [(t, grid[t]) for t in sorted(grid) if t.date() == now.date() and t.hour in DAY_HOURS and t > hour_now]
     rest_html = hour_table(rest) if rest else '<span class="sub">Nothing left of today\'s daylight.</span>'
 
@@ -566,6 +580,8 @@ def write(now: datetime) -> None:
     if ta:
         aloft = ((f' Downrange base low (under launch)' if ta["base_ft"] < BASE_FLOOR_FT else
                   f' Downrange base about {ta["base_ft"]:,} ft') if ta["base_ft"] is not None else " ") +                 f', thermals {ta["word"].lower()}, inversion {inv_text(ta["inv"])[0].lower() + inv_text(ta["inv"])[1:]} (RRFS).'
+    tnote = thermal_day(tword, ta["word"] if ta else None)
+    tline = f"{tline} {tnote}" if tnote else tline
     tom_html = (f'<p class="summary">{esc(tline)} Midday: {esc(wind_text(noon))}. '
                 f'{esc(return_note(noon["dir"]) if noon and noon.get("dir") is not None else "")}'
                 f'{esc(aloft)}</p>'
@@ -580,6 +596,8 @@ def write(now: datetime) -> None:
         bw, line = day_line([(t, rate(v["dir"], v["mph"], v["gust"])[0]) for t, v in rows])
         mid = grid.get(datetime.combine(d, datetime.min.time()).replace(hour=12, tzinfo=HST))
         da = _try(air_day, air, surf, d, problems=problems) if air else None
+        dnote = thermal_day(bw, da["word"] if da else None)
+        line = f"{line} {dnote}" if dnote else line
         week += (f"<tr><td>{d:%a %d}</td><td>{esc(wind_text(mid))}</td><td>{chip(bw)}</td>"
                  f"<td>{esc(line)}</td>"
                  f'<td class="n">{base_label(da["base_ft"]) if da else "–"}</td>'
