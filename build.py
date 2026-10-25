@@ -4156,7 +4156,7 @@ def build() -> str:
 # The card's camera frame is the one direction Sam picks (HOME_CAMERA, an FAA
 # camera id; None = no picture), saved small and overwritten each build.
 SUMMARY_FILE = HERE / "docs" / "summary.json"
-HOME_CAMERA = None
+HOME_CAMERA = 13417          # Kekoa South (Sam, 2026-10-25)
 
 
 def write_summary(v: dict, now: datetime) -> None:
