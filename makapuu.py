@@ -595,8 +595,8 @@ def write(now: datetime) -> None:
     built = f"{now:%Y-%m-%dT%H:%M}"
     page = PAGE.format(style=style, updated=f"{now:%a %d %b %Y · %H:%M} HST", webcam=WEBCAM,
                        kind=f"Now · {now:%H:%M} HST", chip=today_chip, fly=fly_html, wind=wind_html,
-                       dirnote=(f"<dt>Return</dt><dd>{dir_html}</dd>" if dir_html else ""),
-                       base=base_html, therm=therm_html, inv=inv_html, rest=rest_html, tom_title=f"Tomorrow · {tom:%a %d %b}",
+                       dirnote="",
+                       base=base_html + (f'<div class="downret">{dir_html}</div>' if dir_html else ""), therm=therm_html, inv=inv_html, rest=rest_html, tom_title=f"Tomorrow · {tom:%a %d %b}",
                        tom_chip=chip(tword) if tword else "", tomorrow=tom_html, week=week, built=built,
                        diag=esc("; ".join(problems) or "none").replace("--", "-"))
     # IBM Plex has no ʻokina (U+02BB); its fallback glyph stands apart from the
@@ -874,7 +874,7 @@ PAGE = """<!doctype html>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 {style}
-<style>.back {{ color: var(--sky); text-decoration: none; font: 600 .95rem var(--display); }}</style>
+<style>.back {{ color: var(--sky); text-decoration: none; font: 600 .95rem var(--display); }} .downret {{ margin-top: 6px; }}</style>
 </head>
 <body>
 <div class="wrap">
@@ -895,7 +895,7 @@ PAGE = """<!doctype html>
         <dt>On the ridge</dt><dd>{fly}</dd>
         <dt>Wind</dt><dd>{wind}</dd>
         {dirnote}
-        <dt>Downrange base</dt><dd>{base}</dd>
+        <dt>Downrange</dt><dd>{base}</dd>
         <dt>Thermals</dt><dd>{therm}</dd>
         <dt>Inversion</dt><dd>{inv}</dd>
       </dl>
