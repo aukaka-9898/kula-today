@@ -1,0 +1,3 @@
+date,time,station,obs_time,temp_f,dew_f,dew_from,lcl_ft,ti_c,word,camera,camera_bound_ft
+2026-10-25,13:06,Kaneohe runway,12:57,80.1,66.9,own,2990.0,-2.35,Flat,"Clouds are above the ridge and below about 2,600 ft.",2560.0
+2026-10-25,13:06,Heeia,12:30,79.2,71.3,own,1820.0,-2.32,Flat,"Clouds are above the ridge and below about 2,600 ft.",2560.0
