@@ -242,6 +242,7 @@ def lcl_msl(t_f: float, td_f: float, elev_ft: float) -> int:
 # above the ridge and below about 3,300".
 CAP_SHARE = 0.3                # a stretch counts as capped with this share of its columns
 CAMERA_MAX_AGE = timedelta(minutes=40)
+AVERAGE_MIN = 30
 
 
 def crest_camera(now: datetime) -> dict | None:
@@ -254,14 +255,34 @@ def crest_camera(now: datetime) -> dict | None:
     j = requests.get("https://weathercams.faa.gov/api/summary", params={"siteId": 760}, timeout=30,
                      headers={"Referer": "https://weathercams.faa.gov/cameras/state/HI/cameraSite/760/summary"}).json()
     cam = next(c for c in j["payload"]["site"]["cameras"] if c["cameraId"] == 12784)
-    im = max(cam["currentImages"], key=lambda x: x["imageDatetime"])
-    t = datetime.fromisoformat(im["imageDatetime"].replace("Z", "+00:00")).astimezone(HST)
-    if now - t > CAMERA_MAX_AGE:
+    ims = sorted(cam["currentImages"], key=lambda x: x["imageDatetime"])
+    newest = datetime.fromisoformat(ims[-1]["imageDatetime"].replace("Z", "+00:00")).astimezone(HST)
+    if now - newest > CAMERA_MAX_AGE:
         return None
-    rgb = np.asarray(Image.open(BytesIO(requests.get(im["imageUri"], timeout=30).content)).convert("RGB"), float)
-    if rgb.mean() < 60:
-        return None                                    # too dark to read
-    return {**koolaubase.read(rgb), "at": t}
+    # The frames of the last AVERAGE_MIN minutes, averaged (Sam, 10-25: "It's
+    # not unusual for a variance of a couple of hundred feet"): capped shares
+    # by mean, the base bound by median of the frames' bounds.
+    reads = []
+    for im in ims:
+        t = datetime.fromisoformat(im["imageDatetime"].replace("Z", "+00:00")).astimezone(HST)
+        if newest - t > timedelta(minutes=AVERAGE_MIN):
+            continue
+        rgb = np.asarray(Image.open(BytesIO(requests.get(im["imageUri"], timeout=30).content)).convert("RGB"), float)
+        if rgb.mean() >= 60:                           # skip frames too dark to read
+            reads.append(koolaubase.read(rgb))
+    if not reads:
+        return None
+    segs = {}
+    for name in reads[-1]["segments"]:
+        got = [r["segments"][name] for r in reads if name in r["segments"]]
+        bases = [g["base_ft"] for g in got if g["base_ft"]]
+        segs[name] = {"capped": round(float(np.mean([g["capped"] for g in got])), 2),
+                      "base_ft": round(float(np.median(bases)), -1) if bases else None,
+                      "crest_ft": got[-1]["crest_ft"]}
+    bases = [r["base_ft"] for r in reads if r["base_ft"]]
+    return {"segments": segs, "capped": round(float(np.mean([r["capped"] for r in reads])), 2),
+            "base_ft": round(float(np.median(bases)), -1) if bases else None,
+            "at": newest, "frames": len(reads)}
 
 
 def cam_text(cam: dict) -> str:
@@ -529,7 +550,8 @@ def write(now: datetime) -> None:
     cam_line = cam_text(cam) if cam else ""
     if cam_line:
         base_html = (f'{esc(cam_line)}'
-                     f'<div class="sub">Kāneʻohe Bay camera, looking at the Koʻolau, {cam["at"]:%H:%M}.'
+                     f'<div class="sub">Kāneʻohe Bay camera, looking at the Koʻolau: '
+                     f'{cam["frames"]} frame{"s" if cam["frames"] > 1 else ""} to {cam["at"]:%H:%M}, last 30 minutes.'
                      + (f" Kaneohe's air would condense at about {base:,} ft." if base is not None else "")
                      + "</div>")
     elif base is not None:
