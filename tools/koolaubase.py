@@ -82,6 +82,7 @@ HAZE_PX, RUN = 8, 4
 # percentile of that strip within NEAR_PX either side by DARK_MARGIN = cloud
 # bottom at the crest.
 NEAR_PX, DARK_MARGIN = 200, 25
+SCALLOP_PX, SCALLOP_SAG = 160, 10
 CLOUD_BR, CLOUD_BRIGHT = 6, 140
 _GEOM: dict = {}
 
@@ -109,6 +110,23 @@ def geometry(view="sw"):
         dist = np.array([sky[min(sky, key=lambda a: abs(a - z))][2] for z in az_col])
         crest = np.array([sky[min(sky, key=lambda a: abs(a - z))][1] for z in az_col])
         ok = (np.abs(model_y - rows) < 25) & ~np.any([(cols >= a) & (cols <= b) for a, b in MASK], axis=0)
+        # Scallops: the windward Koʻolau is a row of amphitheatre valley heads
+        # between spur ridges; in this view each is a U-shaped sag in the
+        # skyline between two rims. Cloud just above a sag can be back over
+        # the valley head or beyond the crest -- farther than the skyline point
+        # -- and reads low (Sam, 10-25: "Look for 'scallops'"). Only rims and
+        # peaks are read: a column lower on screen than the highest skyline
+        # within SCALLOP_PX on BOTH sides by SCALLOP_SAG px is a scallop
+        # interior. Found: Maunawili (x ~368-440), the Pali gap (~648-776; "not
+        # really a valley but same idea"), Haʻikū (~968-1096), Kahaluʻu
+        # (~1384-1456) -- Sam: "That's perfect". The Pali gap columns stay
+        # read, as the track-only stretch.
+        ys = np.convolve(rows, np.ones(3) / 3, mode="same")
+        lrim = np.array([ys[(cols < x) & (cols >= x - SCALLOP_PX)].min(initial=9e9) for x in cols])
+        rrim = np.array([ys[(cols > x) & (cols <= x + SCALLOP_PX)].min(initial=9e9) for x in cols])
+        scallop = ys > np.maximum(lrim, rrim) + SCALLOP_SAG
+        gap = next(((a, b) for n, a, b in VIEWS[view]["segments"] if n in TRACK_ONLY), (0, -1))
+        ok &= ~scallop | ((cols >= gap[0]) & (cols < gap[1]))
         _GEOM[view] = (g, cols[ok], rows[ok], dist[ok], crest[ok], az_col[ok], clear)
     kc.use(view)
     return _GEOM[view]
