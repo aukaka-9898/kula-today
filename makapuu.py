@@ -319,7 +319,7 @@ def write(now: datetime) -> None:
     (OUT / "index.html").write_text(page, encoding="utf-8")
     camera = _try(save_camera, problems=problems)
     (OUT / "summary.json").write_text(json.dumps({
-        "site": "Makapuu", "title": "Makapuʻu Today", "page": "kula-today/makapuu/", "built": built,
+        "site": "Makapuu", "title": "Makapu2018u Today", "page": "kula-today/makapuu/", "built": built,
         "updated": f"{now:%a %d %b %Y · %H:%M} HST", "kind": f"Now · {now:%H:%M} HST",
         "chip": {"class": RATING_CLASS.get(word, "fair"), "word": word} if w and not night else None,
         "summary": summary, "limited": not obs, "camera": camera}), encoding="utf-8")
