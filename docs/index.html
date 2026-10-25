@@ -92,25 +92,25 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><a class="homebtn" href="/">&larr; Home</a><div class="tag">Kula soaring briefing</div><h1>Kula Today</h1></div>
-    <div class="date">Updated Sun 25 Oct 2026 · 12:40 HST</div>
+    <div class="date">Updated Sun 25 Oct 2026 · 12:42 HST</div>
   </header>
 
   <div>
     <!-- The FAA viewer shows its station list before it opens the camera; the latest frame covers that until it has (Sam, 2026-10-25). -->
-    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" title="Red Hill webcam, live, looking south along the Kula slope" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="camera.jpg?2026-10-25T12:40" alt=""></div>
+    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" title="Red Hill webcam, live, looking south along the Kula slope" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="camera.jpg?2026-10-25T12:42" alt=""></div>
     <div class="camcap">Red Hill webcam, live. FAA WeatherCam (Kekoa). <a href="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" target="_blank" rel="noopener">Open full size</a></div>
   </div>
 
   <div class="cols">
     <section class="panel today" aria-labelledby="t-today">
-      <div class="kind">Measured today · 12:40 HST</div>
+      <div class="kind">Measured today · 12:42 HST</div>
       <div class="head"><h2 id="t-today">Today</h2></div>
-      <div class="databadge"><div class="big">Limited data</div><div>9 of 29 stations reporting. Readings below rest on fewer stations than usual.</div></div>
+      <div class="databadge"><div class="big">Limited data</div><div>9 of 29 stations reporting; the Mesonet could not be reached, its readings are from the 12:40 update. Readings below rest on fewer stations than usual.</div></div>
       
       <dl>
         <dt>Thermals</dt><dd>Unavailable<div class="sub">Kula Ag's readings did not come through this update</div></dd>
         <dt>Derived<br>Cloudbase</dt><dd>Unavailable</dd>
-        <dt>Sun</dt><dd><span class="num">37%</span> of clear sky, lower Kula slope<div class="sub">Last hour, as of 12:30; average of Keokea 37%; Pulehu left out, in trade air</div></dd>
+        <dt>Sun</dt><dd>Unavailable</dd>
         <dt>Shear line</dt><dd>No trade line (trades absent) (forecast)<div class="sub">Trades N (009°). Measured once the upslope sets in</div></dd>
         
         <dt>Upslope</dt><dd>No clear upslope today</dd>
@@ -161,7 +161,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
     <p>Aloha,<br>Sam</p>
   </details>
 </div>
-<!-- build problems: none -->
+<!-- build problems: HCDP observations, using the last good fetch: ConnectTimeout: HTTPSConnectionPool(host='api.hcdp.ikewai.org', port=443): Max retries exceeded with url: /mesonet/db/measurements?location=hawaii&station_ids=0115%2C0118%2C0144%2C0116%2C0119%2C0145%2C0151%2C0152%2C0153%2C0143&var_ids=Tair_1_Avg%2CRH_1_Avg%2CWS_1_Avg%2CWDrs_1_Avg%2CWS_1_Max&start_date=2026-10-25T00%3A00%3A00-10%3A00&row_mode=json&limit=100000 (Caused by ConnectTimeoutError(<HTTPSConnection(host='api.hcdp.ikewai.org', port=443) at 0x75f7e5801280), 'Connection to api.hcdp.ikewai.org timed out. (connect timeout=20)')); Mesonet sun: ConnectTimeout: HTTPSConnectionPool(host='api.hcdp.ikewai.org', port=443): Max retries exceeded with url: /mesonet/db/measurements?location=hawaii&station_ids=0115%2C0118%2C0144%2C0116%2C0119%2C0145%2C0151%2C0152%2C0153&var_ids=SWin_1_Avg&start_date=2026-10-25T11%3A02%3A00-10%3A00&end_date=2026-10-25T12%3A42%3A00-10%3A00&row_mode=json&limit=100000 (Caused by ConnectTimeoutError(<HTTPSConnection(host='api.hcdp.ikewai.org', port=443) at 0x75f7e58052e0), 'Connection to api.hcdp.ikewai.org timed out. (connect timeout=20)')); honolua_trades: ConnectTimeout: HTTPSConnectionPool(host='api.hcdp.ikewai.org', port=443): Max retries exceeded with url: /mesonet/db/measurements?location=hawaii&station_ids=0133&var_ids=WDrs_1_Avg%2CWSrs_1_Avg&start_date=2026-10-25T21%3A45%3A07Z&row_mode=json&limit=1000 (Caused by ConnectTimeoutError(<HTTPSConnection(host='api.hcdp.ikewai.org', port=443) at 0x75f7e58d0470), 'Connection to api.hcdp.ikewai.org timed out. (connect timeout=20)')); sun_trend: ConnectTimeout: HTTPSConnectionPool(host='api.hcdp.ikewai.org', port=443): Max retries exceeded with url: /mesonet/db/measurements?location=hawaii&station_ids=0115%2C0118%2C0144%2C0116%2C0119%2C0145%2C0151%2C0152%2C0153&var_ids=SWin_1_Avg&start_date=2026-10-25T11%3A12%3A00-10%3A00&end_date=2026-10-25T12%3A42%3A00-10%3A00&row_mode=json&limit=100000 (Caused by ConnectTimeoutError(<HTTPSConnection(host='api.hcdp.ikewai.org', port=443) at 0x75f7e58d12b0), 'Connection to api.hcdp.ikewai.org timed out. (connect timeout=20)')); summit_spill: ConnectTimeout: HTTPSConnectionPool(host='api.hcdp.ikewai.org', port=443): Max retries exceeded with url: /mesonet/db/measurements?location=hawaii&station_ids=0153&var_ids=RH_1_Avg%2CWDrs_1_Avg%2CWS_1_Avg&start_date=2026-10-25T07%3A00%3A00-10%3A00&end_date=2026-10-25T08%3A59%3A59-10%3A00&row_mode=json&limit=5000 (Caused by ConnectTimeoutError(<HTTPSConnection(host='api.hcdp.ikewai.org', port=443) at 0x75f7e58e5ac0), 'Connection to api.hcdp.ikewai.org timed out. (connect timeout=20)')) -->
 <script>
 /* Catch up with a new build within ~2 minutes (Sam, 2026-10-17: "the page
    does not seem to autoupdate"). stations.json's "made" is the build time;
@@ -169,7 +169,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
    browser's 10-minute cached copy is bypassed. The 15-minute refresh stays
    as a backstop. */
 (function () {
-  var built = "2026-10-25T12:40";
+  var built = "2026-10-25T12:42";
   function check() {
     fetch("stations.json?" + Date.now(), {cache: "no-store"})
       .then(function (r) { return r.json(); })
