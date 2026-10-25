@@ -4017,9 +4017,3 @@ if __name__ == "__main__":
     out.parent.mkdir(exist_ok=True)
     out.write_text(build(), encoding="utf-8")
     print("wrote", out)
-    # Tells the workflow to run once more on a fresh machine (Sam, 2026-10-24,
-    # "Let's give D a try"): a failed build's three tries all fail, but the
-    # next build's machine gets through at the usual rate, so the block goes
-    # with the machine, not the hour. Daytime only.
-    if "hcdp" in OUTAGES and 6 <= datetime.now(HST).hour < 19:
-        (HERE / ".hcdp_failed").write_text("1")
