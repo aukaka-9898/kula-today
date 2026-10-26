@@ -1,15 +1,16 @@
 {
- "made": "2026-10-25 21:03",
+ "made": "2026-10-26 00:59",
  "flags": [
-  "Shear line: a stale station sat out of 56% of updates over the last week (the rule under review)."
+  "Shear line: a stale station sat out of 56% of updates over the last week (the rule under review).",
+  "Weekly accuracy, last 30 days: cloudbase within 500 ft on 0 of 1 days, typical miss 620 ft; thermals right on 1 of 5, within one step on 4 (pilot reports included)."
  ],
  "stats": {
-  "base_days": 27,
-  "base_mean": 519,
-  "base_raw_mean": 139,
-  "base_sd": 783,
-  "base_morning": 654,
-  "base_afternoon": 409,
+  "base_days": 26,
+  "base_mean": 502,
+  "base_raw_mean": 124,
+  "base_sd": 786,
+  "base_morning": 627,
+  "base_afternoon": 412,
   "alert_days": 2,
   "alert_hits": 0,
   "intrusions_missed": 0,
