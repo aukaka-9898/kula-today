@@ -351,22 +351,20 @@ def cam_text(cam: dict) -> str:
             text = f"Cloud base no higher than about {span} along the ridge"
         else:
             text = f"Cloud base no higher than about {b:,.0f} ft"
-        # Sam, 10-25: "'Greenwall is clear' is sufficient", "High points are in
-        # clouds", "Keep Konahuanui as a landmark" -- Greenwall and Konahuanui by
-        # name, the other stretches as "lower peaks" (Sam: "Konahuanui and lower peaks").
+        # Sam, 10-25: "'Greenwall is clear' is sufficient", "Keep Konahuanui as
+        # a landmark", then: "don't refer to 'lower peaks' it's confusing.
+        # Konahuanui is sufficient" -- only Greenwall and Konahuanui are named.
         named = [n for n in ("Greenwall", "Konahuanui") if n in cam["segments"]]
         cl = [n for n in named if n in clear]
         dn = [n for n in named if n in down]
-        others_down = any(n not in named for n in down)
         if clear and not down:
             return text + "; the whole ridge is clear."
         parts = []
         if cl:
             parts.append(f"{_and(cl)} {'is' if len(cl) == 1 else 'are'} clear")
-        if dn or others_down:
-            who = _and(dn + (["lower peaks"] if others_down else [])) if dn else "lower peaks"
-            parts.append(f"{who} {'are' if (len(dn) + others_down) != 1 or who == 'lower peaks' else 'is'} in clouds")
-        return text + ". " + _cap("; ".join(parts)) + "."
+        if dn:
+            parts.append(f"{_and(dn)} {'is' if len(dn) == 1 else 'are'} in clouds")
+        return text + (". " + _cap("; ".join(parts)) + "." if parts else ".")
     return "The ridge is clear, with no cloud base in view above it."
 
 
@@ -730,10 +728,14 @@ def write(now: datetime) -> None:
         da = _try(air_day, air, surf, d, problems=problems) if air else None
         dnote = thermal_day(bw, da["word"] if da else None)
         line = f"{line} {dnote}" if dnote else line
-        week += (f"<tr><td>{d:%a %d}</td><td>{esc(wind_text(mid))}</td><td>{chip(bw)}</td>"
-                 f"<td>{esc(line)}</td>"
-                 f'<td class="n">{base_label(da["base_ft"]) if da else "–"}</td>'
-                 f'<td>{"–" if not da else esc(da["word"])}</td></tr>')
+        # Phone width (Sam, 10-25: "the Week requires side scroll"): compact
+        # midday wind, the hours on their own full-width line under the day.
+        aloft_d = ""
+        if da:
+            b = base_label(da["base_ft"])
+            aloft_d = (f" Base {'low' if b == 'Low' else b + ' ft'}" if da["base_ft"] is not None else "") +                       f"{',' if da['base_ft'] is not None else ''} thermals {da['word'].lower()}."
+        week += (f'<tr class="wk"><td>{d:%a %d}</td><td class="n">{esc(short_wind(mid))}</td><td>{chip(bw)}</td></tr>'
+                 f'<tr class="wkh"><td colspan="3">{esc(line + aloft_d)}</td></tr>')
 
     summary = (f"Now: {word.lower() if w else 'no wind reading'}"
                + (f", {wind_text(w)}" if w else "") + (" (forecast, Bellows out)." if w and not obs else ".")
@@ -1111,7 +1113,8 @@ PAGE = """<!doctype html>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 {style}
-<style>.back {{ color: var(--sky); text-decoration: none; font: 600 .95rem var(--display); }} .downret {{ margin-top: 6px; }}</style>
+<style>.back {{ color: var(--sky); text-decoration: none; font: 600 .95rem var(--display); }} .downret {{ margin-top: 6px; }}
+tr.wk td {{ border-bottom: 0; padding-bottom: 2px; }} tr.wkh td {{ white-space: normal; color: var(--muted); font-size: .84rem; padding-top: 0; }}</style>
 </head>
 <body>
 <div class="wrap">
@@ -1148,7 +1151,7 @@ PAGE = """<!doctype html>
   <section class="block" aria-labelledby="t-week">
     <h2 id="t-week">The week</h2>
     <div class="tablewrap"><table>
-      <thead><tr><th>Day</th><th>Midday wind</th><th>Best</th><th>Hours</th><th class="n">Downrange base</th><th>Thermals</th></tr></thead>
+      <thead><tr><th>Day</th><th class="n">Midday, mph</th><th>Best</th></tr></thead>
       <tbody>{week}</tbody>
     </table></div>
     <p>Rated hour by hour, 08:00–19:00, from the NWS forecast grid at Makapuʻu: wind from 0–70° only (east of 070° turbulence off Rabbit Island reaches launch), speed and gusts against the site's limits, under 10 mph is a run-off launch. Downrange base and thermals from the RRFS sounding at Kaneohe, as far as it runs (about three days).</p>
