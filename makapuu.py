@@ -247,6 +247,7 @@ def lcl_msl(t_f: float, td_f: float, elev_ft: float) -> int:
 CAP_SHARE = 0.3                # a stretch counts as capped with this share of its columns
 CAMERA_MAX_AGE = timedelta(minutes=40)
 AVERAGE_MIN = 30
+CAMERA_HOURS = ("08:00", "16:45")
 
 
 def crest_camera(now: datetime) -> dict | None:
@@ -300,11 +301,13 @@ def drop_outliers(cam: dict) -> list:
     import numpy as np
     out = []
     segs = {n: s for n, s in cam["segments"].items() if s.get("base_ft") and n != "Pali gap"}
-    for n, s in segs.items():
-        rest = [t["base_ft"] for m, t in segs.items() if m != n]
-        if len(rest) >= 2 and s["base_ft"] < float(np.median(rest)) - OUTLIER_FT:
-            out.append(n)
-    return out
+    if len(segs) < 3:
+        return out
+    # Both ways, against the median of ALL the stretches (17:53 10-25: two
+    # sunset-lit stretches read 5,200-8,400 and the low-only rule dropped the
+    # two good ones).
+    med = float(np.median([s["base_ft"] for s in segs.values()]))
+    return [n for n, s in segs.items() if abs(s["base_ft"] - med) > OUTLIER_FT]
 
 
 GAP_LOG = HERE / "docs" / "makapuu_gap.csv"
@@ -650,7 +653,11 @@ def write(now: datetime) -> None:
     gated = base is not None and base < BASE_FLOOR_FT
     if gated:
         base = None                                      # gated: see BASE_FLOOR_FT
-    cam = _try(crest_camera, now, problems=problems)
+    # Daylight only: from ~17:15 the low sun turns cloud and sky golden and the
+    # colour test breaks (10-25: 5,200-8,400 ft at sunset); early frames have
+    # the same trouble. Outside CAMERA_HOURS the Kaneohe-air number stands alone.
+    in_hours = CAMERA_HOURS[0] <= f"{now:%H:%M}" <= CAMERA_HOURS[1]
+    cam = _try(crest_camera, now, problems=problems) if in_hours else None
     cam_line = cam_text(cam) if cam else ""
     if cam:
         problems += [f"camera outlier left out: {n} {cam['segments'][n]['base_ft']:,.0f} ft"
