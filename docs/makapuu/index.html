@@ -91,22 +91,22 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><a class="homebtn" href="/">&larr; Home</a><div class="tag">Makapu&#8216;u soaring briefing</div><h1>Makapu&#8216;u Today</h1></div>
-    <div class="date">Updated Sun 25 Oct 2026 · 14:43 HST</div>
+    <div class="date">Updated Sun 25 Oct 2026 · 14:52 HST</div>
   </header>
   <div class="databadge"><div class="big">Under construction</div></div>
   <div>
-    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/760/details/camera/12783/full" title="Kāne&#8216;ohe Bay webcam, live, looking southeast down the Ko&#8216;olau toward Makapu&#8216;u" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="camera.jpg?2026-10-25T14:43" alt=""></div>
+    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/760/details/camera/12783/full" title="Kāne&#8216;ohe Bay webcam, live, looking southeast down the Ko&#8216;olau toward Makapu&#8216;u" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="camera.jpg?2026-10-25T14:52" alt=""></div>
     <div class="camcap">Kāne&#8216;ohe Bay webcam, live, looking southeast down the Ko&#8216;olau to Makapu&#8216;u. FAA WeatherCam. <a href="https://weathercams.faa.gov/cameras/state/HI/cameraSite/760/details/camera/12783/full" target="_blank" rel="noopener">Open full size</a> · <a href="https://weathercams.faa.gov/cameras/state/HI/cameraSite/588/details/camera/12153/full" target="_blank" rel="noopener">Makapu&#8216;u camera, at the point</a></div>
   </div>
   <div class="cols">
     <section class="panel today" aria-labelledby="t-today">
-      <div class="kind">Now · 14:43 HST</div>
+      <div class="kind">Now · 14:52 HST</div>
       <div class="head"><h2 id="t-today">Today</h2><span class="chip good">Flyable</span></div>
       <dl>
         <dt>On the ridge</dt><dd><strong>Flyable</strong></dd>
         <dt>Wind</dt><dd><span class="num">NE (034°) 12 mph, gusts 17</span><div class="sub">Bellows, 14:15 (via NOAA HADS)</div></dd>
         
-        <dt>Downrange</dt><dd>Cloud base no higher than about 2,800–2,900 ft along the ridge. Greenwall is clear; Konahuanui and lower peaks are in clouds.<div class="sub">Kāne&#8216;ohe Bay camera, looking at the Ko&#8216;olau, the last 30 minutes to 14:42. Kaneohe (PHNG)'s air would condense at about 3,200 ft.</div><div class="downret">More north than the ideal 050°: easier to get back from downrange, the primary LZ less ideal.</div></dd>
+        <dt>Downrange</dt><dd>Cloud base no higher than about 2,900–3,100 ft along the ridge. Greenwall is clear; Konahuanui and lower peaks are in clouds.<div class="sub">Kāne&#8216;ohe Bay camera, looking at the Ko&#8216;olau, the last 30 minutes to 14:50. Kaneohe (PHNG)'s air would condense at about 3,200 ft.</div><div class="downret">More north than the ideal 050°: easier to get back from downrange, the primary LZ less ideal.</div></dd>
         <dt>Thermals</dt><dd>Probably <strong>flat</strong> (forecast)<div class="sub">RRFS at Kaneohe, run 25 18Z: thermal index -2.7 °C, 10:00–14:00 (surface air: Open-Meteo at Kaneohe); no useable lift. Useful, not critical, at Makapu&#8216;u.</div></dd>
         <dt>Inversion</dt><dd>About 5,700 ft (+1.4 °F)<div class="sub">RRFS at Kaneohe, 14:00: the trade lid</div></dd>
       </dl>
@@ -133,10 +133,10 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
     <p><strong>Notice.</strong> Information only, provided as is, with no guarantee of accuracy or availability. This is not an official forecast. Every pilot is responsible for their own decision to fly.</p>
   </div>
 </div>
-<!-- build problems: moku_temp: ConnectTimeout: HTTPSConnectionPool(host=&#x27;pae-paha.pacioos.hawaii.edu&#x27;, port=443): Max retries exceeded with url: /erddap/tabledap/aws_himb.json?time,air_temperature&amp;time%3E=now-6hours (Caused by ConnectTimeoutError(&lt;HTTPSConnection(host=&#x27;pae-paha.pacioos.hawaii.edu&#x27;, port=443) at 0x740f31eec500&gt;, &#x27;Connection to pae-paha.pacioos.hawaii.edu timed out. (connect timeout=45)&#x27;)); camera outlier left out: Kāne&#8216;ohe crest 2,330 ft; parcel ConnectTimeout: HTTPSConnectionPool(host=&#x27;api.hcdp.ikewai.org&#x27;, port=443): M; parcel ConnectTimeout: HTTPSConnectionPool(host=&#x27;pae-paha.pacioos.hawaii.edu&#x27;, port -->
+<!-- build problems: camera outlier left out: Kāne&#8216;ohe crest 2,330 ft -->
 <script>
 (function () {
-  var built = "2026-10-25T14:43";
+  var built = "2026-10-25T14:52";
   function check() {
     fetch("summary.json?" + Date.now(), {cache: "no-store"}).then(function (r) { return r.json(); })
       .then(function (j) { if (j && j.built && j.built > built) location.replace(location.pathname + "?v=" + Date.now()); })
