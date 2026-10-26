@@ -3355,6 +3355,53 @@ def cloudbase_call(day, path, fc_hours: dict, level_today, leaning=False) -> tup
             "a low or a high day.")
 
 
+# The Kekoa camera's base on the page (Sam, 2026-10-25: "Consider adding cam
+# cloudbase to Kula" ... "do all three"): it leads the Cloudbase row, is drawn
+# on the chart beside the derived line, and gives the review its midday base.
+# Read from docs/camera_base.csv, which log_camera_base fills every build.
+CAMERA_RECENT = timedelta(minutes=30)
+
+
+def camera_rows(day: str):
+    if not CAMERA_BASE_LOG.exists():
+        return pd.DataFrame()
+    c = pd.read_csv(CAMERA_BASE_LOG, dtype={"date": str, "time": str})
+    return c[c.date == day]
+
+
+def camera_recent(now: datetime) -> dict | None:
+    """{ft, at, clear}: the mean of the last 30 minutes' camera readings, or
+    clear=True when every frame then saw the visible slope clear of cloud."""
+    c = camera_rows(f"{now:%Y-%m-%d}")
+    if c.empty:
+        return None
+    t = pd.to_datetime(c.date + " " + c.time)
+    c = c[t >= pd.Timestamp(now.replace(tzinfo=None)) - CAMERA_RECENT]
+    if c.empty:
+        return None
+    last = c.time.max()
+    v = c.camera_ft.dropna()
+    if len(v):
+        return {"ft": round(float(v.mean()), -2), "at": last, "clear": False}
+    if (c.why.fillna("") == "slope clear").all():
+        return {"ft": None, "at": last, "clear": True}
+    return None
+
+
+def camera_top_ft() -> int:
+    """The skyline at the camera's read columns: 'above' this when the slope is clear."""
+    sys.path.insert(0, str(HERE / "tools"))
+    import cambase
+    h = cambase.load_heights()
+    tops = [h[x][cambase.skyline(h, x)] for x in cambase.COLS]
+    return int(round(float(np.median(tops)), -2))
+
+
+def camera_points(day: datetime) -> list:
+    c = camera_rows(f"{day:%Y-%m-%d}").dropna(subset=["camera_ft"])
+    return [[int(t[:2]) * 60 + int(t[3:5]), float(v)] for t, v in zip(c.time, c.camera_ft)]
+
+
 def base_chart(obs, now, up, end, cid="basechart", title="Cloudbase, derived vs forecast",
                with_forecast=True) -> tuple[str, list, list]:
     """(html, derived, forecast): the derived base every 15 minutes through
@@ -3379,7 +3426,8 @@ def base_chart(obs, now, up, end, cid="basechart", title="Cloudbase, derived vs 
             f"{src}." if with_forecast else "Derived from the stations every 15 minutes during the upslope.")
     # The forecast is still returned for the review notes and the scorecard,
     # just not drawn (Sam, 2026-10-17: derived-only charts).
-    return (chart_html(cid, derived, forecast if with_forecast else [], span, note, title=title),
+    cam = safely(camera_points, day) or []
+    return (chart_html(cid, derived, forecast if with_forecast else [], span, note, title=title, camera=cam),
             derived, forecast)
 
 
@@ -3390,7 +3438,7 @@ def base_chart(obs, now, up, end, cid="basechart", title="Cloudbase, derived vs 
 FORECAST_BAND_FT = 700
 
 
-def chart_html(cid, derived, forecast, span, note, nocu=None, title="") -> str:
+def chart_html(cid, derived, forecast, span, note, nocu=None, title="", camera=None) -> str:
     """Cloudbase line chart: derived (solid) and forecast (dashed) by minute of
     the day, the upslope shaded; derived and span may be empty for a forecast.
 
@@ -3399,13 +3447,14 @@ def chart_html(cid, derived, forecast, span, note, nocu=None, title="") -> str:
     glance. It stretches only when a value falls outside."""
     # Every chart shows 09:00-16:00 (Sam): the flying day, nothing outside it.
     clip = lambda pts: [q for q in pts if 540 <= q[0] <= 960]
-    derived, forecast = clip(derived), clip(forecast)
+    derived, forecast, camera = clip(derived), clip(forecast), clip(camera or [])
     if span:
         span = [max(span[0], 540), min(span[1], 960)]
-    data = json.dumps({"derived": derived, "forecast": forecast, "up": span, "nocu": nocu})
+    data = json.dumps({"derived": derived, "forecast": forecast, "camera": camera, "up": span, "nocu": nocu})
     legend = ("" if not derived else
               '<span><span style="display:inline-block;width:16px;height:2px;background:#2a78d6;vertical-align:middle"></span> Derived (stations)</span>'
-              '')
+              '') + ('<span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#3f9d5a;vertical-align:middle"></span> Kekoa camera</span>'
+                     if camera else "")
     head = (f'<div style="font-weight:600;font-size:.9rem;margin:10px 0 2px">{esc(title)}</div>'
             if title else "")
     # The Forecast key only when there is a forecast line (Sam, 2026-10-17:
@@ -3431,13 +3480,14 @@ def chart_html(cid, derived, forecast, span, note, nocu=None, title="") -> str:
     g.save(); g.fillStyle = 'rgba(137,135,129,0.14)';
     g.fillRect(x.getPixelForValue(d.up[0]), a.top, x.getPixelForValue(d.up[1]) - x.getPixelForValue(d.up[0]), a.bottom - a.top); g.restore(); }} }};
   var hm = function (m) {{ return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); }};
-  var ys = d.derived.map(function (a) {{ return a[1]; }}).concat(d.forecast.map(function (a) {{ return a[1]; }}));
+  var ys = d.derived.map(function (a) {{ return a[1]; }}).concat(d.forecast.map(function (a) {{ return a[1]; }})).concat(d.camera.map(function (a) {{ return a[1]; }}));
   var xs = [540, 960];
   new Chart(document.getElementById('{cid}'), {{
     type: 'line',
     data: {{ datasets: [
       {{ label: 'Derived', data: d.derived.map(pt), borderColor: '#2a78d6', borderWidth: 2, pointRadius: 0, tension: 0.3 }},
-      {{ label: 'Forecast', data: d.forecast.map(pt), borderColor: '#eb6834', borderWidth: 2, borderDash: [6, 4], pointRadius: 3, pointBackgroundColor: '#eb6834', tension: 0.3 }}
+      {{ label: 'Forecast', data: d.forecast.map(pt), borderColor: '#eb6834', borderWidth: 2, borderDash: [6, 4], pointRadius: 3, pointBackgroundColor: '#eb6834', tension: 0.3 }},
+      {{ label: 'Kekoa camera', data: d.camera.map(pt), showLine: false, pointRadius: 3, pointBackgroundColor: '#3f9d5a', borderColor: '#3f9d5a' }}
     ] }},
     options: {{ responsive: true, maintainAspectRatio: false, interaction: {{ mode: 'nearest', axis: 'x', intersect: false }},
       plugins: {{ legend: {{ display: false }}, tooltip: {{ callbacks: {{
@@ -3570,6 +3620,10 @@ def day_review(obs, now, up, evening, rnet, word, model, fc_today, fc_pair, entr
             # the evening before said (Sam, 2026-10-20: "daily wrap up ignores
             # the fact that base was high, very high").
             mid = [v for m, v in derived if 11 * 60 <= m <= 14 * 60]
+            cam_mid = [v for m, v in (safely(camera_points, now) or []) if 11 * 60 <= m <= 14 * 60]
+            by_cam = len(cam_mid) >= CAMERA_BASE_DAYS
+            if by_cam:
+                mid = cam_mid
             cat = rules.category(sum(mid) / len(mid), now.month) if mid else None
             if cat in ("high", "low"):
                 lo, hi = MONTH_BASE_RANGE[now.month]
@@ -3592,7 +3646,7 @@ def day_review(obs, now, up, evening, rnet, word, model, fc_today, fc_pair, entr
                 m = round(sum(mid) / len(mid), -2)
                 vs = lambda v: ("right on" if abs(m - v) < 100 else
                                 f"{abs(m - v):,.0f} ft {'higher' if m > v else 'lower'} than")
-                said.append(f"Midday the base averaged about {m:,.0f} ft"
+                said.append(f"Midday the base averaged about {m:,.0f} ft" + (" by the Kekoa camera" if by_cam else "")
                             + (f", {vs(call['ft'])} the evening's number" if call.get("ft") else "")
                             + (f"; the morning update said about {call['ft_am']:,.0f} ft"
                                + (" and was right on" if abs(m - call["ft_am"]) < 100 else
@@ -3734,6 +3788,21 @@ def build() -> str:
     # 8-17 min of Sam on 10-20/21/22; the stations' sky readings can lag.
     safely(log_ridge, now)
     safely(fill_camera_derived, now)
+    cam_now = safely(camera_recent, now) if 7 <= now.hour < 18 else None
+    if cam_now:
+        stations = (f"about {ft(round(base['mid'], -2))} ft ({base['n']} stations, {base['at']:%H:%M})"
+                    if base else "unavailable")
+        if cam_now["clear"]:
+            # No number: a clear slope says no cloud sits ON it up to the
+            # skyline (~7,300 ft), not that every cloud is above that.
+            base_html = (f'<span class="num">No cloud on the slope</span>'
+                         f'<div class="sub">Kekoa camera, the last 30 minutes to {cam_now["at"]}. '
+                         f'Stations: {stations}.</div>')
+        else:
+            base_html = (f'<span class="num">About {ft(cam_now["ft"])} ft</span>'
+                         f'<div class="sub">Kekoa camera, the last 30 minutes to {cam_now["at"]}. '
+                         f'Stations: {stations}.</div>')
+        base_label = "Cloudbase"
     if cu_clear and safely(camera_sees_cloud, now):
         cu_clear = False
     if cu:
