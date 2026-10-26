@@ -92,24 +92,24 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><a class="homebtn" href="/">&larr; Home</a><div class="tag">Kula soaring briefing</div><h1>Kula Today</h1></div>
-    <div class="date">Updated Sun 25 Oct 2026 · 14:11 HST</div>
+    <div class="date">Updated Sun 25 Oct 2026 · 14:22 HST</div>
   </header>
 
   <div>
     <!-- The FAA viewer shows its station list before it opens the camera; the latest frame covers that until it has (Sam, 2026-10-25). -->
-    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" title="Red Hill webcam, live, looking south along the Kula slope" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="camera.jpg?2026-10-25T14:11" alt=""></div>
+    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" title="Red Hill webcam, live, looking south along the Kula slope" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="camera.jpg?2026-10-25T14:22" alt=""></div>
     <div class="camcap">Red Hill webcam, live. FAA WeatherCam (Kekoa). <a href="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" target="_blank" rel="noopener">Open full size</a></div>
   </div>
 
   <div class="cols">
     <section class="panel today" aria-labelledby="t-today">
-      <div class="kind">Measured today · 14:11 HST</div>
+      <div class="kind">Measured today · 14:22 HST</div>
       <div class="head"><h2 id="t-today">Today</h2></div>
       <div class="databadge"><div class="big">Limited data</div><div>9 of 29 stations reporting. Readings below rest on fewer stations than usual.</div></div>
       
       <dl>
         <dt>Thermals</dt><dd>Unavailable<div class="sub">Kula Ag's readings did not come through this update</div></dd>
-        <dt>Cloudbase</dt><dd><span class="num">About 3,000 ft</span><div class="sub">Kekoa camera, the last 30 minutes to 14:05. Stations: unavailable.</div></dd>
+        <dt>Cloudbase</dt><dd><span class="num">About 2,900 ft</span><div class="sub">Kekoa camera, the last 30 minutes to 14:13. Stations: unavailable.</div></dd>
         <dt>Sun</dt><dd><span class="num">60%</span> of clear sky, lower Kula slope<div class="sub">Last hour, as of 14:00; average of Keokea 60%; Pulehu left out, in trade air</div></dd>
         <dt>Shear line</dt><dd>No trade line (trades absent) (forecast)<div class="sub">Trades N (009°). Measured once the upslope sets in</div></dd>
         
@@ -169,7 +169,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
    browser's 10-minute cached copy is bypassed. The 15-minute refresh stays
    as a backstop. */
 (function () {
-  var built = "2026-10-25T14:11";
+  var built = "2026-10-25T14:22";
   function check() {
     fetch("stations.json?" + Date.now(), {cache: "no-store"})
       .then(function (r) { return r.json(); })
