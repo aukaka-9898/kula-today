@@ -89,7 +89,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><a class="homebtn" href="/">&larr; Home</a> <a class="homebtn" href="./">&larr; Makapu&#8216;u Today</a><h1>Makapu&#8216;u Details</h1></div>
-    <div class="date">Updated Sun 25 Oct 2026 · 16:52 HST</div>
+    <div class="date">Updated Sun 25 Oct 2026 · 17:05 HST</div>
   </header>
   <div class="databadge"><div class="big">Under construction</div></div>
   <section class="block" aria-labelledby="t-thermal">
@@ -125,7 +125,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
     </div>
     <div class="sub" id="o-src"></div>
     <div class="chartwrap"><svg id="prof" viewBox="0 0 640 520" role="img" aria-label="Temperature profile"></svg><div id="tip" class="tip" hidden></div></div>
-    <div class="sub">Red: the air (virtual temperature). Green: its dew point. Dashed: the lifted parcel. Tap the chart for the values at a height.</div>
+    <div class="sub">Red: the air's temperature. Pink: its virtual temperature (what the thermal index uses). Green: its dew point. Dashed: the lifted parcel. Tap the chart for the values and the wind at a height.</div>
     <div class="tablewrap"><table id="invtab"><thead><tr><th>Inversion base</th><th class="n">Top</th><th class="n">Warming</th></tr></thead><tbody></tbody></table></div>
   </section>
 <style>
@@ -163,7 +163,9 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
     while (i < L.length - 1 && L[i][0] < h) i++;
     var a = L[i - 1], b = L[i], f = b[0] === a[0] ? 0 : (h - a[0]) / (b[0] - a[0]);
     f = Math.max(0, Math.min(1, f));
-    return {p: a[1] + (b[1] - a[1]) * f, t: a[2] + (b[2] - a[2]) * f, td: a[3] + (b[3] - a[3]) * f};
+    var w = f < 0.5 ? a : b;                         // wind: nearest level (no averaging across north)
+    return {p: a[1] + (b[1] - a[1]) * f, t: a[2] + (b[2] - a[2]) * f, td: a[3] + (b[3] - a[3]) * f,
+            wd: w[4], wk: w[5]};
   }
   function word(ti) {
     for (var i = 0; i < D.bands.length; i++) { var lim = D.bands[i][0]; if (lim === null || ti > lim) return D.bands[i][1]; }
@@ -177,7 +179,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
       var e = env(L, h), tp = sc - DRY * (h - R) / 1000;
       if (!sat && mixr(tp, e.p) <= ws) sat = true;
       var tvp = (tp + 273.15) * (1 + 0.608 * ws) - 273.15, tve = vtemp(e.t, e.td, e.p);
-      out.push({h: h, p: e.p, t: e.t, td: e.td, tvp: tvp, tve: tve, ti: tve - tvp, sat: sat});
+      out.push({h: h, p: e.p, t: e.t, td: e.td, tvp: tvp, tve: tve, ti: tve - tvp, sat: sat, wd: e.wd, wk: e.wk});
     }
     return out;
   }
@@ -279,7 +281,8 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
     g += '<text x="' + (l + 4) + '" y="' + (Y(lo) - 4) + '" style="fill:var(--grass)">' + LBL() + '</text>';
     g += '<clipPath id="plot"><rect x="' + l + '" y="0" width="' + (W - l - rt) + '" height="' + Hh + '"/></clipPath>';
     g += '<path clip-path="url(#plot)" d="' + path(function (x) { return x.td; }) + '" fill="none" stroke="#3f9d5a" stroke-width="2"/>';
-    g += '<path d="' + path(function (x) { return x.tve; }) + '" fill="none" stroke="#c0392b" stroke-width="2"/>';
+    g += '<path d="' + path(function (x) { return x.tve; }) + '" fill="none" stroke="#e8a09a" stroke-width="2"/>';
+    g += '<path d="' + path(function (x) { return x.t; }) + '" fill="none" stroke="#c0392b" stroke-width="2"/>';
     g += '<path d="' + path(function (x) { return x.tvp; }) + '" fill="none" stroke="' + ink + '" stroke-width="1.6" stroke-dasharray="6 5"/>';
     g += '<text x="' + ((l + W - rt) / 2) + '" y="' + (Hh - 4) + '" text-anchor="middle">' + (sel("tu") === "C" ? "°C" : "°F") + "</text>";
     svg.innerHTML = g;
@@ -290,7 +293,10 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
       var rh = 100 * Math.exp(17.625 * best.td / (243.04 + best.td) - 17.625 * best.t / (243.04 + best.t));
       var tip = Q("#tip");
       tip.textContent = "Height        " + n(H(best.h)) + HU() + "\nThermal index " + best.ti.toFixed(1) + " °C\nTemperature   " + Tdisp(best.t) +
-                        "\nDew point     " + Tdisp(best.td) + "\nHumidity      " + Math.round(rh) + "%";
+                        "\nDew point     " + Tdisp(best.td) + "\nHumidity      " + Math.round(rh) + "%" +
+                        (best.wk === null || best.wk === undefined ? "" :
+                         "\nWind          " + (best.wd === null ? "variable" : String(Math.round(best.wd)).padStart(3, "0") + "°") +
+                         " at " + Math.round(best.wk * 1.15078) + " mph");
       tip.hidden = false;
       tip.style.left = Math.min(ev.clientX - b.left + 12, b.width - 190) + "px";
       tip.style.top = (ev.clientY - b.top + 12) + "px";
