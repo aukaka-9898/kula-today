@@ -1,31 +1,30 @@
 {
- "made": "2026-10-26 20:26",
+ "made": "2026-10-27 00:26",
  "flags": [
-  "Shear line: a stale station sat out of 45% of updates over the last week (the rule under review).",
-  "Weekly accuracy, last 30 days: cloudbase within 500 ft on 0 of 1 days, typical miss 620 ft; thermals right on 1 of 5, within one step on 4 (pilot reports included)."
+  "Shear line: a stale station sat out of 45% of updates over the last week (the rule under review)."
  ],
  "stats": {
   "base_days": 26,
-  "base_mean": 502,
-  "base_raw_mean": 124,
-  "base_sd": 786,
-  "base_morning": 627,
-  "base_afternoon": 412,
+  "base_mean": 487,
+  "base_raw_mean": 123,
+  "base_sd": 791,
+  "base_morning": 626,
+  "base_afternoon": 382,
   "alert_days": 2,
   "alert_hits": 0,
   "intrusions_missed": 0,
   "line_dropped_share_7d": 0.45,
-  "cam_puunianiau_cloud_min_days": 7,
+  "cam_puunianiau_cloud_min_days": 8,
   "cam_redhill_cloud_min_days": 8,
-  "station_days": 37,
+  "station_days": 38,
   "accuracy": {
    "base_n": 1,
    "base_within": 0,
    "base_typical": 620.0,
    "base_bias": -620.0,
-   "thermal_n": 5,
+   "thermal_n": 6,
    "thermal_right": 1,
-   "thermal_within_one": 4,
+   "thermal_within_one": 5,
    "thermal_bias": 1.0,
    "rules": {
     "B2": [
@@ -37,8 +36,8 @@
      1
     ]
    },
-   "camera_days": 1,
-   "derived_minus_camera": -860.0,
+   "camera_days": 2,
+   "derived_minus_camera": -600.0,
    "pilots": true
   }
  }
