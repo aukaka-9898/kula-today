@@ -104,6 +104,19 @@ def return_note(dir_deg) -> str:
     return "More east than the ideal 050°: easier going downrange, harder getting back."
 
 
+# Northerly days (Sam, 10-26): the Waimānalo Bowl -- Ironwoods to Puʻu o Kona --
+# faces ~340-020 deg, so a northerly hits it square: "a bunch of small bowls
+# which provide blasts of ridge lift", getting back is easy, the LZ may not be.
+BOWL_DIRS = (0, 30)
+
+
+def bowl_note(dir_deg, word: str) -> str:
+    if dir_deg is None or word not in ("Flyable", "Caution"):
+        return ""
+    return ("Northerly: good day for the Waimānalo Bowl. Beach landing may be required."
+            if BOWL_DIRS[0] <= dir_deg % 360 <= BOWL_DIRS[1] else "")
+
+
 def _intervals(series: dict, conv) -> dict:
     """NWS grid values ('2026-10-25T10:00:00+00:00/PT2H') to {HST hour: value}."""
     out = {}
@@ -762,6 +775,9 @@ def write(now: datetime) -> None:
     today_chip = chip(word) if w and not night else ""
     fly_html = (f"<strong>{esc(word)}</strong>" + (f'<div class="sub">{esc(why)}</div>' if why else "")) if w else "Unavailable"
     wind_html = (f'<span class="num">{esc(wind_text(w))}</span><div class="sub">{esc(src)}</div>') if w else "Unavailable"
+    bowl = bowl_note(w["dir"], word) if w and not night else ""
+    if bowl:
+        wind_html += f'<div class="alert">{esc(bowl)}</div>'
     dir_html = esc(return_note(w["dir"])) if w and w.get("dir") is not None else ""
 
     # The base on the range from the air: Kaneohe's METAR. Heʻeia's shore air
