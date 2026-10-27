@@ -85,6 +85,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
   .row, .base { grid-template-columns: 6.6rem 3.6rem 1fr 2.8rem; gap: 7px; font-size: .82rem; }
 }
 </style><style>.cols > .panel { min-width: 0; } .watch { margin: 6px 0 10px; } .watch ul { margin: 4px 0 0 18px; padding: 0; } .watch li { margin: 3px 0; } .pid { font-size: .72rem; color: #898781; white-space: nowrap; }</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>.back { color: var(--sky); text-decoration: none; font: 600 .95rem var(--display); } .downret { margin-top: 6px; }
 tr.wk td { border-bottom: 0; padding-bottom: 2px; } tr.wkh td { white-space: normal; color: var(--muted); font-size: .84rem; padding-top: 0; }</style>
 </head>
@@ -92,16 +93,16 @@ tr.wk td { border-bottom: 0; padding-bottom: 2px; } tr.wkh td { white-space: nor
 <div class="wrap">
   <header>
     <div><a class="homebtn" href="/">&larr; Home</a><div class="tag">Makapu&#8216;u soaring briefing</div><h1>Makapu&#8216;u Today</h1></div>
-    <div class="date">Updated Mon 26 Oct 2026 · 19:04 HST</div>
+    <div class="date">Updated Mon 26 Oct 2026 · 19:18 HST</div>
   </header>
   <div class="databadge"><div class="big">Under construction</div></div>
   <div>
-    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/760/details/camera/12783/full" title="Kāne&#8216;ohe Bay webcam, live, looking southeast down the Ko&#8216;olau toward Makapu&#8216;u" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="camera.jpg?2026-10-26T19:04" alt=""></div>
+    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/760/details/camera/12783/full" title="Kāne&#8216;ohe Bay webcam, live, looking southeast down the Ko&#8216;olau toward Makapu&#8216;u" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="camera.jpg?2026-10-26T19:18" alt=""></div>
     <div class="camcap">Kāne&#8216;ohe Bay webcam, live, looking southeast down the Ko&#8216;olau to Makapu&#8216;u. FAA WeatherCam. <a href="https://weathercams.faa.gov/cameras/state/HI/cameraSite/760/details/camera/12783/full" target="_blank" rel="noopener">Open full size</a> · <a href="https://weathercams.faa.gov/cameras/state/HI/cameraSite/588/details/camera/12153/full" target="_blank" rel="noopener">Makapu&#8216;u camera, at the point</a></div>
   </div>
   <div class="cols">
     <section class="panel today" aria-labelledby="t-today">
-      <div class="kind">Now · 19:04 HST</div>
+      <div class="kind">Now · 19:18 HST</div>
       <div class="head"><h2 id="t-today">Today</h2></div>
       <dl>
         <dt>On the ridge</dt><dd><strong>Light</strong><div class="sub">under 10 mph: run-off launch only, not recommended</div></dd>
@@ -120,6 +121,35 @@ tr.wk td { border-bottom: 0; padding-bottom: 2px; } tr.wkh td { white-space: nor
       <p class="summary">Light 08:00–19:00: run-off launch only. Midday: ENE (070°) 7 mph, gusts 8. More east than the ideal 050°: easier going downrange, harder getting back. Downrange base about 2,700 ft, thermals flat, inversion about 7,200 ft (+3.1 °F) (RRFS).</p><div class="tablewrap"><table class="hist"><thead><tr><th>Hour</th><th class="n">Wind, mph</th><th>Ridge</th></tr></thead><tbody><tr><td>08:00</td><td class="n">ENE 6 g7</td><td><span class="chip fair">Light</span></td></tr><tr><td>09:00</td><td class="n">ENE 6 g7</td><td><span class="chip fair">Light</span></td></tr><tr><td>10:00</td><td class="n">ENE 6 g7</td><td><span class="chip fair">Light</span></td></tr><tr><td>11:00</td><td class="n">ENE 7 g8</td><td><span class="chip fair">Light</span></td></tr><tr><td>12:00</td><td class="n">ENE 7 g8</td><td><span class="chip fair">Light</span></td></tr><tr><td>13:00</td><td class="n">ENE 7 g8</td><td><span class="chip fair">Light</span></td></tr><tr><td>14:00</td><td class="n">NE 9 g12</td><td><span class="chip fair">Light</span></td></tr><tr><td>15:00</td><td class="n">NE 9 g12</td><td><span class="chip fair">Light</span></td></tr><tr><td>16:00</td><td class="n">NE 9 g12</td><td><span class="chip fair">Light</span></td></tr><tr><td>17:00</td><td class="n">NE 7 g8</td><td><span class="chip fair">Light</span></td></tr><tr><td>18:00</td><td class="n">NE 7 g8</td><td><span class="chip fair">Light</span></td></tr></tbody></table></div>
     </section>
   </div>
+  <section class="block" aria-labelledby="t-wrap"><h2 id="t-wrap">Today, as it turned out</h2><p>At Bellows: Light 09:00–19:00: run-off launch only. Midday NE (042°) 7 mph, gusts 12.</p><p>Midday the downrange base averaged about 2,600 ft by the Kāne&#8216;ohe Bay camera.</p><p>Thermals by Moku o Lo&#8216;e&#x27;s air against the RRFS profile, 10:00–14:00: flat (index 0.0 °C); the forecast said flat.</p><div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted);margin:2px 0 4px">
+<span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#3f9d5a;vertical-align:middle"></span> Kāne&#8216;ohe Bay camera</span>
+<span><span style="display:inline-block;width:16px;height:2px;background:#2a78d6;vertical-align:middle"></span> Moku o Lo&#8216;e's air would condense</span></div>
+<div style="position:relative;width:100%;min-width:0;height:220px"><canvas id="wrapchart" role="img" aria-label="Downrange cloud base through the day"></canvas></div>
+<script>
+(function () {
+  var d = {"camera": [[488, 3010.0], [505, 3010.0], [517, 3000.0], [532, 2880.0], [547, 2630.0], [568, 2740.0], [579, 2840.0], [592, 2860.0], [607, 2770.0], [628, 2680.0], [643, 2670.0], [652, 2620.0], [659, 2620.0], [673, 2590.0], [682, 2590.0], [703, 2570.0], [718, 2570.0], [731, 2570.0], [746, 2610.0], [757, 2620.0], [773, 2620.0], [787, 2580.0], [802, 2540.0], [823, 2560.0], [836, 2540.0], [852, 2480.0], [861, 2480.0], [863, 2480.0], [884, 2480.0], [892, 2480.0], [908, 2480.0], [922, 2490.0], [937, 2470.0], [952, 2480.0], [967, 2500.0], [992, 2470.0], [997, 2470.0]], "moku": [[540, 2555.0], [900, 2650.0], [1020, 2640.0]]}, pt = function (a) { return {x: a[0], y: a[1]}; };
+  var dark = matchMedia('(prefers-color-scheme: dark)').matches, muted = '#898781', grid = dark ? '#2c2c2a' : '#e1e0d9';
+  var hm = function (m) { return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); };
+  var ys = d.camera.concat(d.moku).map(function (a) { return a[1]; });
+  new Chart(document.getElementById('wrapchart'), {
+    type: 'line',
+    data: { datasets: [
+      { label: "Moku o Lo‘e", data: d.moku.map(pt), borderColor: '#2a78d6', borderWidth: 2, pointRadius: 2, pointBackgroundColor: '#2a78d6', tension: 0.3 },
+      { label: 'Camera', data: d.camera.map(pt), showLine: false, pointRadius: 3, pointBackgroundColor: '#3f9d5a', borderColor: '#3f9d5a' }
+    ] },
+    options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'nearest', axis: 'x', intersect: false },
+      plugins: { legend: { display: false }, tooltip: { callbacks: {
+        title: function (i) { return hm(i[0].parsed.x); },
+        label: function (i) { return i.dataset.label + ': ' + Math.round(i.parsed.y).toLocaleString() + ' ft'; } } } },
+      scales: {
+        x: { type: 'linear', min: 480, max: 1020, ticks: { stepSize: 60, color: muted, callback: function (v) { return hm(v); } }, grid: { display: false } },
+        y: { min: Math.min(1500, Math.floor(Math.min.apply(null, ys) / 500) * 500),
+              max: Math.max(4000, Math.ceil(Math.max.apply(null, ys) / 500) * 500),
+              ticks: { stepSize: 500, color: muted, callback: function (v) { return v.toLocaleString(); } }, grid: { color: grid } }
+      } }
+  });
+})();
+</script></section>
   <section class="block" aria-labelledby="t-week">
     <h2 id="t-week">The week</h2>
     <div class="tablewrap"><table>
@@ -134,10 +164,10 @@ tr.wk td { border-bottom: 0; padding-bottom: 2px; } tr.wkh td { white-space: nor
     <p><strong>Notice.</strong> Information only, provided as is, with no guarantee of accuracy or availability. This is not an official forecast. Every pilot is responsible for their own decision to fly.</p>
   </div>
 </div>
-<!-- build problems: moku_temp: ConnectTimeout: HTTPSConnectionPool(host=&#x27;pae-paha.pacioos.hawaii.edu&#x27;, port=443): Max retries exceeded with url: /erddap/tabledap/aws_himb.json?time,air_temperature&amp;time%3E=now-6hours (Caused by ConnectTimeoutError(&lt;HTTPSConnection(host=&#x27;pae-paha.pacioos.hawaii.edu&#x27;, port=443) at 0x73a06ecde510&gt;, &#x27;Connection to pae-paha.pacioos.hawaii.edu timed out. (connect timeout=45)&#x27;)) -->
+<!-- build problems: moku_temp: ConnectTimeout: HTTPSConnectionPool(host=&#x27;pae-paha.pacioos.hawaii.edu&#x27;, port=443): Max retries exceeded with url: /erddap/tabledap/aws_himb.json?time,air_temperature&amp;time%3E=now-6hours (Caused by ConnectTimeoutError(&lt;HTTPSConnection(host=&#x27;pae-paha.pacioos.hawaii.edu&#x27;, port=443) at 0x7656fdc2b830&gt;, &#x27;Connection to pae-paha.pacioos.hawaii.edu timed out. (connect timeout=45)&#x27;)) -->
 <script>
 (function () {
-  var built = "2026-10-26T19:04";
+  var built = "2026-10-26T19:18";
   function check() {
     fetch("summary.json?" + Date.now(), {cache: "no-store"}).then(function (r) { return r.json(); })
       .then(function (j) { if (j && j.built && j.built > built) location.replace(location.pathname + "?v=" + Date.now()); })
