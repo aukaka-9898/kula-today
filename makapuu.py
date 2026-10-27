@@ -771,7 +771,10 @@ def write(now: datetime) -> None:
     else:
         w, src = None, "No wind available"
     word, why = rate(w["dir"], w["mph"], w["gust"]) if w else ("Unknown", "")
-    night = not (6 <= now.hour < 19)
+    # Night by the sun at launch, not the clock (Sam, 10-26: "Use local sunset"):
+    # below -0.833 deg is sunset with refraction and the sun's half-width.
+    import sampler
+    night = sampler.solar_elevation(now.astimezone(timezone.utc), 21.3204, -157.6788) < -0.833
     today_chip = chip(word) if w and not night else ""
     fly_html = (f"<strong>{esc(word)}</strong>" + (f'<div class="sub">{esc(why)}</div>' if why else "")) if w else "Unavailable"
     wind_html = (f'<span class="num">{esc(wind_text(w))}</span><div class="sub">{esc(src)}</div>') if w else "Unavailable"
