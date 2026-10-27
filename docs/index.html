@@ -92,18 +92,18 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><a class="homebtn" href="/">&larr; Home</a><div class="tag">Kula soaring briefing</div><h1>Kula Today</h1></div>
-    <div class="date">Updated Tue 27 Oct 2026 · 08:37 HST</div>
+    <div class="date">Updated Tue 27 Oct 2026 · 08:52 HST</div>
   </header>
 
   <div>
     <!-- The FAA viewer shows its station list before it opens the camera; the latest frame covers that until it has (Sam, 2026-10-25). -->
-    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" title="Red Hill webcam, live, looking south along the Kula slope" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="camera.jpg?2026-10-27T08:37" alt=""></div>
+    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" title="Red Hill webcam, live, looking south along the Kula slope" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="camera.jpg?2026-10-27T08:52" alt=""></div>
     <div class="camcap">Red Hill webcam, live. FAA WeatherCam (Kekoa). <a href="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" target="_blank" rel="noopener">Open full size</a></div>
   </div>
 
   <div class="cols">
     <section class="panel today" aria-labelledby="t-today">
-      <div class="kind">Measured today · 08:37 HST</div>
+      <div class="kind">Measured today · 08:52 HST</div>
       <div class="head"><h2 id="t-today">Today</h2><span class="chip warn">Flat</span></div>
       
       <p class="summary">Cloudbase is steady. Upslope has run since about 07:45 at a light 1 mph. Trades are holding the shear line north of Pukalani, reaching the coast near Haiku, with no trade air on the lower west slope.</p><div style="font-weight:600;font-size:.9rem;margin:10px 0 2px">Cloudbase so far, derived</div><div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted,#6b6b66);margin:2px 0 4px">
@@ -113,7 +113,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="sub">Derived from the stations every 15 minutes during the upslope.</div>
 <script>
 (function () {
-  var d = {"derived": [], "forecast": [], "camera": [], "up": [540, 500], "nocu": null}, pt = function (a) { return {x: a[0], y: a[1]}; };
+  var d = {"derived": [], "forecast": [], "camera": [], "up": [540, 510], "nocu": null}, pt = function (a) { return {x: a[0], y: a[1]}; };
   var dark = matchMedia('(prefers-color-scheme: dark)').matches, muted = '#898781', grid = dark ? '#2c2c2a' : '#e1e0d9';
   var nocu = { id: 'nocu', beforeDatasetsDraw: function (c) { if (!d.nocu) return; var x = c.scales.x, a = c.chartArea, g = c.ctx,
     x0 = x.getPixelForValue(d.nocu[0]), x1 = x.getPixelForValue(d.nocu[1]);
@@ -149,12 +149,12 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 </script>
       <dl>
         <dt>Thermals</dt><dd>Probably <strong>flat</strong> (forecast)<div class="sub">thermal.py on the forecast air; measured rating just after 10:00</div></dd>
-        <dt>Derived<br>Cloudbase</dt><dd><span class="num">About 4,200 ft</span><div class="sub">Station estimate, 3,900–4,800 ft (11 stations, 08:20)</div></dd>
+        <dt>Derived<br>Cloudbase</dt><dd><span class="num">About 4,200 ft</span><div class="sub">Station estimate, 4,100–4,900 ft (11 stations, 08:30)</div></dd>
         <dt>Sun</dt><dd><span class="num">44%</span> of clear sky forecast, 10:00–14:00 (GFS)<div class="sub">Measured from about 09:15; Kula is in Haleakala's shadow until about 08:00</div></dd>
-        <dt>Shear line</dt><dd>North of Pukalani, reaching the coast near Haiku<div class="sub">Last hour: trades at Peahi Rd, upslope at Piiholo</div><div class="sub">Trades at the coast: Paia 066° at 5 mph</div></dd>
+        <dt>Shear line</dt><dd>North of Pukalani, reaching the coast near Haiku<div class="sub">Last hour: trades at Peahi Rd, upslope at Piiholo</div><div class="sub">Trades at the coast: Paia 067° at 4 mph</div></dd>
         
         <dt>Upslope</dt><dd>On since about <span class="num">07:45</span><div class="sub">Drainage ended about 07:30</div></dd>
-        <dt>Wind</dt><dd><span class="num">1 mph</span>, gusts to 5<div class="sub">Lower elevations, 10 stations, last hour</div></dd>
+        <dt>Wind</dt><dd><span class="num">1 mph</span>, gusts to 6<div class="sub">Lower elevations, 10 stations, last hour</div></dd>
       </dl>
     </section>
     <section class="panel tomorrow" aria-labelledby="t-tomorrow">
@@ -196,7 +196,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
    browser's 10-minute cached copy is bypassed. The 15-minute refresh stays
    as a backstop. */
 (function () {
-  var built = "2026-10-27T08:37";
+  var built = "2026-10-27T08:52";
   function check() {
     fetch("stations.json?" + Date.now(), {cache: "no-store"})
       .then(function (r) { return r.json(); })
