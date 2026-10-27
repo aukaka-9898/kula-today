@@ -225,3 +225,7 @@ date,time,station,obs_time,temp_f,dew_f,dew_from,lcl_ft,ti_c,word,camera,camera_
 2026-10-26,16:37,Moku o Loe,15:00,77.7,66.0,Kaneohe,2650.0,-0.95,Flat,Cloud on the Koʻolau: Kahaluʻu crest.,2470.0
 2026-10-26,17:00,Kaneohe runway,16:57,78.1,66.0,own,2750.0,-1.13,Flat,,
 2026-10-26,17:00,Heeia,16:30,77.6,69.9,own,1750.0,-1.2,Flat,,
+2026-10-26,17:07,Kaneohe runway,16:57,78.1,66.0,own,2750.0,-1.13,Flat,,
+2026-10-26,17:07,Heeia,16:30,77.6,69.9,own,1750.0,-1.2,Flat,,
+2026-10-26,17:07,Maunawili,16:45,76.8,70.0,own,1550.0,-0.8,Flat,,
+2026-10-26,17:07,Moku o Loe,15:00,77.7,66.0,Kaneohe,2650.0,-0.91,Flat,,
