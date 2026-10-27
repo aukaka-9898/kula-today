@@ -132,7 +132,7 @@ def grid_hours() -> dict:
 # degrees, UP peak wind mph, TA air F. No dew point. Posts in GOES batches,
 # so the newest value can be most of an hour old.
 HADS_BELLOWS = ("https://hads.ncep.noaa.gov/nexhads2/servlet/DecodedData"
-                "?sinceday=-1&hsa=nil&state=nil&nesdis_ids=B14036D2&of=1")
+                "?sinceday=1&hsa=nil&state=nil&nesdis_ids=B14036D2&of=1")   # 1: since 00Z yesterday, the whole HST day
 
 
 def bellows_hads() -> dict | None:
@@ -154,6 +154,8 @@ def bellows_hads() -> dict | None:
                 vals.setdefault(t, {})[f[2]] = float(f[4])
             except ValueError:
                 continue
+    BELLOWS_DAY.clear()
+    BELLOWS_DAY.update(vals)                     # the wrap-up's day of wind, without a second fetch
     full = [t for t, v in vals.items() if "US" in v]
     if not full:
         return None
@@ -164,6 +166,7 @@ def bellows_hads() -> dict | None:
 
 BELLOWS_PROBLEMS: list = []
 BELLOWS_LAST = OUT / "bellows_last.json"
+BELLOWS_DAY: dict = {}                     # {time: {SHEF code: value}}, the last HADS fetch
 
 
 def bellows_now(now: datetime):
@@ -591,6 +594,137 @@ def inv_text(inv) -> str:
     return f'About {round(inv["base_ft"], -2):,.0f} ft (+{inv["warming_f"]:.1f} °F)'
 
 
+# ---------------------------------------------------------------- The day's wrap-up
+# Like Kula's (Sam, 2026-10-26: "Build it. Include thermal call just for the
+# hell of it"): from WRAP_FROM, the day as measured -- Bellows' hours rated,
+# the downrange base by the Kāneʻohe Bay camera beside Moku o Loʻe's
+# condensation level, and the thermal call from Moku o Loʻe's air against
+# the RRFS profile. All from the parcel log the builds already write.
+WRAP_FROM = 17
+WRAP_CAMERA_MIN = 3        # midday camera readings needed to lead with the camera (Kula's rule)
+
+
+def bellows_day(day) -> list:
+    """[(hour, {dir, mph, gust})] for the day's daylight hours, from HADS."""
+    import numpy as np
+    if not BELLOWS_DAY:
+        bellows_hads()
+    by: dict = {}
+    for t, v in BELLOWS_DAY.items():
+        if t.date() == day and t.hour in DAY_HOURS and "US" in v:
+            by.setdefault(t.hour, []).append(v)
+    out = []
+    for h in sorted(by):
+        vs = by[h]
+        dirs = [v["UD"] for v in vs if v.get("UD") is not None]
+        d = None
+        if dirs:
+            r = np.radians(dirs)
+            d = float(np.degrees(np.arctan2(np.sin(r).mean(), np.cos(r).mean())) % 360)
+        gusts = [v["UP"] for v in vs if v.get("UP") is not None]
+        out.append((h, {"dir": d, "mph": float(np.mean([v["US"] for v in vs])),
+                        "gust": max(gusts) if gusts else None}))
+    return out
+
+
+def _wrap_log(day: str):
+    import pandas as pd
+    try:
+        p = pd.read_csv(PARCEL_LOG)
+    except Exception:
+        return None
+    p = p[p.date == day].copy()
+    if p.empty:
+        return None
+    p["m"] = p.time.map(lambda s: int(s[:2]) * 60 + int(s[3:5]))
+    p["om"] = p.obs_time.map(lambda s: int(s[:2]) * 60 + int(s[3:5]))
+    return p
+
+
+def wrap_chart(camera: list, moku: list) -> str:
+    """The day's downrange base: camera dots, Moku o Loʻe's line, 08:00-17:00."""
+    data = json.dumps({"camera": camera, "moku": moku})
+    return f"""<div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted);margin:2px 0 4px">
+<span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#3f9d5a;vertical-align:middle"></span> Kāneʻohe Bay camera</span>
+<span><span style="display:inline-block;width:16px;height:2px;background:#2a78d6;vertical-align:middle"></span> Moku o Loʻe's air would condense</span></div>
+<div style="position:relative;width:100%;min-width:0;height:220px"><canvas id="wrapchart" role="img" aria-label="Downrange cloud base through the day"></canvas></div>
+<script>
+(function () {{
+  var d = {data}, pt = function (a) {{ return {{x: a[0], y: a[1]}}; }};
+  var dark = matchMedia('(prefers-color-scheme: dark)').matches, muted = '#898781', grid = dark ? '#2c2c2a' : '#e1e0d9';
+  var hm = function (m) {{ return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); }};
+  var ys = d.camera.concat(d.moku).map(function (a) {{ return a[1]; }});
+  new Chart(document.getElementById('wrapchart'), {{
+    type: 'line',
+    data: {{ datasets: [
+      {{ label: "Moku o Lo‘e", data: d.moku.map(pt), borderColor: '#2a78d6', borderWidth: 2, pointRadius: 2, pointBackgroundColor: '#2a78d6', tension: 0.3 }},
+      {{ label: 'Camera', data: d.camera.map(pt), showLine: false, pointRadius: 3, pointBackgroundColor: '#3f9d5a', borderColor: '#3f9d5a' }}
+    ] }},
+    options: {{ responsive: true, maintainAspectRatio: false, interaction: {{ mode: 'nearest', axis: 'x', intersect: false }},
+      plugins: {{ legend: {{ display: false }}, tooltip: {{ callbacks: {{
+        title: function (i) {{ return hm(i[0].parsed.x); }},
+        label: function (i) {{ return i.dataset.label + ': ' + Math.round(i.parsed.y).toLocaleString() + ' ft'; }} }} }} }},
+      scales: {{
+        x: {{ type: 'linear', min: 480, max: 1020, ticks: {{ stepSize: 60, color: muted, callback: function (v) {{ return hm(v); }} }}, grid: {{ display: false }} }},
+        y: {{ min: Math.min(1500, Math.floor(Math.min.apply(null, ys) / 500) * 500),
+              max: Math.max(4000, Math.ceil(Math.max.apply(null, ys) / 500) * 500),
+              ticks: {{ stepSize: 500, color: muted, callback: function (v) {{ return v.toLocaleString(); }} }}, grid: {{ color: grid }} }}
+      }} }}
+  }});
+}})();
+</script>"""
+
+
+def day_wrap(now: datetime, forecast_word: str | None, problems: list) -> str:
+    """The wrap-up section's html, or "" before WRAP_FROM."""
+    import numpy as np
+    import thermal as th
+    if not WRAP_FROM <= now.hour:
+        return ""
+    said = []
+    hours = _try(bellows_day, now.date(), problems=problems) or []
+    if hours:
+        _, line = day_line([(datetime.combine(now.date(), datetime.min.time()).replace(hour=h), rate(w["dir"], w["mph"], w["gust"])[0])
+                            for h, w in hours])
+        mid = [w for h, w in hours if 11 <= h < 14]
+        if mid:
+            r = np.radians([w["dir"] for w in mid if w["dir"] is not None])
+            md = float(np.degrees(np.arctan2(np.sin(r).mean(), np.cos(r).mean())) % 360) if len(r) else None
+            g = [w["gust"] for w in mid if w["gust"] is not None]
+            line += f' Midday {wind_text({"dir": md, "mph": float(np.mean([w["mph"] for w in mid])), "gust": max(g) if g else None})}.'
+        said.append(f"At Bellows: {line}")
+    p = _wrap_log(f"{now:%Y-%m-%d}")
+    chart = ""
+    if p is not None:
+        cam = (p.dropna(subset=["camera_bound_ft"]).groupby("m").camera_bound_ft.first()
+               if "camera_bound_ft" in p else None)
+        moku_rows = p[p.station == "Moku o Loe"]
+        moku = moku_rows.groupby("om").lcl_ft.median()
+        camera_pts = [[int(m), float(v)] for m, v in cam.items()] if cam is not None else []
+        moku_pts = [[int(m), float(v)] for m, v in moku.items() if 480 <= m <= 1020]
+        cam_mid = [v for m, v in camera_pts if 660 <= m <= 840]
+        moku_mid = [v for m, v in moku_pts if 660 <= m <= 840]
+        if len(cam_mid) >= WRAP_CAMERA_MIN:
+            s = f"Midday the downrange base averaged about {round(np.mean(cam_mid), -2):,.0f} ft by the Kāneʻohe Bay camera"
+            s += (f"; Moku o Loʻe's air would have condensed at about {round(np.mean(moku_mid), -2):,.0f}." if moku_mid else ".")
+            said.append(s)
+        elif moku_mid:
+            said.append(f"Midday Moku o Loʻe's air would have condensed at about {round(np.mean(moku_mid), -2):,.0f} ft "
+                        "(too few camera readings to say more).")
+        ti = moku_rows[(moku_rows.m >= 600) & (moku_rows.m < 840)].ti_c.dropna()
+        if len(ti):
+            peak = float(ti.median())
+            said.append(f"Thermals by Moku o Loʻe's air against the RRFS profile, 10:00–14:00: {th.describe(peak).lower()} "
+                        f"(index {peak:.1f} °C)" + (f"; the forecast said {forecast_word.lower()}." if forecast_word else "."))
+        if camera_pts or moku_pts:
+            chart = wrap_chart(camera_pts, moku_pts)
+    if not said and not chart:
+        return ""
+    body = "".join(f"<p>{esc(s)}</p>" for s in said)
+    return (f'<section class="block" aria-labelledby="t-wrap"><h2 id="t-wrap">Today, as it turned out</h2>'
+            f'{body}{chart}</section>')
+
+
 def _try(fn, *a, problems: list):
     try:
         return fn(*a)
@@ -750,6 +884,7 @@ def write(now: datetime) -> None:
 
     _try(log_parcels, now, k, air, cam, problems=problems)      # before the page, so its problems show
     problems += [f"parcel {p}" for p in PARCEL_PROBLEMS]
+    wrap = _try(day_wrap, now, today_air["word"] if today_air else None, problems, problems=problems) or ""
     raw = (HERE / "template.html").read_text(encoding="utf-8")
     style = "".join("<style>" + part.split("</style>")[0] + "</style>" for part in raw.split("<style>")[1:])
     built = f"{now:%Y-%m-%dT%H:%M}"
@@ -757,7 +892,7 @@ def write(now: datetime) -> None:
                        kind=f"Now · {now:%H:%M} HST", chip=today_chip, fly=fly_html, wind=wind_html,
                        dirnote="",
                        base=base_html + (f'<div class="downret">{dir_html}</div>' if dir_html else ""), therm=therm_html, inv=inv_html, rest=rest_html, tom_title=f"Tomorrow · {tom:%a %d %b}",
-                       tom_chip=chip(tword) if tword else "", tomorrow=tom_html, week=week, built=built,
+                       tom_chip=chip(tword) if tword else "", tomorrow=tom_html, week=week, built=built, wrap=wrap,
                        diag=esc("; ".join(problems) or "none").replace("--", "-"))
     # IBM Plex has no ʻokina (U+02BB); its fallback glyph stands apart from the
     # letters, so the visible text uses the left quote instead.
@@ -1120,6 +1255,7 @@ PAGE = """<!doctype html>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 {style}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>.back {{ color: var(--sky); text-decoration: none; font: 600 .95rem var(--display); }} .downret {{ margin-top: 6px; }}
 tr.wk td {{ border-bottom: 0; padding-bottom: 2px; }} tr.wkh td {{ white-space: normal; color: var(--muted); font-size: .84rem; padding-top: 0; }}</style>
 </head>
@@ -1155,6 +1291,7 @@ tr.wk td {{ border-bottom: 0; padding-bottom: 2px; }} tr.wkh td {{ white-space: 
       {tomorrow}
     </section>
   </div>
+  {wrap}
   <section class="block" aria-labelledby="t-week">
     <h2 id="t-week">The week</h2>
     <div class="tablewrap"><table>
