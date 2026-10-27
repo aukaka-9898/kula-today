@@ -90,7 +90,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><a class="homebtn" href="/">&larr; Home</a> <a class="homebtn" href="./">&larr; Kula Today</a><h1>Kula Details</h1></div>
-    <div class="date">Updated Tue 27 Oct 2026 · 12:22 HST</div>
+    <div class="date">Updated Tue 27 Oct 2026 · 12:37 HST</div>
   </header>
 
   <section class="block" aria-labelledby="t-thermal">
@@ -338,9 +338,9 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 </script>
 
   <section class="block" aria-labelledby="t-ladder">
-    <h2 id="t-ladder">Sunlight up the slope, as of 12:00</h2>
+    <h2 id="t-ladder">Sunlight up the slope, as of 12:15</h2>
     <p>Share of clear-sky sunlight measured at each station over the last 60 minutes of readings. Stations under cloud read low; stations above its top read full sun.</p>
-    <div class="rows"><div class="row"><span>Summit</span><span class="elev">9,776</span><div class="bar shaded"><span style="width:31%"></span></div><span class="pct">31%</span></div><div class="row"><span>Nene Nest</span><span class="elev">8,500</span><div class="bar shaded"><span style="width:45%"></span></div><span class="pct">45%</span></div><div class="row"><span>Park HQ</span><span class="elev">6,926</span><div class="bar shaded"><span style="width:27%"></span></div><span class="pct">27%</span></div><div class="base"><span class="lbl">Cloudbase now</span><span class="elev">3,800</span><div class="line"></div><span></span></div><div class="row"><span>Kula Ag</span><span class="elev">3,162</span><div class="bar shaded"><span style="width:15%"></span></div><span class="pct">15%</span></div><div class="row"><span>Keokea</span><span class="elev">2,849</span><div class="bar shaded"><span style="width:21%"></span></div><span class="pct">21%</span></div><div class="row"><span>Piiholo</span><span class="elev">2,090</span><div class="bar shaded"><span style="width:37%"></span></div><span class="pct">37%</span></div><div class="row"><span>Pulehu</span><span class="elev">1,402</span><div class="bar shaded"><span style="width:30%"></span></div><span class="pct">30%</span></div></div>
+    <div class="rows"><div class="row"><span>Summit</span><span class="elev">9,776</span><div class="bar shaded"><span style="width:25%"></span></div><span class="pct">25%</span></div><div class="row"><span>Nene Nest</span><span class="elev">8,500</span><div class="bar shaded"><span style="width:33%"></span></div><span class="pct">33%</span></div><div class="row"><span>Park HQ</span><span class="elev">6,926</span><div class="bar shaded"><span style="width:18%"></span></div><span class="pct">18%</span></div><div class="base"><span class="lbl">Cloudbase now</span><span class="elev">3,500</span><div class="line"></div><span></span></div><div class="row"><span>Kula Ag</span><span class="elev">3,162</span><div class="bar shaded"><span style="width:12%"></span></div><span class="pct">12%</span></div><div class="row"><span>Keokea</span><span class="elev">2,849</span><div class="bar shaded"><span style="width:14%"></span></div><span class="pct">14%</span></div><div class="row"><span>Piiholo</span><span class="elev">2,090</span><div class="bar shaded"><span style="width:30%"></span></div><span class="pct">30%</span></div><div class="row"><span>Pulehu</span><span class="elev">1,402</span><div class="bar shaded"><span style="width:30%"></span></div><span class="pct">30%</span></div></div>
   </section>
 
   <section class="block" id="stationmap">
@@ -437,7 +437,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <script>
 /* Reload when a newer build is out, like the main page. */
 (function () {
-  var built = "2026-10-27T12:22";
+  var built = "2026-10-27T12:37";
   function check() {
     fetch("stations.json?" + Date.now(), {cache: "no-store"})
       .then(function (r) { return r.json(); })
