@@ -92,22 +92,22 @@ tr.wk td { border-bottom: 0; padding-bottom: 2px; } tr.wkh td { white-space: nor
 <div class="wrap">
   <header>
     <div><a class="homebtn" href="/">&larr; Home</a><div class="tag">Makapu&#8216;u soaring briefing</div><h1>Makapu&#8216;u Today</h1></div>
-    <div class="date">Updated Mon 26 Oct 2026 · 18:19 HST</div>
+    <div class="date">Updated Mon 26 Oct 2026 · 18:22 HST</div>
   </header>
   <div class="databadge"><div class="big">Under construction</div></div>
   <div>
-    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/760/details/camera/12783/full" title="Kāne&#8216;ohe Bay webcam, live, looking southeast down the Ko&#8216;olau toward Makapu&#8216;u" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="camera.jpg?2026-10-26T18:19" alt=""></div>
+    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/760/details/camera/12783/full" title="Kāne&#8216;ohe Bay webcam, live, looking southeast down the Ko&#8216;olau toward Makapu&#8216;u" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="camera.jpg?2026-10-26T18:22" alt=""></div>
     <div class="camcap">Kāne&#8216;ohe Bay webcam, live, looking southeast down the Ko&#8216;olau to Makapu&#8216;u. FAA WeatherCam. <a href="https://weathercams.faa.gov/cameras/state/HI/cameraSite/760/details/camera/12783/full" target="_blank" rel="noopener">Open full size</a> · <a href="https://weathercams.faa.gov/cameras/state/HI/cameraSite/588/details/camera/12153/full" target="_blank" rel="noopener">Makapu&#8216;u camera, at the point</a></div>
   </div>
   <div class="cols">
     <section class="panel today" aria-labelledby="t-today">
-      <div class="kind">Now · 18:19 HST</div>
+      <div class="kind">Now · 18:22 HST</div>
       <div class="head"><h2 id="t-today">Today</h2><span class="chip fair">Light</span></div>
       <dl>
         <dt>On the ridge</dt><dd><strong>Light</strong><div class="sub">under 10 mph: run-off launch only, not recommended</div></dd>
-        <dt>Wind</dt><dd><span class="num">ENE (058°) 6 mph, gusts 9</span><div class="sub">Bellows, 17:15 (via NOAA HADS)</div></dd>
+        <dt>Wind</dt><dd><span class="num">NE (045°) 7 mph, gusts 11</span><div class="sub">Bellows, 18:15 (via NOAA HADS)</div></dd>
         
-        <dt>Downrange</dt><dd><span class="num">About 2,600 ft</span>, cloud likely on the higher crest downrange<div class="sub">Condensation level of the air at Moku o Lo&#8216;e 2,600 ft (18:00); Kaneohe (PHNG) 2,500 ft (18:05). Kaneohe's ceilometer: BKN 2,900 ft, OVC 3,900 ft.</div><div class="downret">Near the ideal 050°: a fair balance between going downrange and getting back.</div></dd>
+        <dt>Downrange</dt><dd><span class="num">About 2,600 ft</span>, cloud likely on the higher crest downrange<div class="sub">Condensation level of the air at Moku o Lo&#8216;e 2,600 ft (18:00); Kaneohe (PHNG) 2,500 ft (18:18). Kaneohe's ceilometer: SCT 3,000 ft, OVC 4,100 ft.</div><div class="downret">Near the ideal 050°: a fair balance between going downrange and getting back.</div></dd>
         <dt>Thermals</dt><dd>Probably <strong>flat</strong> (forecast)<div class="sub">RRFS at Kaneohe, run 26 18Z: thermal index -2.9 °C, 10:00–14:00 (surface air: Open-Meteo at Kaneohe); no useable lift. Useful, not critical, at Makapu&#8216;u.</div></dd>
         <dt>Inversion</dt><dd>About 5,000 ft (+4.3 °F)<div class="sub">RRFS at Kaneohe, 14:00: the trade lid</div></dd>
       </dl>
@@ -134,10 +134,10 @@ tr.wk td { border-bottom: 0; padding-bottom: 2px; } tr.wkh td { white-space: nor
     <p><strong>Notice.</strong> Information only, provided as is, with no guarantee of accuracy or availability. This is not an official forecast. Every pilot is responsible for their own decision to fly.</p>
   </div>
 </div>
-<!-- build problems: HADS Bellows: ValueError: HADS answered without Bellows: &#x27;&#x27; -->
+<!-- build problems: none -->
 <script>
 (function () {
-  var built = "2026-10-26T18:19";
+  var built = "2026-10-26T18:22";
   function check() {
     fetch("summary.json?" + Date.now(), {cache: "no-store"}).then(function (r) { return r.json(); })
       .then(function (j) { if (j && j.built && j.built > built) location.replace(location.pathname + "?v=" + Date.now()); })
