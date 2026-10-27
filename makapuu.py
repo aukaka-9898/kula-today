@@ -602,6 +602,8 @@ def inv_text(inv) -> str:
 # the RRFS profile. All from the parcel log the builds already write.
 WRAP_FROM = 17
 WRAP_CAMERA_MIN = 3        # midday camera readings needed to lead with the camera (Kula's rule)
+# The chart spans the camera's hours only (Sam, 10-26: "clip the chart to match cam obs").
+WRAP_SPAN = tuple(int(t[:2]) * 60 + int(t[3:]) for t in CAMERA_HOURS)
 
 
 def bellows_day(day) -> list:
@@ -642,7 +644,7 @@ def _wrap_log(day: str):
 
 
 def wrap_chart(camera: list, moku: list) -> str:
-    """The day's downrange base: camera dots, Moku o Loʻe's line, 08:00-17:00."""
+    """The day's downrange base: camera dots, Moku o Loʻe's line, over the camera's hours."""
     data = json.dumps({"camera": camera, "moku": moku})
     return f"""<div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted);margin:2px 0 4px">
 <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#3f9d5a;vertical-align:middle"></span> Kāneʻohe Bay camera</span>
@@ -665,7 +667,7 @@ def wrap_chart(camera: list, moku: list) -> str:
         title: function (i) {{ return hm(i[0].parsed.x); }},
         label: function (i) {{ return i.dataset.label + ': ' + Math.round(i.parsed.y).toLocaleString() + ' ft'; }} }} }} }},
       scales: {{
-        x: {{ type: 'linear', min: 480, max: 1020, ticks: {{ stepSize: 60, color: muted, callback: function (v) {{ return hm(v); }} }}, grid: {{ display: false }} }},
+        x: {{ type: 'linear', min: {WRAP_SPAN[0]}, max: {WRAP_SPAN[1]}, ticks: {{ stepSize: 60, color: muted, callback: function (v) {{ return hm(v); }} }}, grid: {{ display: false }} }},
         y: {{ min: Math.min(1500, Math.floor(Math.min.apply(null, ys) / 500) * 500),
               max: Math.max(4000, Math.ceil(Math.max.apply(null, ys) / 500) * 500),
               ticks: {{ stepSize: 500, color: muted, callback: function (v) {{ return v.toLocaleString(); }} }}, grid: {{ color: grid }} }}
@@ -702,7 +704,7 @@ def day_wrap(now: datetime, forecast_word: str | None, problems: list) -> str:
         moku_rows = p[p.station == "Moku o Loe"]
         moku = moku_rows.groupby("om").lcl_ft.median()
         camera_pts = [[int(m), float(v)] for m, v in cam.items()] if cam is not None else []
-        moku_pts = [[int(m), float(v)] for m, v in moku.items() if 480 <= m <= 1020]
+        moku_pts = [[int(m), float(v)] for m, v in moku.items() if WRAP_SPAN[0] <= m <= WRAP_SPAN[1]]
         cam_mid = [v for m, v in camera_pts if 660 <= m <= 840]
         moku_mid = [v for m, v in moku_pts if 660 <= m <= 840]
         if len(cam_mid) >= WRAP_CAMERA_MIN:
