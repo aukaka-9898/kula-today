@@ -3605,6 +3605,7 @@ def day_review(obs, now, up, evening, rnet, word, model, fc_today, fc_pair, entr
         said.append("No clear upslope today.")
 
     chart_html = "Not derived<div class=\"sub\">No upslope, so no slope air to derive it from</div>"
+    derived, forecast = [], []
     if up is not None and len(obs):
         got = safely(base_chart, obs, now, up, end, "basechart", "Cloudbase, derived", False)
         if got and got[1]:
