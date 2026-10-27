@@ -90,7 +90,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><a class="homebtn" href="/">&larr; Home</a> <a class="homebtn" href="./">&larr; Kula Today</a><h1>Kula Details</h1></div>
-    <div class="date">Updated Mon 26 Oct 2026 · 14:37 HST</div>
+    <div class="date">Updated Mon 26 Oct 2026 · 14:52 HST</div>
   </header>
 
   <section class="block" aria-labelledby="t-thermal">
@@ -338,9 +338,9 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 </script>
 
   <section class="block" aria-labelledby="t-ladder">
-    <h2 id="t-ladder">Sunlight up the slope, as of 14:37</h2>
+    <h2 id="t-ladder">Sunlight up the slope, as of 14:30</h2>
     <p>Share of clear-sky sunlight measured at each station over the last 60 minutes of readings. Stations under cloud read low; stations above its top read full sun.</p>
-    <div class="rows"><div class="row"><span>Kamehamenui 1</span><span class="elev">6,601</span><div class="bar "><span style="width:84%"></span></div><span class="pct">84%</span></div><div class="row"><span>Kula 1</span><span class="elev">6,554</span><div class="bar "><span style="width:77%"></span></div><span class="pct">77%</span></div></div>
+    <div class="rows"><div class="row"><span>Summit</span><span class="elev">9,776</span><div class="bar "><span style="width:100%"></span></div><span class="pct">100%</span></div><div class="row"><span>Nene Nest</span><span class="elev">8,500</span><div class="bar "><span style="width:100%"></span></div><span class="pct">100%</span></div><div class="row"><span>Park HQ</span><span class="elev">6,926</span><div class="bar "><span style="width:83%"></span></div><span class="pct">83%</span></div><div class="row"><span>Kamehamenui 1</span><span class="elev">6,601</span><div class="bar "><span style="width:84%"></span></div><span class="pct">84%</span></div><div class="row"><span>Kula 1</span><span class="elev">6,554</span><div class="bar "><span style="width:77%"></span></div><span class="pct">77%</span></div><div class="row"><span>Keokea</span><span class="elev">2,849</span><div class="bar "><span style="width:85%"></span></div><span class="pct">85%</span></div><div class="row"><span>Piiholo</span><span class="elev">2,090</span><div class="bar "><span style="width:100%"></span></div><span class="pct">100%</span></div><div class="row"><span>Pulehu</span><span class="elev">1,402</span><div class="bar "><span style="width:100%"></span></div><span class="pct">100%</span></div></div>
   </section>
 
   <section class="block" id="stationmap">
@@ -437,7 +437,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <script>
 /* Reload when a newer build is out, like the main page. */
 (function () {
-  var built = "2026-10-26T14:37";
+  var built = "2026-10-26T14:52";
   function check() {
     fetch("stations.json?" + Date.now(), {cache: "no-store"})
       .then(function (r) { return r.json(); })
