@@ -90,7 +90,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><a class="homebtn" href="/">&larr; Home</a> <a class="homebtn" href="./">&larr; Kula Today</a><h1>Kula Details</h1></div>
-    <div class="date">Updated Mon 26 Oct 2026 · 19:25 HST</div>
+    <div class="date">Updated Mon 26 Oct 2026 · 19:30 HST</div>
   </header>
 
   <section class="block" aria-labelledby="t-thermal">
@@ -338,7 +338,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 </script>
 
   <section class="block" aria-labelledby="t-ladder">
-    <h2 id="t-ladder">Sunlight up the slope, as of 19:15</h2>
+    <h2 id="t-ladder">Sunlight up the slope, as of 19:30</h2>
     <p>Share of clear-sky sunlight measured at each station over the last 60 minutes of readings. Stations under cloud read low; stations above its top read full sun. Late in the day the sun is low in the west, so a station under the deck can read full sun coming in under the deck's edge.</p>
     <div class="rows"><p>Unavailable.</p></div>
   </section>
@@ -437,7 +437,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <script>
 /* Reload when a newer build is out, like the main page. */
 (function () {
-  var built = "2026-10-26T19:25";
+  var built = "2026-10-26T19:30";
   function check() {
     fetch("stations.json?" + Date.now(), {cache: "no-store"})
       .then(function (r) { return r.json(); })

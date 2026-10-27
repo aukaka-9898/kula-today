@@ -93,11 +93,11 @@ tr.wk td { border-bottom: 0; padding-bottom: 2px; } tr.wkh td { white-space: nor
 <div class="wrap">
   <header>
     <div><a class="homebtn" href="/">&larr; Home</a><div class="tag">Makapu&#8216;u soaring briefing</div><h1>Makapu&#8216;u Today</h1></div>
-    <div class="date">Updated Mon 26 Oct 2026 · 19:26 HST</div>
+    <div class="date">Updated Mon 26 Oct 2026 · 19:42 HST</div>
   </header>
   <div class="databadge"><div class="big">Under construction</div></div>
   <div>
-    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/760/details/camera/12783/full" title="Kāne&#8216;ohe Bay webcam, live, looking southeast down the Ko&#8216;olau toward Makapu&#8216;u" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="camera.jpg?2026-10-26T19:26" alt=""></div>
+    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/760/details/camera/12783/full" title="Kāne&#8216;ohe Bay webcam, live, looking southeast down the Ko&#8216;olau toward Makapu&#8216;u" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="camera.jpg?2026-10-26T19:42" alt=""></div>
     <div class="camcap">Kāne&#8216;ohe Bay webcam, live, looking southeast down the Ko&#8216;olau to Makapu&#8216;u. FAA WeatherCam. <a href="https://weathercams.faa.gov/cameras/state/HI/cameraSite/760/details/camera/12783/full" target="_blank" rel="noopener">Open full size</a> · <a href="https://weathercams.faa.gov/cameras/state/HI/cameraSite/588/details/camera/12153/full" target="_blank" rel="noopener">Makapu&#8216;u camera, at the point</a></div>
   </div>
   <div class="cols">
@@ -110,7 +110,7 @@ tr.wk td { border-bottom: 0; padding-bottom: 2px; } tr.wkh td { white-space: nor
 <div style="position:relative;width:100%;min-width:0;height:220px"><canvas id="wrapchart" role="img" aria-label="Downrange cloud base through the day"></canvas></div>
 <script>
 (function () {
-  var d = {"camera": [[488, 3010.0], [505, 3010.0], [517, 3000.0], [532, 2880.0], [547, 2630.0], [568, 2740.0], [579, 2840.0], [592, 2860.0], [607, 2770.0], [628, 2680.0], [643, 2670.0], [652, 2620.0], [659, 2620.0], [673, 2590.0], [682, 2590.0], [703, 2570.0], [718, 2570.0], [731, 2570.0], [746, 2610.0], [757, 2620.0], [773, 2620.0], [787, 2580.0], [802, 2540.0], [823, 2560.0], [836, 2540.0], [852, 2480.0], [861, 2480.0], [863, 2480.0], [884, 2480.0], [892, 2480.0], [908, 2480.0], [922, 2490.0], [937, 2470.0], [952, 2480.0], [967, 2500.0], [992, 2470.0], [997, 2470.0]], "moku": [[540, 2555.0], [900, 2650.0], [1020, 2640.0]]}, pt = function (a) { return {x: a[0], y: a[1]}; };
+  var d = {"camera": [[488, 3010.0], [505, 3010.0], [517, 3000.0], [532, 2880.0], [547, 2630.0], [568, 2740.0], [579, 2840.0], [592, 2860.0], [607, 2770.0], [628, 2680.0], [643, 2670.0], [652, 2620.0], [659, 2620.0], [673, 2590.0], [682, 2590.0], [703, 2570.0], [718, 2570.0], [731, 2570.0], [746, 2610.0], [757, 2620.0], [773, 2620.0], [787, 2580.0], [802, 2540.0], [823, 2560.0], [836, 2540.0], [852, 2480.0], [861, 2480.0], [863, 2480.0], [884, 2480.0], [892, 2480.0], [908, 2480.0], [922, 2490.0], [937, 2470.0], [952, 2480.0], [967, 2500.0], [992, 2470.0], [997, 2470.0]], "moku": [[540, 2555.0], [900, 2650.0]]}, pt = function (a) { return {x: a[0], y: a[1]}; };
   var dark = matchMedia('(prefers-color-scheme: dark)').matches, muted = '#898781', grid = dark ? '#2c2c2a' : '#e1e0d9';
   var hm = function (m) { return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); };
   var ys = d.camera.concat(d.moku).map(function (a) { return a[1]; });
@@ -125,7 +125,7 @@ tr.wk td { border-bottom: 0; padding-bottom: 2px; } tr.wkh td { white-space: nor
         title: function (i) { return hm(i[0].parsed.x); },
         label: function (i) { return i.dataset.label + ': ' + Math.round(i.parsed.y).toLocaleString() + ' ft'; } } } },
       scales: {
-        x: { type: 'linear', min: 480, max: 1020, ticks: { stepSize: 60, color: muted, callback: function (v) { return hm(v); } }, grid: { display: false } },
+        x: { type: 'linear', min: 480, max: 1005, ticks: { stepSize: 60, color: muted, callback: function (v) { return hm(v); } }, grid: { display: false } },
         y: { min: Math.min(1500, Math.floor(Math.min.apply(null, ys) / 500) * 500),
               max: Math.max(4000, Math.ceil(Math.max.apply(null, ys) / 500) * 500),
               ticks: { stepSize: 500, color: muted, callback: function (v) { return v.toLocaleString(); } }, grid: { color: grid } }
@@ -154,10 +154,10 @@ tr.wk td { border-bottom: 0; padding-bottom: 2px; } tr.wkh td { white-space: nor
     <p><strong>Notice.</strong> Information only, provided as is, with no guarantee of accuracy or availability. This is not an official forecast. Every pilot is responsible for their own decision to fly.</p>
   </div>
 </div>
-<!-- build problems: none -->
+<!-- build problems: moku_temp: ConnectTimeout: HTTPSConnectionPool(host=&#x27;pae-paha.pacioos.hawaii.edu&#x27;, port=443): Max retries exceeded with url: /erddap/tabledap/aws_himb.json?time,air_temperature&amp;time%3E=now-6hours (Caused by ConnectTimeoutError(&lt;HTTPSConnection(host=&#x27;pae-paha.pacioos.hawaii.edu&#x27;, port=443) at 0x7a25cd9b8e30&gt;, &#x27;Connection to pae-paha.pacioos.hawaii.edu timed out. (connect timeout=45)&#x27;)) -->
 <script>
 (function () {
-  var built = "2026-10-26T19:26";
+  var built = "2026-10-26T19:42";
   function check() {
     fetch("summary.json?" + Date.now(), {cache: "no-store"}).then(function (r) { return r.json(); })
       .then(function (j) { if (j && j.built && j.built > built) location.replace(location.pathname + "?v=" + Date.now()); })
