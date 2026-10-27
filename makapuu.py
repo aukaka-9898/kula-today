@@ -676,15 +676,16 @@ def wrap_chart(camera: list, moku: list) -> str:
 
 
 def day_wrap(now: datetime, forecast_word: str | None, problems: list) -> str:
-    """The wrap-up section's html, or "" before WRAP_FROM."""
+    """(the Today tile's body, the day's best word) from WRAP_FROM, else None.
+    It replaces the tile, as Kula's day in review does (Sam, 10-26)."""
     import numpy as np
     import thermal as th
     if not WRAP_FROM <= now.hour:
-        return ""
-    said = []
+        return None
+    said, best = [], None
     hours = _try(bellows_day, now.date(), problems=problems) or []
     if hours:
-        _, line = day_line([(datetime.combine(now.date(), datetime.min.time()).replace(hour=h), rate(w["dir"], w["mph"], w["gust"])[0])
+        best, line = day_line([(datetime.combine(now.date(), datetime.min.time()).replace(hour=h), rate(w["dir"], w["mph"], w["gust"])[0])
                             for h, w in hours])
         mid = [w for h, w in hours if 11 <= h < 14]
         if mid:
@@ -719,10 +720,8 @@ def day_wrap(now: datetime, forecast_word: str | None, problems: list) -> str:
         if camera_pts or moku_pts:
             chart = wrap_chart(camera_pts, moku_pts)
     if not said and not chart:
-        return ""
-    body = "".join(f"<p>{esc(s)}</p>" for s in said)
-    return (f'<section class="block" aria-labelledby="t-wrap"><h2 id="t-wrap">Today, as it turned out</h2>'
-            f'{body}{chart}</section>')
+        return None
+    return "".join(f'<p class="summary">{esc(s)}</p>' for s in said) + chart, best
 
 
 def _try(fn, *a, problems: list):
@@ -884,15 +883,28 @@ def write(now: datetime) -> None:
 
     _try(log_parcels, now, k, air, cam, problems=problems)      # before the page, so its problems show
     problems += [f"parcel {p}" for p in PARCEL_PROBLEMS]
-    wrap = _try(day_wrap, now, today_air["word"] if today_air else None, problems, problems=problems) or ""
+    wrap = _try(day_wrap, now, today_air["word"] if today_air else None, problems, problems=problems)
+    if wrap:
+        today_body, kind, today_title = wrap[0], "The day in review", f"Today · {now:%a %d %b}"
+        today_chip = chip(wrap[1]) if wrap[1] else ""
+    else:
+        today_body = f"""<dl>
+        <dt>On the ridge</dt><dd>{fly_html}</dd>
+        <dt>Wind</dt><dd>{wind_html}</dd>
+        <dt>Downrange</dt><dd>{base_html + (f'<div class="downret">{dir_html}</div>' if dir_html else "")}</dd>
+        <dt>Thermals</dt><dd>{therm_html}</dd>
+        <dt>Inversion</dt><dd>{inv_html}</dd>
+      </dl>
+      <div class="kind" style="color:var(--muted)">Rest of today (forecast)</div>
+      {rest_html}"""
+        kind, today_title = f"Now · {now:%H:%M} HST", "Today"
     raw = (HERE / "template.html").read_text(encoding="utf-8")
     style = "".join("<style>" + part.split("</style>")[0] + "</style>" for part in raw.split("<style>")[1:])
     built = f"{now:%Y-%m-%dT%H:%M}"
     page = PAGE.format(style=style, updated=f"{now:%a %d %b %Y · %H:%M} HST", webcam=WEBCAM, webcam_launch=WEBCAM_LAUNCH,
-                       kind=f"Now · {now:%H:%M} HST", chip=today_chip, fly=fly_html, wind=wind_html,
-                       dirnote="",
-                       base=base_html + (f'<div class="downret">{dir_html}</div>' if dir_html else ""), therm=therm_html, inv=inv_html, rest=rest_html, tom_title=f"Tomorrow · {tom:%a %d %b}",
-                       tom_chip=chip(tword) if tword else "", tomorrow=tom_html, week=week, built=built, wrap=wrap,
+                       kind=kind, chip=today_chip, today_title=today_title, today_body=today_body,
+                       tom_title=f"Tomorrow · {tom:%a %d %b}",
+                       tom_chip=chip(tword) if tword else "", tomorrow=tom_html, week=week, built=built,
                        diag=esc("; ".join(problems) or "none").replace("--", "-"))
     # IBM Plex has no ʻokina (U+02BB); its fallback glyph stands apart from the
     # letters, so the visible text uses the left quote instead.
@@ -904,7 +916,7 @@ def write(now: datetime) -> None:
     camera = _try(save_camera, problems=problems)
     (OUT / "summary.json").write_text(json.dumps({
         "site": "Makapuu", "title": "Makapu‘u Today", "page": "kula-today/makapuu/", "built": built,
-        "updated": f"{now:%a %d %b %Y · %H:%M} HST", "kind": f"Now · {now:%H:%M} HST",
+        "updated": f"{now:%a %d %b %Y · %H:%M} HST", "kind": kind,
         "chip": {"class": RATING_CLASS.get(word, "fair"), "word": word} if w and not night else None,
         "summary": summary, "limited": not obs, "camera": camera}), encoding="utf-8")
 
@@ -1273,17 +1285,8 @@ tr.wk td {{ border-bottom: 0; padding-bottom: 2px; }} tr.wkh td {{ white-space: 
   <div class="cols">
     <section class="panel today" aria-labelledby="t-today">
       <div class="kind">{kind}</div>
-      <div class="head"><h2 id="t-today">Today</h2>{chip}</div>
-      <dl>
-        <dt>On the ridge</dt><dd>{fly}</dd>
-        <dt>Wind</dt><dd>{wind}</dd>
-        {dirnote}
-        <dt>Downrange</dt><dd>{base}</dd>
-        <dt>Thermals</dt><dd>{therm}</dd>
-        <dt>Inversion</dt><dd>{inv}</dd>
-      </dl>
-      <div class="kind" style="color:var(--muted)">Rest of today (forecast)</div>
-      {rest}
+      <div class="head"><h2 id="t-today">{today_title}</h2>{chip}</div>
+      {today_body}
     </section>
     <section class="panel tomorrow" aria-labelledby="t-tomorrow">
       <div class="kind">Forecast</div>
@@ -1291,7 +1294,6 @@ tr.wk td {{ border-bottom: 0; padding-bottom: 2px; }} tr.wkh td {{ white-space: 
       {tomorrow}
     </section>
   </div>
-  {wrap}
   <section class="block" aria-labelledby="t-week">
     <h2 id="t-week">The week</h2>
     <div class="tablewrap"><table>
