@@ -1,23 +1,23 @@
 {
- "made": "2026-10-26 20:18",
+ "made": "2026-10-26 20:26",
  "flags": [
   "Shear line: a stale station sat out of 45% of updates over the last week (the rule under review).",
   "Weekly accuracy, last 30 days: cloudbase within 500 ft on 0 of 1 days, typical miss 620 ft; thermals right on 1 of 5, within one step on 4 (pilot reports included)."
  ],
  "stats": {
-  "base_days": 27,
-  "base_mean": 488,
-  "base_raw_mean": 123,
-  "base_sd": 776,
-  "base_morning": 617,
-  "base_afternoon": 394,
+  "base_days": 26,
+  "base_mean": 502,
+  "base_raw_mean": 124,
+  "base_sd": 786,
+  "base_morning": 627,
+  "base_afternoon": 412,
   "alert_days": 2,
   "alert_hits": 0,
   "intrusions_missed": 0,
   "line_dropped_share_7d": 0.45,
-  "cam_puunianiau_cloud_min_days": 8,
+  "cam_puunianiau_cloud_min_days": 7,
   "cam_redhill_cloud_min_days": 8,
-  "station_days": 38,
+  "station_days": 37,
   "accuracy": {
    "base_n": 1,
    "base_within": 0,
