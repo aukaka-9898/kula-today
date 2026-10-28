@@ -878,6 +878,9 @@ def write(now: datetime) -> None:
                 f'{esc(aloft)}</p>'
                 + hour_table(trows)) if trows else "<p>No forecast available.</p>"
 
+    import nwsalerts                                            # NWS alerts for launch's area (Sam, 10-27)
+    alerts = _try(nwsalerts.line_html, 21.3204, -157.6788, problems=problems) or ""
+    icons = _try(nwsalerts.day_icons, "makapuu", problems=problems) or {}   # only out-of-the-ordinary days
     week = ""
     for k_day in range(1, 7):
         d = now.date() + timedelta(days=k_day)
@@ -895,18 +898,18 @@ def write(now: datetime) -> None:
         if da:
             b = base_label(da["base_ft"])
             aloft_d = (f" Base {'low' if b == 'Low' else b + ' ft'}" if da["base_ft"] is not None else "") +                       f"{',' if da['base_ft'] is not None else ''} thermals {da['word'].lower()}."
-        week += (f'<tr class="wk"><td>{d:%a %d}</td><td class="n">{esc(short_wind(mid))}</td><td>{chip(bw)}</td></tr>'
+        week += (f'<tr class="wk"><td>{d:%a %d}{nwsalerts.icon_html(icons.get(d), 22)}</td><td class="n">{esc(short_wind(mid))}</td><td>{chip(bw)}</td></tr>'
                  f'<tr class="wkh"><td colspan="3">{esc(line + aloft_d)}</td></tr>')
 
     summary = (f"Now: {word.lower() if w else 'no wind reading'}"
                + (f", {wind_text(w)}" if w else "") + (" (forecast, Bellows out)." if w and not obs else ".")
                + (f" Tomorrow: {tline}" if tline else ""))
 
-    import nwsalerts                                            # NWS alerts for launch's area (Sam, 10-27)
-    alerts = _try(nwsalerts.line_html, 21.3204, -157.6788, problems=problems) or ""
     _try(log_parcels, now, k, air, cam, problems=problems)      # before the page, so its problems show
     problems += [f"parcel {p}" for p in PARCEL_PROBLEMS]
     wrap = _try(day_wrap, now, today_air["word"] if today_air else None, problems, problems=problems)
+    if not wrap and not night:
+        alerts += nwsalerts.today_html(icons.get(now.date()))
     if wrap:
         today_body, kind, today_title = wrap[0], "The day in review", f"Today · {now:%a %d %b}"
         today_chip = chip(wrap[1]) if wrap[1] else ""
@@ -927,7 +930,7 @@ def write(now: datetime) -> None:
     page = PAGE.format(style=style, updated=f"{now:%a %d %b %Y · %H:%M} HST", webcam=WEBCAM, webcam_launch=WEBCAM_LAUNCH,
                        kind=kind, chip=today_chip, today_title=today_title, today_body=today_body,
                        tom_title=f"Tomorrow · {tom:%a %d %b}",
-                       tom_chip=chip(tword) if tword else "", tomorrow=tom_html, week=week, built=built, alerts=alerts,
+                       tom_chip=(chip(tword) if tword else "") + nwsalerts.icon_html(icons.get(tom)), tomorrow=tom_html, week=week, built=built, alerts=alerts,
                        diag=esc("; ".join(problems) or "none").replace("--", "-"))
     # IBM Plex has no ʻokina (U+02BB); its fallback glyph stands apart from the
     # letters, so the visible text uses the left quote instead.

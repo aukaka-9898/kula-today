@@ -14,6 +14,7 @@ from __future__ import annotations
 import html
 import json
 import math
+import re
 import os
 import sys
 import time
@@ -4267,6 +4268,11 @@ def build() -> str:
     # NWS watches, warnings and advisories for Kula Ag's area (Sam, 10-27: "build alerts").
     import nwsalerts
     nws_html = safely(nwsalerts.line_html, cv.KULA_AG_LAT, cv.KULA_AG_LON) or ""
+    icons = safely(nwsalerts.day_icons, "kula") or {}         # only out-of-the-ordinary days
+    nws_html += nwsalerts.today_html(icons.get(now.date())) if today_kind.startswith("Measured") else ""
+    rows_html = re.sub(r"<tr><td>(\w{3} (\d{2}))</td>",
+                       lambda m: "<tr><td>" + m.group(1) + next((nwsalerts.icon_html(g, 22) for d, g in icons.items()
+                                                                  if d.day == int(m.group(2))), "") + "</td>", rows_html)
     v = dict(
         updated=f"{now:%a %d %b %Y · %H:%M} HST", today_kind=today_kind, today_title=today_title,
         built=f"{now:%Y-%m-%dT%H:%M}",
@@ -4276,7 +4282,7 @@ def build() -> str:
         sun_row=(f"<dt>Sun</dt><dd>{sun_html}</dd>" if sun_html is not None else ""),
         wind=wind_html,
         ceil_row=(f"<dt>Ceiling</dt><dd>{ceil_html}</dd>" if ceil_html else ""),
-        tom_title=f"{'Tomorrow' if tom > now.date() else 'Today'} · {tom:%a %d %b}", tom_chip=tom_chip, tomorrow=t_html,
+        tom_title=f"{'Tomorrow' if tom > now.date() else 'Today'} · {tom:%a %d %b}", tom_chip=tom_chip + nwsalerts.icon_html(icons.get(tom)), tomorrow=t_html,
         rows=rows_html, ladder=ladder_html or (f"<p>Night. First reading tomorrow about {first_at}.</p>"
                                                if night else
                                                f"<p>Not yet: the slope is in Haleakala's shadow until "
