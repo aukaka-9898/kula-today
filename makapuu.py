@@ -607,6 +607,80 @@ def inv_text(inv) -> str:
     return f'About {round(inv["base_ft"], -2):,.0f} ft (+{inv["warming_f"]:.1f} °F)'
 
 
+# ---------------------------------------------------------------- Wind barbs
+# The day's wind as barbs against the hour (Sam, 10-27: "Makapuu needs a chart.
+# Use wind symbols against time, forecast and observed across the day" -- "Use
+# wind barb notation"): the NWS grid's forecast in one row, Bellows' hourly
+# means in the other. Standard notation, knots: the staff points to where the
+# wind comes from, feathers on the clockwise side (northern hemisphere), short
+# 5, long 10, flag 50; calm is a circle. Coloured by the ridge rating; the
+# number under each barb is mph, as on the rest of the page.
+BARB_CLASS = {"good": "var(--good)", "fair": "var(--fair)", "warn": "var(--warn)"}
+
+
+def _barb(cx: float, cy: float, dir_deg, mph, colour: str) -> str:
+    import math
+    kt = (mph or 0) / 1.15078
+    if dir_deg is None or kt < 2.5:
+        return f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="5" fill="none" stroke="{colour}" stroke-width="1.6"/>'
+    b = math.radians(dir_deg)
+    vx, vy = math.sin(b), -math.cos(b)              # toward the source, screen y down
+    px, py = math.sin(b + math.pi / 2), -math.cos(b + math.pi / 2)   # the clockwise side
+    L = 30
+    ex, ey = cx + vx * L, cy + vy * L
+    out = [f'<line x1="{cx:.1f}" y1="{cy:.1f}" x2="{ex:.1f}" y2="{ey:.1f}"/>',
+           f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="2" fill="{colour}" stroke="none"/>']
+    n = int(round(kt / 5.0))
+    flags, n = divmod(n, 10)
+    longs, shorts = divmod(n, 2)
+    pos = 0.0                                       # distance in from the staff's end
+    for _ in range(flags):
+        ax, ay = ex - vx * pos, ey - vy * pos
+        bx, by = ex - vx * (pos + 6), ey - vy * (pos + 6)
+        tx, ty = ax + px * 12 - vx * 3, ay + py * 12 - vy * 3
+        out.append(f'<polygon points="{ax:.1f},{ay:.1f} {tx:.1f},{ty:.1f} {bx:.1f},{by:.1f}" fill="{colour}"/>')
+        pos += 8
+    if flags == 0 and longs == 0 and shorts:
+        pos = 4                                     # a lone short barb sits in from the end
+    for k in range(longs + shorts):
+        size = 13 if k < longs else 7
+        ax, ay = ex - vx * pos, ey - vy * pos
+        out.append(f'<line x1="{ax:.1f}" y1="{ay:.1f}" x2="{ax + (px * .9 + vx * .45) * size:.1f}" '
+                   f'y2="{ay + (py * .9 + vy * .45) * size:.1f}"/>')
+        pos += 4.5
+    return f'<g stroke="{colour}" stroke-width="1.8" stroke-linecap="round">{"".join(out)}</g>'
+
+
+def barb_chart(fc: dict, ob: dict) -> str:
+    """fc and ob: {hour: {dir, mph, gust}} for the day's hours."""
+    hours = list(DAY_HOURS)
+    col, left, top = 54, 70, 34
+    W, H = left + col * len(hours) + 10, top + 2 * 72 + 22
+    parts = []
+    for r, (label, data) in enumerate((("Forecast", fc), ("Bellows", ob))):
+        cy = top + r * 72 + 28
+        parts.append(f'<text x="4" y="{cy + 4}" class="lbl">{label}</text>')
+        for i, h in enumerate(hours):
+            w = data.get(h)
+            if not w or w.get("mph") is None:
+                continue
+            cx = left + col * i + col / 2
+            word = rate(w["dir"], w["mph"], w.get("gust"))[0]
+            colour = BARB_CLASS[RATING_CLASS.get(word, "fair")]
+            g = f' g{w["gust"]:.0f}' if w.get("gust") is not None else ""
+            parts.append(_barb(cx, cy, w["dir"], w["mph"], colour)
+                         + f'<text x="{cx:.1f}" y="{cy + 40}" class="num" text-anchor="middle">{w["mph"]:.0f}{g}</text>')
+    for i, h in enumerate(hours):
+        x = left + col * i + col / 2
+        parts.append(f'<text x="{x:.1f}" y="{H - 4}" class="lbl" text-anchor="middle">{h:02d}</text>')
+    return (f'<div style="width:100%;overflow:hidden;margin:6px 0 2px">'
+            f'<svg viewBox="0 0 {W} {H}" width="100%" role="img" aria-label="Wind barbs by hour, forecast and Bellows">'
+            '<style>.lbl{font:600 11px var(--display);fill:var(--muted)}.num{font:10px var(--mono);fill:var(--muted)}</style>'
+            + "".join(parts) + '</svg></div>'
+            '<div class="sub">Wind barbs in knots (short 5, long 10, flag 50; circle calm), pointing to where the wind '
+            'comes from; numbers are mph and gusts. Green flyable, grey caution or light, amber not flyable.</div>')
+
+
 # ---------------------------------------------------------------- The day's wrap-up
 # Like Kula's (Sam, 2026-10-26: "Build it. Include thermal call just for the
 # hell of it"): from WRAP_FROM, the day as measured -- Bellows' hours rated,
@@ -910,8 +984,11 @@ def write(now: datetime) -> None:
     wrap = _try(day_wrap, now, today_air["word"] if today_air else None, problems, problems=problems)
     if not wrap and not night:
         alerts += nwsalerts.today_html(icons.get(now.date()))
+    fc = {t.hour: v for t, v in grid.items() if t.date() == now.date() and t.hour in DAY_HOURS}
+    ob = dict(_try(bellows_day, now.date(), problems=problems) or [])
+    barbs = barb_chart(fc, ob) if fc or ob else ""
     if wrap:
-        today_body, kind, today_title = wrap[0], "The day in review", f"Today · {now:%a %d %b}"
+        today_body, kind, today_title = wrap[0] + barbs, "The day in review", f"Today · {now:%a %d %b}"
         today_chip = chip(wrap[1]) if wrap[1] else ""
     else:
         today_body = f"""<dl>
@@ -921,6 +998,7 @@ def write(now: datetime) -> None:
         <dt>Thermals</dt><dd>{therm_html}</dd>
         <dt>Inversion</dt><dd>{inv_html}</dd>
       </dl>
+      {barbs}
       <div class="kind" style="color:var(--muted)">Rest of today (forecast)</div>
       {rest_html}"""
         kind, today_title = f"Now · {now:%H:%M} HST", "Today"
