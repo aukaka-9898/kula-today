@@ -388,3 +388,6 @@ date,time,station,obs_time,temp_f,dew_f,dew_from,lcl_ft,ti_c,word,camera,camera_
 2026-10-27,16:52,Heeia,16:30,71.8,71.6,own,50.0,1.72,Flat,,
 2026-10-27,16:52,Maunawili,16:30,72.8,70.9,own,440.0,1.23,Flat,,
 2026-10-27,16:52,Nonokio,16:00,74.7,70.4,own,990.0,0.22,Flat,,
+2026-10-27,16:54,Kaneohe runway,15:57,75.0,69.1,own,1350.0,0.19,Flat,,
+2026-10-27,16:54,Heeia,16:30,71.8,71.6,own,50.0,1.72,Flat,,
+2026-10-27,16:54,Nonokio,16:00,74.7,70.4,own,990.0,0.22,Flat,,
