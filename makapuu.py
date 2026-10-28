@@ -655,11 +655,11 @@ def _barb(cx: float, cy: float, dir_deg, mph, colour: str) -> str:
 def barb_chart(fc: dict, ob: dict) -> str:
     """fc and ob: {hour: {dir, mph, gust}} for the day's hours."""
     hours = list(DAY_HOURS)
-    col, left, top = 54, 70, 34
-    W, H = left + col * len(hours) + 10, top + 2 * 72 + 22
+    col, left, top = 56, 84, 34
+    W, H = left + col * len(hours) + 10, top + 2 * 76 + 26
     parts = []
     for r, (label, data) in enumerate((("Forecast", fc), ("Bellows", ob))):
-        cy = top + r * 72 + 28
+        cy = top + r * 76 + 28
         parts.append(f'<text x="4" y="{cy + 4}" class="lbl">{label}</text>')
         for i, h in enumerate(hours):
             w = data.get(h)
@@ -670,13 +670,13 @@ def barb_chart(fc: dict, ob: dict) -> str:
             colour = BARB_CLASS[RATING_CLASS.get(word, "fair")]
             g = f' g{w["gust"]:.0f}' if w.get("gust") is not None else ""
             parts.append(_barb(cx, cy, w["dir"], w["mph"], colour)
-                         + f'<text x="{cx:.1f}" y="{cy + 40}" class="num" text-anchor="middle">{w["mph"]:.0f}{g}</text>')
+                         + f'<text x="{cx:.1f}" y="{cy + 44}" class="num" text-anchor="middle">{w["mph"]:.0f}{g}</text>')
     for i, h in enumerate(hours):
         x = left + col * i + col / 2
         parts.append(f'<text x="{x:.1f}" y="{H - 4}" class="lbl" text-anchor="middle">{h:02d}</text>')
     return (f'<div style="width:100%;overflow:hidden;margin:6px 0 2px">'
             f'<svg viewBox="0 0 {W} {H}" width="100%" role="img" aria-label="Wind barbs by hour, forecast and Bellows">'
-            '<style>.lbl{font:600 11px var(--display);fill:var(--muted)}.num{font:10px var(--mono);fill:var(--muted)}</style>'
+            '<style>.lbl{font:600 15px var(--display);fill:var(--muted)}.num{font:14px var(--mono);fill:var(--muted)}</style>'
             + "".join(parts) + '</svg></div>'
             '<div class="sub">Wind barbs in knots (short 5, long 10, flag 50; circle calm), pointing to where the wind '
             'comes from; numbers are mph and gusts. Green flyable, grey caution or light, amber not flyable.</div>')
