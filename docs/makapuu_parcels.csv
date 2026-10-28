@@ -322,3 +322,6 @@ date,time,station,obs_time,temp_f,dew_f,dew_from,lcl_ft,ti_c,word,camera,camera_
 2026-10-27,13:37,Heeia,12:30,76.1,72.9,own,740.0,0.23,Flat,Cloud on the Koʻolau: Kahaluʻu crest.,2560.0
 2026-10-27,13:37,Maunawili,13:15,73.6,70.7,own,670.0,1.84,Flat,Cloud on the Koʻolau: Kahaluʻu crest.,2560.0
 2026-10-27,13:37,Nonokio,13:00,76.6,66.1,own,2400.0,0.62,Flat,Cloud on the Koʻolau: Kahaluʻu crest.,2560.0
+2026-10-27,13:58,Kaneohe runway,12:57,80.1,68.0,own,2750.0,-1.84,Flat,"Cloud base no higher than about 2,800 ft along the ridge. Konahuanui is in clouds.",2530.0
+2026-10-27,13:58,Heeia,13:30,74.1,73.9,own,50.0,1.26,Flat,"Cloud base no higher than about 2,800 ft along the ridge. Konahuanui is in clouds.",2530.0
+2026-10-27,13:58,Nonokio,13:00,76.6,66.1,own,2400.0,0.62,Flat,"Cloud base no higher than about 2,800 ft along the ridge. Konahuanui is in clouds.",2530.0
