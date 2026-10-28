@@ -1,8 +1,6 @@
 {
- "made": "2026-10-27 17:37",
- "flags": [
-  "Shear line: a stale station sat out of 45% of updates over the last week (the rule under review)."
- ],
+ "made": "2026-10-27 17:52",
+ "flags": [],
  "stats": {
   "base_days": 26,
   "base_mean": 487,
@@ -13,9 +11,9 @@
   "alert_days": 2,
   "alert_hits": 0,
   "intrusions_missed": 0,
-  "line_dropped_share_7d": 0.45,
-  "cam_puunianiau_cloud_min_days": 8,
-  "cam_redhill_cloud_min_days": 8,
+  "line_dropped_share_7d": 0.29,
+  "cam_puunianiau_cloud_min_days": 9,
+  "cam_redhill_cloud_min_days": 9,
   "station_days": 38,
   "accuracy": {
    "base_n": 1,
