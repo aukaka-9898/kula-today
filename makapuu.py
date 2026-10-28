@@ -260,6 +260,7 @@ def lcl_msl(t_f: float, td_f: float, elev_ft: float) -> int:
 # above the crest is placed at the crest's distance, and cumulus drift in front
 # of the range, so it is an upper limit. Sam's wording, 10-25: "Clouds are
 # above the ridge and below about 3,300".
+CEIL_SHOW_FT = 5000
 CAP_SHARE = 0.3                # a stretch counts as capped with this share of its columns
 CAMERA_MAX_AGE = timedelta(minutes=40)
 AVERAGE_MIN = 30
@@ -892,11 +893,20 @@ def write(now: datetime) -> None:
                      for n in drop_outliers(cam) if n != "Pali gap"]
         if 8 <= now.hour <= 17:
             _try(log_gap, now, cam, problems=problems)
+    # Kāneʻohe's ceilometer as confirmation only (Sam, 10-27, the deck day: the
+    # profile "hints strongly for a deck at 2,600", PHNG had BKN 2,500 OVC 3,500;
+    # but it sees straight up, so clear air over the field says nothing about
+    # the ridge): shown only for a broken or overcast layer under CEIL_SHOW_FT.
+    low = [c for c in (k or {}).get("clouds") or [] if c.get("cover") in ("BKN", "OVC")
+           and c.get("base") is not None and c["base"] < CEIL_SHOW_FT]
+    ceil_sub = ('<div class="sub">Kāneʻohe ceilometer: '
+                + ", ".join(f'{"broken" if c["cover"] == "BKN" else "overcast"} {c["base"]:,}' for c in low)
+                + f' ft ({k["at"]:%H:%M}).</div>') if low else ""
     if cam_line:
         base_html = (f'{esc(cam_line)}'
                      f'<div class="sub">Kāneʻohe Bay camera, looking at the Koʻolau, the last 30 minutes to {cam["at"]:%H:%M}.'
                      + (f" {airs[0][0]}'s air would condense at about {base:,} ft." if base is not None else "")
-                     + "</div>")
+                     + "</div>") + ceil_sub
     elif base is not None:
         if base < CREST_LOW_FT:
             cap = f"below the crest behind Waimānalo ({CREST_LOW_FT:,}–{CREST_HIGH_FT:,} ft): cloud on the Koʻolau likely"
@@ -912,9 +922,9 @@ def write(now: datetime) -> None:
                      + (f" Kaneohe's ceilometer: {esc(ceil)}." if ceil else "") + "</div>")
     elif gated:
         base_html = ('<strong>Low</strong><div class="sub">Kaneohe\'s air would condense under launch height: '
-                     'wet air at the coast.</div>')
+                     'wet air at the coast.</div>') + ceil_sub
     else:
-        base_html = "Unavailable"
+        base_html = ("Unavailable" + ceil_sub) if ceil_sub else "Unavailable"
 
     today_air = _try(air_day, air, surf, now.date(), problems=problems) if air else None
     if today_air:
