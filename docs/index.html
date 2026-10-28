@@ -93,24 +93,24 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><a class="homebtn" href="/">&larr; Home</a><div class="tag">Kula soaring briefing</div><h1>Kula Today</h1></div>
-    <div class="date">Updated Tue 27 Oct 2026 · 17:22 HST</div>
+    <div class="date">Updated Tue 27 Oct 2026 · 17:37 HST</div>
   </header>
 
   <div>
     <!-- The FAA viewer shows its station list before it opens the camera; the latest frame covers that until it has (Sam, 2026-10-25). -->
-    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" title="Red Hill webcam, live, looking south along the Kula slope" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="camera.jpg?2026-10-27T17:22" alt=""></div>
+    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" title="Red Hill webcam, live, looking south along the Kula slope" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="camera.jpg?2026-10-27T17:37" alt=""></div>
     <div class="camcap">Red Hill webcam, live. FAA WeatherCam (Kekoa). <a href="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" target="_blank" rel="noopener">Open full size</a></div>
   </div>
 
   <div class="cols">
     <section class="panel today" aria-labelledby="t-today">
-      <div class="kind">Measured today · 17:22 HST</div>
-      <div class="head"><h2 id="t-today">Today</h2><span class="chip warn">Flat</span></div>
-      <div class="alert" style="font-size:.95rem;margin:4px 0 6px">Flood Watch until Thu 05:00 <a href="https://forecast.weather.gov/MapClick.php?lat=20.7579&lon=-156.3200" target="_blank" rel="noopener" style="font-weight:500">NWS details</a></div><div class="sub" style="display:flex;align-items:center;gap:6px;margin:2px 0 6px"><img src="https://api.weather.gov/icons/land/day/tsra,40?size=small" width="34" height="34" alt="Scattered Showers And Thunderstorms (40%)" title="NWS: Scattered Showers And Thunderstorms (40%)" loading="lazy" style="vertical-align:middle;border-radius:4px;margin-left:6px"><span>NWS today: Scattered Showers And Thunderstorms (40%)</span></div>
-      <p class="summary">Cloudbase has come down from its late-morning high and is steady now. Kula Ag had deep shade over the last hour; cloud reaches all the way to the Summit. The upslope is ending: the slope has nearly stopped gaining heat since about 15:00.</p><div style="font-weight:600;font-size:.9rem;margin:10px 0 2px">Cloudbase so far, derived</div><div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted,#6b6b66);margin:2px 0 4px">
+      <div class="kind">The day in review</div>
+      <div class="head"><h2 id="t-today">Today · Tue 27 Oct</h2><span class="chip warn">Flat</span></div>
+      <div class="alert" style="font-size:.95rem;margin:4px 0 6px">Flood Watch until Thu 05:00 <a href="https://forecast.weather.gov/MapClick.php?lat=20.7579&lon=-156.3200" target="_blank" rel="noopener" style="font-weight:500">NWS details</a></div>
+      <p class="summary">A flat day (forecast light). Thermals stayed flat all day. The upslope ran from about 07:45 to about 17:15. A low day for October: the base stayed down near 3,500 ft (normal 4,500–5,400 ft). The evening before, the page called it low, a hit. Midday the base averaged about 3,500 ft by the Kekoa camera; the morning update said about 4,200 ft, off by 700 ft. Most of the day the shear line was north of Pukalani, reaching the coast near Haiku; furthest south about 08:22, crossing Kula Highway between the middle Lower Kula Road junction and Waiakoa. Data gaps: no readings all day from 1 station (Nakula); Kahikinui stopped at 13:55; the Mesonet could not be reached on 14 of 55 updates.</p><div style="font-weight:600;font-size:.9rem;margin:10px 0 2px">Cloudbase, derived</div><div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted,#6b6b66);margin:2px 0 4px">
 
 <span><span style="display:inline-block;width:16px;height:2px;background:#2a78d6;vertical-align:middle"></span> Derived (stations)</span><span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#3f9d5a;vertical-align:middle"></span> Kekoa camera</span></div>
-<div style="position:relative;width:100%;min-width:0;height:220px"><canvas id="livechart" role="img" aria-label="Derived cloudbase through the day"></canvas></div>
+<div style="position:relative;width:100%;min-width:0;height:220px"><canvas id="basechart" role="img" aria-label="Derived cloudbase through the day"></canvas></div>
 <div class="sub">Derived from the stations every 15 minutes during the upslope.</div>
 <script>
 (function () {
@@ -127,7 +127,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
   var hm = function (m) { return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); };
   var ys = d.derived.map(function (a) { return a[1]; }).concat(d.forecast.map(function (a) { return a[1]; })).concat(d.camera.map(function (a) { return a[1]; }));
   var xs = [540, 960];
-  new Chart(document.getElementById('livechart'), {
+  new Chart(document.getElementById('basechart'), {
     type: 'line',
     data: { datasets: [
       { label: 'Derived', data: d.derived.map(pt), borderColor: '#2a78d6', borderWidth: 2, pointRadius: 0, tension: 0.3 },
@@ -149,13 +149,13 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 })();
 </script>
       <dl>
-        <dt>Thermals</dt><dd>Seem <strong>flat</strong> as of 17:00<div class="sub">Kula Ag's last hour of air through the NAM sounding (thermal.py); no sun anywhere on the Kula side (best 29%)</div></dd>
-        <dt>Cloudbase</dt><dd><span class="num">About 3,000 ft</span><div class="sub">Kekoa camera, the last 30 minutes to 17:21. Stations: about 3,100 ft (10 stations, 17:00).</div></dd>
-        <dt>Sun</dt><dd><span class="num">11%</span> of clear sky, lower Kula slope<div class="sub">Last hour, as of 17:00; average of Kula Ag 7%, Keokea 6%, Pulehu 21%</div></dd>
-        <dt>Shear line</dt><dd>No call<div class="sub">No trades: WNW 1 kt off the north coast (NWS marine forecast). Sea breezes and upslope rule; no shear line.</div></dd>
+        <dt>Thermals</dt><dd><strong>Flat</strong> for the day, 10:00–14:00<div class="sub">Kula Ag's measured air through the NAM sounding (thermal.py); forecast was Light</div></dd>
         
-        <dt>Upslope</dt><dd>Began about <span class="num">07:45</span>, now ending<div class="sub">Slope heating nearly stopped about 15:00</div></dd>
-        <dt>Wind</dt><dd><span class="num">2 mph</span>, gusts to 6<div class="sub">Lower elevations, 9 stations, last hour</div></dd>
+        
+        <dt>Shear line</dt><dd>North of Pukalani, reaching the coast near Haiku<div class="sub">Most of the day, 31 updates. Furthest south about 08:22: Crossing Kula Highway between the middle Lower Kula Road junction and Waiakoa</div></dd>
+        
+        <dt>Upslope</dt><dd><span class="num">07:45</span> to about <span class="num">17:15</span><div class="sub">Drainage from about 17:15</div></dd>
+        <dt>Wind</dt><dd><span class="num">2 mph</span>, gusts to 8<div class="sub">Lower elevations, during the upslope</div></dd>
       </dl>
     </section>
     <section class="panel tomorrow" aria-labelledby="t-tomorrow">
@@ -197,7 +197,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
    browser's 10-minute cached copy is bypassed. The 15-minute refresh stays
    as a backstop. */
 (function () {
-  var built = "2026-10-27T17:22";
+  var built = "2026-10-27T17:37";
   function check() {
     fetch("stations.json?" + Date.now(), {cache: "no-store"})
       .then(function (r) { return r.json(); })
