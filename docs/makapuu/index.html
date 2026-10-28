@@ -94,16 +94,16 @@ tr.wk td { border-bottom: 0; padding-bottom: 2px; } tr.wkh td { white-space: nor
 <div class="wrap">
   <header>
     <div><a class="homebtn" href="/">&larr; Home</a><div class="tag">Makapu&#8216;u soaring briefing</div><h1>Makapu&#8216;u Today</h1></div>
-    <div class="date">Updated Wed 28 Oct 2026 · 10:53 HST</div>
+    <div class="date">Updated Wed 28 Oct 2026 · 10:57 HST</div>
   </header>
   <div class="databadge"><div class="big">Under construction</div></div>
   <div>
-    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/760/details/camera/12783/full" title="Kāne&#8216;ohe Bay webcam, live, looking southeast down the Ko&#8216;olau toward Makapu&#8216;u" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="camera.jpg?2026-10-28T10:53" alt=""></div>
+    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/760/details/camera/12783/full" title="Kāne&#8216;ohe Bay webcam, live, looking southeast down the Ko&#8216;olau toward Makapu&#8216;u" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="camera.jpg?2026-10-28T10:57" alt=""></div>
     <div class="camcap">Kāne&#8216;ohe Bay webcam, live, looking southeast down the Ko&#8216;olau to Makapu&#8216;u. FAA WeatherCam. <a href="https://weathercams.faa.gov/cameras/state/HI/cameraSite/760/details/camera/12783/full" target="_blank" rel="noopener">Open full size</a> · <a href="https://weathercams.faa.gov/cameras/state/HI/cameraSite/588/details/camera/12153/full" target="_blank" rel="noopener">Makapu&#8216;u camera, at the point</a></div>
   </div>
   <div class="cols">
     <section class="panel today" aria-labelledby="t-today">
-      <div class="kind">Now · 10:53 HST</div>
+      <div class="kind">Now · 10:57 HST</div>
       <div class="head"><h2 id="t-today">Today</h2><span class="chip warn">Not flyable</span></div>
       <div class="alert" style="font-size:.95rem;margin:4px 0 6px">Flood Watch until Thu 05:00 <a href="https://forecast.weather.gov/MapClick.php?lat=21.3204&lon=-157.6788" target="_blank" rel="noopener" style="font-weight:500">NWS details</a></div><div class="sub" style="display:flex;align-items:center;gap:6px;margin:2px 0 6px"><img src="https://api.weather.gov/icons/land/day/tsra,90/tsra,60?size=small" width="34" height="34" alt="Occasional Showers And Thunderstorms (85%)" title="NWS: Occasional Showers And Thunderstorms (85%)" loading="lazy" style="vertical-align:middle;border-radius:4px;margin-left:6px"><span>NWS today: Occasional Showers And Thunderstorms (85%)</span></div>
       <dl>
@@ -140,7 +140,7 @@ tr.wk td { border-bottom: 0; padding-bottom: 2px; } tr.wkh td { white-space: nor
 <!-- build problems: camera outlier left out: Kāne&#8216;ohe crest 2,300 ft -->
 <script>
 (function () {
-  var built = "2026-10-28T10:53";
+  var built = "2026-10-28T10:57";
   function check() {
     fetch("summary.json?" + Date.now(), {cache: "no-store"}).then(function (r) { return r.json(); })
       .then(function (j) { if (j && j.built && j.built > built) location.replace(location.pathname + "?v=" + Date.now()); })
