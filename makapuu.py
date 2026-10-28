@@ -902,6 +902,8 @@ def write(now: datetime) -> None:
                + (f", {wind_text(w)}" if w else "") + (" (forecast, Bellows out)." if w and not obs else ".")
                + (f" Tomorrow: {tline}" if tline else ""))
 
+    import nwsalerts                                            # NWS alerts for launch's area (Sam, 10-27)
+    alerts = _try(nwsalerts.line_html, 21.3204, -157.6788, problems=problems) or ""
     _try(log_parcels, now, k, air, cam, problems=problems)      # before the page, so its problems show
     problems += [f"parcel {p}" for p in PARCEL_PROBLEMS]
     wrap = _try(day_wrap, now, today_air["word"] if today_air else None, problems, problems=problems)
@@ -925,7 +927,7 @@ def write(now: datetime) -> None:
     page = PAGE.format(style=style, updated=f"{now:%a %d %b %Y · %H:%M} HST", webcam=WEBCAM, webcam_launch=WEBCAM_LAUNCH,
                        kind=kind, chip=today_chip, today_title=today_title, today_body=today_body,
                        tom_title=f"Tomorrow · {tom:%a %d %b}",
-                       tom_chip=chip(tword) if tword else "", tomorrow=tom_html, week=week, built=built,
+                       tom_chip=chip(tword) if tword else "", tomorrow=tom_html, week=week, built=built, alerts=alerts,
                        diag=esc("; ".join(problems) or "none").replace("--", "-"))
     # IBM Plex has no ʻokina (U+02BB); its fallback glyph stands apart from the
     # letters, so the visible text uses the left quote instead.
@@ -1307,6 +1309,7 @@ tr.wk td {{ border-bottom: 0; padding-bottom: 2px; }} tr.wkh td {{ white-space: 
     <section class="panel today" aria-labelledby="t-today">
       <div class="kind">{kind}</div>
       <div class="head"><h2 id="t-today">{today_title}</h2>{chip}</div>
+      {alerts}
       {today_body}
     </section>
     <section class="panel tomorrow" aria-labelledby="t-tomorrow">

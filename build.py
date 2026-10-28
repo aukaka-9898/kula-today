@@ -4264,10 +4264,13 @@ def build() -> str:
             out += '<div class="row">' + chunk
         ladder_html = out
 
+    # NWS watches, warnings and advisories for Kula Ag's area (Sam, 10-27: "build alerts").
+    import nwsalerts
+    nws_html = safely(nwsalerts.line_html, cv.KULA_AG_LAT, cv.KULA_AG_LON) or ""
     v = dict(
         updated=f"{now:%a %d %b %Y · %H:%M} HST", today_kind=today_kind, today_title=today_title,
         built=f"{now:%Y-%m-%dT%H:%M}",
-        today_chip=today_chip, data_badge=badge_html, summary=summary_html, base_label=base_label,
+        today_chip=today_chip, data_badge=nws_html + badge_html, summary=summary_html, base_label=base_label,
         therm=therm_html, base=base_html, up=up_html, line=line_html,
         base_row=(f"<dt>{base_label}</dt><dd>{base_html}</dd>" if base_html else ""),
         sun_row=(f"<dt>Sun</dt><dd>{sun_html}</dd>" if sun_html is not None else ""),
