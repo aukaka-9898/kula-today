@@ -1567,6 +1567,33 @@ LINE_SILENT_WARN = 6
 KULA_HWY_LON = -156.333
 
 
+# A trade day first (Sam, 2026-10-27, after the line was drawn between
+# Pukalani and Paia on a day of light southerlies: "the problem seems to be
+# with defining trades. Today was not a trade day"; "If it's less than 8 knots
+# land/sea breezes will dominate anyway"). The marine grid off the north coast
+# -- the gradient wind, as convergence.trade_direction() reads it -- for this
+# hour: in the trade sector at 8 kt or more, or no line. Pāʻia's ENE 17 that
+# morning was the sea breeze, not the trades.
+TRADE_DAY_MIN_KT = 8
+KMH_PER_KT = 1.852
+
+
+def marine_now(now: datetime):
+    """(direction deg, speed kt) on the marine grid for this hour, or None."""
+    grid = requests.get(cv.MARINE_GRID, headers=cv.HEAD, timeout=60).json()["properties"]
+    hour = pd.Timestamp(now).tz_convert("Pacific/Honolulu").floor("h")
+
+    def at(name):
+        for v in grid[name]["values"]:
+            start, duration = v["validTime"].split("/")
+            begin = pd.Timestamp(start).tz_convert("Pacific/Honolulu")
+            if begin <= hour < begin + pd.Timedelta(hours=cv._hours(duration)):
+                return v["value"]
+        return None
+    d, kmh = at("windDirection"), at("windSpeed")
+    return None if d is None or kmh is None else (float(d), float(kmh) / KMH_PER_KT)
+
+
 def line_now(obs: pd.DataFrame, now: datetime):
     """The traced line (Sam, 2026-10-21: "build it"), as the page's bracket:
     where the anchor->origin line crosses Kula Highway. The ladder's best split
@@ -1574,6 +1601,11 @@ def line_now(obs: pd.DataFrame, now: datetime):
     lad = smoothed_ladder(obs, now)
     if lad.empty:
         return None, lad
+    m = safely(marine_now, now)            # unreachable: judge from the stations, as before
+    if m is not None and (cv._side(m[0]) != "trades" or m[1] < TRADE_DAY_MIN_KT):
+        return {"found": False, "no_call": True, "no_trades": True,
+                "why": (f"No trades: {cv.compass(m[0])} {m[1]:.0f} kt off the north coast (NWS marine forecast). "
+                        "Sea breezes and upslope rule; no shear line.")}, lad
     rows = station_rows(obs, lad)
     tr = safely(trace_line, rows)
     # How many corridor stations are silent (Sam, 2026-10-22: "Lots of stations
