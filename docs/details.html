@@ -90,7 +90,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><a class="homebtn" href="/">&larr; Home</a> <a class="homebtn" href="./">&larr; Kula Today</a><h1>Kula Details</h1></div>
-    <div class="date">Updated Tue 27 Oct 2026 · 16:07 HST</div>
+    <div class="date">Updated Tue 27 Oct 2026 · 16:13 HST</div>
   </header>
 
   <section class="block" aria-labelledby="t-thermal">
@@ -338,9 +338,9 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 </script>
 
   <section class="block" aria-labelledby="t-ladder">
-    <h2 id="t-ladder">Sunlight up the slope, as of 15:45</h2>
-    <p>Share of clear-sky sunlight measured at each station over the last 60 minutes of readings. Stations under cloud read low; stations above its top read full sun.</p>
-    <div class="rows"><div class="row"><span>Summit</span><span class="elev">9,776</span><div class="bar shaded"><span style="width:26%"></span></div><span class="pct">26%</span></div><div class="row"><span>Nene Nest</span><span class="elev">8,500</span><div class="bar shaded"><span style="width:41%"></span></div><span class="pct">41%</span></div><div class="row"><span>Park HQ</span><span class="elev">6,926</span><div class="bar shaded"><span style="width:18%"></span></div><span class="pct">18%</span></div><div class="row"><span>Kamehamenui 1</span><span class="elev">6,601</span><div class="bar shaded"><span style="width:17%"></span></div><span class="pct">17%</span></div><div class="row"><span>Kula 1</span><span class="elev">6,554</span><div class="bar shaded"><span style="width:40%"></span></div><span class="pct">40%</span></div><div class="base"><span class="lbl">Cloudbase now</span><span class="elev">3,200</span><div class="line"></div><span></span></div><div class="row"><span>Kula Ag</span><span class="elev">3,162</span><div class="bar shaded"><span style="width:17%"></span></div><span class="pct">17%</span></div><div class="row"><span>Keokea</span><span class="elev">2,849</span><div class="bar shaded"><span style="width:16%"></span></div><span class="pct">16%</span></div><div class="row"><span>Piiholo</span><span class="elev">2,090</span><div class="bar shaded"><span style="width:34%"></span></div><span class="pct">34%</span></div><div class="row"><span>Pulehu</span><span class="elev">1,402</span><div class="bar shaded"><span style="width:22%"></span></div><span class="pct">22%</span></div></div>
+    <h2 id="t-ladder">Sunlight up the slope, as of 16:00</h2>
+    <p>Share of clear-sky sunlight measured at each station over the last 60 minutes of readings. Stations under cloud read low; stations above its top read full sun. Late in the day the sun is low in the west, so a station under the deck can read full sun coming in under the deck's edge.</p>
+    <div class="rows"><div class="row"><span>Summit</span><span class="elev">9,776</span><div class="bar shaded"><span style="width:24%"></span></div><span class="pct">24%</span></div><div class="row"><span>Nene Nest</span><span class="elev">8,500</span><div class="bar shaded"><span style="width:39%"></span></div><span class="pct">39%</span></div><div class="row"><span>Park HQ</span><span class="elev">6,926</span><div class="bar shaded"><span style="width:15%"></span></div><span class="pct">15%</span></div><div class="row"><span>Kamehamenui 1</span><span class="elev">6,601</span><div class="bar shaded"><span style="width:17%"></span></div><span class="pct">17%</span></div><div class="row"><span>Kula 1</span><span class="elev">6,554</span><div class="bar shaded"><span style="width:40%"></span></div><span class="pct">40%</span></div><div class="base"><span class="lbl">Cloudbase now</span><span class="elev">3,200</span><div class="line"></div><span></span></div><div class="row"><span>Kula Ag</span><span class="elev">3,162</span><div class="bar shaded"><span style="width:12%"></span></div><span class="pct">12%</span></div><div class="row"><span>Keokea</span><span class="elev">2,849</span><div class="bar shaded"><span style="width:9%"></span></div><span class="pct">9%</span></div><div class="row"><span>Piiholo</span><span class="elev">2,090</span><div class="bar shaded"><span style="width:31%"></span></div><span class="pct">31%</span></div><div class="row"><span>Pulehu</span><span class="elev">1,402</span><div class="bar shaded"><span style="width:22%"></span></div><span class="pct">22%</span></div></div>
   </section>
 
   <section class="block" id="stationmap">
@@ -437,7 +437,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <script>
 /* Reload when a newer build is out, like the main page. */
 (function () {
-  var built = "2026-10-27T16:07";
+  var built = "2026-10-27T16:13";
   function check() {
     fetch("stations.json?" + Date.now(), {cache: "no-store"})
       .then(function (r) { return r.json(); })

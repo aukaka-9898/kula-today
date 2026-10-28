@@ -92,28 +92,28 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><a class="homebtn" href="/">&larr; Home</a><div class="tag">Kula soaring briefing</div><h1>Kula Today</h1></div>
-    <div class="date">Updated Tue 27 Oct 2026 · 16:07 HST</div>
+    <div class="date">Updated Tue 27 Oct 2026 · 16:13 HST</div>
   </header>
 
   <div>
     <!-- The FAA viewer shows its station list before it opens the camera; the latest frame covers that until it has (Sam, 2026-10-25). -->
-    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" title="Red Hill webcam, live, looking south along the Kula slope" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="camera.jpg?2026-10-27T16:07" alt=""></div>
+    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" title="Red Hill webcam, live, looking south along the Kula slope" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="camera.jpg?2026-10-27T16:13" alt=""></div>
     <div class="camcap">Red Hill webcam, live. FAA WeatherCam (Kekoa). <a href="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" target="_blank" rel="noopener">Open full size</a></div>
   </div>
 
   <div class="cols">
     <section class="panel today" aria-labelledby="t-today">
-      <div class="kind">Measured today · 16:07 HST</div>
+      <div class="kind">Measured today · 16:13 HST</div>
       <div class="head"><h2 id="t-today">Today</h2><span class="chip warn">Flat</span></div>
-      <div class="alert" style="font-size:.95rem;margin:4px 0 6px">Flood Watch until Thu 05:00 <a href="https://forecast.weather.gov/MapClick.php?lat=20.7579&lon=-156.3200" target="_blank" rel="noopener" style="font-weight:500">NWS details</a></div><div class="databadge"><div class="big">Limited data</div><div>23 of 29 stations reporting. Readings below rest on fewer stations than usual.</div><div class="sub">Not reporting: Kahikinui, Upper Kahikinui, Kula 1, Kamehamenui 1, Nakula, Paia</div></div>
-      <p class="summary">Cloudbase has come down from its late-morning high and is steady now. Kula Ag had mostly shade over the last hour; cloud reaches all the way to the Summit. The upslope is ending: the slope has nearly stopped gaining heat since about 15:00.</p><div style="font-weight:600;font-size:.9rem;margin:10px 0 2px">Cloudbase so far, derived</div><div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted,#6b6b66);margin:2px 0 4px">
+      <div class="alert" style="font-size:.95rem;margin:4px 0 6px">Flood Watch until Thu 05:00 <a href="https://forecast.weather.gov/MapClick.php?lat=20.7579&lon=-156.3200" target="_blank" rel="noopener" style="font-weight:500">NWS details</a></div><div class="sub" style="display:flex;align-items:center;gap:6px;margin:2px 0 6px"><img src="https://api.weather.gov/icons/land/day/tsra,40?size=small" width="34" height="34" alt="Scattered Showers And Thunderstorms (40%)" title="NWS: Scattered Showers And Thunderstorms (40%)" loading="lazy" style="vertical-align:middle;border-radius:4px;margin-left:6px"><span>NWS today: Scattered Showers And Thunderstorms (40%)</span></div>
+      <p class="summary">Cloudbase has come down from its late-morning high and is steady now. Kula Ag had deep shade over the last hour; cloud reaches all the way to the Summit. The upslope is ending: the slope has nearly stopped gaining heat since about 15:00.</p><div style="font-weight:600;font-size:.9rem;margin:10px 0 2px">Cloudbase so far, derived</div><div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted,#6b6b66);margin:2px 0 4px">
 
 <span><span style="display:inline-block;width:16px;height:2px;background:#2a78d6;vertical-align:middle"></span> Derived (stations)</span><span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#3f9d5a;vertical-align:middle"></span> Kekoa camera</span></div>
 <div style="position:relative;width:100%;min-width:0;height:220px"><canvas id="livechart" role="img" aria-label="Derived cloudbase through the day"></canvas></div>
 <div class="sub">Derived from the stations every 15 minutes during the upslope.</div>
 <script>
 (function () {
-  var d = {"derived": [[540, 4450.0], [555, 4500.0], [570, 4680.0], [585, 4800.0], [600, 4790.0], [615, 4850.0], [630, 4940.0], [645, 5030.0], [660, 4690.0], [675, 4610.0], [690, 4180.0], [705, 3990.0], [720, 3530.0], [735, 3460.0], [750, 3340.0], [765, 3410.0], [780, 3280.0], [795, 3270.0], [810, 3200.0], [825, 3270.0], [840, 3250.0], [855, 3200.0], [870, 3030.0], [885, 3050.0], [900, 3520.0], [915, 3260.0], [930, 3250.0], [945, 3250.0]], "forecast": [], "camera": [[546, 4960.0], [554, 5080.0], [563, 4110.0], [589, 3500.0], [581, 3750.0], [598, 5340.0], [615, 5580.0], [607, 5370.0], [634, 5450.0], [625, 5480.0], [651, 5210.0], [642, 5430.0], [660, 5190.0], [677, 5170.0], [668, 5130.0], [694, 4240.0], [686, 5070.0], [712, 3340.0], [703, 3990.0], [756, 2770.0], [746, 2860.0], [765, 2800.0], [782, 2800.0], [799, 2930.0], [790, 2820.0], [816, 2790.0], [807, 2880.0], [833, 2560.0], [824, 2680.0], [876, 2820.0], [867, 2840.0], [885, 2800.0], [902, 2820.0], [893, 2680.0], [911, 2730.0], [929, 2820.0], [955, 2680.0], [946, 2710.0], [937, 2820.0]], "up": [540, 945], "nocu": null}, pt = function (a) { return {x: a[0], y: a[1]}; };
+  var d = {"derived": [[540, 4450.0], [555, 4500.0], [570, 4680.0], [585, 4800.0], [600, 4790.0], [615, 4850.0], [630, 4940.0], [645, 5030.0], [660, 4690.0], [675, 4610.0], [690, 4180.0], [705, 3990.0], [720, 3530.0], [735, 3460.0], [750, 3340.0], [765, 3410.0], [780, 3280.0], [795, 3270.0], [810, 3200.0], [825, 3270.0], [840, 3250.0], [855, 3200.0], [870, 3030.0], [885, 3050.0], [900, 3520.0], [915, 3260.0], [930, 3250.0], [945, 3230.0], [960, 3270.0]], "forecast": [], "camera": [[546, 4960.0], [554, 5080.0], [563, 4110.0], [589, 3500.0], [581, 3750.0], [598, 5340.0], [615, 5580.0], [607, 5370.0], [634, 5450.0], [625, 5480.0], [651, 5210.0], [642, 5430.0], [660, 5190.0], [677, 5170.0], [668, 5130.0], [694, 4240.0], [686, 5070.0], [712, 3340.0], [703, 3990.0], [756, 2770.0], [746, 2860.0], [765, 2800.0], [782, 2800.0], [799, 2930.0], [790, 2820.0], [816, 2790.0], [807, 2880.0], [833, 2560.0], [824, 2680.0], [876, 2820.0], [867, 2840.0], [885, 2800.0], [902, 2820.0], [893, 2680.0], [911, 2730.0], [929, 2820.0], [955, 2680.0], [946, 2710.0], [937, 2820.0]], "up": [540, 960], "nocu": null}, pt = function (a) { return {x: a[0], y: a[1]}; };
   var dark = matchMedia('(prefers-color-scheme: dark)').matches, muted = '#898781', grid = dark ? '#2c2c2a' : '#e1e0d9';
   var nocu = { id: 'nocu', beforeDatasetsDraw: function (c) { if (!d.nocu) return; var x = c.scales.x, a = c.chartArea, g = c.ctx,
     x0 = x.getPixelForValue(d.nocu[0]), x1 = x.getPixelForValue(d.nocu[1]);
@@ -148,18 +148,18 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 })();
 </script>
       <dl>
-        <dt>Thermals</dt><dd>Seem <strong>flat</strong> as of 15:45<div class="sub">Kula Ag's last hour of air through the NAM sounding (thermal.py); no sun anywhere on the Kula side (best 40%)</div></dd>
-        <dt>Cloudbase</dt><dd><span class="num">About 2,700 ft</span><div class="sub">Kekoa camera, the last 30 minutes to 16:04. Stations: about 3,200 ft (11 stations, 15:45).</div></dd>
-        <dt>Sun</dt><dd><span class="num">18%</span> of clear sky, lower Kula slope<div class="sub">Last hour, as of 15:45; average of Kula Ag 17%, Keokea 16%, Pulehu 22%</div></dd>
+        <dt>Thermals</dt><dd>Seem <strong>flat</strong> as of 16:00<div class="sub">Kula Ag's last hour of air through the NAM sounding (thermal.py); no sun anywhere on the Kula side (best 40%)</div></dd>
+        <dt>Cloudbase</dt><dd><span class="num">About 2,700 ft</span><div class="sub">Kekoa camera, the last 30 minutes to 16:04. Stations: about 3,200 ft (11 stations, 16:00).</div></dd>
+        <dt>Sun</dt><dd><span class="num">14%</span> of clear sky, lower Kula slope<div class="sub">Last hour, as of 16:00; average of Kula Ag 12%, Keokea 9%, Pulehu 22%</div></dd>
         <dt>Shear line</dt><dd>No call<div class="sub">No trades: SW 5 kt off the north coast (NWS marine forecast). Sea breezes and upslope rule; no shear line.</div></dd>
         
         <dt>Upslope</dt><dd>Began about <span class="num">07:45</span>, now ending<div class="sub">Slope heating nearly stopped about 15:00</div></dd>
-        <dt>Wind</dt><dd><span class="num">2 mph</span>, gusts to 6<div class="sub">Lower elevations, 10 stations, last hour</div></dd>
+        <dt>Wind</dt><dd><span class="num">2 mph</span>, gusts to 7<div class="sub">Lower elevations, 10 stations, last hour</div></dd>
       </dl>
     </section>
     <section class="panel tomorrow" aria-labelledby="t-tomorrow">
       <div class="kind">Forecast</div>
-      <div class="head"><h2 id="t-tomorrow">Tomorrow · Wed 28 Oct</h2><span class="chip warn">Flat</span></div>
+      <div class="head"><h2 id="t-tomorrow">Tomorrow · Wed 28 Oct</h2><span class="chip warn">Flat</span><img src="https://api.weather.gov/icons/land/day/tsra,90?size=small" width="30" height="30" alt="Occasional Showers And Thunderstorms (94%)" title="NWS: Occasional Showers And Thunderstorms (94%)" loading="lazy" style="vertical-align:middle;border-radius:4px;margin-left:6px"></div>
       <dl>
         <dt>Thermals</dt><dd>Probably flat<div class="sub">thermal.py on the forecast air (+3 F, it runs cool); within one category of the measured rating on every test day</div></dd>
         <dt>Cloudbase</dt><dd>About 3,900 ft<div class="sub">Normal for October is 4,500–5,400 ft.</div></dd>
@@ -174,7 +174,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
     <h2 id="t-week">The week</h2>
     <div class="tablewrap"><table>
       <thead><tr><th>Day</th><th class="n">Sun</th><th>Base</th><th>Thermals</th><th>Shear line</th></tr></thead>
-      <tbody><tr><td>Wed 28</td><td class="n">17%</td><td>Normal</td><td>Flat</td><td>Omaopio</td></tr><tr><td>Thu 29</td><td class="n">54%</td><td>Normal</td><td>Flat</td><td>Omaopio</td></tr><tr><td>Fri 30</td><td class="n">91%</td><td>Normal</td><td>Moderate</td><td>Omaopio</td></tr><tr><td>Sat 31</td><td class="n">88%</td><td>Normal</td><td>Moderate</td><td>Omaopio</td></tr><tr><td>Sun 01</td><td class="n">85%</td><td>Normal</td><td>Moderate</td><td>Omaopio</td></tr><tr><td>Mon 02</td><td class="n">90%</td><td>Normal</td><td>Light</td><td>Omaopio</td></tr><tr><td>Tue 03</td><td class="n">42%</td><td>Normal</td><td>Light</td><td>Omaopio</td></tr></tbody>
+      <tbody><tr><td>Wed 28<img src="https://api.weather.gov/icons/land/day/tsra,90?size=small" width="22" height="22" alt="Occasional Showers And Thunderstorms (94%)" title="NWS: Occasional Showers And Thunderstorms (94%)" loading="lazy" style="vertical-align:middle;border-radius:4px;margin-left:6px"></td><td class="n">17%</td><td>Normal</td><td>Flat</td><td>Omaopio</td></tr><tr><td>Thu 29<img src="https://api.weather.gov/icons/land/day/tsra,60?size=small" width="22" height="22" alt="Chance Showers And Thunderstorms (64%)" title="NWS: Chance Showers And Thunderstorms (64%)" loading="lazy" style="vertical-align:middle;border-radius:4px;margin-left:6px"></td><td class="n">54%</td><td>Normal</td><td>Flat</td><td>Omaopio</td></tr><tr><td>Fri 30</td><td class="n">91%</td><td>Normal</td><td>Moderate</td><td>Omaopio</td></tr><tr><td>Sat 31</td><td class="n">88%</td><td>Normal</td><td>Moderate</td><td>Omaopio</td></tr><tr><td>Sun 01</td><td class="n">85%</td><td>Normal</td><td>Moderate</td><td>Omaopio</td></tr><tr><td>Mon 02</td><td class="n">90%</td><td>Normal</td><td>Light</td><td>Omaopio</td></tr><tr><td>Tue 03</td><td class="n">42%</td><td>Normal</td><td>Light</td><td>Omaopio</td></tr></tbody>
     </table></div>
     <p>Sun is the GFS forecast for 10:00–14:00. The model can't see the slope's own cumulus, so its high numbers run about 10 points above what Kula measures.</p>
   </section>
@@ -196,7 +196,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
    browser's 10-minute cached copy is bypassed. The 15-minute refresh stays
    as a backstop. */
 (function () {
-  var built = "2026-10-27T16:07";
+  var built = "2026-10-27T16:13";
   function check() {
     fetch("stations.json?" + Date.now(), {cache: "no-store"})
       .then(function (r) { return r.json(); })
