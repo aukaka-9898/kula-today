@@ -55,6 +55,7 @@ dd { margin: 0; min-width: 0; }
 .num { font: 500 1rem var(--mono); font-variant-numeric: tabular-nums; }
 .sub { color: var(--muted); font-size: .86rem; }
 .summary { margin: 0; font-size: .92rem; line-height: 1.5; }
+td.wx { padding: 2px 0; width: 44px; text-align: right; } td.wx img { margin: 0 !important; display: block; }
 .alert { color: var(--warn); font-size: .86rem; font-weight: 600; margin-top: 2px; }
 .databadge { border: 2px solid var(--warn); border-radius: 8px; padding: 10px 12px; display: grid; gap: 3px; font-size: .9rem; }
 .databadge .big { font: 700 1.5rem/1.1 var(--display); letter-spacing: .06em; text-transform: uppercase; color: var(--warn); }
@@ -90,7 +91,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><a class="homebtn" href="/">&larr; Home</a> <a class="homebtn" href="./">&larr; Kula Today</a><h1>Kula Details</h1></div>
-    <div class="date">Updated Tue 27 Oct 2026 · 16:18 HST</div>
+    <div class="date">Updated Tue 27 Oct 2026 · 16:31 HST</div>
   </header>
 
   <section class="block" aria-labelledby="t-thermal">
@@ -437,7 +438,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <script>
 /* Reload when a newer build is out, like the main page. */
 (function () {
-  var built = "2026-10-27T16:18";
+  var built = "2026-10-27T16:31";
   function check() {
     fetch("stations.json?" + Date.now(), {cache: "no-store"})
       .then(function (r) { return r.json(); })
