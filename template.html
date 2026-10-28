@@ -56,6 +56,7 @@ dd { margin: 0; min-width: 0; }
 .num { font: 500 1rem var(--mono); font-variant-numeric: tabular-nums; }
 .sub { color: var(--muted); font-size: .86rem; }
 .summary { margin: 0; font-size: .92rem; line-height: 1.5; }
+td.wx { padding: 2px 0; width: 44px; text-align: right; } td.wx img { margin: 0 !important; display: block; }
 .alert { color: var(--warn); font-size: .86rem; font-weight: 600; margin-top: 2px; }
 .databadge { border: 2px solid var(--warn); border-radius: 8px; padding: 10px 12px; display: grid; gap: 3px; font-size: .9rem; }
 .databadge .big { font: 700 1.5rem/1.1 var(--display); letter-spacing: .06em; text-transform: uppercase; color: var(--warn); }
@@ -127,7 +128,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
   <section class="block" aria-labelledby="t-week">
     <h2 id="t-week">The week</h2>
     <div class="tablewrap"><table>
-      <thead><tr><th>Day</th><th class="n">Sun</th><th>Base</th><th>Thermals</th><th>Shear line</th></tr></thead>
+      <thead><tr><th>Day</th><th class="n">Sun</th><th>Base</th><th>Thermals</th><th>Shear line</th><th></th></tr></thead>
       <tbody>$rows</tbody>
     </table></div>
     <p>Sun is the GFS forecast for 10:00–14:00. The model can't see the slope's own cumulus, so its high numbers run about 10 points above what Kula measures.</p>

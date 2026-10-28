@@ -4270,9 +4270,12 @@ def build() -> str:
     nws_html = safely(nwsalerts.line_html, cv.KULA_AG_LAT, cv.KULA_AG_LON) or ""
     icons = safely(nwsalerts.day_icons, "kula") or {}         # only out-of-the-ordinary days
     nws_html += nwsalerts.today_html(icons.get(now.date())) if today_kind.startswith("Measured") else ""
-    rows_html = re.sub(r"<tr><td>(\w{3} (\d{2}))</td>",
-                       lambda m: "<tr><td>" + m.group(1) + next((nwsalerts.icon_html(g, 22) for d, g in icons.items()
-                                                                  if d.day == int(m.group(2))), "") + "</td>", rows_html)
+    # The week's icons in a column of their own at the right, the row's height
+    # (Sam, 10-27: "too small ... Move them to the right side and fit height").
+    rows_html = re.sub(r"<tr><td>(\w{3} (\d{2}))</td>(.*?)</tr>",
+                       lambda m: f"<tr><td>{m.group(1)}</td>{m.group(3)}<td class=\"wx\">"
+                                 + next((nwsalerts.icon_html(g, 40) for d, g in icons.items()
+                                         if d.day == int(m.group(2))), "") + "</td></tr>", rows_html)
     v = dict(
         updated=f"{now:%a %d %b %Y · %H:%M} HST", today_kind=today_kind, today_title=today_title,
         built=f"{now:%Y-%m-%dT%H:%M}",
@@ -4325,7 +4328,8 @@ def write_summary(v: dict, now: datetime) -> None:
            "updated": v.get("updated"), "kind": v.get("today_kind"), "heading": v.get("today_title"),
            "chip": None if not chip_m else {"class": chip_m.group(1), "word": chip_m.group(2)},
            "summary": re.sub(r"\s+", " ", html.unescape(re.sub(r"<[^>]+>", "", summ.group(1)))).strip() if summ else "",
-           "limited": bool(v.get("data_badge")), "camera": camera}
+           "limited": bool(v.get("data_badge")), "camera": camera,
+           "alerts": list(sys.modules["nwsalerts"].LAST_TEXTS) if "nwsalerts" in sys.modules else []}
     SUMMARY_FILE.write_text(json.dumps(out), encoding="utf-8")
 
 

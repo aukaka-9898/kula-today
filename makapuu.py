@@ -972,7 +972,8 @@ def write(now: datetime) -> None:
         if da:
             b = base_label(da["base_ft"])
             aloft_d = (f" Base {'low' if b == 'Low' else b + ' ft'}" if da["base_ft"] is not None else "") +                       f"{',' if da['base_ft'] is not None else ''} thermals {da['word'].lower()}."
-        week += (f'<tr class="wk"><td>{d:%a %d}{nwsalerts.icon_html(icons.get(d), 22)}</td><td class="n">{esc(short_wind(mid))}</td><td>{chip(bw)}</td></tr>'
+        week += (f'<tr class="wk"><td>{d:%a %d}</td><td class="n">{esc(short_wind(mid))}</td><td>{chip(bw)}</td>'
+                 f'<td class="wx" rowspan="2">{nwsalerts.icon_html(icons.get(d), 46)}</td></tr>'
                  f'<tr class="wkh"><td colspan="3">{esc(line + aloft_d)}</td></tr>')
 
     summary = (f"Now: {word.lower() if w else 'no wind reading'}"
@@ -1022,7 +1023,8 @@ def write(now: datetime) -> None:
         "site": "Makapuu", "title": "Makapu‘u Today", "page": "kula-today/makapuu/", "built": built,
         "updated": f"{now:%a %d %b %Y · %H:%M} HST", "kind": kind,
         "chip": {"class": RATING_CLASS.get(word, "fair"), "word": word} if w and not night else None,
-        "summary": summary, "limited": not obs, "camera": camera}), encoding="utf-8")
+        "summary": summary, "limited": not obs, "camera": camera,
+        "alerts": list(nwsalerts.LAST_TEXTS)}), encoding="utf-8")
 
 
 # ---------------------------------------------------------------- Details page
@@ -1402,7 +1404,7 @@ tr.wk td {{ border-bottom: 0; padding-bottom: 2px; }} tr.wkh td {{ white-space: 
   <section class="block" aria-labelledby="t-week">
     <h2 id="t-week">The week</h2>
     <div class="tablewrap"><table>
-      <thead><tr><th>Day</th><th class="n">Midday, mph</th><th>Best</th></tr></thead>
+      <thead><tr><th>Day</th><th class="n">Midday, mph</th><th>Best</th><th></th></tr></thead>
       <tbody>{week}</tbody>
     </table></div>
     <p>Rated hour by hour, 08:00–19:00, from the NWS forecast grid at Makapuʻu: wind from 0–70° only (east of 070° turbulence off Rabbit Island reaches launch), speed and gusts against the site's limits, under 10 mph is a run-off launch. Downrange base and thermals from the RRFS sounding at Kaneohe, as far as it runs (about three days).</p>
