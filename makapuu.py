@@ -1068,6 +1068,7 @@ MAP_STATIONS = [("bellows", "BELH1", "Bellows", 21.3667, -157.7167, 39),
                 ("nws", "067HE", "HECO Nonokio", 21.33861, -157.71167, 42),
                 ("nws", "134HE", "HECO Kuluanui Rd", 21.30071, -157.70012, 580),
                 ("metar", "PHNG", "Kaneohe (PHNG)", 21.45389, -157.76556, 16),
+                ("moku", "1612480", "Moku o Loʻe", 21.4331, -157.79, 5),
                 ("hads-air", "HRRH1", "Heʻeia NERR", 21.4314, -157.8153, 0),
                 ("hcdp", "0531", "Kaluanui Ridge", 21.30491, -157.70302, 784),
                 ("hcdp", "0533", "Maunawili", 21.36827, -157.76272, 46)]
@@ -1343,6 +1344,21 @@ def write_station_map(now: datetime, k: dict | None) -> None:
                     row["gust"] = round(metar["wgst"] * 1.15078)
                 if metar.get("temp") is not None and metar.get("dewp") is not None:
                     air(row, metar["temp"] * 1.8 + 32, metar["dewp"] * 1.8 + 32, t)
+            elif feed == "moku":
+                # NOAA's tide gauge (Sam, 10-29: "It does not appear on the map at all"):
+                # wind and air temperature; no humidity, so Kaneohe's dew point, as the page uses.
+                w = requests.get(COOPS_MOKU.replace("air_temperature", "wind"), timeout=30).json()["data"][-1]
+                t = datetime.strptime(w["t"], "%Y-%m-%d %H:%M").replace(tzinfo=timezone.utc).astimezone(HST)
+                if now - t <= OBS_MAX_AGE and w.get("s") not in (None, ""):
+                    row.update(dir=round(float(w["d"])), mph=round(float(w["s"]) * 2.23694), at=f"{t:%H:%M}")
+                    if w.get("g") not in (None, ""):
+                        row["gust"] = round(float(w["g"]) * 2.23694)
+                mk = moku_temp(now)
+                if mk and metar and metar.get("dewp") is not None:
+                    air(row, mk[0] * 1.8 + 32, metar["dewp"] * 1.8 + 32, mk[1])
+                    row["dew_from"] = "Kaneohe"
+                elif mk:
+                    row["temp_f_only"] = round(mk[0] * 1.8 + 32, 1)
             elif feed == "hcdp" and sid in hcdp:
                 t, v = hcdp[sid]
                 if "WS_1_Avg" in v:
