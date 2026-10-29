@@ -47,7 +47,7 @@ WEBCAM_LAUNCH = "https://weathercams.faa.gov/cameras/state/HI/cameraSite/588/det
 # max, caution max). 66-70 is caution only. 71 and round: not flyable --
 # turbulence off Rabbit Island reaches launch (Sam, 10-12).
 SECTORS = ((0, 19, 15, 17), (20, 60, 16, 20), (61, 65, 12, 15), (66, 70, None, 10))
-GUST_FACTOR_MAX = 8                  # WG Charts.vb: green needs gust - speed <= 8
+GUST_FACTOR_MAX = 10                 # gust - speed over 10 mph is not green (Sam, 10-29; WG averaging kept)
 LIGHT_MPH = 10                       # Sam: "Put it at 10. On that ridge even that provides some lift"
 IDEAL_DIR = 50                       # Sam 10-21: "sort of ideal. but there are those who will say different"
 DAY_HOURS = range(8, 19)
