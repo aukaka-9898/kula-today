@@ -582,3 +582,7 @@ date,time,station,obs_time,temp_f,dew_f,dew_from,lcl_ft,ti_c,word,camera,camera_
 2026-10-28,17:37,Maunawili,17:15,75.9,74.9,own,230.0,-0.16,Flat,,
 2026-10-28,17:37,Nonokio,17:00,75.9,74.1,own,420.0,-0.08,Flat,,
 2026-10-28,17:37,Moku o Loe,17:00,76.0,75.0,Kaneohe,230.0,-0.27,Flat,,
+2026-10-29,08:07,Kaneohe runway,07:57,78.1,73.9,own,940.0,-0.23,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2920.0
+2026-10-29,08:07,Heeia,07:30,76.5,76.5,own,10.0,0.36,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2920.0
+2026-10-29,08:07,Maunawili,07:45,76.2,74.5,own,390.0,0.77,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2920.0
+2026-10-29,08:07,Moku o Loe,08:00,77.7,73.9,Kaneohe,860.0,-0.03,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2920.0
