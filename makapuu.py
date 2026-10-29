@@ -398,10 +398,23 @@ def _and(names: list) -> str:
 
 
 MOKU_MAX_AGE = timedelta(hours=3)        # PacIOOS posts hourly, ~2 h behind
+# NOAA's tide gauge on Moku o Loʻe (CO-OPS 1612480) first: air temperature every
+# 6 minutes, current to the minute -- the reading Weather Guesser shows (Sam,
+# 10-29, when PacIOOS's HIMB station had stopped posting at 22:00). PacIOOS
+# stays as the fallback.
+COOPS_MOKU = ("https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?station=1612480"
+              "&product=air_temperature&date=latest&units=metric&time_zone=gmt&format=json")
 
 
 def moku_temp(now: datetime):
     """(air temperature C, time) at Moku o Loʻe, or None if over MOKU_MAX_AGE old."""
+    try:
+        d = requests.get(COOPS_MOKU, timeout=30).json()["data"][-1]
+        t = datetime.strptime(d["t"], "%Y-%m-%d %H:%M").replace(tzinfo=timezone.utc).astimezone(HST)
+        if d.get("v") not in (None, "") and now - t <= MOKU_MAX_AGE:
+            return float(d["v"]), t
+    except Exception:
+        pass
     r = requests.get("https://pae-paha.pacioos.hawaii.edu/erddap/tabledap/aws_himb.json"
                      "?time,air_temperature&time%3E=now-6hours", timeout=45).json()["table"]["rows"]
     rows = [x for x in r if x[1] is not None]
@@ -1215,11 +1228,9 @@ def _parcel_candidates(now: datetime, k: dict | None) -> dict:
     except Exception as e:
         PARCEL_PROBLEMS.append(f"{type(e).__name__}: {str(e)[:60]}")
     try:
-        r = requests.get("https://pae-paha.pacioos.hawaii.edu/erddap/tabledap/aws_himb.json"
-                         "?time,air_temperature&time%3E=now-6hours", timeout=45).json()["table"]["rows"]
-        if r:
-            t = datetime.fromisoformat(r[-1][0].replace("Z", "+00:00")).astimezone(HST)
-            out["Moku o Loe"] = (r[-1][1] * 1.8 + 32, None, t)
+        mk = moku_temp(now)
+        if mk:
+            out["Moku o Loe"] = (mk[0] * 1.8 + 32, None, mk[1])
     except Exception as e:
         PARCEL_PROBLEMS.append(f"{type(e).__name__}: {str(e)[:60]}")
     return out
