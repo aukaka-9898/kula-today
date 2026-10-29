@@ -1,5 +1,5 @@
 {
- "made": "2026-10-28 17:52",
+ "made": "2026-10-28 18:07",
  "flags": [],
  "stats": {
   "base_days": 25,
@@ -11,9 +11,9 @@
   "alert_days": 2,
   "alert_hits": 0,
   "intrusions_missed": 0,
-  "line_dropped_share_7d": 0.29,
-  "cam_puunianiau_cloud_min_days": 9,
-  "cam_redhill_cloud_min_days": 9,
+  "line_dropped_share_7d": 0.26,
+  "cam_puunianiau_cloud_min_days": 10,
+  "cam_redhill_cloud_min_days": 10,
   "station_days": 38,
   "accuracy": {
    "base_n": 1,
