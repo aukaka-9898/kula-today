@@ -1,13 +1,13 @@
 {
- "made": "2026-10-28 20:32",
+ "made": "2026-10-29 01:27",
  "flags": [],
  "stats": {
-  "base_days": 25,
-  "base_mean": 481,
-  "base_raw_mean": 118,
-  "base_sd": 804,
-  "base_morning": 611,
-  "base_afternoon": 381,
+  "base_days": 24,
+  "base_mean": 448,
+  "base_raw_mean": 88,
+  "base_sd": 800,
+  "base_morning": 574,
+  "base_afternoon": 358,
   "alert_days": 2,
   "alert_hits": 0,
   "intrusions_missed": 0,
@@ -16,14 +16,14 @@
   "cam_redhill_cloud_min_days": 10,
   "station_days": 38,
   "accuracy": {
-   "base_n": 1,
+   "base_n": 2,
    "base_within": 0,
-   "base_typical": 620.0,
-   "base_bias": -620.0,
-   "thermal_n": 7,
-   "thermal_right": 1,
-   "thermal_within_one": 6,
-   "thermal_bias": 1.0,
+   "base_typical": 760.0,
+   "base_bias": 140.0,
+   "thermal_n": 8,
+   "thermal_right": 2,
+   "thermal_within_one": 7,
+   "thermal_bias": 0.88,
    "rules": {
     "B2": [
      1,
@@ -34,8 +34,8 @@
      2
     ]
    },
-   "camera_days": 3,
-   "derived_minus_camera": -420.0,
+   "camera_days": 4,
+   "derived_minus_camera": -330.0,
    "pilots": true
   }
  }
