@@ -93,24 +93,24 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><a class="homebtn" href="/">&larr; Home</a><div class="tag">Kula soaring briefing</div><h1>Kula Today</h1></div>
-    <div class="date">Updated Thu 29 Oct 2026 · 08:07 HST</div>
+    <div class="date">Updated Thu 29 Oct 2026 · 08:22 HST</div>
   </header>
 
   <div>
     <!-- The FAA viewer shows its station list before it opens the camera; the latest frame covers that until it has (Sam, 2026-10-25). -->
-    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" title="Red Hill webcam, live, looking south along the Kula slope" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="camera.jpg?2026-10-29T08:07" alt=""></div>
+    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" title="Red Hill webcam, live, looking south along the Kula slope" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="camera.jpg?2026-10-29T08:22" alt=""></div>
     <div class="camcap">Red Hill webcam, live. FAA WeatherCam (Kekoa). <a href="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" target="_blank" rel="noopener">Open full size</a></div>
   </div>
 
   <div class="cols">
     <section class="panel today" aria-labelledby="t-today">
-      <div class="kind">Measured today · 08:07 HST</div>
+      <div class="kind">Measured today · 08:22 HST</div>
       <div class="head"><h2 id="t-today">Today</h2><span class="chip warn">Flat</span></div>
       <div class="alert" style="font-size:.95rem;margin:4px 0 6px">Flood Watch until Thu 18:00 <a href="https://forecast.weather.gov/MapClick.php?lat=20.7579&lon=-156.3200" target="_blank" rel="noopener" style="font-weight:500">NWS details</a></div><div class="sub" style="display:flex;align-items:center;gap:6px;margin:2px 0 6px"><img src="https://api.weather.gov/icons/land/day/rain_showers,50/rain_showers,60?size=small" width="34" height="34" alt="Chance Rain Showers (61%)" title="NWS: Chance Rain Showers (61%)" loading="lazy" style="vertical-align:middle;border-radius:4px;margin-left:6px"><span>NWS today: Chance Rain Showers (61%)</span></div>
-      <p class="summary">Low cloud is down to about 3,200 ft; the night&#x27;s dew is evaporating -- Kula Ag&#x27;s dew point is up 2 °F since 04:00 and it is still 95% humid. Today&#x27;s forecast: Thermals probably flat. Trades from the ENE should put the shear line at Pukalani. Upslope has not set in yet.</p><div class="watch"><div class="kind">What to watch</div><ul><li>The night&#x27;s dew is still evaporating (Kula Ag&#x27;s dew point still rising): the base stays low until it stops. Possible cap: once it lifts, the wet slope can keep feeding moisture and hold the base down for hours. <span class="pid">P3 · Base will lift</span></li></ul></div>
+      <p class="summary">Low cloud is down to about 3,100 ft; the night&#x27;s dew is evaporating -- Kula Ag&#x27;s dew point is up 2 °F since 04:00 and it is still 95% humid. Today&#x27;s forecast: Thermals probably flat. Trades from the ENE should put the shear line at Pukalani. Upslope has not set in yet.</p><div class="watch"><div class="kind">What to watch</div><ul><li>The night&#x27;s dew is still evaporating (Kula Ag&#x27;s dew point still rising): the base stays low until it stops. Possible cap: once it lifts, the wet slope can keep feeding moisture and hold the base down for hours. <span class="pid">P3 · Base will lift</span></li></ul></div>
       <dl>
         <dt>Thermals</dt><dd>Probably <strong>flat</strong> (forecast)<div class="sub">thermal.py on the forecast air; measured rating just after 10:00</div></dd>
-        <dt>Morning<br>cloud</dt><dd>Low cloud down to about <span class="num">3,200 ft</span><div class="sub">7 of 11 slope stations near saturation; Kula Ag 68/66 °F (95%), dew point up 2 °F since 04:00 as the night's dew evaporates</div></dd>
+        <dt>Morning<br>cloud</dt><dd>Low cloud down to about <span class="num">3,100 ft</span><div class="sub">7 of 11 slope stations near saturation; Kula Ag 68/67 °F (95%), dew point up 2 °F since 04:00 as the night's dew evaporates</div></dd>
         <dt>Sun</dt><dd><span class="num">44%</span> of clear sky forecast, 10:00–14:00 (GFS)<div class="sub">Measured from about 09:15; Kula is in Haleakala's shadow until about 08:00</div></dd>
         <dt>Shear line</dt><dd>At Pukalani (forecast)<div class="sub">Trades ENE (077°). Measured once the upslope sets in</div></dd>
         
@@ -157,7 +157,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
    browser's 10-minute cached copy is bypassed. The 15-minute refresh stays
    as a backstop. */
 (function () {
-  var built = "2026-10-29T08:07";
+  var built = "2026-10-29T08:22";
   function check() {
     fetch("stations.json?" + Date.now(), {cache: "no-store"})
       .then(function (r) { return r.json(); })
