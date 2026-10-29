@@ -299,10 +299,12 @@ def crest_camera(now: datetime) -> dict | None:
         got = [r["segments"][name] for r in reads if name in r["segments"]]
         bases = [g["base_ft"] for g in got if g["base_ft"]]
         segs[name] = {"capped": round(float(np.mean([g["capped"] for g in got])), 2),
+                      "hidden": round(float(np.mean([g.get("hidden", 0) for g in got])), 2),
                       "base_ft": round(float(np.median(bases)), -1) if bases else None,
                       "crest_ft": got[-1]["crest_ft"], "crest_max_ft": got[-1].get("crest_max_ft")}
     bases = [r["base_ft"] for r in reads if r["base_ft"]]
     return {"segments": segs, "capped": round(float(np.mean([r["capped"] for r in reads])), 2),
+            "hidden": round(float(np.mean([r.get("hidden", 0) for r in reads])), 2),
             "base_ft": round(float(np.median(bases)), -1) if bases else None,
             "at": newest, "frames": len(reads)}
 
@@ -345,7 +347,20 @@ def log_gap(now: datetime, cam: dict) -> None:
                     round(float(np.median(shown)), -1) if shown else None])
 
 
+HIDDEN_SHARE = 0.5     # a stretch whose crest is out of sight this much of the time
+
+
 def cam_text(cam: dict) -> str:
+    # The crest out of sight -- cloud on the ridge, or rain or cloud between it
+    # and the camera (10-28) -- is said as such, never read as "clear".
+    hidden = [n for n, s in cam["segments"].items() if s.get("hidden", 0) >= HIDDEN_SHARE and n != "Pali gap"]
+    shown = [n for n in cam["segments"] if n != "Pali gap"]
+    if hidden and len(hidden) >= len(shown) - 1:
+        return "The ridge is hidden: cloud or rain over the Koʻolau."
+    if hidden:
+        cam = {**cam, "segments": {n: s for n, s in cam["segments"].items() if n not in hidden}}
+        rest = cam_text(cam)
+        return rest + " " + _cap(f"{_and(hidden)} {'is' if len(hidden) == 1 else 'are'} hidden by cloud or rain.")
     capped = [n for n, s in cam["segments"].items() if s["capped"] >= CAP_SHARE and n != "Pali gap"]
     if capped:
         return "Cloud on the Koʻolau: " + ", ".join(capped) + "."

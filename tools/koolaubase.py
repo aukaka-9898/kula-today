@@ -72,6 +72,11 @@ BELOW = (3, 16)            # rows under the skyline read for cloud on the crest
 LIGHT = (45, 70)           # rows under the skyline read for the frame's lighting
 CAP_LIFT = 30              # brighter than clear air by this, beyond the lighting change
 CAP_SAT = 45               # grey/white: max - min channel under this
+# The crest must be visible to be read (Sam, 10-29: on 10-28 "the camera was
+# socked in at times yet it seemed to be used 'Greenwall is clear'"). Contrast
+# across the skyline against the clear frame's: 10-28 frames read 0.01-0.11,
+# good days 0.45-2.1 (10-25 to 10-27).
+VIS_RATIO = 0.25
 REACH_PX = 220             # how far above the crest a cloud bottom is looked for
 # Cloud vs the pale haze right over the crest (10:03 clear frame): haze
 # ~150 grey with blue minus red ~9-24; cloud 150-170 with blue minus red
@@ -164,9 +169,13 @@ def read(rgb, view="sw"):
     strip = np.array([gray[int(y0) - 25:int(y0) - 10, x - 3:x + 4].mean() for x, y0 in zip(cols, rows)])
     ref = np.array([np.percentile(strip[np.abs(cols - x) <= NEAR_PX], 75) for x in cols])
     out = []
+    edge = lambda im, x, y: abs(im[y - 12:y - 4, x - 3:x + 4].mean() - im[y + 4:y + 12, x - 3:x + 4].mean())
     for x, y0, d, c, az, st, rf in zip(cols, rows, dist, crest, azs, strip, ref):
         y0 = int(round(y0))
         sl = slice(x - 3, x + 4)
+        if clear is not None and edge(gray, x, y0) < VIS_RATIO * max(edge(clear, x, y0), 1.0):
+            out.append({"x": int(x), "crest_ft": round(c), "capped": False, "hidden": True, "base_ft": None})
+            continue
         grey = sat[y0 + BELOW[0]:y0 + BELOW[1], sl].mean() < CAP_SAT
         if selfref:
             under = gray[y0 + BELOW[0]:y0 + BELOW[1], sl].mean() - gray[y0 + LIGHT[0]:y0 + LIGHT[1], sl].mean()
@@ -186,7 +195,7 @@ def read(rgb, view="sw"):
             hit = next((i for i in range(len(cloud) - RUN) if cloud[i:i + RUN].all()), None)
             if hit is not None:
                 base = height_ft(g, az, bot - hit, d)
-        out.append({"x": int(x), "crest_ft": round(c), "capped": bool(capped),
+        out.append({"x": int(x), "crest_ft": round(c), "capped": bool(capped), "hidden": False,
                     "base_ft": None if base is None else round(base, -1)})
     segs = {}
     for name, a, b in VIEWS[view]["segments"]:
@@ -196,12 +205,14 @@ def read(rgb, view="sw"):
         cap = sum(o["capped"] for o in part) / len(part)
         bases = [o["base_ft"] for o in part if o["base_ft"] is not None]
         segs[name] = {"capped": round(cap, 2), "n": len(part),
+                      "hidden": round(sum(o["hidden"] for o in part) / len(part), 2),
                       "base_ft": round(float(np.median(bases)), -1) if len(bases) >= 3 else None,
                       "crest_ft": round(float(np.median([o["crest_ft"] for o in part])), -1),
                       "crest_max_ft": round(float(max(o["crest_ft"] for o in part)), -1)}
     caps = [o for o in out if o["capped"]]
     bases = [o["base_ft"] for o in out if o["base_ft"] is not None]
     return {"columns": out, "segments": segs, "capped": round(len(caps) / max(len(out), 1), 2),
+            "hidden": round(sum(o["hidden"] for o in out) / max(len(out), 1), 2),
             "base_ft": round(float(np.median(bases)), -1) if len(bases) >= 5 else None}
 
 
