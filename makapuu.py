@@ -1361,7 +1361,7 @@ def write_station_map(now: datetime, k: dict | None) -> None:
                     air(row, metar["temp"] * 1.8 + 32, metar["dewp"] * 1.8 + 32, t)
             elif feed == "moku":
                 # NOAA's tide gauge (Sam, 10-29: "It does not appear on the map at all"):
-                # wind and air temperature; no humidity, so Kaneohe's dew point, as the page uses.
+                # wind and air temperature. No humidity, so no dew point (Sam, 10-29: drop it).
                 w = requests.get(COOPS_MOKU.replace("air_temperature", "wind"), timeout=30).json()["data"][-1]
                 t = datetime.strptime(w["t"], "%Y-%m-%d %H:%M").replace(tzinfo=timezone.utc).astimezone(HST)
                 if now - t <= OBS_MAX_AGE and w.get("s") not in (None, ""):
@@ -1369,10 +1369,7 @@ def write_station_map(now: datetime, k: dict | None) -> None:
                     if w.get("g") not in (None, ""):
                         row["gust"] = round(float(w["g"]) * 2.23694)
                 mk = moku_temp(now)
-                if mk and metar and metar.get("dewp") is not None:
-                    air(row, mk[0] * 1.8 + 32, metar["dewp"] * 1.8 + 32, mk[1])
-                    row["dew_from"] = "Kaneohe"
-                elif mk:
+                if mk:
                     row["temp_f_only"] = round(mk[0] * 1.8 + 32, 1)
             elif feed == "hcdp" and sid in hcdp:
                 t, v = hcdp[sid]
