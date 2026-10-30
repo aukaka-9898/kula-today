@@ -120,10 +120,28 @@ def bright_base(gray, heights: dict, thr=30, run=3, base_rows=15):
     return (round(float(np.median(nums)), -1) if spread <= 600 else None), res
 
 
+# Hidden (Sam, 2026-10-29: "a two hour gap in camera calls, from 1100"): cloud
+# or rain right at the camera washes the whole box out evenly, the backup's
+# lighting correction cancels it, and it read "above" -- logged as "no edge".
+# Contrast in the box against the clear day's: fogged-in frames 0.02-0.15
+# (10-27 to 10-29), clear-air frames 0.45-0.78, edges still found down to ~0.25.
+HIDDEN_RATIO = 0.16
+
+
+def box_contrast(gray) -> float:
+    w = gray[ROWS[0]:ROWS[1] + 60, 840:1020]
+    return float(np.abs(np.diff(w, axis=0)).mean() + np.abs(np.diff(w, axis=1)).mean())
+
+
 def camera_base(rgb, heights: dict, gray=None):
     """(base ft or None, spread ft or None, why): the edge reading, then the
     grey-sky backup. why: "" (edge), "grey backup", "slope clear", "no edge",
-    "bright" (no edge, blue sky: backup skipped)."""
+    "bright" (no edge, blue sky: backup skipped), "hidden" (cloud or rain at
+    the camera: the slope is lost)."""
+    if gray is None:                     # PIL's "L" weights, as the backup was tuned
+        gray = rgb @ np.array([0.299, 0.587, 0.114])
+    if box_contrast(gray) < HIDDEN_RATIO * box_contrast(_ref()):
+        return None, None, "hidden"
     base, spread, top = edge_base(rgb, heights)
     if base is not None:
         return base, spread, ""
@@ -131,7 +149,5 @@ def camera_base(rgb, heights: dict, gray=None):
         return None, None, "slope clear"
     if sky_blue(rgb) > OVERCAST_BLUE:
         return None, None, "bright"
-    if gray is None:                     # PIL's "L" weights, as the backup was tuned
-        gray = rgb @ np.array([0.299, 0.587, 0.114])
     v, _ = bright_base(gray, heights, thr=30)
     return (v, None, "grey backup") if isinstance(v, float) else (None, None, "no edge")

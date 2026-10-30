@@ -3434,8 +3434,9 @@ def camera_rows(day: str):
 
 
 def camera_recent(now: datetime) -> dict | None:
-    """{ft, at, clear}: the mean of the last 30 minutes' camera readings, or
-    clear=True when every frame then saw the visible slope clear of cloud."""
+    """{ft, at, clear, hidden}: the mean of the last 30 minutes' camera readings,
+    clear=True when every frame then saw the visible slope clear of cloud, or
+    hidden=True when most frames had the slope lost in cloud or rain."""
     c = camera_rows(f"{now:%Y-%m-%d}")
     if c.empty:
         return None
@@ -3449,6 +3450,8 @@ def camera_recent(now: datetime) -> dict | None:
         return {"ft": round(float(v.mean()), -2), "at": last, "clear": False}
     if (c.why.fillna("") == "slope clear").all():
         return {"ft": None, "at": last, "clear": True}
+    if (c.why.fillna("") == "hidden").mean() >= 0.5:
+        return {"ft": None, "at": last, "clear": False, "hidden": True}
     return None
 
 
@@ -3857,7 +3860,11 @@ def build() -> str:
     if cam_now:
         stations = (f"about {ft(round(base['mid'], -2))} ft ({base['n']} stations, {base['at']:%H:%M})"
                     if base else "unavailable")
-        if cam_now["clear"]:
+        if cam_now.get("hidden"):
+            base_html = (f'<span class="num">Slope hidden</span>'
+                         f'<div class="sub">Kekoa camera, the last 30 minutes to {cam_now["at"]}: '
+                         f'cloud or rain at the camera. Stations: {stations}.</div>')
+        elif cam_now["clear"]:
             # No number: a clear slope says no cloud sits ON it up to the
             # skyline (~7,300 ft), not that every cloud is above that.
             base_html = (f'<span class="num">No cloud on the slope</span>'
