@@ -93,18 +93,18 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><a class="homebtn" href="/">&larr; Home</a><div class="tag">Kula soaring briefing</div><h1>Kula Today</h1></div>
-    <div class="date">Updated Thu 29 Oct 2026 · 16:05 HST</div>
+    <div class="date">Updated Thu 29 Oct 2026 · 16:06 HST</div>
   </header>
 
   <div>
     <!-- The FAA viewer shows its station list before it opens the camera; the latest frame covers that until it has (Sam, 2026-10-25). -->
-    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" title="Red Hill webcam, live, looking south along the Kula slope" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="camera.jpg?2026-10-29T16:05" alt=""></div>
+    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" title="Red Hill webcam, live, looking south along the Kula slope" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="camera.jpg?2026-10-29T16:06" alt=""></div>
     <div class="camcap">Red Hill webcam, live. FAA WeatherCam (Kekoa). <a href="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" target="_blank" rel="noopener">Open full size</a></div>
   </div>
 
   <div class="cols">
     <section class="panel today" aria-labelledby="t-today">
-      <div class="kind">Measured today · 16:05 HST</div>
+      <div class="kind">Measured today · 16:06 HST</div>
       <div class="head"><h2 id="t-today">Today</h2><span class="chip warn">Flat</span></div>
       <div class="alert" style="font-size:.95rem;margin:4px 0 6px">Flood Watch until Thu 18:00 <a href="https://forecast.weather.gov/MapClick.php?lat=20.7579&lon=-156.3200" target="_blank" rel="noopener" style="font-weight:500">NWS details</a></div><div class="sub" style="display:flex;align-items:center;gap:6px;margin:2px 0 6px"><img src="https://api.weather.gov/icons/land/day/rain_showers,60?size=small" width="34" height="34" alt="Rain Showers Likely (55%)" title="NWS: Rain Showers Likely (55%)" loading="lazy" style="vertical-align:middle;border-radius:4px;margin-left:6px"><span>NWS today: Rain Showers Likely (55%)</span></div><div class="databadge"><div class="big">Limited data</div><div>19 of 29 stations reporting. Readings below rest on fewer stations than usual.</div></div>
       <p class="summary">Cloudbase is steady. Kula Ag had mostly shade over the last hour; cloud reaches all the way to the Summit. The upslope is ending: the slope has nearly stopped gaining heat since about 15:30. Trades are holding the shear line crossing Kula Highway between Pukalani and Omaopio, with no trade air on the lower west slope.</p><div style="font-weight:600;font-size:.9rem;margin:10px 0 2px">Cloudbase so far, derived</div><div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted,#6b6b66);margin:2px 0 4px">
@@ -150,7 +150,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 </script>
       <dl>
         <dt>Thermals</dt><dd>Seem <strong>flat</strong> as of 15:45<div class="sub">Kula Ag's last hour of air through the NAM sounding (thermal.py); no sun anywhere on the Kula side (best 30%)</div></dd>
-        <dt>Derived<br>Cloudbase</dt><dd><span class="num">About 3,100 ft</span><div class="sub">The lower slope is still damp from the dew overnight. The highest station (MECO Crater Rd) is at about 4,900 ft: the base should lift toward that as the dew dries</div></dd>
+        <dt>Derived<br>Cloudbase</dt><dd><span class="num">About 3,100 ft</span><div class="sub">The lower slope is still wet from the rain. The highest station (MECO Crater Rd) is at about 4,900 ft: the base should lift toward that as the slope dries</div></dd>
         <dt>Sun</dt><dd><span class="num">28%</span> of clear sky, lower Kula slope<div class="sub">Last hour, as of 15:45; average of Kula Ag 27%, Keokea 27%, Pulehu 29%</div></dd>
         <dt>Shear line</dt><dd>Crossing Kula Highway between Pukalani and Omaopio<div class="sub">Last hour: trades at Piiholo, upslope at Red Hill</div><div class="alert">8 of 21 stations not reporting: the line is less certain than usual</div></dd>
         
@@ -197,7 +197,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
    browser's 10-minute cached copy is bypassed. The 15-minute refresh stays
    as a backstop. */
 (function () {
-  var built = "2026-10-29T16:05";
+  var built = "2026-10-29T16:06";
   function check() {
     fetch("stations.json?" + Date.now(), {cache: "no-store"})
       .then(function (r) { return r.json(); })
