@@ -713,9 +713,10 @@ def barb_chart(fc: dict, ob: dict) -> str:
 # ---------------------------------------------------------------- The day's wrap-up
 # Like Kula's (Sam, 2026-10-26: "Build it. Include thermal call just for the
 # hell of it"): from WRAP_FROM, the day as measured -- Bellows' hours rated,
-# the downrange base by the Kāneʻohe Bay camera beside Moku o Loʻe's
-# condensation level, and the thermal call from Moku o Loʻe's air against
-# the RRFS profile. All from the parcel log the builds already write.
+# the downrange base by the Kāneʻohe Bay camera, and the thermal call from
+# the Kaneohe runway's air against the RRFS profile. All from the parcel log
+# the builds already write. Moku o Loʻe measures no humidity, so it gives no
+# condensation level or thermal index (Sam, 10-29: drop its borrowed dew point).
 WRAP_FROM = 17
 WRAP_CAMERA_MIN = 3        # midday camera readings needed to lead with the camera (Kula's rule)
 # The chart spans the camera's hours only (Sam, 10-26: "clip the chart to match cam obs").
@@ -759,23 +760,21 @@ def _wrap_log(day: str):
     return p
 
 
-def wrap_chart(camera: list, moku: list) -> str:
-    """The day's downrange base: camera dots, Moku o Loʻe's line, over the camera's hours."""
-    data = json.dumps({"camera": camera, "moku": moku})
+def wrap_chart(camera: list) -> str:
+    """The day's downrange base: camera dots over the camera's hours."""
+    data = json.dumps({"camera": camera})
     return f"""<div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted);margin:2px 0 4px">
-<span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#3f9d5a;vertical-align:middle"></span> Kāneʻohe Bay camera</span>
-<span><span style="display:inline-block;width:16px;height:2px;background:#2a78d6;vertical-align:middle"></span> Moku o Loʻe's air would condense</span></div>
+<span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#3f9d5a;vertical-align:middle"></span> Kāneʻohe Bay camera</span></div>
 <div style="position:relative;width:100%;min-width:0;height:220px"><canvas id="wrapchart" role="img" aria-label="Downrange cloud base through the day"></canvas></div>
 <script>
 (function () {{
   var d = {data}, pt = function (a) {{ return {{x: a[0], y: a[1]}}; }};
   var dark = matchMedia('(prefers-color-scheme: dark)').matches, muted = '#898781', grid = dark ? '#2c2c2a' : '#e1e0d9';
   var hm = function (m) {{ return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); }};
-  var ys = d.camera.concat(d.moku).map(function (a) {{ return a[1]; }});
+  var ys = d.camera.map(function (a) {{ return a[1]; }});
   new Chart(document.getElementById('wrapchart'), {{
     type: 'line',
     data: {{ datasets: [
-      {{ label: "Moku o Lo‘e", data: d.moku.map(pt), borderColor: '#2a78d6', borderWidth: 2, pointRadius: 2, pointBackgroundColor: '#2a78d6', tension: 0.3 }},
       {{ label: 'Camera', data: d.camera.map(pt), showLine: false, pointRadius: 3, pointBackgroundColor: '#3f9d5a', borderColor: '#3f9d5a' }}
     ] }},
     options: {{ responsive: true, maintainAspectRatio: false, interaction: {{ mode: 'nearest', axis: 'x', intersect: false }},
@@ -817,26 +816,18 @@ def day_wrap(now: datetime, forecast_word: str | None, problems: list) -> str:
     if p is not None:
         cam = (p.dropna(subset=["camera_bound_ft"]).groupby("m").camera_bound_ft.first()
                if "camera_bound_ft" in p else None)
-        moku_rows = p[p.station == "Moku o Loe"]
-        moku = moku_rows.groupby("om").lcl_ft.median()
+        runway = p[p.station == "Kaneohe runway"]
         camera_pts = [[int(m), float(v)] for m, v in cam.items()] if cam is not None else []
-        moku_pts = [[int(m), float(v)] for m, v in moku.items() if WRAP_SPAN[0] <= m <= WRAP_SPAN[1]]
         cam_mid = [v for m, v in camera_pts if 660 <= m <= 840]
-        moku_mid = [v for m, v in moku_pts if 660 <= m <= 840]
         if len(cam_mid) >= WRAP_CAMERA_MIN:
-            s = f"Midday the downrange base averaged about {round(np.mean(cam_mid), -2):,.0f} ft by the Kāneʻohe Bay camera"
-            s += (f"; Moku o Loʻe's air would have condensed at about {round(np.mean(moku_mid), -2):,.0f}." if moku_mid else ".")
-            said.append(s)
-        elif moku_mid:
-            said.append(f"Midday Moku o Loʻe's air would have condensed at about {round(np.mean(moku_mid), -2):,.0f} ft "
-                        "(too few camera readings to say more).")
-        ti = moku_rows[(moku_rows.m >= 600) & (moku_rows.m < 840)].ti_c.dropna()
+            said.append(f"Midday the downrange base averaged about {round(np.mean(cam_mid), -2):,.0f} ft by the Kāneʻohe Bay camera.")
+        ti = runway[(runway.m >= 600) & (runway.m < 840)].ti_c.dropna()
         if len(ti):
             peak = float(ti.median())
-            said.append(f"Thermals by Moku o Loʻe's air against the RRFS profile, 10:00–14:00: {th.describe(peak).lower()} "
+            said.append(f"Thermals by the Kaneohe runway's air against the RRFS profile, 10:00–14:00: {th.describe(peak).lower()} "
                         f"(index {peak:.1f} °C)" + (f"; the forecast said {forecast_word.lower()}." if forecast_word else "."))
-        if camera_pts or moku_pts:
-            chart = wrap_chart(camera_pts, moku_pts)
+        if camera_pts:
+            chart = wrap_chart(camera_pts)
     if not said and not chart:
         return None
     return "".join(f'<p class="summary">{esc(s)}</p>' for s in said) + chart, best
@@ -896,13 +887,8 @@ def write(now: datetime) -> None:
         if got and now - got[-1][0] <= OBS_MAX_AGE + timedelta(minutes=30):
             t, tf, rh = got[-1]
             airs.append((HADS_AIR[code][1], lcl_msl(tf, dew_f(tf, rh), HADS_AIR[code][2]), t))
-    # Moku o Loʻe's temperature (the bay, marine air) with Kaneohe's dew point
-    # leads: Kaneohe's temperature is the runway's (Sam, 10-25: "Seems like moku
-    # o loe is preferred over kaneohe"; first readings within ~200 ft under the
-    # camera's limit, the runway ~500 ft over). Kaneohe's own air is the fallback.
-    mk = _try(moku_temp, now, problems=problems)
-    if mk and k and k.get("td_c") is not None:
-        airs.append(("Moku o Loʻe", int(round((mk[0] - k["td_c"]) * 125 * 3.28084, -2)), mk[1]))
+    # Moku o Loʻe led here with Kaneohe's dew point (Sam, 10-25) until 10-29:
+    # it measures no humidity, so the borrowed dew point is dropped ("drop them").
     kb = crest_base(k)
     if kb is not None:
         airs.append(("Kaneohe (PHNG)", kb, k["at"]))
@@ -1259,7 +1245,6 @@ def log_parcels(now: datetime, k: dict | None, air: dict | None, cam: dict | Non
         return
     cands = _parcel_candidates(now, k)
     prof = _profile(air, now.replace(minute=0, second=0, microsecond=0)) if air else None
-    td_coast = cands.get("Kaneohe runway", (None, None, None))[1]
     new = not PARCEL_LOG.exists()
     with open(PARCEL_LOG, "a", newline="", encoding="utf-8") as f:
         w = csv.writer(f)
@@ -1269,11 +1254,11 @@ def log_parcels(now: datetime, k: dict | None, air: dict | None, cam: dict | Non
         cam_txt = cam_text(cam) if cam else ""
         bound = cam.get("base_ft") if cam else None
         for name, (tf, td, t) in cands.items():
-            dew_from = "own"
-            if td is None and td_coast is not None:
-                td, dew_from = td_coast, "Kaneohe"                # Moku o Loʻe has no humidity
-            if td is None:
+            if td is None:                         # Moku o Loʻe: no humidity, temperature only
+                w.writerow([f"{now:%Y-%m-%d}", f"{now:%H:%M}", name, f"{t:%H:%M}", round(tf, 1), "", "",
+                            "", "", "", cam_txt, bound])
                 continue
+            dew_from = "own"
             lcl = round((tf - td) / 1.8 * 125 * 3.28084, -1)
             ti = word = ""
             if prof is not None:
