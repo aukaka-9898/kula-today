@@ -3469,6 +3469,14 @@ def camera_points(day: datetime) -> list:
     return [[int(t[:2]) * 60 + int(t[3:5]), float(v)] for t, v in zip(c.time, c.camera_ft)]
 
 
+def camera_hidden(day: datetime) -> list:
+    """Minutes of the day the camera had the slope hidden (cloud or rain at it)."""
+    c = camera_rows(f"{day:%Y-%m-%d}")
+    if c.empty:
+        return []
+    return sorted(int(t[:2]) * 60 + int(t[3:5]) for t in c[c.why.fillna("") == "hidden"].time)
+
+
 def base_chart(obs, now, up, end, cid="basechart", title="Cloudbase, derived vs forecast",
                with_forecast=True) -> tuple[str, list, list]:
     """(html, derived, forecast): the derived base every 15 minutes through
@@ -3494,7 +3502,9 @@ def base_chart(obs, now, up, end, cid="basechart", title="Cloudbase, derived vs 
     # The forecast is still returned for the review notes and the scorecard,
     # just not drawn (Sam, 2026-10-17: derived-only charts).
     cam = safely(camera_points, day) or []
-    return (chart_html(cid, derived, forecast if with_forecast else [], span, note, title=title, camera=cam),
+    hid = safely(camera_hidden, day) or []
+    return (chart_html(cid, derived, forecast if with_forecast else [], span, note, title=title, camera=cam,
+                       hidden=hid),
             derived, forecast)
 
 
@@ -3505,7 +3515,7 @@ def base_chart(obs, now, up, end, cid="basechart", title="Cloudbase, derived vs 
 FORECAST_BAND_FT = 700
 
 
-def chart_html(cid, derived, forecast, span, note, nocu=None, title="", camera=None) -> str:
+def chart_html(cid, derived, forecast, span, note, nocu=None, title="", camera=None, hidden=None) -> str:
     """Cloudbase line chart: derived (solid) and forecast (dashed) by minute of
     the day, the upslope shaded; derived and span may be empty for a forecast.
 
@@ -3515,13 +3525,19 @@ def chart_html(cid, derived, forecast, span, note, nocu=None, title="", camera=N
     # Every chart shows 09:00-16:00 (Sam): the flying day, nothing outside it.
     clip = lambda pts: [q for q in pts if 540 <= q[0] <= 960]
     derived, forecast, camera = clip(derived), clip(forecast), clip(camera or [])
+    # Camera hidden (Sam, 10-29): a camera-sized dot in a caution colour on the
+    # bottom axis for each frame with the slope lost in cloud or rain -- no height.
+    hidden = [m for m in (hidden or []) if 540 <= m <= 960]
     if span:
         span = [max(span[0], 540), min(span[1], 960)]
-    data = json.dumps({"derived": derived, "forecast": forecast, "camera": camera, "up": span, "nocu": nocu})
+    data = json.dumps({"derived": derived, "forecast": forecast, "camera": camera, "hidden": hidden,
+                       "up": span, "nocu": nocu})
     legend = ("" if not derived else
               '<span><span style="display:inline-block;width:16px;height:2px;background:#2a78d6;vertical-align:middle"></span> Derived (stations)</span>'
               '') + ('<span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#3f9d5a;vertical-align:middle"></span> Kekoa camera</span>'
-                     if camera else "")
+                     if camera else "") + (
+              '<span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#e0a100;vertical-align:middle"></span> Camera hidden (cloud or rain)</span>'
+              if hidden else "")
     head = (f'<div style="font-weight:600;font-size:.9rem;margin:10px 0 2px">{esc(title)}</div>'
             if title else "")
     # The Forecast key only when there is a forecast line (Sam, 2026-10-17:
@@ -3549,20 +3565,24 @@ def chart_html(cid, derived, forecast, span, note, nocu=None, title="", camera=N
   var hm = function (m) {{ return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); }};
   var ys = d.derived.map(function (a) {{ return a[1]; }}).concat(d.forecast.map(function (a) {{ return a[1]; }})).concat(d.camera.map(function (a) {{ return a[1]; }}));
   var xs = [540, 960];
+  var ymin = Math.min(3500, Math.floor(Math.min.apply(null, ys) / 500) * 500);
   new Chart(document.getElementById('{cid}'), {{
     type: 'line',
     data: {{ datasets: [
       {{ label: 'Derived', data: d.derived.map(pt), borderColor: '#2a78d6', borderWidth: 2, pointRadius: 0, tension: 0.3 }},
       {{ label: 'Forecast', data: d.forecast.map(pt), borderColor: '#eb6834', borderWidth: 2, borderDash: [6, 4], pointRadius: 3, pointBackgroundColor: '#eb6834', tension: 0.3 }},
-      {{ label: 'Kekoa camera', data: d.camera.map(pt), showLine: false, pointRadius: 3, pointBackgroundColor: '#3f9d5a', borderColor: '#3f9d5a' }}
+      {{ label: 'Kekoa camera', data: d.camera.map(pt), showLine: false, pointRadius: 3, pointBackgroundColor: '#3f9d5a', borderColor: '#3f9d5a' }},
+      {{ label: 'Camera hidden', data: d.hidden.map(function (m) {{ return {{x: m, y: ymin}}; }}), showLine: false, clip: false,
+         pointRadius: 3, pointBackgroundColor: '#e0a100', borderColor: '#e0a100' }}
     ] }},
     options: {{ responsive: true, maintainAspectRatio: false, interaction: {{ mode: 'nearest', axis: 'x', intersect: false }},
       plugins: {{ legend: {{ display: false }}, tooltip: {{ callbacks: {{
         title: function (i) {{ return hm(i[0].parsed.x); }},
-        label: function (i) {{ return i.dataset.label + ': ' + Math.round(i.parsed.y).toLocaleString() + ' ft'; }} }} }} }},
+        label: function (i) {{ return i.dataset.label === 'Camera hidden' ? 'Camera hidden: cloud or rain at the camera'
+          : i.dataset.label + ': ' + Math.round(i.parsed.y).toLocaleString() + ' ft'; }} }} }} }},
       scales: {{
         x: {{ type: 'linear', min: xs[0], max: xs[1], ticks: {{ stepSize: 60, color: muted, callback: function (v) {{ return hm(v); }} }}, grid: {{ display: false }} }},
-        y: {{ min: Math.min(3500, Math.floor(Math.min.apply(null, ys) / 500) * 500),
+        y: {{ min: ymin,
               max: Math.max(7000, Math.ceil(Math.max.apply(null, ys) / 500) * 500),
               ticks: {{ stepSize: 500, color: muted, callback: function (v) {{ return v.toLocaleString(); }} }}, grid: {{ color: grid }} }}
       }} }},
