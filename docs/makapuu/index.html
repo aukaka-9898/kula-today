@@ -94,23 +94,23 @@ tr.wk td { border-bottom: 0; padding-bottom: 2px; } tr.wkh td { white-space: nor
 <div class="wrap">
   <header>
     <div><a class="homebtn" href="/">&larr; Home</a><div class="tag">Makapu&#8216;u soaring briefing</div><h1>Makapu&#8216;u Today</h1></div>
-    <div class="date">Updated Fri 30 Oct 2026 · 08:23 HST</div>
+    <div class="date">Updated Fri 30 Oct 2026 · 08:37 HST</div>
   </header>
   <div class="databadge"><div class="big">Under construction</div></div>
   <div>
-    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/760/details/camera/12783/full" title="Kāne&#8216;ohe Bay webcam, live, looking southeast down the Ko&#8216;olau toward Makapu&#8216;u" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="camera.jpg?2026-10-30T08:23" alt=""></div>
+    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/760/details/camera/12783/full" title="Kāne&#8216;ohe Bay webcam, live, looking southeast down the Ko&#8216;olau toward Makapu&#8216;u" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="camera.jpg?2026-10-30T08:37" alt=""></div>
     <div class="camcap">Kāne&#8216;ohe Bay webcam, live, looking southeast down the Ko&#8216;olau to Makapu&#8216;u. FAA WeatherCam. <a href="https://weathercams.faa.gov/cameras/state/HI/cameraSite/760/details/camera/12783/full" target="_blank" rel="noopener">Open full size</a> · <a href="https://weathercams.faa.gov/cameras/state/HI/cameraSite/588/details/camera/12153/full" target="_blank" rel="noopener">Makapu&#8216;u camera, at the point</a></div>
   </div>
   <div class="cols">
     <section class="panel today" aria-labelledby="t-today">
-      <div class="kind">Now · 08:23 HST</div>
+      <div class="kind">Now · 08:37 HST</div>
       <div class="head"><h2 id="t-today">Today</h2><span class="chip warn">Not flyable</span></div>
       
       <dl>
-        <dt>On the ridge</dt><dd><strong>Not flyable</strong><div class="sub">wind and gusts average 18 mph, over the 15 mph limit for this direction</div></dd>
-        <dt>Wind</dt><dd><span class="num">ENE (061°) 17 mph, gusts 20</span><div class="sub">Bellows, 07:15</div></dd>
+        <dt>On the ridge</dt><dd><strong>Not flyable</strong><div class="sub">wind and gusts average 17 mph, over the 15 mph limit for this direction</div></dd>
+        <dt>Wind</dt><dd><span class="num">ENE (061°) 17 mph</span><div class="sub">Bellows, 07:15</div></dd>
         <dt>Cloudbase at launch</dt><dd><span class="num">About 1,200 ft</span><div class="sub">Condensation level of the air at HECO Mokuhano, 08:00.</div></dd>
-        <dt>Cloudbase at Kāne&#8216;ohe</dt><dd>Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.<div class="sub">Kāne&#8216;ohe Bay camera, looking at the Ko&#8216;olau, the last 30 minutes to 08:15. Kaneohe (PHNG)'s air would condense at about 1,400 ft.</div><div class="sub">Kāne&#8216;ohe ceilometer: broken 2,000, overcast 4,500 ft (07:57).</div><div class="downret">More east than the ideal 050°: easier going downrange, harder getting back.</div></dd>
+        <dt>Cloudbase at Kāne&#8216;ohe</dt><dd>Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.<div class="sub">Kāne&#8216;ohe Bay camera, looking at the Ko&#8216;olau, the last 30 minutes to 08:32. Kaneohe (PHNG)'s air would condense at about 1,400 ft.</div><div class="sub">Kāne&#8216;ohe ceilometer: broken 2,000, overcast 4,500 ft (07:57).</div><div class="downret">More east than the ideal 050°: easier going downrange, harder getting back.</div></dd>
         <dt>Thermals</dt><dd>Probably <strong>flat</strong> (forecast)<div class="sub">RRFS at Kaneohe, run 30 12Z: thermal index -1.6 °C, 10:00–14:00 (surface air: Open-Meteo at Kaneohe); no useable lift. Useful, not critical, at Makapu&#8216;u.</div></dd>
         <dt>Inversion</dt><dd>About 5,700 ft (+1.4 °F)<div class="sub">RRFS at Kaneohe, 14:00: the trade lid</div></dd>
       </dl>
@@ -138,10 +138,10 @@ tr.wk td { border-bottom: 0; padding-bottom: 2px; } tr.wkh td { white-space: nor
     <p><strong>Notice.</strong> Information only, provided as is, with no guarantee of accuracy or availability. This is not an official forecast. Every pilot is responsible for their own decision to fly.</p>
   </div>
 </div>
-<!-- build problems: camera outlier left out: Greenwall 3,830 ft; camera outlier left out: Kāne&#8216;ohe crest 2,200 ft -->
+<!-- build problems: camera outlier left out: Greenwall 3,460 ft; camera outlier left out: Kāne&#8216;ohe crest 1,830 ft -->
 <script>
 (function () {
-  var built = "2026-10-30T08:23";
+  var built = "2026-10-30T08:37";
   function check() {
     fetch("summary.json?" + Date.now(), {cache: "no-store"}).then(function (r) { return r.json(); })
       .then(function (j) { if (j && j.built && j.built > built) location.replace(location.pathname + "?v=" + Date.now()); })
