@@ -1201,7 +1201,7 @@ def _lcl_ft(t_f, td_f) -> float:
 # 067HE as well".) Each daytime build logs every candidate's air, and the base
 # and thermal index it gives through the Kaneohe RRFS sounding, beside the
 # camera's reading -- docs/makapuu_parcels.csv -- to be scored against the
-# camera and Sam's calls. Nonokio (067HE) logs once the NWS feed returns.
+# camera and Sam's calls. Nonokio (067HE) and Mokuhano (065HE) from the NWS feed.
 PARCEL_LOG = HERE / "docs" / "makapuu_parcels.csv"
 PARCEL_PROBLEMS: list = []              # why a candidate's air was missing, into the page's problems
 
@@ -1227,16 +1227,19 @@ def _parcel_candidates(now: datetime, k: dict | None) -> dict:
                 out["Maunawili"] = (tf, dew_f(tf, v["RH_1_Avg"]), t)
     except Exception as e:
         PARCEL_PROBLEMS.append(f"{type(e).__name__}: {str(e)[:60]}")
-    try:
-        p = requests.get("https://api.weather.gov/stations/067HE/observations/latest", headers=HEAD,
-                         timeout=30).json()["properties"]
-        t = datetime.fromisoformat(p["timestamp"]).astimezone(HST)
-        if now - t <= OBS_MAX_AGE and p["temperature"]["value"] is not None:
-            tf = p["temperature"]["value"] * 1.8 + 32
-            td = None if p["dewpoint"]["value"] is None else p["dewpoint"]["value"] * 1.8 + 32
-            out["Nonokio"] = (tf, td, t)
-    except Exception as e:
-        PARCEL_PROBLEMS.append(f"{type(e).__name__}: {str(e)[:60]}")
+    # HECO Mokuhano at Makapuʻu Point too (Sam, 10-29: "Nonokio and Mokuhano
+    # seem effective for launch" -- for the base).
+    for sid, name in (("067HE", "Nonokio"), ("065HE", "Mokuhano")):
+        try:
+            p = requests.get(f"https://api.weather.gov/stations/{sid}/observations/latest", headers=HEAD,
+                             timeout=30).json()["properties"]
+            t = datetime.fromisoformat(p["timestamp"]).astimezone(HST)
+            if now - t <= OBS_MAX_AGE and p["temperature"]["value"] is not None:
+                tf = p["temperature"]["value"] * 1.8 + 32
+                td = None if p["dewpoint"]["value"] is None else p["dewpoint"]["value"] * 1.8 + 32
+                out[name] = (tf, td, t)
+        except Exception as e:
+            PARCEL_PROBLEMS.append(f"{name}: {type(e).__name__}: {str(e)[:60]}")
     try:
         mk = moku_temp(now)
         if mk:
