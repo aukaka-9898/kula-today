@@ -93,24 +93,24 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><a class="homebtn" href="/">&larr; Home</a><div class="tag">Kula soaring briefing</div><h1>Kula Today</h1></div>
-    <div class="date">Updated Fri 30 Oct 2026 · 06:07 HST</div>
+    <div class="date">Updated Fri 30 Oct 2026 · 06:22 HST</div>
   </header>
 
   <div>
     <!-- The FAA viewer shows its station list before it opens the camera; the latest frame covers that until it has (Sam, 2026-10-25). -->
-    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" title="Red Hill webcam, live, looking south along the Kula slope" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="camera.jpg?2026-10-30T06:07" alt=""></div>
+    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" title="Red Hill webcam, live, looking south along the Kula slope" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="camera.jpg?2026-10-30T06:22" alt=""></div>
     <div class="camcap">Red Hill webcam, live. FAA WeatherCam (Kekoa). <a href="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" target="_blank" rel="noopener">Open full size</a></div>
   </div>
 
   <div class="cols">
     <section class="panel today" aria-labelledby="t-today">
-      <div class="kind">Measured today · 06:07 HST</div>
+      <div class="kind">Measured today · 06:22 HST</div>
       <div class="head"><h2 id="t-today">Today</h2><span class="chip warn">Flat</span></div>
-      <div class="databadge"><div class="big">Limited data</div><div>25 of 29 stations reporting; the Mesonet could not be reached this update. Readings below rest on fewer stations than usual.</div><div class="sub">Not reporting: Kahikinui, Upper Kahikinui, Nakula, Paia</div></div>
+      <div class="databadge"><div class="big">Limited data</div><div>23 of 29 stations reporting. Readings below rest on fewer stations than usual.</div><div class="sub">Not reporting: Kaonoulu 1, Kahikinui, Upper Kahikinui, Waihou Springs 1, Nakula, Paia</div></div>
       <p class="summary">No cloud over Kula yet. First clouds will form at about 3,400 ft, a little higher if the slope warms first. Today&#x27;s forecast: Thermals probably flat. Trades from the ENE should put the shear line at Pukalani. Upslope has not set in yet.</p>
       <dl>
         <dt>Thermals</dt><dd>Probably <strong>flat</strong> (forecast)<div class="sub">thermal.py on the forecast air; measured rating just after 10:00</div></dd>
-        <dt>First<br>clouds</dt><dd>About <span class="num">3,400 ft</span><div class="sub">5 of 10 slope stations near saturation; no cloud overhead yet; Kula Ag 65/62 °F (88%)</div></dd>
+        <dt>First<br>clouds</dt><dd>About <span class="num">3,400 ft</span><div class="sub">5 of 10 slope stations near saturation; no cloud overhead yet; Kula Ag 64/61 °F (89%)</div></dd>
         <dt>Sun</dt><dd><span class="num">22%</span> of clear sky forecast, 10:00–14:00 (GFS)<div class="sub">Measured from about 09:15; Kula is in Haleakala's shadow until about 08:00</div></dd>
         <dt>Shear line</dt><dd>At Pukalani (forecast)<div class="sub">Trades ENE (064°). Measured once the upslope sets in</div></dd>
         
@@ -149,7 +149,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
   </div>
 
 </div>
-<!-- build problems: HCDP observations, using api.weather.gov: ConnectTimeout: HTTPSConnectionPool(host='api.hcdp.ikewai.org', port=443): Max retries exceeded with url: /mesonet/db/measurements?location=hawaii&station_ids=0115%2C0118%2C0144%2C0116%2C0119%2C0145%2C0151%2C0152%2C0153%2C0143&var_ids=Tair_1_Avg%2CRH_1_Avg%2CWS_1_Avg%2CWDrs_1_Avg%2CWS_1_Max&start_date=2026-10-30T00%3A00%3A00-10%3A00&row_mode=json&limit=100000 (Caused by ConnectTimeoutError(<HTTPSConnection(host='api.hcdp.ikewai.org', port=443) at 0x76d2e6ee6540), 'Connection to api.hcdp.ikewai.org timed out. (connect timeout=20)')); Mesonet sun: ConnectTimeout: HTTPSConnectionPool(host='api.hcdp.ikewai.org', port=443): Max retries exceeded with url: /mesonet/db/measurements?location=hawaii&station_ids=0115%2C0118%2C0144%2C0116%2C0119%2C0145%2C0151%2C0152%2C0153&var_ids=SWin_1_Avg&start_date=2026-10-30T04%3A27%3A00-10%3A00&end_date=2026-10-30T06%3A07%3A00-10%3A00&row_mode=json&limit=100000 (Caused by ConnectTimeoutError(<HTTPSConnection(host='api.hcdp.ikewai.org', port=443) at 0x76d2e6d3e9f0), 'Connection to api.hcdp.ikewai.org timed out. (connect timeout=20)')); kula_sky: ConnectTimeout: HTTPSConnectionPool(host='api.hcdp.ikewai.org', port=443): Max retries exceeded with url: /mesonet/db/measurements?location=hawaii&station_ids=0119%2C0116%2C0118&var_ids=LWin_1_Avg%2CTair_1_Avg&start_date=2026-10-30T05%3A22%3A28-10%3A00&end_date=2026-10-30T06%3A07%3A28-10%3A00&row_mode=json&limit=100000 (Caused by ConnectTimeoutError(<HTTPSConnection(host='api.hcdp.ikewai.org', port=443) at 0x76d2e6d89e50), 'Connection to api.hcdp.ikewai.org timed out. (connect timeout=20)')); overnight_line: ConnectTimeout: HTTPSConnectionPool(host='api.hcdp.ikewai.org', port=443): Max retries exceeded with url: /mesonet/db/measurements?location=hawaii&station_ids=0119&var_ids=Rnet_1_Avg%2CRH_1_Avg&start_date=2026-10-30T02%3A00%3A00-10%3A00&end_date=2026-10-30T04%3A00%3A00-10%3A00&row_mode=json&limit=10000 (Caused by ConnectTimeoutError(<HTTPSConnection(host='api.hcdp.ikewai.org', port=443) at 0x76d2e6d87e90), 'Connection to api.hcdp.ikewai.org timed out. (connect timeout=20)')); details yesterday: ConnectTimeout -->
+<!-- build problems: none -->
 <script>
 /* Catch up with a new build within ~2 minutes (Sam, 2026-10-17: "the page
    does not seem to autoupdate"). stations.json's "made" is the build time;
@@ -157,7 +157,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
    browser's 10-minute cached copy is bypassed. The 15-minute refresh stays
    as a backstop. */
 (function () {
-  var built = "2026-10-30T06:07";
+  var built = "2026-10-30T06:22";
   function check() {
     fetch("stations.json?" + Date.now(), {cache: "no-store"})
       .then(function (r) { return r.json(); })
