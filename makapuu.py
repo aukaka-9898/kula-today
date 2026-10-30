@@ -363,7 +363,15 @@ def cam_text(cam: dict) -> str:
         return rest + " " + _cap(f"{_and(hidden)} {'is' if len(hidden) == 1 else 'are'} hidden by cloud or rain.")
     capped = [n for n, s in cam["segments"].items() if s["capped"] >= CAP_SHARE and n != "Pali gap"]
     if capped:
-        return "Cloud on the Koʻolau: " + ", ".join(capped) + "."
+        # The base with it (Sam, 10-29): at or below the lowest capped crest,
+        # or lower where the camera saw cloud bottoms under the rest.
+        tops = [cam["segments"][n]["crest_ft"] for n in capped if cam["segments"][n].get("crest_ft")]
+        b = min([v for v in (cam.get("base_ft"), min(tops) if tops else None) if v] or [None])             if (cam.get("base_ft") or tops) else None
+        lead = f"Cloud base at or below about {round(b, -2):,.0f} ft" if b else "Cloud on the Koʻolau"
+        named = [n for n in ("Greenwall", "Konahuanui") if n in capped]
+        tail = (f"{_and(named)} {'is' if len(named) == 1 else 'are'} in clouds" if named
+                else "the crest is in clouds")
+        return f"{lead}. {_cap(tail)}."
     if cam["base_ft"]:
         # Each stretch's own cloud bottoms against its own tops (terrain model)
         # -- Sam, 10-25: "Above the ridge in places ... Use the DEM to provide a

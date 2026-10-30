@@ -77,6 +77,18 @@ CAP_SAT = 45               # grey/white: max - min channel under this
 # across the skyline against the clear frame's: 10-28 frames read 0.01-0.11,
 # good days 0.45-2.1 (10-25 to 10-27).
 VIS_RATIO = 0.25
+# ...but only when the ground below is washed out too (Sam, 10-29: "under the
+# dismal conditions kaneohe produces a pretty good result for base"). That day
+# the deck sat on the crest with clear air under it: the town and near hills
+# read 0.88-1.07 of the clear frame's contrast, 10-28's socked-in spells
+# 0.02-0.16. Crest lost but the ground clear = cloud ON the crest: capped.
+MID_CLEAR = 0.35
+MID_BOX = (slice(820, 900), slice(300, 1200))   # town and near hills under the crest
+
+
+def _texture(im) -> float:
+    w = im[MID_BOX]
+    return float(np.abs(np.diff(w, axis=0)).mean() + np.abs(np.diff(w, axis=1)).mean())
 REACH_PX = 220             # how far above the crest a cloud bottom is looked for
 # Cloud vs the pale haze right over the crest (10:03 clear frame): haze
 # ~150 grey with blue minus red ~9-24; cloud 150-170 with blue minus red
@@ -170,11 +182,13 @@ def read(rgb, view="sw"):
     ref = np.array([np.percentile(strip[np.abs(cols - x) <= NEAR_PX], 75) for x in cols])
     out = []
     edge = lambda im, x, y: abs(im[y - 12:y - 4, x - 3:x + 4].mean() - im[y + 4:y + 12, x - 3:x + 4].mean())
+    ground_clear = clear is None or _texture(gray) >= MID_CLEAR * _texture(clear)
     for x, y0, d, c, az, st, rf in zip(cols, rows, dist, crest, azs, strip, ref):
         y0 = int(round(y0))
         sl = slice(x - 3, x + 4)
         if clear is not None and edge(gray, x, y0) < VIS_RATIO * max(edge(clear, x, y0), 1.0):
-            out.append({"x": int(x), "crest_ft": round(c), "capped": False, "hidden": True, "base_ft": None})
+            out.append({"x": int(x), "crest_ft": round(c), "capped": ground_clear, "hidden": not ground_clear,
+                        "base_ft": None})
             continue
         grey = sat[y0 + BELOW[0]:y0 + BELOW[1], sl].mean() < CAP_SAT
         if selfref:
