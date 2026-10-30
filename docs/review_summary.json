@@ -1,15 +1,15 @@
 {
- "made": "2026-10-29 18:52",
+ "made": "2026-10-30 01:20",
  "flags": [
   "Camera check: cloud down to 2,800 ft (Red Hill camera vs derived base) disagreed by 2 h or more on 3 of 11 days (10-27, 10-28, 10-29)."
  ],
  "stats": {
-  "base_days": 24,
-  "base_mean": 448,
-  "base_raw_mean": 88,
-  "base_sd": 800,
-  "base_morning": 574,
-  "base_afternoon": 358,
+  "base_days": 23,
+  "base_mean": 399,
+  "base_raw_mean": 41,
+  "base_sd": 782,
+  "base_morning": 539,
+  "base_afternoon": 307,
   "alert_days": 2,
   "alert_hits": 0,
   "intrusions_missed": 0,
@@ -18,14 +18,14 @@
   "cam_redhill_cloud_min_days": 11,
   "station_days": 38,
   "accuracy": {
-   "base_n": 2,
+   "base_n": 3,
    "base_within": 0,
-   "base_typical": 760.0,
-   "base_bias": 140.0,
-   "thermal_n": 8,
-   "thermal_right": 2,
-   "thermal_within_one": 7,
-   "thermal_bias": 0.88,
+   "base_typical": 710.0,
+   "base_bias": 300.0,
+   "thermal_n": 9,
+   "thermal_right": 3,
+   "thermal_within_one": 8,
+   "thermal_bias": 0.78,
    "rules": {
     "B2": [
      1,
@@ -36,8 +36,8 @@
      2
     ]
    },
-   "camera_days": 4,
-   "derived_minus_camera": -330.0,
+   "camera_days": 5,
+   "derived_minus_camera": -260.0,
    "pilots": true
   }
  }
