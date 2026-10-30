@@ -3884,11 +3884,17 @@ def build() -> str:
         _lat = _c.sort_values("observed").groupby("station_id").tail(1)
         if len(_lat) >= 3:
             _up, _names = _upper_pair(_lat)
-            _wet = ("still wet from the rain", "the slope dries") if rained(now) else                    ("still damp from the dew overnight", "the dew dries")
-            base_html = (f'<span class="num">About {ft(round(base["mid"], -2))} ft</span>'
-                         f'<div class="sub">The lower slope is {_wet[0]}. The highest '
-                         f'station ({", ".join(_names)}) is at about {ft(round(_up, -2))} ft: the base should '
-                         f'lift toward that as {_wet[1]}</div>')
+            # After rain no lift is predicted (Sam, 10-29: "drop the prediction. If and
+            # when it lifts the report will change"): on 10-28/29 it rained on and off
+            # for two days and the base never lifted.
+            if rained(now):
+                base_html = (f'<span class="num">About {ft(round(base["mid"], -2))} ft</span>'
+                             f'<div class="sub">The lower slope is wet from the rain</div>')
+            else:
+                base_html = (f'<span class="num">About {ft(round(base["mid"], -2))} ft</span>'
+                             f'<div class="sub">The lower slope is still damp from the dew overnight. The highest '
+                             f'station ({", ".join(_names)}) is at about {ft(round(_up, -2))} ft: the base should '
+                             f'lift toward that as the dew dries</div>')
     if mc:
         base_label = "Morning<br>cloud" if mc.get("overhead") else "First<br>clouds"
         dew = (f"; Kula Ag {mc['ka_t']:.0f}/{mc['ka_td']:.0f} °F ({mc['ka_rh']:.0f}%)"
