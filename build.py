@@ -1059,6 +1059,37 @@ def night_signals(day) -> dict | None:
     return {"rnet": sum(rn) / len(rn), "rh": sum(rh) / len(rh)}
 
 
+# Rain, not dew (Sam, 2026-10-29: "I think Kula is wet due to rain, not dew").
+# That morning phase 2 said "damp from the dew overnight" while Kula Ag had 2 mm
+# overnight and 3-4 more after 09:00, Keokea 2 and 7 (Flood Watch). The lower
+# slope's gauges over the last 12 hours decide the word.
+RAIN_GAUGES = "0119,0116"          # Kula Ag, Keokea
+RAIN_WET_MM = 1.0
+
+
+@functools.lru_cache(maxsize=4)
+def _recent_rain(stamp: str) -> float | None:
+    end = datetime.strptime(stamp, "%Y-%m-%dT%H")
+    rows = _retrying(mesonet.get)("/mesonet/db/measurements", location="hawaii",
+                                  station_ids=RAIN_GAUGES, var_ids="RF_1_Tot300s",
+                                  start_date=f"{end - timedelta(hours=12):%Y-%m-%dT%H:00:00}-10:00",
+                                  end_date=f"{end:%Y-%m-%dT%H:59:59}-10:00", row_mode="json", limit=10000)
+    tot: dict = {}
+    for r in rows:
+        if r.get("value") is not None:
+            tot[r["station_id"]] = tot.get(r["station_id"], 0.0) + float(r["value"])
+    return max(tot.values()) if tot else None
+
+
+def rained(now: datetime) -> bool:
+    """Did the lower slope's gauges catch rain in the last 12 hours?"""
+    try:
+        mm = _recent_rain(f"{now:%Y-%m-%dT%H}")
+    except Exception:
+        return False
+    return mm is not None and mm >= RAIN_WET_MM
+
+
 def overnight_line(now: datetime) -> str | None:
     if not 4 <= now.hour < 12:
         return None
@@ -3853,10 +3884,11 @@ def build() -> str:
         _lat = _c.sort_values("observed").groupby("station_id").tail(1)
         if len(_lat) >= 3:
             _up, _names = _upper_pair(_lat)
+            _wet = ("still wet from the rain", "the slope dries") if rained(now) else                    ("still damp from the dew overnight", "the dew dries")
             base_html = (f'<span class="num">About {ft(round(base["mid"], -2))} ft</span>'
-                         f'<div class="sub">The lower slope is still damp from the dew overnight. The highest '
+                         f'<div class="sub">The lower slope is {_wet[0]}. The highest '
                          f'station ({", ".join(_names)}) is at about {ft(round(_up, -2))} ft: the base should '
-                         f'lift toward that as the dew dries</div>')
+                         f'lift toward that as {_wet[1]}</div>')
     if mc:
         base_label = "Morning<br>cloud" if mc.get("overhead") else "First<br>clouds"
         dew = (f"; Kula Ag {mc['ka_t']:.0f}/{mc['ka_td']:.0f} °F ({mc['ka_rh']:.0f}%)"
