@@ -90,7 +90,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><a class="homebtn" href="/">&larr; Home</a> <a class="homebtn" href="./">&larr; Makapu&#8216;u Today</a><h1>Makapu&#8216;u Details</h1></div>
-    <div class="date">Updated Thu 29 Oct 2026 · 16:01 HST</div>
+    <div class="date">Updated Thu 29 Oct 2026 · 16:02 HST</div>
   </header>
   <div class="databadge"><div class="big">Under construction</div></div>
   <section class="block" aria-labelledby="t-thermal">
@@ -365,10 +365,8 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
       if (s.mph !== null) lines.push("Wind: " + (s.dir === null ? "variable" : "from " + s.dir + "°") + " at " + s.mph + " mph" + (s.gust !== undefined ? ", gusts " + s.gust : "") + " (" + s.at + ")");
       if (s.temp_f !== undefined) {
         lines.push("Temperature: " + s.temp_f.toFixed(1) + " °F");
-        // Moku o Lo&#8216;e measures no humidity: its dew point is Kaneohe's (Sam, 10-29: "a myth?")
-        if (s.dew_from) lines.push("Dew point: " + s.dew_f.toFixed(1) + " °F, borrowed from " + s.dew_from + " (not measured here)");
-        else lines.push("Dew point: " + s.dew_f.toFixed(1) + " °F, humidity " + s.rh + "%");
-        lines.push("Condensation level: " + s.lcl_ft.toLocaleString() + " ft" + (s.dew_from ? " (with " + s.dew_from + "'s dew point)" : ""));
+        lines.push("Dew point: " + s.dew_f.toFixed(1) + " °F, humidity " + s.rh + "%");
+        lines.push("Condensation level: " + s.lcl_ft.toLocaleString() + " ft");
       }
       if (s.temp_f_only !== undefined) lines.push("Temperature: " + s.temp_f_only.toFixed(1) + " °F (no dew point)");
       if (s.no_wind) lines.push("Wind not used (unreliable here)");
