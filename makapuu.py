@@ -447,6 +447,28 @@ def moku_temp(now: datetime):
     return (rows[-1][1], t) if now - t <= MOKU_MAX_AGE else None
 
 
+# The base at launch, apart from downrange (Sam, 10-29: "base at [launch] is
+# often lower than downrange"; "Nonokio and Mokuhano seem effective for
+# launch"; rows "Cloudbase at..." for both). Mokuhano sits at Makapuʻu Point;
+# Nonokio, in Waimānalo, is the backup.
+LAUNCH_AIR = (("065HE", "HECO Mokuhano", 60), ("067HE", "HECO Nonokio", 42))
+
+
+def launch_base(now: datetime):
+    """(base ft MSL, station name, time) from the first launch station reporting, or None."""
+    for sid, name, elev in LAUNCH_AIR:
+        try:
+            p = requests.get(f"https://api.weather.gov/stations/{sid}/observations/latest", headers=HEAD,
+                             timeout=30).json()["properties"]
+            t = datetime.fromisoformat(p["timestamp"]).astimezone(HST)
+            tc, dc = p["temperature"]["value"], p["dewpoint"]["value"]
+            if now - t <= OBS_MAX_AGE and tc is not None and dc is not None:
+                return lcl_msl(tc * 1.8 + 32, dc * 1.8 + 32, elev), name, t
+        except Exception:
+            continue
+    return None
+
+
 def crest_base(k: dict) -> int | None:
     """Condensation level of Kaneohe's open-coast air: where the trades
     lifted over the Koʻolau condense. 125 m per degree C of spread."""
@@ -948,6 +970,16 @@ def write(now: datetime) -> None:
     else:
         base_html = ("Unavailable" + ceil_sub) if ceil_sub else "Unavailable"
 
+    lb = _try(launch_base, now, problems=problems)
+    if lb is None:
+        launch_html = "Unavailable"
+    elif lb[0] < LAUNCH_FT:
+        launch_html = (f'<strong>Below launch</strong> (about {lb[0]:,} ft)'
+                       f'<div class="sub">Condensation level of the air at {esc(lb[1])}, {lb[2]:%H:%M}.</div>')
+    else:
+        launch_html = (f'<span class="num">About {lb[0]:,} ft</span>'
+                       f'<div class="sub">Condensation level of the air at {esc(lb[1])}, {lb[2]:%H:%M}.</div>')
+
     today_air = _try(air_day, air, surf, now.date(), problems=problems) if air else None
     if today_air:
         therm_html = (f'Probably <strong>{esc(today_air["word"].lower())}</strong> (forecast)'
@@ -1027,7 +1059,8 @@ def write(now: datetime) -> None:
         today_body = f"""<dl>
         <dt>On the ridge</dt><dd>{fly_html}</dd>
         <dt>Wind</dt><dd>{wind_html}</dd>
-        <dt>Downrange</dt><dd>{base_html + (f'<div class="downret">{dir_html}</div>' if dir_html else "")}</dd>
+        <dt>Cloudbase at launch</dt><dd>{launch_html}</dd>
+        <dt>Cloudbase at Kāneʻohe</dt><dd>{base_html + (f'<div class="downret">{dir_html}</div>' if dir_html else "")}</dd>
         <dt>Thermals</dt><dd>{therm_html}</dd>
         <dt>Inversion</dt><dd>{inv_html}</dd>
       </dl>
@@ -1456,7 +1489,7 @@ tr.wk td {{ border-bottom: 0; padding-bottom: 2px; }} tr.wkh td {{ white-space: 
   </section>
   <a class="detailslink" href="details.html">Details: thermal profile and station map &rarr;</a>
   <div class="notes">
-    <p><strong>Where the numbers come from.</strong> Wind: Bellows (BELH1) via api.weather.gov, or the NWS forecast grid for the hour when Bellows is not reporting. Downrange base: the Kāneʻohe Bay camera's view of the Koʻolau, and Kaneohe (PHNG) temperature and dew point via aviationweather.gov. Thermals, inversion and the forecast downrange base: RRFS forecast soundings at Kaneohe (BUFKIT, Penn State). Limits: the Makapuʻu site table.</p>
+    <p><strong>Where the numbers come from.</strong> Wind: Bellows (BELH1) via api.weather.gov, or the NWS forecast grid for the hour when Bellows is not reporting. Cloudbase at launch: HECO Mokuhano at Makapuʻu Point (HECO Nonokio as backup) temperature and dew point via api.weather.gov. Cloudbase at Kāneʻohe: the Kāneʻohe Bay camera's view of the Koʻolau, and Kaneohe (PHNG) temperature and dew point via aviationweather.gov. Thermals, inversion and the forecast downrange base: RRFS forecast soundings at Kaneohe (BUFKIT, Penn State). Limits: the Makapuʻu site table.</p>
     <p><strong>Notice.</strong> Information only, provided as is, with no guarantee of accuracy or availability. This is not an official forecast. Every pilot is responsible for their own decision to fly.</p>
   </div>
 </div>
