@@ -1,6 +1,8 @@
 {
- "made": "2026-10-29 18:07",
- "flags": [],
+ "made": "2026-10-29 18:22",
+ "flags": [
+  "Camera check: cloud down to 2,800 ft (Red Hill camera vs derived base) disagreed by 2 h or more on 3 of 11 days (10-27, 10-28, 10-29)."
+ ],
  "stats": {
   "base_days": 24,
   "base_mean": 448,
@@ -11,9 +13,9 @@
   "alert_days": 2,
   "alert_hits": 0,
   "intrusions_missed": 0,
-  "line_dropped_share_7d": 0.26,
-  "cam_puunianiau_cloud_min_days": 10,
-  "cam_redhill_cloud_min_days": 10,
+  "line_dropped_share_7d": 0.12,
+  "cam_puunianiau_cloud_min_days": 11,
+  "cam_redhill_cloud_min_days": 11,
   "station_days": 38,
   "accuracy": {
    "base_n": 2,

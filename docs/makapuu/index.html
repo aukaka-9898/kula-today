@@ -94,11 +94,11 @@ tr.wk td { border-bottom: 0; padding-bottom: 2px; } tr.wkh td { white-space: nor
 <div class="wrap">
   <header>
     <div><a class="homebtn" href="/">&larr; Home</a><div class="tag">Makapu&#8216;u soaring briefing</div><h1>Makapu&#8216;u Today</h1></div>
-    <div class="date">Updated Thu 29 Oct 2026 · 18:08 HST</div>
+    <div class="date">Updated Thu 29 Oct 2026 · 18:22 HST</div>
   </header>
   <div class="databadge"><div class="big">Under construction</div></div>
   <div>
-    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/760/details/camera/12783/full" title="Kāne&#8216;ohe Bay webcam, live, looking southeast down the Ko&#8216;olau toward Makapu&#8216;u" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="camera.jpg?2026-10-29T18:08" alt=""></div>
+    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/760/details/camera/12783/full" title="Kāne&#8216;ohe Bay webcam, live, looking southeast down the Ko&#8216;olau toward Makapu&#8216;u" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="camera.jpg?2026-10-29T18:22" alt=""></div>
     <div class="camcap">Kāne&#8216;ohe Bay webcam, live, looking southeast down the Ko&#8216;olau to Makapu&#8216;u. FAA WeatherCam. <a href="https://weathercams.faa.gov/cameras/state/HI/cameraSite/760/details/camera/12783/full" target="_blank" rel="noopener">Open full size</a> · <a href="https://weathercams.faa.gov/cameras/state/HI/cameraSite/588/details/camera/12153/full" target="_blank" rel="noopener">Makapu&#8216;u camera, at the point</a></div>
   </div>
   <div class="cols">
@@ -106,27 +106,32 @@ tr.wk td { border-bottom: 0; padding-bottom: 2px; } tr.wkh td { white-space: nor
       <div class="kind">The day in review</div>
       <div class="head"><h2 id="t-today">Today · Thu 29 Oct</h2><span class="chip fair">Caution</span></div>
       
-      <p class="summary">At Bellows: Caution 15:00–16:00, 17:00–18:00. Midday ENE (061°) 19 mph, gusts 24.</p><p class="summary">Midday the downrange base averaged about 2,700 ft by the Kāne&#8216;ohe Bay camera.</p><p class="summary">Thermals by the Kaneohe runway&#x27;s air against the RRFS profile, 10:00–14:00: flat (index -0.6 °C); the forecast said flat.</p><div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted);margin:2px 0 4px">
-<span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#3f9d5a;vertical-align:middle"></span> Kāne&#8216;ohe Bay camera</span></div>
+      <p class="summary">At Bellows: Caution 15:00–16:00, 17:00–18:00. Midday ENE (061°) 19 mph, gusts 24.</p><p class="summary">Midday cloud sat on the Ko&#8216;olau crest: base at or below about 2,200 ft (Kāne&#8216;ohe Bay camera). Kaneohe&#x27;s air would condense at about 1,400 ft.</p><p class="summary">Thermals by the Kaneohe runway&#x27;s air against the RRFS profile, 10:00–14:00: flat (index -0.6 °C); the forecast said flat.</p><div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted);margin:2px 0 4px">
+<span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#3f9d5a;vertical-align:middle"></span> Kāne&#8216;ohe Bay camera (base no higher than)</span>
+<span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#e0a100;vertical-align:middle"></span> Crest in cloud or hidden</span></div>
 <div style="position:relative;width:100%;min-width:0;height:220px"><canvas id="wrapchart" role="img" aria-label="Downrange cloud base through the day"></canvas></div>
 <script>
 (function () {
-  var d = {"camera": [[487, 2920.0], [503, 2840.0], [505, 2730.0], [517, 2760.0], [532, 2760.0], [548, 3020.0], [562, 3020.0], [577, 2970.0], [592, 3400.0], [607, 2900.0], [622, 3010.0], [637, 3010.0], [652, 2910.0], [667, 2610.0], [676, 2610.0], [683, 2600.0], [697, 2610.0], [712, 2720.0], [727, 2830.0], [743, 2780.0], [763, 2760.0], [778, 2700.0], [787, 2700.0], [808, 2840.0], [817, 2840.0], [832, 2640.0], [847, 2590.0], [862, 2600.0], [885, 2730.0], [888, 2730.0], [899, 2730.0], [916, 2890.0], [922, 2890.0], [938, 2960.0], [952, 3140.0], [961, 3140.0], [962, 3140.0], [965, 3140.0], [966, 4120.0], [978, 3540.0], [990, 2970.0], [1001, 2970.0], [1004, 2970.0], [1005, 2970.0]]}, pt = function (a) { return {x: a[0], y: a[1]}; };
+  var d = {"camera": [], "lost": [[487, "Hidden: cloud or rain"], [503, "Hidden: cloud or rain"], [505, "Hidden: cloud or rain"], [517, "Hidden: cloud or rain"], [532, "Hidden: cloud or rain"], [548, "Hidden: cloud or rain"], [562, "Hidden: cloud or rain"], [577, "Hidden: cloud or rain"], [592, "Hidden: cloud or rain"], [607, "Hidden: cloud or rain"], [622, "Crest in cloud"], [637, "Crest in cloud"], [652, "Crest in cloud"], [667, "Crest in cloud"], [676, "Crest in cloud"], [683, "Crest in cloud"], [697, "Crest in cloud"], [712, "Crest in cloud"], [727, "Crest in cloud"], [743, "Crest in cloud"], [763, "Crest in cloud"], [778, "Crest in cloud"], [787, "Crest in cloud"], [808, "Crest in cloud"], [817, "Crest in cloud"], [832, "Crest in cloud"], [847, "Crest in cloud"], [862, "Crest in cloud"], [885, "Crest in cloud"], [888, "Crest in cloud"], [899, "Crest in cloud"], [916, "Crest in cloud"], [922, "Crest in cloud"], [938, "Hidden: cloud or rain"], [952, "Hidden: cloud or rain"], [961, "Hidden: cloud or rain"], [962, "Hidden: cloud or rain"], [965, "Hidden: cloud or rain"], [966, "Hidden: cloud or rain"], [978, "Hidden: cloud or rain"], [990, "Hidden: cloud or rain"], [1001, "Hidden: cloud or rain"], [1004, "Crest in cloud"], [1005, "Crest in cloud"]]}, pt = function (a) { return {x: a[0], y: a[1]}; };
   var dark = matchMedia('(prefers-color-scheme: dark)').matches, muted = '#898781', grid = dark ? '#2c2c2a' : '#e1e0d9';
   var hm = function (m) { return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); };
   var ys = d.camera.map(function (a) { return a[1]; });
+  var ymin = Math.min(1500, Math.floor(Math.min.apply(null, ys) / 500) * 500);
   new Chart(document.getElementById('wrapchart'), {
     type: 'line',
     data: { datasets: [
-      { label: 'Camera', data: d.camera.map(pt), showLine: false, pointRadius: 3, pointBackgroundColor: '#3f9d5a', borderColor: '#3f9d5a' }
+      { label: 'Camera', data: d.camera.map(pt), showLine: false, pointRadius: 3, pointBackgroundColor: '#3f9d5a', borderColor: '#3f9d5a' },
+      { label: 'Lost', data: d.lost.map(function (a) { return {x: a[0], y: ymin, t: a[1]}; }), showLine: false, clip: false,
+         pointRadius: 3, pointBackgroundColor: '#e0a100', borderColor: '#e0a100' }
     ] },
     options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'nearest', axis: 'x', intersect: false },
       plugins: { legend: { display: false }, tooltip: { callbacks: {
         title: function (i) { return hm(i[0].parsed.x); },
-        label: function (i) { return i.dataset.label + ': ' + Math.round(i.parsed.y).toLocaleString() + ' ft'; } } } },
+        label: function (i) { return i.dataset.label === 'Lost' ? i.raw.t
+          : 'Base no higher than ' + Math.round(i.parsed.y).toLocaleString() + ' ft'; } } } },
       scales: {
         x: { type: 'linear', min: 480, max: 1005, ticks: { stepSize: 60, color: muted, callback: function (v) { return hm(v); } }, grid: { display: false } },
-        y: { min: Math.min(1500, Math.floor(Math.min.apply(null, ys) / 500) * 500),
+        y: { min: ymin,
               max: Math.max(4000, Math.ceil(Math.max.apply(null, ys) / 500) * 500),
               ticks: { stepSize: 500, color: muted, callback: function (v) { return v.toLocaleString(); } }, grid: { color: grid } }
       } }
@@ -157,7 +162,7 @@ tr.wk td { border-bottom: 0; padding-bottom: 2px; } tr.wkh td { white-space: nor
 <!-- build problems: none -->
 <script>
 (function () {
-  var built = "2026-10-29T18:08";
+  var built = "2026-10-29T18:22";
   function check() {
     fetch("summary.json?" + Date.now(), {cache: "no-store"}).then(function (r) { return r.json(); })
       .then(function (j) { if (j && j.built && j.built > built) location.replace(location.pathname + "?v=" + Date.now()); })
