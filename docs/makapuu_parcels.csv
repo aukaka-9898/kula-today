@@ -629,106 +629,106 @@ date,time,station,obs_time,temp_f,dew_f,dew_from,lcl_ft,ti_c,word,camera,camera_
 2026-10-29,10:07,Heeia,09:30,77.2,76.7,own,100.0,-0.62,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2900.0
 2026-10-29,10:07,Maunawili,09:45,76.1,73.7,own,560.0,0.64,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2900.0
 2026-10-29,10:07,Moku o Loe,10:00,78.1,73.0,Kaneohe,1150.0,-0.68,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2900.0
-2026-10-29,10:22,Kaneohe runway,09:57,79.0,73.0,own,1350.0,-1.19,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,3010.0
-2026-10-29,10:22,Heeia,09:30,77.2,76.7,own,100.0,-0.62,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,3010.0
-2026-10-29,10:22,Maunawili,10:00,76.0,73.4,own,580.0,0.74,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,3010.0
-2026-10-29,10:22,Moku o Loe,10:18,78.3,73.0,Kaneohe,1190.0,-0.78,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,3010.0
-2026-10-29,10:37,Kaneohe runway,09:57,79.0,73.0,own,1350.0,-1.19,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,3010.0
-2026-10-29,10:37,Heeia,09:30,77.2,76.7,own,100.0,-0.62,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,3010.0
-2026-10-29,10:37,Maunawili,10:15,76.2,73.4,own,640.0,0.63,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,3010.0
-2026-10-29,10:37,Nonokio,10:00,77.6,72.9,own,1070.0,-0.38,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,3010.0
-2026-10-29,10:37,Moku o Loe,10:30,78.1,73.0,Kaneohe,1150.0,-0.68,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,3010.0
-2026-10-29,10:52,Kaneohe runway,09:57,79.0,73.0,own,1350.0,-1.19,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2910.0
-2026-10-29,10:52,Heeia,10:30,77.3,76.3,own,230.0,-0.63,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2910.0
-2026-10-29,10:52,Maunawili,10:30,76.4,73.6,own,650.0,0.46,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2910.0
-2026-10-29,10:52,Nonokio,10:00,77.6,72.9,own,1070.0,-0.38,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2910.0
-2026-10-29,10:52,Moku o Loe,10:48,78.1,73.0,Kaneohe,1150.0,-0.68,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2910.0
-2026-10-29,11:07,Kaneohe runway,10:57,78.1,72.0,own,1390.0,-0.3,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2610.0
-2026-10-29,11:07,Heeia,10:30,77.3,76.3,own,230.0,-0.37,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2610.0
-2026-10-29,11:07,Nonokio,10:50,77.5,72.8,own,1060.0,0.2,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2610.0
-2026-10-29,11:07,Moku o Loe,11:00,78.1,72.0,Kaneohe,1390.0,-0.3,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2610.0
-2026-10-29,11:16,Kaneohe runway,10:57,78.1,72.0,own,1390.0,-0.3,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2610.0
-2026-10-29,11:16,Heeia,10:30,77.3,76.3,own,230.0,-0.37,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2610.0
-2026-10-29,11:16,Nonokio,11:00,77.5,72.7,own,1090.0,0.21,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2610.0
-2026-10-29,11:16,Moku o Loe,11:12,78.1,72.0,Kaneohe,1390.0,-0.3,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2610.0
-2026-10-29,11:23,Heeia,10:30,77.3,76.3,own,230.0,-0.37,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2600.0
-2026-10-29,11:23,Maunawili,11:00,76.5,73.3,own,730.0,0.67,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2600.0
-2026-10-29,11:23,Nonokio,11:00,77.5,72.7,own,1090.0,0.21,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2600.0
-2026-10-29,11:37,Kaneohe runway,10:57,78.1,72.0,own,1390.0,-0.3,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2610.0
-2026-10-29,11:37,Heeia,10:30,77.3,76.3,own,230.0,-0.37,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2610.0
-2026-10-29,11:37,Maunawili,11:15,76.7,73.3,own,780.0,0.55,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2610.0
-2026-10-29,11:37,Nonokio,11:00,77.5,72.7,own,1090.0,0.21,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2610.0
-2026-10-29,11:37,Moku o Loe,11:30,78.1,72.0,Kaneohe,1390.0,-0.3,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2610.0
-2026-10-29,11:52,Kaneohe runway,10:57,78.1,72.0,own,1390.0,-0.44,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2720.0
-2026-10-29,11:52,Heeia,11:30,77.4,76.1,own,290.0,-0.51,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2720.0
-2026-10-29,11:52,Maunawili,11:30,76.7,73.2,own,790.0,0.63,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2720.0
-2026-10-29,11:52,Moku o Loe,11:48,78.1,72.0,Kaneohe,1390.0,-0.44,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2720.0
-2026-10-29,12:07,Kaneohe runway,11:57,79.0,73.0,own,1350.0,-0.94,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2830.0
-2026-10-29,12:07,Heeia,11:30,77.4,76.1,own,290.0,-0.39,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2830.0
-2026-10-29,12:07,Maunawili,11:45,76.6,73.3,own,750.0,0.58,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2830.0
-2026-10-29,12:07,Nonokio,11:40,76.8,73.1,own,840.0,0.47,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2830.0
-2026-10-29,12:07,Moku o Loe,12:00,77.9,73.0,Kaneohe,1110.0,-0.33,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2830.0
-2026-10-29,12:23,Kaneohe runway,11:57,79.0,73.0,own,1350.0,-0.94,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2780.0
-2026-10-29,12:23,Heeia,11:30,77.4,76.1,own,290.0,-0.39,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2780.0
-2026-10-29,12:23,Maunawili,12:00,76.3,73.2,own,710.0,0.72,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2780.0
-2026-10-29,12:23,Nonokio,12:00,76.7,73.0,own,840.0,0.54,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2780.0
-2026-10-29,12:23,Moku o Loe,12:18,77.9,73.0,Kaneohe,1110.0,-0.33,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2780.0
-2026-10-29,12:43,Kaneohe runway,11:57,79.0,73.0,own,1350.0,-0.94,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2760.0
-2026-10-29,12:43,Heeia,12:30,77.2,75.9,own,290.0,-0.24,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2760.0
-2026-10-29,12:43,Nonokio,12:00,76.7,73.0,own,840.0,0.54,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2760.0
-2026-10-29,12:43,Moku o Loe,12:36,77.9,73.0,Kaneohe,1110.0,-0.33,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2760.0
-2026-10-29,12:58,Kaneohe runway,12:55,78.8,71.6,own,1640.0,-0.68,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2700.0
-2026-10-29,12:58,Heeia,12:30,77.2,75.9,own,290.0,-0.24,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2700.0
-2026-10-29,12:58,Nonokio,12:00,76.7,73.0,own,840.0,0.54,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2700.0
-2026-10-29,12:58,Moku o Loe,12:54,78.1,71.6,Kaneohe,1480.0,-0.28,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2700.0
-2026-10-29,13:07,Kaneohe runway,12:57,78.1,72.0,own,1390.0,-0.43,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2700.0
-2026-10-29,13:07,Heeia,12:30,77.2,75.9,own,290.0,0.03,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2700.0
-2026-10-29,13:07,Maunawili,12:45,76.8,73.4,own,780.0,0.54,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2700.0
-2026-10-29,13:07,Nonokio,12:30,77.0,73.1,own,900.0,0.42,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2700.0
-2026-10-29,13:07,Moku o Loe,13:00,78.1,72.0,Kaneohe,1390.0,-0.43,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2700.0
-2026-10-29,13:28,Kaneohe runway,12:57,78.1,72.0,own,1390.0,-0.43,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2840.0
-2026-10-29,13:28,Heeia,12:30,77.2,75.9,own,290.0,0.03,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2840.0
-2026-10-29,13:28,Moku o Loe,13:24,78.3,72.0,Kaneohe,1440.0,-0.53,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2840.0
-2026-10-29,13:37,Kaneohe runway,12:57,78.1,72.0,own,1390.0,-0.43,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2840.0
-2026-10-29,13:37,Heeia,12:30,77.2,75.9,own,290.0,0.03,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2840.0
-2026-10-29,13:37,Maunawili,13:15,76.7,73.3,own,790.0,0.58,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2840.0
-2026-10-29,13:37,Moku o Loe,13:30,78.3,72.0,Kaneohe,1440.0,-0.53,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2840.0
-2026-10-29,13:52,Kaneohe runway,12:57,78.1,72.0,own,1390.0,-0.43,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2640.0
-2026-10-29,13:52,Heeia,13:30,77.5,76.4,own,260.0,-0.59,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2640.0
-2026-10-29,13:52,Maunawili,13:30,76.9,73.4,own,800.0,0.48,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2640.0
-2026-10-29,13:52,Moku o Loe,13:48,78.1,72.0,Kaneohe,1390.0,-0.43,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2640.0
-2026-10-29,14:07,Kaneohe runway,13:57,78.1,72.0,own,1390.0,-0.43,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2590.0
-2026-10-29,14:07,Heeia,13:30,77.5,76.4,own,260.0,-0.6,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2590.0
-2026-10-29,14:07,Maunawili,13:45,76.9,73.4,own,820.0,0.34,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2590.0
-2026-10-29,14:07,Nonokio,13:50,77.4,72.9,own,1030.0,0.15,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2590.0
-2026-10-29,14:07,Moku o Loe,14:00,77.9,72.0,Kaneohe,1350.0,-0.33,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2590.0
-2026-10-29,14:22,Kaneohe runway,13:57,78.1,72.0,own,1390.0,-0.43,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2600.0
-2026-10-29,14:22,Heeia,13:30,77.5,76.4,own,260.0,-0.6,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2600.0
-2026-10-29,14:22,Maunawili,14:00,77.0,73.3,own,860.0,0.31,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2600.0
-2026-10-29,14:22,Nonokio,13:50,77.4,72.9,own,1030.0,0.15,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2600.0
-2026-10-29,14:22,Moku o Loe,14:18,77.9,72.0,Kaneohe,1350.0,-0.33,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2600.0
-2026-10-29,14:45,Kaneohe runway,13:57,78.1,72.0,own,1390.0,-0.43,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2730.0
-2026-10-29,14:45,Heeia,14:30,77.2,76.0,own,290.0,-0.42,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2730.0
-2026-10-29,14:45,Nonokio,14:20,77.3,73.3,own,910.0,0.14,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2730.0
-2026-10-29,14:45,Moku o Loe,14:36,78.3,72.0,Kaneohe,1440.0,-0.53,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2730.0
-2026-10-29,14:48,Kaneohe runway,13:57,78.1,72.0,own,1390.0,-0.43,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2730.0
-2026-10-29,14:48,Heeia,14:30,77.2,76.0,own,290.0,-0.42,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2730.0
-2026-10-29,14:48,Maunawili,14:30,76.8,73.3,own,790.0,0.45,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2730.0
-2026-10-29,14:48,Nonokio,14:20,77.3,73.3,own,910.0,0.14,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2730.0
-2026-10-29,14:48,Moku o Loe,14:42,78.1,72.0,Kaneohe,1390.0,-0.43,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2730.0
-2026-10-29,14:59,Kaneohe runway,14:57,78.1,71.1,own,1600.0,-0.34,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2730.0
-2026-10-29,14:59,Heeia,14:30,77.2,76.0,own,290.0,-0.42,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2730.0
-2026-10-29,14:59,Nonokio,14:20,77.3,73.3,own,910.0,0.14,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2730.0
-2026-10-29,14:59,Moku o Loe,14:54,78.1,71.1,Kaneohe,1600.0,-0.34,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2730.0
-2026-10-29,15:16,Kaneohe runway,14:57,78.1,71.1,own,1600.0,-0.41,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2890.0
-2026-10-29,15:16,Heeia,14:30,77.2,76.0,own,290.0,-0.5,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2890.0
-2026-10-29,15:16,Nonokio,14:40,77.3,73.4,own,900.0,-0.24,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2890.0
-2026-10-29,15:16,Moku o Loe,15:12,78.3,71.1,Kaneohe,1640.0,-0.51,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2890.0
-2026-10-29,15:22,Kaneohe runway,14:57,78.1,71.1,own,1600.0,-0.41,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2890.0
-2026-10-29,15:22,Heeia,14:30,77.2,76.0,own,290.0,-0.5,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2890.0
-2026-10-29,15:22,Maunawili,15:00,76.8,73.5,own,730.0,0.15,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2890.0
-2026-10-29,15:22,Nonokio,14:40,77.3,73.4,own,900.0,-0.24,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2890.0
-2026-10-29,15:22,Moku o Loe,15:18,78.3,71.1,Kaneohe,1640.0,-0.51,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2890.0
+2026-10-29,10:22,Kaneohe runway,09:57,79.0,73.0,own,1350.0,-1.19,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",
+2026-10-29,10:22,Heeia,09:30,77.2,76.7,own,100.0,-0.62,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",
+2026-10-29,10:22,Maunawili,10:00,76.0,73.4,own,580.0,0.74,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",
+2026-10-29,10:22,Moku o Loe,10:18,78.3,73.0,Kaneohe,1190.0,-0.78,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",
+2026-10-29,10:37,Kaneohe runway,09:57,79.0,73.0,own,1350.0,-1.19,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",3650.0
+2026-10-29,10:37,Heeia,09:30,77.2,76.7,own,100.0,-0.62,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",3650.0
+2026-10-29,10:37,Maunawili,10:15,76.2,73.4,own,640.0,0.63,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",3650.0
+2026-10-29,10:37,Nonokio,10:00,77.6,72.9,own,1070.0,-0.38,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",3650.0
+2026-10-29,10:37,Moku o Loe,10:30,78.1,73.0,Kaneohe,1150.0,-0.68,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",3650.0
+2026-10-29,10:52,Kaneohe runway,09:57,79.0,73.0,own,1350.0,-1.19,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",2620.0
+2026-10-29,10:52,Heeia,10:30,77.3,76.3,own,230.0,-0.63,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",2620.0
+2026-10-29,10:52,Maunawili,10:30,76.4,73.6,own,650.0,0.46,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",2620.0
+2026-10-29,10:52,Nonokio,10:00,77.6,72.9,own,1070.0,-0.38,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",2620.0
+2026-10-29,10:52,Moku o Loe,10:48,78.1,73.0,Kaneohe,1150.0,-0.68,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",2620.0
+2026-10-29,11:07,Kaneohe runway,10:57,78.1,72.0,own,1390.0,-0.3,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",2600.0
+2026-10-29,11:07,Heeia,10:30,77.3,76.3,own,230.0,-0.37,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",2600.0
+2026-10-29,11:07,Nonokio,10:50,77.5,72.8,own,1060.0,0.2,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",2600.0
+2026-10-29,11:07,Moku o Loe,11:00,78.1,72.0,Kaneohe,1390.0,-0.3,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",2600.0
+2026-10-29,11:16,Kaneohe runway,10:57,78.1,72.0,own,1390.0,-0.3,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",3030.0
+2026-10-29,11:16,Heeia,10:30,77.3,76.3,own,230.0,-0.37,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",3030.0
+2026-10-29,11:16,Nonokio,11:00,77.5,72.7,own,1090.0,0.21,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",3030.0
+2026-10-29,11:16,Moku o Loe,11:12,78.1,72.0,Kaneohe,1390.0,-0.3,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",3030.0
+2026-10-29,11:23,Heeia,10:30,77.3,76.3,own,230.0,-0.37,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",2540.0
+2026-10-29,11:23,Maunawili,11:00,76.5,73.3,own,730.0,0.67,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",2540.0
+2026-10-29,11:23,Nonokio,11:00,77.5,72.7,own,1090.0,0.21,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",2540.0
+2026-10-29,11:37,Kaneohe runway,10:57,78.1,72.0,own,1390.0,-0.3,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",2620.0
+2026-10-29,11:37,Heeia,10:30,77.3,76.3,own,230.0,-0.37,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",2620.0
+2026-10-29,11:37,Maunawili,11:15,76.7,73.3,own,780.0,0.55,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",2620.0
+2026-10-29,11:37,Nonokio,11:00,77.5,72.7,own,1090.0,0.21,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",2620.0
+2026-10-29,11:37,Moku o Loe,11:30,78.1,72.0,Kaneohe,1390.0,-0.3,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",2620.0
+2026-10-29,11:52,Kaneohe runway,10:57,78.1,72.0,own,1390.0,-0.44,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",2930.0
+2026-10-29,11:52,Heeia,11:30,77.4,76.1,own,290.0,-0.51,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",2930.0
+2026-10-29,11:52,Maunawili,11:30,76.7,73.2,own,790.0,0.63,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",2930.0
+2026-10-29,11:52,Moku o Loe,11:48,78.1,72.0,Kaneohe,1390.0,-0.44,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",2930.0
+2026-10-29,12:07,Kaneohe runway,11:57,79.0,73.0,own,1350.0,-0.94,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",
+2026-10-29,12:07,Heeia,11:30,77.4,76.1,own,290.0,-0.39,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",
+2026-10-29,12:07,Maunawili,11:45,76.6,73.3,own,750.0,0.58,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",
+2026-10-29,12:07,Nonokio,11:40,76.8,73.1,own,840.0,0.47,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",
+2026-10-29,12:07,Moku o Loe,12:00,77.9,73.0,Kaneohe,1110.0,-0.33,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",
+2026-10-29,12:23,Kaneohe runway,11:57,79.0,73.0,own,1350.0,-0.94,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",
+2026-10-29,12:23,Heeia,11:30,77.4,76.1,own,290.0,-0.39,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",
+2026-10-29,12:23,Maunawili,12:00,76.3,73.2,own,710.0,0.72,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",
+2026-10-29,12:23,Nonokio,12:00,76.7,73.0,own,840.0,0.54,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",
+2026-10-29,12:23,Moku o Loe,12:18,77.9,73.0,Kaneohe,1110.0,-0.33,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",
+2026-10-29,12:43,Kaneohe runway,11:57,79.0,73.0,own,1350.0,-0.94,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",
+2026-10-29,12:43,Heeia,12:30,77.2,75.9,own,290.0,-0.24,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",
+2026-10-29,12:43,Nonokio,12:00,76.7,73.0,own,840.0,0.54,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",
+2026-10-29,12:43,Moku o Loe,12:36,77.9,73.0,Kaneohe,1110.0,-0.33,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",
+2026-10-29,12:58,Kaneohe runway,12:55,78.8,71.6,own,1640.0,-0.68,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",2660.0
+2026-10-29,12:58,Heeia,12:30,77.2,75.9,own,290.0,-0.24,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",2660.0
+2026-10-29,12:58,Nonokio,12:00,76.7,73.0,own,840.0,0.54,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",2660.0
+2026-10-29,12:58,Moku o Loe,12:54,78.1,71.6,Kaneohe,1480.0,-0.28,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",2660.0
+2026-10-29,13:07,Kaneohe runway,12:57,78.1,72.0,own,1390.0,-0.43,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",3080.0
+2026-10-29,13:07,Heeia,12:30,77.2,75.9,own,290.0,0.03,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",3080.0
+2026-10-29,13:07,Maunawili,12:45,76.8,73.4,own,780.0,0.54,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",3080.0
+2026-10-29,13:07,Nonokio,12:30,77.0,73.1,own,900.0,0.42,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",3080.0
+2026-10-29,13:07,Moku o Loe,13:00,78.1,72.0,Kaneohe,1390.0,-0.43,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",3080.0
+2026-10-29,13:28,Kaneohe runway,12:57,78.1,72.0,own,1390.0,-0.43,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",2690.0
+2026-10-29,13:28,Heeia,12:30,77.2,75.9,own,290.0,0.03,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",2690.0
+2026-10-29,13:28,Moku o Loe,13:24,78.3,72.0,Kaneohe,1440.0,-0.53,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",2690.0
+2026-10-29,13:37,Kaneohe runway,12:57,78.1,72.0,own,1390.0,-0.43,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",2710.0
+2026-10-29,13:37,Heeia,12:30,77.2,75.9,own,290.0,0.03,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",2710.0
+2026-10-29,13:37,Maunawili,13:15,76.7,73.3,own,790.0,0.58,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",2710.0
+2026-10-29,13:37,Moku o Loe,13:30,78.3,72.0,Kaneohe,1440.0,-0.53,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",2710.0
+2026-10-29,13:52,Kaneohe runway,12:57,78.1,72.0,own,1390.0,-0.43,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",2590.0
+2026-10-29,13:52,Heeia,13:30,77.5,76.4,own,260.0,-0.59,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",2590.0
+2026-10-29,13:52,Maunawili,13:30,76.9,73.4,own,800.0,0.48,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",2590.0
+2026-10-29,13:52,Moku o Loe,13:48,78.1,72.0,Kaneohe,1390.0,-0.43,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",2590.0
+2026-10-29,14:07,Kaneohe runway,13:57,78.1,72.0,own,1390.0,-0.43,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",2530.0
+2026-10-29,14:07,Heeia,13:30,77.5,76.4,own,260.0,-0.6,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",2530.0
+2026-10-29,14:07,Maunawili,13:45,76.9,73.4,own,820.0,0.34,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",2530.0
+2026-10-29,14:07,Nonokio,13:50,77.4,72.9,own,1030.0,0.15,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",2530.0
+2026-10-29,14:07,Moku o Loe,14:00,77.9,72.0,Kaneohe,1350.0,-0.33,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",2530.0
+2026-10-29,14:22,Kaneohe runway,13:57,78.1,72.0,own,1390.0,-0.43,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",2650.0
+2026-10-29,14:22,Heeia,13:30,77.5,76.4,own,260.0,-0.6,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",2650.0
+2026-10-29,14:22,Maunawili,14:00,77.0,73.3,own,860.0,0.31,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",2650.0
+2026-10-29,14:22,Nonokio,13:50,77.4,72.9,own,1030.0,0.15,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",2650.0
+2026-10-29,14:22,Moku o Loe,14:18,77.9,72.0,Kaneohe,1350.0,-0.33,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",2650.0
+2026-10-29,14:45,Kaneohe runway,13:57,78.1,72.0,own,1390.0,-0.43,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",2470.0
+2026-10-29,14:45,Heeia,14:30,77.2,76.0,own,290.0,-0.42,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",2470.0
+2026-10-29,14:45,Nonokio,14:20,77.3,73.3,own,910.0,0.14,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",2470.0
+2026-10-29,14:45,Moku o Loe,14:36,78.3,72.0,Kaneohe,1440.0,-0.53,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",2470.0
+2026-10-29,14:48,Kaneohe runway,13:57,78.1,72.0,own,1390.0,-0.43,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",3000.0
+2026-10-29,14:48,Heeia,14:30,77.2,76.0,own,290.0,-0.42,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",3000.0
+2026-10-29,14:48,Maunawili,14:30,76.8,73.3,own,790.0,0.45,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",3000.0
+2026-10-29,14:48,Nonokio,14:20,77.3,73.3,own,910.0,0.14,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",3000.0
+2026-10-29,14:48,Moku o Loe,14:42,78.1,72.0,Kaneohe,1390.0,-0.43,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",3000.0
+2026-10-29,14:59,Kaneohe runway,14:57,78.1,71.1,own,1600.0,-0.34,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",2650.0
+2026-10-29,14:59,Heeia,14:30,77.2,76.0,own,290.0,-0.42,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",2650.0
+2026-10-29,14:59,Nonokio,14:20,77.3,73.3,own,910.0,0.14,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",2650.0
+2026-10-29,14:59,Moku o Loe,14:54,78.1,71.1,Kaneohe,1600.0,-0.34,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",2650.0
+2026-10-29,15:16,Kaneohe runway,14:57,78.1,71.1,own,1600.0,-0.41,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",2780.0
+2026-10-29,15:16,Heeia,14:30,77.2,76.0,own,290.0,-0.5,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",2780.0
+2026-10-29,15:16,Nonokio,14:40,77.3,73.4,own,900.0,-0.24,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",2780.0
+2026-10-29,15:16,Moku o Loe,15:12,78.3,71.1,Kaneohe,1640.0,-0.51,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",2780.0
+2026-10-29,15:22,Kaneohe runway,14:57,78.1,71.1,own,1600.0,-0.41,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",2420.0
+2026-10-29,15:22,Heeia,14:30,77.2,76.0,own,290.0,-0.5,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",2420.0
+2026-10-29,15:22,Maunawili,15:00,76.8,73.5,own,730.0,0.15,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",2420.0
+2026-10-29,15:22,Nonokio,14:40,77.3,73.4,own,900.0,-0.24,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",2420.0
+2026-10-29,15:22,Moku o Loe,15:18,78.3,71.1,Kaneohe,1640.0,-0.51,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",2420.0
 2026-10-29,15:38,Kaneohe runway,14:57,78.1,71.1,own,1600.0,-0.41,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2960.0
 2026-10-29,15:38,Heeia,14:30,77.2,76.0,own,290.0,-0.5,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2960.0
 2026-10-29,15:38,Maunawili,15:15,76.9,72.9,own,890.0,0.17,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2960.0

@@ -790,11 +790,24 @@ def _wrap_log(day: str):
     return p
 
 
-def wrap_chart(camera: list) -> str:
-    """The day's downrange base: camera dots over the camera's hours."""
-    data = json.dumps({"camera": camera})
+def cam_state(text) -> str:
+    """"capped", "hidden" or "bound" from a logged camera line."""
+    t = str(text)
+    if t.startswith("Cloud base at or below") or t.startswith("Cloud on the Koʻolau"):
+        return "capped"
+    if t.startswith("The ridge is hidden"):
+        return "hidden"
+    return "bound"
+
+
+def wrap_chart(camera: list, lost: list | None = None) -> str:
+    """The day's downrange base: camera ceilings over the camera's hours; frames
+    with the crest in cloud or hidden as amber dots on the axis (no height)."""
+    lost = lost or []
+    data = json.dumps({"camera": camera, "lost": lost})
     return f"""<div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted);margin:2px 0 4px">
-<span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#3f9d5a;vertical-align:middle"></span> Kāneʻohe Bay camera</span></div>
+<span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#3f9d5a;vertical-align:middle"></span> Kāneʻohe Bay camera (base no higher than)</span>
+{'<span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#e0a100;vertical-align:middle"></span> Crest in cloud or hidden</span>' if lost else ''}</div>
 <div style="position:relative;width:100%;min-width:0;height:220px"><canvas id="wrapchart" role="img" aria-label="Downrange cloud base through the day"></canvas></div>
 <script>
 (function () {{
@@ -802,18 +815,22 @@ def wrap_chart(camera: list) -> str:
   var dark = matchMedia('(prefers-color-scheme: dark)').matches, muted = '#898781', grid = dark ? '#2c2c2a' : '#e1e0d9';
   var hm = function (m) {{ return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); }};
   var ys = d.camera.map(function (a) {{ return a[1]; }});
+  var ymin = Math.min(1500, Math.floor(Math.min.apply(null, ys) / 500) * 500);
   new Chart(document.getElementById('wrapchart'), {{
     type: 'line',
     data: {{ datasets: [
-      {{ label: 'Camera', data: d.camera.map(pt), showLine: false, pointRadius: 3, pointBackgroundColor: '#3f9d5a', borderColor: '#3f9d5a' }}
+      {{ label: 'Camera', data: d.camera.map(pt), showLine: false, pointRadius: 3, pointBackgroundColor: '#3f9d5a', borderColor: '#3f9d5a' }},
+      {{ label: 'Lost', data: d.lost.map(function (a) {{ return {{x: a[0], y: ymin, t: a[1]}}; }}), showLine: false, clip: false,
+         pointRadius: 3, pointBackgroundColor: '#e0a100', borderColor: '#e0a100' }}
     ] }},
     options: {{ responsive: true, maintainAspectRatio: false, interaction: {{ mode: 'nearest', axis: 'x', intersect: false }},
       plugins: {{ legend: {{ display: false }}, tooltip: {{ callbacks: {{
         title: function (i) {{ return hm(i[0].parsed.x); }},
-        label: function (i) {{ return i.dataset.label + ': ' + Math.round(i.parsed.y).toLocaleString() + ' ft'; }} }} }} }},
+        label: function (i) {{ return i.dataset.label === 'Lost' ? i.raw.t
+          : 'Base no higher than ' + Math.round(i.parsed.y).toLocaleString() + ' ft'; }} }} }} }},
       scales: {{
         x: {{ type: 'linear', min: {WRAP_SPAN[0]}, max: {WRAP_SPAN[1]}, ticks: {{ stepSize: 60, color: muted, callback: function (v) {{ return hm(v); }} }}, grid: {{ display: false }} }},
-        y: {{ min: Math.min(1500, Math.floor(Math.min.apply(null, ys) / 500) * 500),
+        y: {{ min: ymin,
               max: Math.max(4000, Math.ceil(Math.max.apply(null, ys) / 500) * 500),
               ticks: {{ stepSize: 500, color: muted, callback: function (v) {{ return v.toLocaleString(); }} }}, grid: {{ color: grid }} }}
       }} }}
@@ -844,20 +861,40 @@ def day_wrap(now: datetime, forecast_word: str | None, problems: list) -> str:
     p = _wrap_log(f"{now:%Y-%m-%d}")
     chart = ""
     if p is not None:
-        cam = (p.dropna(subset=["camera_bound_ft"]).groupby("m").camera_bound_ft.first()
-               if "camera_bound_ft" in p else None)
+        # One row per build; the camera's line says what it saw (Sam, 10-29: the
+        # wrap "averaged about 2,700 ft" from ceilings while cloud sat on the crest).
         runway = p[p.station == "Kaneohe runway"]
-        camera_pts = [[int(m), float(v)] for m, v in cam.items()] if cam is not None else []
-        cam_mid = [v for m, v in camera_pts if 660 <= m <= 840]
-        if len(cam_mid) >= WRAP_CAMERA_MIN:
-            said.append(f"Midday the downrange base averaged about {round(np.mean(cam_mid), -2):,.0f} ft by the Kāneʻohe Bay camera.")
+        rows = p.dropna(subset=["camera"]).groupby("m").agg(camera=("camera", "first"),
+                                                            bound=("camera_bound_ft", "first"))
+        rows["state"] = rows.camera.map(cam_state)
+        camera_pts = [[int(m), float(r.bound)] for m, r in rows.iterrows()
+                      if r.state == "bound" and r.bound == r.bound]
+        lost = [[int(m), "Crest in cloud" if r.state == "capped" else "Hidden: cloud or rain"]
+                for m, r in rows.iterrows() if r.state != "bound"]
+        mid = rows[(rows.index >= 660) & (rows.index <= 840)]
+        air = runway[(runway.m >= 660) & (runway.m <= 840)].lcl_ft.dropna()
+        air_txt = f" Kaneohe's air would condense at about {round(float(air.median()), -2):,.0f} ft." if len(air) else ""
+        if len(mid) >= WRAP_CAMERA_MIN:
+            share = mid.state.value_counts(normalize=True)
+            if share.get("capped", 0) >= 0.5:
+                at = [int(x.replace(",", "")) for x in mid.camera.str.extract(r"at or below about ([\d,]+) ft")[0].dropna()]
+                said.append("Midday cloud sat on the Koʻolau crest" +
+                            (f": base at or below about {round(float(np.median(at)), -2):,.0f} ft (Kāneʻohe Bay camera)." if at else ".")
+                            + air_txt)
+            elif share.get("hidden", 0) >= 0.5:
+                said.append("Midday the Koʻolau was hidden by cloud or rain." + air_txt)
+            else:
+                v = [b for m, b in camera_pts if 660 <= m <= 840]
+                if v:
+                    said.append(f"Midday the downrange base was no higher than about {round(float(np.mean(v)), -2):,.0f} ft "
+                                "by the Kāneʻohe Bay camera.")
         ti = runway[(runway.m >= 600) & (runway.m < 840)].ti_c.dropna()
         if len(ti):
             peak = float(ti.median())
             said.append(f"Thermals by the Kaneohe runway's air against the RRFS profile, 10:00–14:00: {th.describe(peak).lower()} "
                         f"(index {peak:.1f} °C)" + (f"; the forecast said {forecast_word.lower()}." if forecast_word else "."))
-        if camera_pts:
-            chart = wrap_chart(camera_pts)
+        if camera_pts or lost:
+            chart = wrap_chart(camera_pts, lost)
     if not said and not chart:
         return None
     return "".join(f'<p class="summary">{esc(s)}</p>' for s in said) + chart, best
