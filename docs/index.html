@@ -93,24 +93,24 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><a class="homebtn" href="/">&larr; Home</a><div class="tag">Kula soaring briefing</div><h1>Kula Today</h1></div>
-    <div class="date">Updated Thu 29 Oct 2026 · 17:37 HST</div>
+    <div class="date">Updated Thu 29 Oct 2026 · 18:07 HST</div>
   </header>
 
   <div>
     <!-- The FAA viewer shows its station list before it opens the camera; the latest frame covers that until it has (Sam, 2026-10-25). -->
-    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" title="Red Hill webcam, live, looking south along the Kula slope" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="camera.jpg?2026-10-29T17:37" alt=""></div>
+    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" title="Red Hill webcam, live, looking south along the Kula slope" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="camera.jpg?2026-10-29T18:07" alt=""></div>
     <div class="camcap">Red Hill webcam, live. FAA WeatherCam (Kekoa). <a href="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" target="_blank" rel="noopener">Open full size</a></div>
   </div>
 
   <div class="cols">
     <section class="panel today" aria-labelledby="t-today">
-      <div class="kind">Measured today · 17:37 HST</div>
-      <div class="head"><h2 id="t-today">Today</h2><span class="chip fair">Light</span></div>
-      <div class="alert" style="font-size:.95rem;margin:4px 0 6px">Flood Watch until Thu 18:00 <a href="https://forecast.weather.gov/MapClick.php?lat=20.7579&lon=-156.3200" target="_blank" rel="noopener" style="font-weight:500">NWS details</a></div><div class="sub" style="display:flex;align-items:center;gap:6px;margin:2px 0 6px"><img src="https://api.weather.gov/icons/land/day/rain_showers,60?size=small" width="34" height="34" alt="Rain Showers Likely (55%)" title="NWS: Rain Showers Likely (55%)" loading="lazy" style="vertical-align:middle;border-radius:4px;margin-left:6px"><span>NWS today: Rain Showers Likely (55%)</span></div><div class="databadge"><div class="big">Limited data</div><div>25 of 29 stations reporting; the Mesonet could not be reached, its readings are from the 17:07 update. Readings below rest on fewer stations than usual.</div><div class="sub">Not reporting: Kahikinui, Upper Kahikinui, Nakula, Paia</div></div>
-      <p class="summary">Cloudbase is edging up. Kula Ag had about half sun over the last hour; cloud reaches all the way to the Summit. Upslope has run since about 08:15 at a light 1 mph, and thermals seem light. Trades are holding the shear line at Pukalani, with no trade air on the lower west slope.</p><div style="font-weight:600;font-size:.9rem;margin:10px 0 2px">Cloudbase so far, derived</div><div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted,#6b6b66);margin:2px 0 4px">
+      <div class="kind">The day in review</div>
+      <div class="head"><h2 id="t-today">Today · Thu 29 Oct</h2><span class="chip warn">Flat</span></div>
+      
+      <p class="summary">A flat day (forecast flat). Thermals stayed flat all day. The upslope ran from about 08:15 to about 16:30. A low day for October: the base stayed down near 3,100 ft (normal 4,500–5,400 ft). The evening before, the page called it normal, about 3,700 ft, a miss. Midday the base averaged about 3,100 ft by the Kekoa camera, 600 ft lower than the evening&#x27;s number; the morning update said about 3,600 ft, off by 500 ft. Most of the day the shear line was crossing Kula Highway between Pukalani and Omaopio; furthest south about 16:52, crossing Kula Highway between Omaopio and the middle Lower Kula Road junction. Data gaps: no readings all day from 3 stations (Kahikinui, Nakula, Upper Kahikinui); the Mesonet could not be reached on 17 of 58 updates.</p><div class="watch"><div class="kind">What the day did</div><ul><li>Saturated, dew-fed morning: low cloud until about 08:30.</li><li>Watched for: Late start (P2) from 09:37; Base will lift (P3) from 08:07.</li></ul></div><div style="font-weight:600;font-size:.9rem;margin:10px 0 2px">Cloudbase, derived</div><div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted,#6b6b66);margin:2px 0 4px">
 
 <span><span style="display:inline-block;width:16px;height:2px;background:#2a78d6;vertical-align:middle"></span> Derived (stations)</span><span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#3f9d5a;vertical-align:middle"></span> Kekoa camera</span><span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;border:1.5px solid #898781;box-sizing:border-box;vertical-align:middle"></span> Camera, no call</span></div>
-<div style="position:relative;width:100%;min-width:0;height:220px"><canvas id="livechart" role="img" aria-label="Derived cloudbase through the day"></canvas></div>
+<div style="position:relative;width:100%;min-width:0;height:220px"><canvas id="basechart" role="img" aria-label="Derived cloudbase through the day"></canvas></div>
 <div class="sub">Derived from the stations every 15 minutes during the upslope.</div>
 <script>
 (function () {
@@ -128,7 +128,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
   var ys = d.derived.map(function (a) { return a[1]; }).concat(d.forecast.map(function (a) { return a[1]; })).concat(d.camera.map(function (a) { return a[1]; }));
   var xs = [540, 960];
   var ymin = Math.min(3500, Math.floor(Math.min.apply(null, ys) / 500) * 500);
-  new Chart(document.getElementById('livechart'), {
+  new Chart(document.getElementById('basechart'), {
     type: 'line',
     data: { datasets: [
       { label: 'Derived', data: d.derived.map(pt), borderColor: '#2a78d6', borderWidth: 2, pointRadius: 0, tension: 0.3 },
@@ -156,13 +156,13 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 })();
 </script>
       <dl>
-        <dt>Thermals</dt><dd>Seem <strong>light</strong> as of 16:45<div class="sub">Kula Ag's last hour of air through the NAM sounding (thermal.py)</div></dd>
-        <dt>Cloudbase</dt><dd><span class="num">About 3,100 ft</span><div class="sub">The lower slope is still damp from the dew overnight. The highest station (MECO Crater Rd) is at about 4,600 ft: the base should lift toward that as the dew dries</div></dd>
-        <dt>Sun</dt><dd><span class="num">45%</span> of clear sky, lower Kula slope<div class="sub">Last hour, as of 16:45; average of Kula Ag 49%, Keokea 47%, Pulehu 39%</div></dd>
-        <dt>Shear line</dt><dd>At Pukalani<div class="sub">Traced from the backwind at MECO Pulehu Rd 2 up to the trades at Piiholo</div></dd>
+        <dt>Thermals</dt><dd><strong>Flat</strong> for the day, 10:00–14:00<div class="sub">Kula Ag's measured air through the NAM sounding (thermal.py); forecast was Flat</div></dd>
         
-        <dt>Upslope</dt><dd>On since about <span class="num">08:15</span><div class="sub">Drainage ended about 07:30</div></dd>
-        <dt>Wind</dt><dd><span class="num">2 mph</span>, gusts to 6<div class="sub">Lower elevations, 10 stations, last hour</div></dd>
+        
+        <dt>Shear line</dt><dd>Crossing Kula Highway between Pukalani and Omaopio<div class="sub">Most of the day, 14 updates. Furthest south about 16:52: Crossing Kula Highway between Omaopio and the middle Lower Kula Road junction</div></dd>
+        
+        <dt>Upslope</dt><dd><span class="num">08:15</span> to about <span class="num">16:30</span></dd>
+        <dt>Wind</dt><dd><span class="num">2 mph</span>, gusts to 7<div class="sub">Lower elevations, during the upslope</div></dd>
       </dl>
     </section>
     <section class="panel tomorrow" aria-labelledby="t-tomorrow">
@@ -174,7 +174,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
         <dt>Sun</dt><dd><span class="num">5%</span> of clear sky, 10:00–14:00 (GFS)<div class="sub">The model can't see the slope's own cumulus: when it says 90% or more, Kula has measured about 80%. Good flying days measure about 80%, overcast about 50%, socked in 20%.</div></dd>
         <dt>Shear line</dt><dd>At Pukalani<div class="sub">Trades ENE (064°)</div></dd>
       </dl>
-      <div class="sub">Forecast as of 16:43 HST</div><div class="sub">Forecast rules last checked October 2026: all holding.</div><div class="sub">Accuracy, last 30 days, the evening call against the day: cloudbase within 500 ft on 0 of 2 days (typical miss 760 ft); thermals right on 2 of 8, within one step on 7. Scored against pilot reports where there are any, otherwise the camera and stations.</div>
+      <div class="sub">Forecast as of 18:07 HST</div><div class="sub">Forecast rules last checked October 2026: all holding.</div><div class="sub">Accuracy, last 30 days, the evening call against the day: cloudbase within 500 ft on 0 of 2 days (typical miss 760 ft); thermals right on 2 of 8, within one step on 7. Scored against pilot reports where there are any, otherwise the camera and stations.</div>
     </section>
   </div>
 
@@ -182,7 +182,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
     <h2 id="t-week">The week</h2>
     <div class="tablewrap"><table>
       <thead><tr><th>Day</th><th class="n">Sun</th><th>Base</th><th>Thermals</th><th>Shear line</th><th></th></tr></thead>
-      <tbody><tr><td>Fri 30</td><td class="n">5%</td><td>Normal</td><td>Light</td><td>Pukalani</td><td class="wx"></td></tr><tr><td>Sat 31</td><td class="n">39%</td><td>Normal</td><td>Moderate</td><td>Omaopio</td><td class="wx"></td></tr><tr><td>Sun 01</td><td class="n">74%</td><td>Normal</td><td>Moderate</td><td>Omaopio</td><td class="wx"></td></tr><tr><td>Mon 02</td><td class="n">86%</td><td>Normal</td><td>Strong</td><td>Omaopio</td><td class="wx"></td></tr><tr><td>Tue 03</td><td class="n">76%</td><td>Normal</td><td>Strong</td><td>Pukalani</td><td class="wx"></td></tr><tr><td>Wed 04</td><td class="n">85%</td><td>Normal</td><td>Moderate</td><td>Pukalani</td><td class="wx"></td></tr><tr><td>Thu 05</td><td class="n">91%</td><td>Normal</td><td>Moderate</td><td>Pukalani</td><td class="wx"></td></tr></tbody>
+      <tbody><tr><td>Fri 30</td><td class="n">5%</td><td>Normal</td><td>Light</td><td>Pukalani</td><td class="wx"></td></tr><tr><td>Sat 31</td><td class="n">39%</td><td>Normal</td><td>Light</td><td>Omaopio</td><td class="wx"></td></tr><tr><td>Sun 01</td><td class="n">74%</td><td>Normal</td><td>Moderate</td><td>Omaopio</td><td class="wx"></td></tr><tr><td>Mon 02</td><td class="n">86%</td><td>Normal</td><td>Strong</td><td>Omaopio</td><td class="wx"></td></tr><tr><td>Tue 03</td><td class="n">76%</td><td>Normal</td><td>Strong</td><td>Pukalani</td><td class="wx"></td></tr><tr><td>Wed 04</td><td class="n">85%</td><td>Normal</td><td>Moderate</td><td>Pukalani</td><td class="wx"></td></tr><tr><td>Thu 05</td><td class="n">91%</td><td>Normal</td><td>Moderate</td><td>Pukalani</td><td class="wx"></td></tr></tbody>
     </table></div>
     <p>Sun is the GFS forecast for 10:00–14:00. The model can't see the slope's own cumulus, so its high numbers run about 10 points above what Kula measures.</p>
   </section>
@@ -196,7 +196,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
   </div>
 
 </div>
-<!-- build problems: HCDP observations, using the last good fetch: ConnectTimeout: HTTPSConnectionPool(host='api.hcdp.ikewai.org', port=443): Max retries exceeded with url: /mesonet/db/measurements?location=hawaii&station_ids=0115%2C0118%2C0144%2C0116%2C0119%2C0145%2C0151%2C0152%2C0153%2C0143&var_ids=Tair_1_Avg%2CRH_1_Avg%2CWS_1_Avg%2CWDrs_1_Avg%2CWS_1_Max&start_date=2026-10-29T00%3A00%3A00-10%3A00&row_mode=json&limit=100000 (Caused by ConnectTimeoutError(<HTTPSConnection(host='api.hcdp.ikewai.org', port=443) at 0x76c462dfdf70), 'Connection to api.hcdp.ikewai.org timed out. (connect timeout=20)')); net_radiation: ConnectTimeout: HTTPSConnectionPool(host='api.hcdp.ikewai.org', port=443): Max retries exceeded with url: /mesonet/db/measurements?location=hawaii&station_ids=0119&var_ids=Rnet_1_Avg&start_date=2026-10-29T12%3A00%3A00-10%3A00&row_mode=json&limit=100000 (Caused by ConnectTimeoutError(<HTTPSConnection(host='api.hcdp.ikewai.org', port=443) at 0x76c462e9e1b0), 'Connection to api.hcdp.ikewai.org timed out. (connect timeout=20)')); Mesonet sun: ConnectTimeout: HTTPSConnectionPool(host='api.hcdp.ikewai.org', port=443): Max retries exceeded with url: /mesonet/db/measurements?location=hawaii&station_ids=0115%2C0118%2C0144%2C0116%2C0119%2C0145%2C0151%2C0152%2C0153&var_ids=SWin_1_Avg&start_date=2026-10-29T15%3A57%3A00-10%3A00&end_date=2026-10-29T17%3A37%3A00-10%3A00&row_mode=json&limit=100000 (Caused by ConnectTimeoutError(<HTTPSConnection(host='api.hcdp.ikewai.org', port=443) at 0x76c462e110d0), 'Connection to api.hcdp.ikewai.org timed out. (connect timeout=20)')); sun ladder from 15:45 reused; first_cumulus: ConnectTimeout: HTTPSConnectionPool(host='api.hcdp.ikewai.org', port=443): Max retries exceeded with url: /mesonet/db/measurements?location=hawaii&station_ids=0119%2C0116%2C0151&var_ids=SWin_1_Avg%2CLWin_1_Avg%2CTair_1_Avg&start_date=2026-10-29T07%3A30%3A00-10%3A00&end_date=2026-10-29T17%3A37%3A29-10%3A00&row_mode=json&limit=100000 (Caused by ConnectTimeoutError(<HTTPSConnection(host='api.hcdp.ikewai.org', port=443) at 0x76c462d15f40), 'Connection to api.hcdp.ikewai.org timed out. (connect timeout=20)')); window_sun: ConnectTimeout: HTTPSConnectionPool(host='api.hcdp.ikewai.org', port=443): Max retries exceeded with url: /mesonet/db/measurements?location=hawaii&station_ids=0115%2C0118%2C0144%2C0116%2C0119%2C0145%2C0151%2C0152%2C0153&var_ids=SWin_1_Avg&start_date=2026-10-29T09%3A00%3A00-10%3A00&end_date=2026-10-29T15%3A00%3A00-10%3A00&row_mode=json&limit=100000 (Caused by ConnectTimeoutError(<HTTPSConnection(host='api.hcdp.ikewai.org', port=443) at 0x76c462d6e5a0), 'Connection to api.hcdp.ikewai.org timed out. (connect timeout=20)')); sun_trend: ConnectTimeout: HTTPSConnectionPool(host='api.hcdp.ikewai.org', port=443): Max retries exceeded with url: /mesonet/db/measurements?location=hawaii&station_ids=0115%2C0118%2C0144%2C0116%2C0119%2C0145%2C0151%2C0152%2C0153&var_ids=SWin_1_Avg&start_date=2026-10-29T16%3A07%3A00-10%3A00&end_date=2026-10-29T17%3A37%3A00-10%3A00&row_mode=json&limit=100000 (Caused by ConnectTimeoutError(<HTTPSConnection(host='api.hcdp.ikewai.org', port=443) at 0x76c462ede750), 'Connection to api.hcdp.ikewai.org timed out. (connect timeout=20)')); sky_now: ConnectTimeout: HTTPSConnectionPool(host='api.hcdp.ikewai.org', port=443): Max retries exceeded with url: /mesonet/db/measurements?location=hawaii&station_ids=0119%2C0116%2C0118&var_ids=LWin_1_Avg%2CTair_1_Avg&start_date=2026-10-29T16%3A07%3A29-10%3A00&end_date=2026-10-29T17%3A37%3A29-10%3A00&row_mode=json&limit=100000 (Caused by ConnectTimeoutError(<HTTPSConnection(host='api.hcdp.ikewai.org', port=443) at 0x76c462edee40), 'Connection to api.hcdp.ikewai.org timed out. (connect timeout=20)')); summit_spill: ConnectTimeout: HTTPSConnectionPool(host='api.hcdp.ikewai.org', port=443): Max retries exceeded with url: /mesonet/db/measurements?location=hawaii&station_ids=0153&var_ids=RH_1_Avg%2CWDrs_1_Avg%2CWS_1_Avg&start_date=2026-10-29T07%3A00%3A00-10%3A00&end_date=2026-10-29T08%3A59%3A59-10%3A00&row_mode=json&limit=5000 (Caused by ConnectTimeoutError(<HTTPSConnection(host='api.hcdp.ikewai.org', port=443) at 0x76c462d79790), 'Connection to api.hcdp.ikewai.org timed out. (connect timeout=20)')) -->
+<!-- build problems: none -->
 <script>
 /* Catch up with a new build within ~2 minutes (Sam, 2026-10-17: "the page
    does not seem to autoupdate"). stations.json's "made" is the build time;
@@ -204,7 +204,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
    browser's 10-minute cached copy is bypassed. The 15-minute refresh stays
    as a backstop. */
 (function () {
-  var built = "2026-10-29T17:37";
+  var built = "2026-10-29T18:07";
   function check() {
     fetch("stations.json?" + Date.now(), {cache: "no-store"})
       .then(function (r) { return r.json(); })
