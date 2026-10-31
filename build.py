@@ -3953,7 +3953,7 @@ def day_review(obs, now, up, evening, rnet, word, model, fc_today, fc_pair, entr
     chart_html = "Not derived<div class=\"sub\">No upslope, so no slope air to derive it from</div>"
     derived, forecast = [], []
     if up is not None and len(obs):
-        got = safely(base_chart, obs, now, up, end, "basechart", "Cloudbase, derived", False)
+        got = safely(base_chart, obs, now, up, end, "basechart", "Cloudbase", False)
         if got and got[1]:
             chart, derived, forecast = got
             dv = [v for _, v in derived]
@@ -4439,7 +4439,7 @@ def build() -> str:
     # The day so far against the morning's forecast (Sam): the review's chart,
     # drawn live from the upslope to the newest reading.
     if up is not None and len(obs) and not day_over:
-        live = safely(base_chart, obs, now, up, None, "livechart", "Cloudbase so far, derived", False)
+        live = safely(base_chart, obs, now, up, None, "livechart", "Cloudbase so far", False)
         if live and live[1]:
             summary_html += live[0]
 
