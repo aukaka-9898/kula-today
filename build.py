@@ -332,6 +332,7 @@ def log_dropouts(now: datetime) -> None:
 # Shown when under BADGE_MIN_SHARE of the stations have a reading in the last
 # 90 min, or the Mesonet could not be reached this update.
 BADGE_MIN_SHARE = 0.8
+BADGE_HCDP_FRESH = timedelta(minutes=30)
 # Far down the south slope, not critical to Kula most of the time (Sam, 10-31):
 # never counted for the badge, either way.
 BADGE_SKIP = {"Kahikinui", "Upper Kahikinui", "Nakula"}
@@ -341,7 +342,10 @@ def data_badge() -> str:
     rows = [r for r in json.loads(STATIONS_FILE.read_text(encoding="utf-8"))["stations"]
             if r["name"] not in BADGE_SKIP]
     out = [r["name"] for r in rows if not r.get("at")]
-    hcdp = "hcdp" in OUTAGES
+    # A missed Mesonet fetch covered by the last one under BADGE_HCDP_FRESH old
+    # is not limited data (Sam, 10-31: "26 of 26 stations reporting; the
+    # Mesonet could not be reached, its readings are from the 10:07 update ???").
+    hcdp = "hcdp" in OUTAGES and (HCDP_FROM is None or datetime.now(HST) - HCDP_FROM > BADGE_HCDP_FRESH)
     if not hcdp and len(out) < (1 - BADGE_MIN_SHARE) * len(rows):
         return ""
     sub = f"{len(rows) - len(out)} of {len(rows)} stations reporting"
