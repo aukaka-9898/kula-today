@@ -713,11 +713,11 @@ def _barb(cx: float, cy: float, dir_deg, mph, colour: str) -> str:
 def barb_chart(fc: dict, ob: dict) -> str:
     """fc and ob: {hour: {dir, mph, gust}} for the day's hours."""
     hours = list(DAY_HOURS)
-    col, left, top = 56, 84, 34
-    W, H = left + col * len(hours) + 10, top + 2 * 76 + 26
+    col, left, top, row = 56, 84, 34, 92
+    W, H = left + col * len(hours) + 10, top + 2 * row + 10
     parts = []
     for r, (label, data) in enumerate((("Forecast", fc), ("Bellows", ob))):
-        cy = top + r * 76 + 28
+        cy = top + r * row + 28
         parts.append(f'<text x="4" y="{cy + 4}" class="lbl">{label}</text>')
         for i, h in enumerate(hours):
             w = data.get(h)
@@ -728,7 +728,9 @@ def barb_chart(fc: dict, ob: dict) -> str:
             colour = BARB_CLASS[RATING_CLASS.get(word, "fair")]
             g = f' g{w["gust"]:.0f}' if w.get("gust") is not None else ""
             parts.append(_barb(cx, cy, w["dir"], w["mph"], colour)
-                         + f'<text x="{cx:.1f}" y="{cy + 44}" class="num" text-anchor="middle">{w["mph"]:.0f}{g}</text>')
+                         + f'<text x="{cx:.1f}" y="{cy + 44}" class="num" text-anchor="middle">{w["mph"]:.0f}{g}</text>'
+                         + (f'<text x="{cx:.1f}" y="{cy + 61}" class="num" text-anchor="middle">{w["dir"]:03.0f}°</text>'
+                            if w.get("dir") is not None else ""))
     for i, h in enumerate(hours):
         x = left + col * i + col / 2
         parts.append(f'<text x="{x:.1f}" y="{H - 4}" class="lbl" text-anchor="middle">{h:02d}</text>')
@@ -737,7 +739,7 @@ def barb_chart(fc: dict, ob: dict) -> str:
             '<style>.lbl{font:600 15px var(--display);fill:var(--muted)}.num{font:14px var(--mono);fill:var(--muted)}</style>'
             + "".join(parts) + '</svg></div>'
             '<div class="sub">Wind barbs in knots (short 5, long 10, flag 50; circle calm), pointing to where the wind '
-            'comes from; numbers are mph and gusts. Green flyable, grey caution or light, amber not flyable.</div>')
+            'comes from; numbers are mph and gusts, then the direction in degrees. Green flyable, grey caution or light, amber not flyable.</div>')
 
 
 # ---------------------------------------------------------------- The day's wrap-up
@@ -1034,8 +1036,6 @@ def write(now: datetime) -> None:
     if note:
         wind_html += f'<div class="alert">{esc(note)}</div>'
 
-    rest = [(t, grid[t]) for t in sorted(grid) if t.date() == now.date() and t.hour in DAY_HOURS and t > hour_now]
-    rest_html = hour_table(rest) if rest else '<span class="sub">Nothing left of today\'s daylight.</span>'
 
     # --- Forecast: tomorrow, then the week
     tom = now.date() + timedelta(days=1)
@@ -1101,9 +1101,7 @@ def write(now: datetime) -> None:
         <dt>Thermals</dt><dd>{therm_html}</dd>
         <dt>Inversion</dt><dd>{inv_html}</dd>
       </dl>
-      {barbs}
-      <div class="kind" style="color:var(--muted)">Rest of today (forecast)</div>
-      {rest_html}"""
+      {barbs}"""
         kind, today_title = f"Now · {now:%H:%M} HST", "Today"
     raw = (HERE / "template.html").read_text(encoding="utf-8")
     style = "".join("<style>" + part.split("</style>")[0] + "</style>" for part in raw.split("<style>")[1:])
