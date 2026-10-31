@@ -2262,11 +2262,17 @@ def trace_line(rows: list) -> dict:
     trades = lambda r: cv._side(r["dir"]) == "trades"
     elev = lambda r: r["elev_ft"] or 0
     low = sorted((r for r in live if elev(r) <= LOW_BAND_FT), key=lambda r: -r["lat"])
+    # A backwind is wind blowing back -- the upslope sector -- or light and
+    # variable under the shear. A strong wind just north of the trade sector is
+    # the trades veered (Sam, 2026-10-30: Pulehu Rd 2 "from 15 deg at 17 mph
+    # ... This is not a backwind"; Paia 075 at 25, Hamakuapoko 039).
+    back = lambda r, north: (cv._side(r["dir"]) == "upslope" or not north
+                             or r["mph"] < TRACE_SPEED_FRAC * float(np.median([q["mph"] for q in north])))
     anchor, seen = None, False
     for r in low:
         if trades(r):
             seen = True
-        elif seen:
+        elif seen and back(r, [q for q in low if q["lat"] > r["lat"] and trades(q)]):
             anchor = r
             break
     if anchor is None:
