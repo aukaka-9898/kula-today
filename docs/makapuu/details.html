@@ -98,7 +98,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><a class="homebtn" href="/">&larr; Home</a> <a class="homebtn" href="./">&larr; Makapu&#8216;u Today</a><h1>Makapu&#8216;u Details</h1></div>
-    <div class="date">Updated Sat 31 Oct 2026 · 13:23 HST</div>
+    <div class="date">Updated Sat 31 Oct 2026 · 13:30 HST</div>
   </header>
   <div class="databadge"><div class="big">Under construction</div></div>
   <section class="block" aria-labelledby="t-thermal">
@@ -255,12 +255,18 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
     if (top === null) top = c[c.length - 1].h;
     var work = c.filter(function (x) { return x.h <= top; }), peak = Math.min.apply(null, work.map(function (x) { return x.ti; }));
     var wet = c.filter(function (x) { return x.sat; }), lcl = wet.length ? wet[0].h : null;
-    // Top of useable lift: as high as the parcel still rises, capped at the
-    // cloudbase, once it clears 500 ft above release (Sam, 10-31: "a climb to
-    // base, even as low as it called, is possible. That should be reflected").
-    // Not the Light threshold (-3.5 C): a Flat day at -3.4 C read "None".
-    var use = lcl === null ? top : Math.min(top, lcl);
-    if (use - D.release_ft < 500) use = D.release_ft;
+    // Top of useable lift as Weather Guesser has it (Thermal_Calcs.MaxLiftHeight,
+    // MinimumTI = -3.5 C, read 10-31 with Sam's leave): the highest height where
+    // the index weakens through -3.5 C, interpolated between levels; none if it
+    // never gets that strong. Not capped at the cloudbase (WG does not).
+    var use = D.release_ft;
+    for (i = work.length - 1; i > 0; i--) {
+      var a = work[i - 1], b = work[i];
+      if (a.ti <= D.bands[0][0] && b.ti > D.bands[0][0]) {
+        use = a.h + (b.h - a.h) * (D.bands[0][0] - a.ti) / (b.ti - a.ti); break;
+      }
+      if (b.ti <= D.bands[0][0]) { use = b.h; break; }
+    }
     Q("#o-word").textContent = word(peak);
     Q("#o-ti").textContent = "Thermal index " + TIdisp(peak) + " at its strongest";
     Q("#o-base").textContent = lcl === null ? "above " + n(H(D.top_ft)) + HU() : n(Math.floor(H(lcl) / 100) * 100) + HU();
