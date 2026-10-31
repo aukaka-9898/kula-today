@@ -1569,6 +1569,8 @@ def _schedule(times: pd.Series, now: datetime) -> tuple[float, bool]:
 # by each station's own schedule (_schedule): only a rung that has missed its
 # reports sits out.
 STALE_RUNGS_SIT_OUT = True
+# Paia under this is no trade reading for paia_check; Honolua stands in.
+PAIA_MIN_MPH = 4.0
 
 
 def best_split(lad: pd.DataFrame) -> dict:
@@ -1687,7 +1689,7 @@ def line_now(obs: pd.DataFrame, now: datetime):
             if note:
                 got = line_sane(got, (got["north_lat"] + got["south_lat"]) / 2, lad)
         got["silent_note"] = note
-        return got, lad
+        return paia_check(got, lad), lad
     (a_lat, a_lon), (o_lat, o_lon) = tr["anchor_ll"], tr["origin_ll"]
     # Sam, 2026-10-23: "The shear will only run generally east - west (not
     # strictly). A major deviation from this should result in a no call
@@ -1711,7 +1713,7 @@ def line_now(obs: pd.DataFrame, now: datetime):
     if note:
         got = line_sane(got, lat, lad)
     got["silent_note"] = note
-    return got, lad
+    return paia_check(got, lad), lad
 
 
 # A line traced more than this far off east-west is a no call (Sam, 10-23),
@@ -1772,6 +1774,26 @@ def honolua_trades():
     rad = np.deg2rad(w.WDrs_1_Avg)
     u, v = (w.WSrs_1_Avg * np.sin(rad)).sum(), (w.WSrs_1_Avg * np.cos(rad)).sum()
     return float(np.rad2deg(np.arctan2(u, v)) % 360)
+
+
+def paia_check(got: dict, lad: pd.DataFrame) -> dict:
+    """A line at Naalae Road or further south takes trades with a north
+    component; Paia from east of LINE_SOUTH_MAX_DIR says it is well north of
+    there (Sam, 2026-10-31: "Paia reading should be an indication that the
+    Naalae call is problematic"). Always on, unlike line_sane. Honolua stands
+    in when Paia is out or calm."""
+    if not got.get("found") or got["north_lat"] > NOT_FLYABLE_LAT:
+        return got
+    paia = lad[(lad.name == "Paia") & lad.wind_dir.notna()] if len(lad) else lad
+    if len(paia) and paia.wind_mph.iloc[0] >= PAIA_MIN_MPH:
+        d, where = float(paia.wind_dir.iloc[0]), "Paia"
+    else:
+        d, where = safely(honolua_trades), TRADE_CHECK[1]
+    if d is None or d <= LINE_SOUTH_MAX_DIR or d >= 330:
+        return got
+    return {"found": False, "no_call": True, "silent_note": got.get("silent_note"),
+            "why": (f"the stations put it at Naalae Road or further south, which takes trades from "
+                    f"the north; {where}'s trades from {d:03.0f}° put it well north of there")}
 
 
 def line_sane(got: dict, lat: float, lad: pd.DataFrame) -> dict:
