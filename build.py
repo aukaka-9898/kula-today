@@ -2317,7 +2317,17 @@ def trace_line(rows: list, ambient: float | None = None) -> dict:
     # Olinda Rd (4,021) and Waihou (4,011) both in the trades means the line
     # passes south of Waihou.
     top = max(elev(r) for r in up)
-    origin = min((r for r in up if elev(r) >= top - 300), key=lambda r: r["lat"])
+    group = [r for r in up if elev(r) >= top - 300]
+    if all(solid(r) for r in group):
+        origin = min(group, key=lambda r: r["lat"])
+    else:
+        # A light station in the tie (Sam, 2026-10-30: Waihou at 1 mph, an hour
+        # old, beat Olinda Rd for being further south): fresh readings only,
+        # then the most wind.
+        mins = lambda r: int(r["at"][:2]) * 60 + int(r["at"][3:5]) if r.get("at") else -10**6
+        newest = max(mins(r) for r in live)
+        fresh = [r for r in group if newest - mins(r) <= 30] or group
+        origin = max(fresh, key=lambda r: r["mph"])
     # Stations near the line: which side of it they sit, and what they read.
     (a_lat, a_lon), (o_lat, o_lon) = (anchor["lat"], anchor["lon"]), (origin["lat"], origin["lon"])
     k = math.cos(math.radians(a_lat))
