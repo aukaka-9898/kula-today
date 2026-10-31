@@ -713,8 +713,8 @@ def _barb(cx: float, cy: float, dir_deg, mph, colour: str) -> str:
 def barb_chart(fc: dict, ob: dict) -> str:
     """fc and ob: {hour: {dir, mph, gust}} for the day's hours."""
     hours = list(DAY_HOURS)
-    col, left, top, row = 56, 84, 34, 92
-    W, H = left + col * len(hours) + 10, top + 2 * row + 10
+    col, left, top, row = 56, 84, 34, 100
+    W, H = left + col * len(hours) + 10, top + 2 * row + 16
     parts = []
     for r, (label, data) in enumerate((("Forecast", fc), ("Bellows", ob))):
         cy = top + r * row + 28
@@ -729,7 +729,7 @@ def barb_chart(fc: dict, ob: dict) -> str:
             g = f' g{w["gust"]:.0f}' if w.get("gust") is not None else ""
             parts.append(_barb(cx, cy, w["dir"], w["mph"], colour)
                          + f'<text x="{cx:.1f}" y="{cy + 44}" class="num" text-anchor="middle">{w["mph"]:.0f}{g}</text>'
-                         + (f'<text x="{cx:.1f}" y="{cy + 61}" class="num" text-anchor="middle">{w["dir"]:03.0f}°</text>'
+                         + (f'<text x="{cx:.1f}" y="{cy + 64}" class="num" text-anchor="middle">{w["dir"]:03.0f}°</text>'
                             if w.get("dir") is not None else ""))
     for i, h in enumerate(hours):
         x = left + col * i + col / 2
