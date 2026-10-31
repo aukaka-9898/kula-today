@@ -4400,7 +4400,7 @@ def build() -> str:
     # NWS watches, warnings and advisories for Kula Ag's area (Sam, 10-27: "build alerts").
     import nwsalerts
     nws_html = safely(nwsalerts.line_html, cv.KULA_AG_LAT, cv.KULA_AG_LON) or ""
-    icons = safely(nwsalerts.day_icons, "kula") or {}         # only out-of-the-ordinary days
+    icons = safely(nwsalerts.day_icons, "kula") or {}         # every day
     nws_html += nwsalerts.today_html(icons.get(now.date())) if today_kind.startswith("Measured") else ""
     # The week's icons in a column of their own at the right, the row's height
     # (Sam, 10-27: "too small ... Move them to the right side and fit height").

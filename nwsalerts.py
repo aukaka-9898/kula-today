@@ -50,32 +50,13 @@ def line_html(lat: float, lon: float) -> str:
 
 
 # ---------------------------------------------------------------- forecast icons
-# The NWS point forecast's daytime icon, shown only when its words say the day
-# is out of the ordinary (Sam, 10-27: "Use the words to filter the icon
-# display"). Makapuʻu: thunder, showers likely or heavy, rain chance 40% or
-# more, cloudy all day, breezy or windy, haze. Kula, whose ordinary afternoon
-# is cloudy and whose zone wording is written for the coast: only thunder,
-# "likely", "occasional", heavy or flooding, or 60% or more.
+# The NWS point forecast's daytime icon for every day. It was filtered to
+# out-of-the-ordinary days (10-27); Sam, 10-31, raining in Kaneohe under a
+# "scattered" forecast: "I think the icons would be good".
 FORECAST = {"kula": "https://api.weather.gov/gridpoints/HFO/219,120/forecast",
             "makapuu": "https://api.weather.gov/gridpoints/HFO/162,145/forecast"}
-BIG_WORDS = ("thunder", "likely", "occasional", "numerous", "heavy", "flood")
-
-
-def notable(short: str, pop, site: str) -> bool:
-    s, pop = short.lower(), pop or 0
-    if any(w in s for w in BIG_WORDS):
-        return True
-    if site == "kula":
-        return pop >= 60
-    if pop >= 40:
-        return True
-    if s.startswith(("cloudy", "mostly cloudy")) and " then " not in s:
-        return True
-    return any(w in s for w in ("breezy", "windy", "haze", "smoke"))
-
-
 def day_icons(site: str) -> dict:
-    """{date: (icon url, words)} for daytime periods worth showing."""
+    """{date: (icon url, words)} for every daytime period (Sam, 10-31: show them every day)."""
     r = requests.get(FORECAST[site], headers=HEAD, timeout=30)
     r.raise_for_status()
     out = {}
@@ -84,7 +65,7 @@ def day_icons(site: str) -> dict:
             continue
         d = datetime.fromisoformat(p["startTime"]).astimezone(HST).date()
         pop = (p.get("probabilityOfPrecipitation") or {}).get("value")
-        if d not in out and notable(p["shortForecast"], pop, site):
+        if d not in out:
             words = p["shortForecast"] + (f" ({pop}%)" if pop else "")
             out[d] = (p["icon"].replace("size=medium", "size=small"), words)
     return out

@@ -1055,7 +1055,7 @@ def write(now: datetime) -> None:
 
     import nwsalerts                                            # NWS alerts for launch's area (Sam, 10-27)
     alerts = _try(nwsalerts.line_html, 21.3204, -157.6788, problems=problems) or ""
-    icons = _try(nwsalerts.day_icons, "makapuu", problems=problems) or {}   # only out-of-the-ordinary days
+    icons = _try(nwsalerts.day_icons, "makapuu", problems=problems) or {}   # every day
     week = ""
     for k_day in range(1, 7):
         d = now.date() + timedelta(days=k_day)
