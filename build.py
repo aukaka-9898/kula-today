@@ -949,6 +949,19 @@ def lower_wind(obs: pd.DataFrame, since=None, until=None):
             "n": int(w.station_id.nunique()), "gusty": bool(gusty)}
 
 
+# Upslope by consensus, not one averaged vector (Sam, 2026-10-31: "How about
+# a consensus of stations to declare upslope?"). At 08:00 that morning the
+# slope sat at 0-2 mph, the average's direction was noise, and it read upslope
+# with 3 of 9 stations upslope -- which let a ladder line south of Naalae
+# Road through. Each station is judged on its own last 30 minutes; upslope
+# needs half or more of them reading 190-320 deg, UPSLOPE_MIN_N reporting,
+# for two quarter hours running. Replayed 10-24..10-31: the same or 15 min
+# later on good days (10-27 30 min), 10-26's wet 11:15 and 10-31's 08:00
+# gone. A quarter hour with most stations draining is drainage.
+UPSLOPE_SHARE = 0.5
+UPSLOPE_MIN_N = 5
+
+
 def upslope_since(obs: pd.DataFrame):
     core = obs[~obs.station_id.isin(OFF_SLOPE) & (obs.elev_ft <= 4400)].dropna(
         subset=["wind_dir", "wind_mph"]).copy()
@@ -958,16 +971,20 @@ def upslope_since(obs: pd.DataFrame):
     core["t"] = core.observed.dt.floor("15min")
     r = np.radians(core.wind_dir)
     core["u"], core["v"] = core.wind_mph * np.sin(r), core.wind_mph * np.cos(r)
-    g = core.groupby("t")[["u", "v"]].mean()
-    d = (np.degrees(np.arctan2(g.u, g.v)) % 360)
-    phase = d.map(lambda x: "drain" if 70 <= x <= 160 else ("up" if 190 <= x <= 320 else "mix"))
-    drains = [t for t, p in phase.items() if p == "drain"]
+    count = {}
+    for t in sorted(core.t.unique()):
+        w = core[(core.observed > t - pd.Timedelta("15min")) & (core.observed < t + pd.Timedelta("15min"))]
+        g = w.groupby("station_id")[["u", "v"]].mean()
+        d = np.degrees(np.arctan2(g.u, g.v)) % 360
+        count[t] = (int(d.between(190, 320).sum()), int(d.between(70, 160).sum()), len(d))
+    drains = [t for t, (u, dr, n) in count.items() if dr > n / 2]
     last_drain = drains[-1] if drains else None
-    ts = [t for t in phase.index if last_drain is None or t > last_drain]
+    ts = [t for t in count if last_drain is None or t > last_drain]
     # Two quarter hours (30 min) of upslope confirm it (Sam, 2026-10-14);
     # three made the page trail Weather Guesser's cusp by ~45-60 min.
     for i in range(len(ts) - 1):
-        if all(phase[ts[i + k]] == "up" for k in range(2)):
+        if all(count[ts[i + k]][2] >= UPSLOPE_MIN_N and count[ts[i + k]][0] >= UPSLOPE_SHARE * count[ts[i + k]][2]
+               for k in range(2)):
             return ts[i], last_drain
     return None, last_drain
 
