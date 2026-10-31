@@ -1749,7 +1749,11 @@ FIT_L0 = np.arange(20.74, 20.9001, 0.0005)           # the line's latitude at Ku
 FIT_K = (np.tan(np.radians(np.arange(-45, 46, 5)))     # within LINE_EW_MAX_DEG of east-west
          * math.cos(math.radians(20.8)))            # latitude per degree of longitude
 FIT_WEST_LON, FIT_EAST_LON = -156.39, -156.28       # the line's drawn ends (Sam's lines span these)
-COAST_TRADES = ("Paia", "Hamakuapoko Rd", "Peahi Rd")  # trades here alone are no line on the slope
+COAST_TRADES = ("Paia", "Hamakuapoko Rd", "Peahi Rd")
+# No cross-check against Paia through the convergence formula (075 at
+# Pukalani, 0.8 mi per 10 deg): against Sam's 40 drawn lines it ran 2.4 mi
+# north on average (median miss 2.5 mi; the fit 0.34) and silenced most good
+# calls. Re-anchor it before using it as a check (10-31).
 
 
 def _fit_class(d):
@@ -1776,10 +1780,12 @@ def map_fit(rows: list) -> dict:
     l0, k = float(np.median(FIT_L0[i])), float(np.median(FIT_K[j]))
     at = lambda x: l0 + k * (x - KULA_HWY_LON)
     north = lat > at(lon)
-    slope_t = sum(w[n] for n, r in enumerate(use) if c[n] == "T" and north[n] and r["name"] not in COAST_TRADES)
+    # The coast counts (Sam, 10-31, GOES and stations: a line Makawao-Kahului
+    # with trades only at the coast; blind tests: lines missed 13 -> 3).
+    north_t = float(w[(c == "T") & north].sum())
     up_s = float(w[(c == "U") & ~north].sum())
-    if slope_t < FIT_MIN_T:
-        return {"found": False, "why": "no trades on the slope yet"}
+    if north_t < FIT_MIN_T:
+        return {"found": False, "why": "no trades north of the upslope"}
     if up_s < FIT_MIN_U:
         return {"found": False, "why": "no upslope south of the trades"}
     # The stations either side nearest the line, for the words.
@@ -1799,12 +1805,17 @@ def line_now(obs: pd.DataFrame, now: datetime):
     lad = smoothed_ladder(obs, now)
     if lad.empty:
         return None, lad
+    rows = station_rows(obs, lad)
     m = safely(marine_now, now)            # unreachable: judge from the stations, as before
-    if m is not None and (cv._side(m[0]) != "trades" or m[1] < TRADE_DAY_MIN_KT):
+    # The forecast vetoes a line only when the coast measures no trades either
+    # (Sam, 10-23: "Don't use forecasts to establish current conditions";
+    # 10-31: the grid said SSW 5 kt while Paia had 100 at 21 mph).
+    coast = [r for r in rows if r["name"] in COAST_TRADES and r.get("dir") is not None and r.get("mph") is not None
+             and cv._side(r["dir"]) == "trades" and r["mph"] >= TRADE_DAY_MIN_KT * 1.15078]
+    if m is not None and not coast and (cv._side(m[0]) != "trades" or m[1] < TRADE_DAY_MIN_KT):
         return {"found": False, "no_call": True, "no_trades": True,
                 "why": (f"No trades: {cv.compass(m[0])} {m[1]:.0f} kt off the north coast (NWS marine forecast). "
                         "Sea breezes and upslope rule; no shear line.")}, lad
-    rows = station_rows(obs, lad)
     # How many corridor stations are silent (Sam, 2026-10-22: "Lots of stations
     # not reporting today. Wreaked havoc with locating the shear" -- every
     # station via api.weather.gov stopped at 03:20).
