@@ -68,7 +68,14 @@ def _base_will_lift(c):
     if tr <= 0.3:
         if c.get("spill") and rules.says("P8", c["spill"]):
             return None     # P8 outranks it: moisture from above keeps the base down
+        if c.get("wet_cause"):
+            return ("Kula Ag's dew point has stopped rising: the wet ground is giving up less moisture, "
+                    "so the base should start to lift." + cap)
         return "Kula Ag's dew point has stopped rising: the night's dew is about spent, so the base should start to lift." + cap
+    if c.get("wet_cause"):
+        # Not dew (Sam, 10-31: "the wet is not just dew ... a couple of days have soaked Kula").
+        return (f"The ground is still drying after {c['wet_cause']} (Kula Ag's dew point still rising): "
+                "the base stays low until it stops." + cap)
     return "The night's dew is still evaporating (Kula Ag's dew point still rising): the base stays low until it stops." + cap
 
 
@@ -149,7 +156,8 @@ def _summit_spillover(c):
     if not s or not rules.says("P8", s):
         return None
     if s.get("dew"):
-        return ("Summit spillover on a dew morning: probably not flyable; the base is likely to stay "
+        return (f"Summit spillover on a {'wet' if c.get('wet_cause') else 'dew'} morning: probably not flyable; "
+                "the base is likely to stay "
                 "under 4,000 ft.")
     return ("Summit spillover: moist trade air has been over the summit since 07:00. Crater cloud spilling "
             "west gets mixed into Kula's thermals, so expect a lower base that stalls rather than climbs. "

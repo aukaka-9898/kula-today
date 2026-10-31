@@ -1182,6 +1182,7 @@ def _recent_rain(stamp: str) -> tuple | None:
 # Soaked, not just damp (Sam, 10-31: "the wet is not just dew. Pretty sure a
 # couple of days have soaked Kula"; 10-27..29 brought 37 mm at Kula Ag, 30 at
 # Keokea). 48 h: "If wet enough the low deck could persist for more than a day."
+WET_CAUSE = None     # this build's wet_cause(), for every sentence that would say dew
 SOAKED_HOURS = 48
 SOAKED_MM = 10.0
 
@@ -1201,12 +1202,18 @@ def _rain_total(stamp: str, hours: int) -> float | None:
     return max(tot.values()) if tot else None
 
 
-def soaked(now: datetime) -> bool:
+def wet_cause(now: datetime) -> str | None:
+    """'rain for two days' or 'rain yesterday' when the slope is soaked (10 mm
+    in 48 h at a lower gauge), else None (Sam, 10-31: describe it that way and
+    "fix all references to dew"). Two days: 2 mm or more in each 24 h."""
     try:
-        mm = _rain_total(f"{now:%Y-%m-%dT%H}", SOAKED_HOURS)
+        last = _rain_total(f"{now:%Y-%m-%dT%H}", 24) or 0.0
+        both = _rain_total(f"{now:%Y-%m-%dT%H}", SOAKED_HOURS) or 0.0
     except Exception:
-        return False
-    return mm is not None and mm >= SOAKED_MM
+        return None
+    if both < SOAKED_MM:
+        return None
+    return "rain for two days" if last >= 2 and both - last >= 2 else "rain yesterday"
 
 
 def rained(now: datetime) -> bool:
@@ -4015,7 +4022,8 @@ def day_notes(derived: list, forecast: list, inv, phase: dict, fired: dict, deca
     notes = []
     if phase.get("wet"):
         start2 = phase["intervals"][0][0] if phase.get("intervals") else None
-        notes.append("Saturated, dew-fed morning" + (f": low cloud until about {start2}." if start2 else "."))
+        notes.append((f"Saturated morning after {WET_CAUSE}" if WET_CAUSE else "Saturated, dew-fed morning")
+                     + (f": low cloud until about {start2}." if start2 else "."))
     pts = sorted(derived)
     # the biggest 30-minute rise of the base
     best = None
@@ -4305,6 +4313,8 @@ def build() -> str:
         cu_clear = False
     if cu:
         cu_clear = settle("cu_clear", cu_clear, now)
+    global WET_CAUSE
+    WET_CAUSE = safely(wet_cause, now)
     mc = safely(morning_cloud, obs, now) if up is None and 6 <= now.hour < 12 and len(obs) else None
     # The sky radiometers can't tell a mid-level deck from low cloud: 10-31 a
     # grey layer well above the crest read 0.99 and the page said "Low cloud is
@@ -4330,7 +4340,8 @@ def build() -> str:
                 base_html = (f'<span class="num">About {ft(round(base["mid"], -2))} ft</span>'
                              f'<div class="sub">The lower slope is wet from the rain</div>')
             else:
-                wet = ("The lower slope is still wet from recent rain" if soaked(now)
+                _cause = wet_cause(now)
+                wet = (f"The lower slope is still wet from {_cause}" if _cause
                        else "The lower slope is still damp from the dew overnight")
                 # No sun, no drying (Sam, 10-31: "it's too wet to dry with no
                 # sun"; "wet ground = less sun"): no lift prediction.
@@ -4345,7 +4356,8 @@ def build() -> str:
         base_label = "Morning<br>cloud" if mc.get("overhead") else "First<br>clouds"
         dew = (f"; Kula Ag {mc['ka_t']:.0f}/{mc['ka_td']:.0f} °F ({mc['ka_rh']:.0f}%)"
                + (f", dew point up {mc['rise']:.0f} °F since {mc['since']:%H:%M}"
-                  + (" as the night's dew evaporates" if mc.get("dewy") else "")
+                  + ((" as the wet ground dries" if WET_CAUSE else " as the night's dew evaporates")
+                     if mc.get("dewy") else "")
                   if mc.get("rise", 0) >= 1.5 else "") if "ka_t" in mc else "")
         # No hourly forecast feet here (Sam, 2026-10-18: Today showed 5,600 -> 5,400
         # while the Forecast panel's category said 4,500-5,400); the Forecast
@@ -4552,7 +4564,8 @@ def build() -> str:
                  ("No low cloud on the slope (camera); a cloud layer is overhead. " if mc.get("aloft") else
                   "No cloud over Kula yet. ") + f"First clouds will form at about {ft(round(mc['base'], -2))} ft, "
                  "a little higher if the slope warms first")
-                + (("; the night's dew is evaporating -- " if mc.get("dewy") else
+                + ((f"; the ground is still wet from {WET_CAUSE} -- " if mc.get("dewy") and WET_CAUSE else
+                    "; the night's dew is evaporating -- " if mc.get("dewy") else
                     "; " if mc.get("overhead") else ". ")
                    + f"Kula Ag's dew point is up {mc['rise']:.0f} °F "
                    f"since {mc['since']:%H:%M} and it is still {mc['ka_rh']:.0f}% humid."
@@ -4569,7 +4582,7 @@ def build() -> str:
     ctx = {"now": now, "up": up, "morning": mc, "base": base["mid"] if base else None,
            "ka_td_trend": float(recent.dew_f.iloc[-1] - recent.dew_f.iloc[0]) if len(recent) >= 2 else None,
            "ka_sun": ka_sun, "inv": next((i for i in inv_today if i), None),
-           "upslope_typical": UPSLOPE_TYPICAL[now.month]}
+           "upslope_typical": UPSLOPE_TYPICAL[now.month], "wet_cause": WET_CAUSE}
     _core_now = _core(obs) if len(obs) else obs
     _end = obs.observed.max() if len(obs) else None
     ctx["base_hist"] = ([v for v in (_derived_at(_core_now, _end - pd.Timedelta(minutes=m)) for m in (0, 15, 30, 45))
