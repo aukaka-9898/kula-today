@@ -100,18 +100,18 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><a class="homebtn" href="/">&larr; Home</a><div class="tag">Kula soaring briefing</div><h1>Kula Today</h1></div>
-    <div class="date">Updated Sat 31 Oct 2026 · 07:52 HST</div>
+    <div class="date">Updated Sat 31 Oct 2026 · 07:53 HST</div>
   </header>
 
   <div>
     <!-- The FAA viewer shows its station list before it opens the camera; the latest frame covers that until it has (Sam, 2026-10-25). -->
-    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" title="Red Hill webcam, live, looking south along the Kula slope" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="camera.jpg?2026-10-31T07:52" alt=""></div>
+    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" title="Red Hill webcam, live, looking south along the Kula slope" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="camera.jpg?2026-10-31T07:53" alt=""></div>
     <div class="camcap">Red Hill webcam, live. FAA WeatherCam (Kekoa). <a href="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" target="_blank" rel="noopener">Open full size</a></div>
   </div>
 
   <div class="cols">
     <section class="panel today" aria-labelledby="t-today">
-      <div class="kind">Measured today · 07:52 HST</div>
+      <div class="kind">Measured today · 07:53 HST</div>
       <div class="head"><h2 id="t-today">Today</h2><span class="chip warn">Flat</span></div>
       <div class="sub" style="display:flex;align-items:center;gap:6px;margin:2px 0 6px"><img src="https://api.weather.gov/icons/land/day/bkn/rain_showers,40?size=small" width="34" height="34" alt="Partly Sunny then Scattered Rain Showers (35%)" title="NWS: Partly Sunny then Scattered Rain Showers (35%)" loading="lazy" style="vertical-align:middle;border-radius:4px;margin-left:6px"><span>NWS today: Partly Sunny then Scattered Rain Showers (35%)</span></div><div class="datanote"><span class="chip fair">Limited data</span> 18 of 29 stations reporting.</div>
       <p class="summary">No low cloud on the slope (camera); a cloud layer is overhead. First clouds will form at about 3,500 ft, a little higher if the slope warms first; the night&#x27;s dew is evaporating -- Kula Ag&#x27;s dew point is up 2 °F since 05:30 and it is still 89% humid. Today&#x27;s forecast: Thermals probably flat. No trade line is expected. Upslope has not set in yet.</p><div class="watch"><div class="kind">What to watch</div><ul><li>Kula Ag&#x27;s dew point has stopped rising: the night&#x27;s dew is about spent, so the base should start to lift. Possible cap: once it lifts, the wet slope can keep feeding moisture and hold the base down for hours. <span class="pid">P3 · Base will lift</span></li></ul></div>
@@ -164,7 +164,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
    browser's 10-minute cached copy is bypassed. The 15-minute refresh stays
    as a backstop. */
 (function () {
-  var built = "2026-10-31T07:52";
+  var built = "2026-10-31T07:53";
   function check() {
     fetch("stations.json?" + Date.now(), {cache: "no-store"})
       .then(function (r) { return r.json(); })
