@@ -553,6 +553,26 @@ def line_at(lat: float) -> str:
     return f"crossing Kula Highway near {name}"
 
 
+# A fitted line is worded by its own geometry, not by the stations nearest it
+# (Sam, 10-31: "Haiku is not near Kahului" -- the fit ran Makawao to Kahului,
+# and the wording named Haiku after the nearest trade station, Hamakuapoko).
+KAHULUI_SHORE = (20.885, -156.43)
+
+
+def fit_words(lat: float, west_ll, east_ll) -> str:
+    kind, name = _place(lat)
+    text = ("north of Makawao" if kind == "shore" else line_at(lat))
+    k = (west_ll[0] - east_ll[0]) / (west_ll[1] - east_ll[1])
+    if lat + k * (KAHULUI_SHORE[1] - KULA_HWY_LON) >= KAHULUI_SHORE[0]:
+        text += ", running toward Kahului"
+    return text
+
+
+def line_text(e: dict) -> str:
+    """The words for a line: a fitted line's own, else the station bracket's."""
+    return e.get("words") or line_between(e["north_lat"], e["south_lat"], e["north_of"], e["south_of"])
+
+
 def line_between(north_lat: float, south_lat: float,
                  north_name: str | None = None, south_name: str | None = None) -> str:
     """The same for a measured bracket between two ladder stations."""
@@ -878,7 +898,7 @@ def summary(obs: pd.DataFrame, ladder, up, verdict, pos, west, now: datetime,
         tail = ("with trade air reaching the lower west slope at Pulehu" if west
                 else "with no trade air on the lower west slope")
         out.append(f"Trades are holding the shear line "
-                   f"{line_between(pos['north_lat'], pos['south_lat'], pos['north_of'], pos['south_of'])}, {tail}.")
+                   f"{line_text(pos)}, {tail}.")
         if pos["north_lat"] <= NOT_FLYABLE_LAT:
             out.append(NOT_FLYABLE)
     elif west:
@@ -1833,6 +1853,7 @@ def line_now(obs: pd.DataFrame, now: datetime):
     lat = f["lat"]
     got = {"found": True, "north_lat": lat, "south_lat": lat, "north_of": f["north_of"], "south_of": f["south_of"],
            "traced": True, "fit": f, "trace": {"anchor_ll": f["west_ll"], "origin_ll": f["east_ll"]},
+           "words": fit_words(lat, f["west_ll"], f["east_ll"]),
            "landmarks": [], "in_shear": False, "span_miles": 0.0,
            "as_of": lad.observed_local.max(), "dropped": 0, "old": old}
     if note:
@@ -2605,7 +2626,8 @@ def log_line(now: datetime, pos) -> list:
     if pos and pos.get("found"):
         entries.append({"t": f"{now:%H:%M}", "north_lat": float(pos["north_lat"]),
                         "south_lat": float(pos["south_lat"]), "north_of": str(pos["north_of"]),
-                        "south_of": str(pos["south_of"]), "dropped": int(pos.get("dropped", 0))})
+                        "south_of": str(pos["south_of"]), "dropped": int(pos.get("dropped", 0)),
+                        **({"words": pos["words"]} if pos.get("words") else {})})
     LINE_LOG.write_text(json.dumps({"date": today, "entries": entries}), encoding="utf-8")
     return entries
 
@@ -2631,7 +2653,7 @@ def line_moves(entries: list) -> str | None:
     furthest north and south with times, when they differ."""
     if not entries:
         return None
-    text = lambda e: line_between(e["north_lat"], e["south_lat"], e["north_of"], e["south_of"])
+    text = line_text
     texts = [text(e) for e in entries]
     common = max(dict.fromkeys(texts), key=texts.count)
     south = min(entries, key=lambda e: e["south_lat"])
@@ -2669,10 +2691,10 @@ def line_day(entries: list):
     """(where it sat most of the day, the furthest south and when) from the log."""
     if not entries:
         return None
-    texts = [line_between(e["north_lat"], e["south_lat"], e["north_of"], e["south_of"]) for e in entries]
+    texts = [line_text(e) for e in entries]
     common = max(dict.fromkeys(texts), key=texts.count)
     far = min(entries, key=lambda e: e["south_lat"])
-    far_text = line_between(far["north_lat"], far["south_lat"], far["north_of"], far["south_of"])
+    far_text = line_text(far)
     return common, (None if far_text == common else (far_text, far["t"]))
 
 
@@ -4343,7 +4365,7 @@ def build() -> str:
 
     # line text
     if pos and pos.get("found"):
-        line_html = (f"{esc(_cap(line_between(pos['north_lat'], pos['south_lat'], pos['north_of'], pos['south_of'])))}"
+        line_html = (f"{esc(_cap(line_text(pos)))}"
                      + (f"<div class=\"sub\">Fitted to the station map: trades at {esc(pos['north_of'])}, "
                         f"upslope at {esc(pos['south_of'])} nearest the line</div>" if pos.get("fit") else
                         f"<div class=\"sub\">Traced from the backwind at {esc(pos['south_of'])} "
