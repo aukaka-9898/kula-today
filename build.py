@@ -2299,9 +2299,9 @@ def write_details(now: datetime, obs: pd.DataFrame) -> None:
 def write_station_map(obs: pd.DataFrame, lad: pd.DataFrame, now: datetime, pos=None, west=None,
                       sun=None) -> None:
     rows = station_rows(obs, lad, sun or {})
-    k = safely(kahului_row, now)
-    if k:
-        rows.append(k)
+    for k in (safely(kahului_row, now), safely(harbor_row, now)):
+        if k:
+            rows.append(k)
     _write_map(rows, now, pos, west)
 
 
@@ -2312,6 +2312,23 @@ def write_station_map(obs: pd.DataFrame, lad: pd.DataFrame, now: datetime, pos=N
 # (10-31; the METARs carry the "$" maintenance flag).
 KAHULUI_LL = (20.8986, -156.4305, 54)
 KAHULUI_MAX_AGE = timedelta(minutes=90)
+
+
+# Kahului Harbor (NOS tide station 1615680, KLIH1), on the map only (Sam,
+# 2026-10-31: "Add the harbor. Useful for SE conditions"): the onshore wind at
+# the Kahului end of the line every 6 minutes, where the airport reports
+# hourly. Last hour's mean. Its neighbour Kaehu (071HI) left off: light and
+# sheltered, and its dew point is no use here (Sam).
+HARBOR_LL = (20.895, -156.47667, 0)
+
+
+def harbor_row(now: datetime) -> dict | None:
+    got = _ladder_readings("KLIH1", now - timedelta(hours=1))
+    if got.empty:
+        return None
+    return {"name": "Kahului Harbor", "lat": HARBOR_LL[0], "lon": HARBOR_LL[1], "elev_ft": HARBOR_LL[2],
+            "dir": round(float(cv.mean_direction(got.wind_dir))), "mph": round(float(got.wind_mph.mean())),
+            "at": f"{got.observed.max():%H:%M}"}
 
 
 def kahului_row(now: datetime) -> dict | None:
