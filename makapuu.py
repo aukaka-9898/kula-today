@@ -931,13 +931,12 @@ def write(now: datetime) -> None:
                "NWS forecast for this hour: Bellows not reporting" + (f" since {obs_t:%d %b %H:%M}" if obs_t else ""))
     else:
         w, src = None, "No wind available"
-    word, why = rate(w["dir"], w["mph"], w["gust"]) if w else ("Unknown", "")
+    word = rate(w["dir"], w["mph"], w["gust"])[0] if w else "Unknown"
     # Night by the sun at launch, not the clock (Sam, 10-26: "Use local sunset"):
     # below -0.833 deg is sunset with refraction and the sun's half-width.
     import sampler
     night = sampler.solar_elevation(now.astimezone(timezone.utc), 21.3204, -157.6788) < -0.833
     today_chip = chip(word) if w and not night else ""
-    fly_html = (f"<strong>{esc(word)}</strong>" + (f'<div class="sub">{esc(why)}</div>' if why else "")) if w else "Unavailable"
     wind_html = (f'<span class="num">{esc(wind_text(w))}</span><div class="sub">{esc(src)}</div>') if w else "Unavailable"
     bowl = bowl_note(w["dir"], word) if w and not night else ""
     if bowl:
@@ -1029,9 +1028,11 @@ def write(now: datetime) -> None:
     else:
         therm_html = inv_html = "Unavailable"
 
+    # No "On the ridge" row (Sam, 10-31: "the badge is sufficient"): the rating
+    # is the Today chip; its occasional thermal note sits under Wind.
     note = thermal_day(word, today_air["word"] if today_air else None) if w else ""
     if note:
-        fly_html += f'<div class="alert">{esc(note)}</div>'
+        wind_html += f'<div class="alert">{esc(note)}</div>'
 
     rest = [(t, grid[t]) for t in sorted(grid) if t.date() == now.date() and t.hour in DAY_HOURS and t > hour_now]
     rest_html = hour_table(rest) if rest else '<span class="sub">Nothing left of today\'s daylight.</span>'
@@ -1094,7 +1095,6 @@ def write(now: datetime) -> None:
         today_chip = chip(wrap[1]) if wrap[1] else ""
     else:
         today_body = f"""<dl>
-        <dt>On the ridge</dt><dd>{fly_html}</dd>
         <dt>Wind</dt><dd>{wind_html}</dd>
         <dt>Cloudbase at launch</dt><dd>{launch_html}</dd>
         <dt>Cloudbase at Kāneʻohe</dt><dd>{base_html + (f'<div class="downret">{dir_html}</div>' if dir_html else "")}</dd>
