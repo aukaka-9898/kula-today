@@ -49,7 +49,8 @@ WEBCAM_LAUNCH = "https://weathercams.faa.gov/cameras/state/HI/cameraSite/588/det
 SECTORS = ((0, 19, 15, 17), (20, 60, 16, 20), (61, 65, 12, 15), (66, 70, None, 10))
 GUST_FACTOR_MAX = 10                 # gust - speed over 10 mph is not green (Sam, 10-29; WG averaging kept)
 LIGHT_MPH = 10                       # Sam: "Put it at 10. On that ridge even that provides some lift"
-IDEAL_DIR = 50                       # Sam 10-21: "sort of ideal. but there are those who will say different"
+BALANCE_DIR = 50                     # Sam 10-21: "sort of ideal. but there are those who will say different";
+                                     # 10-31: never call it "ideal" on the page
 DAY_HOURS = range(8, 19)
 # The Koʻolau crest downrange behind Waimānalo and on to Kāneʻohe (550 m grid
 # and 10 m checks, 10-12): 2,100-2,800 ft, ~1,200-1,500 at the Makapuʻu end.
@@ -97,11 +98,11 @@ def return_note(dir_deg) -> str:
     d = dir_deg % 360
     if d > 180:
         return ""
-    if abs(d - IDEAL_DIR) <= 10:
-        return "Near the ideal 050°: a fair balance between going downrange and getting back."
-    if d < IDEAL_DIR:
-        return "More north than the ideal 050°: easier to get back from downrange, the primary LZ less ideal."
-    return "More east than the ideal 050°: easier going downrange, harder getting back."
+    if abs(d - BALANCE_DIR) <= 10:
+        return "Near 050°: a fair balance between going downrange and getting back."
+    if d < BALANCE_DIR:
+        return "North of 050°: easier to get back from downrange, the primary LZ less favourable."
+    return "East of 050°: easier going downrange, harder getting back."
 
 
 # Northerly days (Sam, 10-26): the Waimānalo Bowl -- Ironwoods to Puʻu o Kona --
