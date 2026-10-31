@@ -1154,7 +1154,11 @@ def night_signals(day) -> dict | None:
 # (10-29 night: Keokea 0.76 mm, Kula Ag 0.51 mm in 60 min; 10-31: 0.25).
 RAIN_GAUGES = "0119,0116"          # Kula Ag, Keokea
 RAIN_WET_MM = 1.0
-RAIN_HOUR_MM = 0.5                 # two 0.254 mm tips inside 60 minutes
+RAIN_HOUR_MM = 0.5
+# The dew-drying lift is predicted only with this much sun on the lower Kula
+# side over the last hour (the Sun row's share of clear sky): good days ~80%,
+# overcast ~50% (Sam, 10-31).
+DRY_SUN_MIN = 0.60                 # two 0.254 mm tips inside 60 minutes
 
 
 @functools.lru_cache(maxsize=4)
@@ -4295,6 +4299,11 @@ def build() -> str:
             if rained(now):
                 base_html = (f'<span class="num">About {ft(round(base["mid"], -2))} ft</span>'
                              f'<div class="sub">The lower slope is wet from the rain</div>')
+            elif side_sun is not None and side_sun < DRY_SUN_MIN:
+                # No sun, no drying (Sam, 10-31: "it's too wet to dry with no
+                # sun"; "wet ground = less sun"): no lift prediction.
+                base_html = (f'<span class="num">About {ft(round(base["mid"], -2))} ft</span>'
+                             f'<div class="sub">The lower slope is still damp from the dew overnight</div>')
             else:
                 base_html = (f'<span class="num">About {ft(round(base["mid"], -2))} ft</span>'
                              f'<div class="sub">The lower slope is still damp from the dew overnight. The highest '
