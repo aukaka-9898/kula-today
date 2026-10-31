@@ -1514,6 +1514,7 @@ def smoothed_ladder(obs: pd.DataFrame, now: datetime) -> pd.DataFrame:
                 continue
         if have.empty:
             continue
+        cadence, overdue = _schedule(have.observed, now)
         recent = have[have.observed >= cut]
         if recent.empty:
             # No reading in the hour: use up to three hours rather than drop
@@ -1527,13 +1528,34 @@ def smoothed_ladder(obs: pd.DataFrame, now: datetime) -> pd.DataFrame:
         rows.append({"station": sid, "name": name, "lat": lat, "elev_ft": elev,
                      "observed_local": have.observed.max(), "wind_dir": d,
                      "wind_mph": float(have.wind_mph.mean()), "side": cv._side(d),
-                     "n": len(have)})
+                     "n": len(have), "cadence_min": cadence, "overdue": overdue})
     return pd.DataFrame(rows)
 
 
+# Each station's own schedule (Sam, 2026-10-30: "Use station schedule"; the
+# NWS metadata carries none): its reporting interval from the gaps between its
+# recent readings -- Mesonet 5 min, MECO 10, the RAWS hourly (Waihou Springs
+# at :26). A station is overdue only when it has missed reports: its newest
+# reading older than two intervals plus SCHEDULE_RELAY for the relay
+# (api.weather.gov runs ~30-50 min behind; 45 allowed). An hourly station's 60-minute-old
+# reading is on schedule, not stale.
+SCHEDULE_RELAY = pd.Timedelta("45min")
+
+
+def _schedule(times: pd.Series, now: datetime) -> tuple[float, bool]:
+    t = pd.Series(sorted(set(times))).tail(13)
+    gaps = t.diff().dropna()
+    cadence = gaps.median() if len(gaps) >= 2 else pd.Timedelta("60min")
+    cadence = min(max(cadence, pd.Timedelta("1min")), pd.Timedelta("3h"))
+    overdue = pd.Timestamp(now.replace(tzinfo=None)) - t.iloc[-1] > 2 * cadence + SCHEDULE_RELAY
+    return round(cadence.total_seconds() / 60, 1), bool(overdue)
+
+
 # Off (Sam, 2026-10-21, "Stale-stations, let's see what happens"): it sat a
-# station out of 62% of updates over the week to 10-21.
-STALE_RUNGS_SIT_OUT = False
+# station out of 62% of updates over the week to 10-21. Back on 10-30 judged
+# by each station's own schedule (_schedule): only a rung that has missed its
+# reports sits out.
+STALE_RUNGS_SIT_OUT = True
 
 
 def best_split(lad: pd.DataFrame) -> dict:
@@ -1553,9 +1575,8 @@ def best_split(lad: pd.DataFrame) -> dict:
     # freshest: api.weather.gov runs ~50 min behind the Mesonet and FAA, so
     # "45 min behind the freshest" would have dropped most MECO and coast rungs.
     dropped = 0
-    if STALE_RUNGS_SIT_OUT and len(f) >= 4:
-        typical = f.observed_local.median()
-        keep = f.observed_local > typical - pd.Timedelta("30min")
+    if STALE_RUNGS_SIT_OUT and len(f) >= 4 and "overdue" in f:
+        keep = ~f.overdue.astype(bool)
         dropped = int((~keep).sum())
         f = f[keep].reset_index(drop=True)
     if len(f) < 2:
