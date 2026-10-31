@@ -56,6 +56,7 @@ h1 { font: 700 2.1rem/1.05 var(--display); letter-spacing: .01em; margin: 0; }
 .chip.warn { color: var(--chip-stop); background: color-mix(in srgb, var(--chip-stop) 14%, transparent); }
 dl { margin: 0; display: grid; grid-template-columns: max-content 1fr; gap: 8px 14px; }
 dt { font: 600 .74rem var(--display); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); padding-top: 3px; }
+dt a { color: inherit; text-decoration: underline dotted; text-underline-offset: 3px; }  /* row label -> its data on the details page (Sam, 10-31) */
 dd { margin: 0; min-width: 0; }
 .num { font: 500 1rem var(--mono); font-variant-numeric: tabular-nums; }
 .sub { color: var(--muted); font-size: .86rem; }
@@ -98,7 +99,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><a class="homebtn" href="/">&larr; Home</a> <a class="homebtn" href="./">&larr; Kula Today</a><h1>Kula Details</h1></div>
-    <div class="date">Updated Sat 31 Oct 2026 · 12:07 HST</div>
+    <div class="date">Updated Sat 31 Oct 2026 · 12:11 HST</div>
   </header>
 
   <section class="block" aria-labelledby="t-thermal">
@@ -359,9 +360,9 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 </script>
 
   <section class="block" aria-labelledby="t-ladder">
-    <h2 id="t-ladder">Sunlight up the slope, as of 11:45</h2>
+    <h2 id="t-ladder">Sunlight up the slope, as of 12:00</h2>
     <p>Share of clear-sky sunlight measured at each station over the last 60 minutes of readings. Stations under cloud read low; stations above its top read full sun.</p>
-    <div class="rows"><div class="row"><span>Summit</span><span class="elev">9,776</span><div class="bar "><span style="width:99%"></span></div><span class="pct">99%</span></div><div class="row"><span>Nene Nest</span><span class="elev">8,500</span><div class="bar "><span style="width:98%"></span></div><span class="pct">98%</span></div><div class="row"><span>Park HQ</span><span class="elev">6,926</span><div class="bar "><span style="width:64%"></span></div><span class="pct">64%</span></div><div class="row"><span>Kamehamenui 1</span><span class="elev">6,601</span><div class="bar shaded"><span style="width:50%"></span></div><span class="pct">50%</span></div><div class="row"><span>Kula 1</span><span class="elev">6,554</span><div class="bar "><span style="width:67%"></span></div><span class="pct">67%</span></div><div class="base"><span class="lbl">Cloudbase now</span><span class="elev">3,800</span><div class="line"></div><span></span></div><div class="row"><span>Kula Ag</span><span class="elev">3,162</span><div class="bar shaded"><span style="width:49%"></span></div><span class="pct">49%</span></div><div class="row"><span>Keokea</span><span class="elev">2,849</span><div class="bar shaded"><span style="width:31%"></span></div><span class="pct">31%</span></div><div class="row"><span>Piiholo</span><span class="elev">2,090</span><div class="bar shaded"><span style="width:29%"></span></div><span class="pct">29%</span></div><div class="row"><span>Pulehu</span><span class="elev">1,402</span><div class="bar "><span style="width:75%"></span></div><span class="pct">75%</span></div></div>
+    <div class="rows"><div class="row"><span>Summit</span><span class="elev">9,776</span><div class="bar "><span style="width:99%"></span></div><span class="pct">99%</span></div><div class="row"><span>Nene Nest</span><span class="elev">8,500</span><div class="bar "><span style="width:100%"></span></div><span class="pct">100%</span></div><div class="row"><span>Park HQ</span><span class="elev">6,926</span><div class="bar "><span style="width:66%"></span></div><span class="pct">66%</span></div><div class="row"><span>Kamehamenui 1</span><span class="elev">6,601</span><div class="bar shaded"><span style="width:50%"></span></div><span class="pct">50%</span></div><div class="row"><span>Kula 1</span><span class="elev">6,554</span><div class="bar "><span style="width:67%"></span></div><span class="pct">67%</span></div><div class="base"><span class="lbl">Cloudbase now</span><span class="elev">3,800</span><div class="line"></div><span></span></div><div class="row"><span>Kula Ag</span><span class="elev">3,162</span><div class="bar shaded"><span style="width:49%"></span></div><span class="pct">49%</span></div><div class="row"><span>Keokea</span><span class="elev">2,849</span><div class="bar shaded"><span style="width:27%"></span></div><span class="pct">27%</span></div><div class="row"><span>Piiholo</span><span class="elev">2,090</span><div class="bar shaded"><span style="width:32%"></span></div><span class="pct">32%</span></div><div class="row"><span>Pulehu</span><span class="elev">1,402</span><div class="bar "><span style="width:66%"></span></div><span class="pct">66%</span></div></div>
   </section>
 
   <section class="block" id="stationmap">
@@ -458,7 +459,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <script>
 /* Reload when a newer build is out, like the main page. */
 (function () {
-  var built = "2026-10-31T12:07";
+  var built = "2026-10-31T12:11";
   function check() {
     fetch("stations.json?" + Date.now(), {cache: "no-store"})
       .then(function (r) { return r.json(); })
