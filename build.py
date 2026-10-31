@@ -3810,6 +3810,14 @@ def chart_html(cid, derived, forecast, span, note, nocu=None, title="", camera=N
   var band = {{ id: 'band', beforeDatasetsDraw: function (c) {{ if (!d.up) return; var x = c.scales.x, a = c.chartArea, g = c.ctx;
     g.save(); g.fillStyle = 'rgba(137,135,129,0.14)';
     g.fillRect(x.getPixelForValue(d.up[0]), a.top, x.getPixelForValue(d.up[1]) - x.getPixelForValue(d.up[0]), a.bottom - a.top); g.restore(); }} }};
+  // Landmarks on the slope (Sam, 10-31): dashed lines across the chart.
+  var marks = {{ id: 'marks', beforeDatasetsDraw: function (c) {{ var y = c.scales.y, a = c.chartArea, g = c.ctx;
+    [[4600, 'Treeline'], [6200, 'Ferns']].forEach(function (m) {{
+      if (m[0] < y.min || m[0] > y.max) return; var py = y.getPixelForValue(m[0]);
+      g.save(); g.strokeStyle = muted; g.lineWidth = 1; g.setLineDash([4, 4]);
+      g.beginPath(); g.moveTo(a.left, py); g.lineTo(a.right, py); g.stroke();
+      g.setLineDash([]); g.fillStyle = muted; g.font = '11px sans-serif'; g.textAlign = 'right';
+      g.fillText(m[1] + ' ' + m[0].toLocaleString(), a.right - 4, py - 4); g.restore(); }}); }} }};
   var hm = function (m) {{ return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); }};
   var ys = d.derived.map(function (a) {{ return a[1]; }}).concat(d.forecast.map(function (a) {{ return a[1]; }})).concat(d.camera.map(function (a) {{ return a[1]; }}));
   var xs = [540, 960];
@@ -3837,7 +3845,7 @@ def chart_html(cid, derived, forecast, span, note, nocu=None, title="", camera=N
               max: Math.max(7000, Math.ceil(Math.max.apply(null, ys) / 500) * 500),
               ticks: {{ stepSize: 500, color: muted, callback: function (v) {{ return v.toLocaleString(); }} }}, grid: {{ color: grid }} }}
       }} }},
-    plugins: [nocu]
+    plugins: [nocu, marks]
   }});
 }})();
 </script>"""
