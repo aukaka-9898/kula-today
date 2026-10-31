@@ -3817,7 +3817,7 @@ def chart_html(cid, derived, forecast, span, note, nocu=None, title="", camera=N
       g.save(); g.strokeStyle = muted; g.lineWidth = 1; g.setLineDash([4, 4]);
       g.beginPath(); g.moveTo(a.left, py); g.lineTo(a.right, py); g.stroke();
       g.setLineDash([]); g.fillStyle = muted; g.font = '11px sans-serif'; g.textAlign = 'right';
-      g.fillText(m[1] + ' ' + m[0].toLocaleString(), a.right - 4, py - 4); g.restore(); }}); }} }};
+      g.fillText(m[1], a.right - 4, py - 4); g.restore(); }}); }} }};
   var hm = function (m) {{ return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); }};
   var ys = d.derived.map(function (a) {{ return a[1]; }}).concat(d.forecast.map(function (a) {{ return a[1]; }})).concat(d.camera.map(function (a) {{ return a[1]; }}));
   var xs = [540, 960];
