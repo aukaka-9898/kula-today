@@ -1090,8 +1090,11 @@ def write(now: datetime) -> None:
     fc = {t.hour: v for t, v in grid.items() if t.date() == now.date() and t.hour in DAY_HOURS}
     ob = dict(_try(bellows_day, now.date(), problems=problems) or [])
     barbs = barb_chart(fc, ob) if fc or ob else ""
+    # Full width under Today and Tomorrow (Sam, 10-31: "the wind barbs are not full width").
+    barbs = (f'<section class="block" aria-labelledby="t-wind"><h2 id="t-wind">Wind by the hour</h2>{barbs}</section>'
+             if barbs else "")
     if wrap:
-        today_body, kind, today_title = wrap[0] + barbs, "The day in review", f"Today · {now:%a %d %b}"
+        today_body, kind, today_title = wrap[0], "The day in review", f"Today · {now:%a %d %b}"
         today_chip = chip(wrap[1]) if wrap[1] else ""
     else:
         today_body = f"""<dl>
@@ -1100,8 +1103,7 @@ def write(now: datetime) -> None:
         <dt>Cloudbase at Kāneʻohe</dt><dd>{base_html + (f'<div class="downret">{dir_html}</div>' if dir_html else "")}</dd>
         <dt>Thermals</dt><dd>{therm_html}</dd>
         <dt>Inversion</dt><dd>{inv_html}</dd>
-      </dl>
-      {barbs}"""
+      </dl>"""
         kind, today_title = f"Now · {now:%H:%M} HST", "Today"
     raw = (HERE / "template.html").read_text(encoding="utf-8")
     style = "".join("<style>" + part.split("</style>")[0] + "</style>" for part in raw.split("<style>")[1:])
@@ -1109,7 +1111,7 @@ def write(now: datetime) -> None:
     page = PAGE.format(style=style, updated=f"{now:%a %d %b %Y · %H:%M} HST", webcam=WEBCAM, webcam_launch=WEBCAM_LAUNCH,
                        kind=kind, chip=today_chip, today_title=today_title, today_body=today_body,
                        tom_title=f"Tomorrow · {tom:%a %d %b}",
-                       tom_chip=(chip(tword) if tword else "") + nwsalerts.icon_html(icons.get(tom)), tomorrow=tom_html, week=week, built=built, alerts=alerts,
+                       tom_chip=(chip(tword) if tword else "") + nwsalerts.icon_html(icons.get(tom)), tomorrow=tom_html, barbs=barbs, week=week, built=built, alerts=alerts,
                        diag=esc("; ".join(problems) or "none").replace("--", "-"))
     # IBM Plex has no ʻokina (U+02BB); its fallback glyph stands apart from the
     # letters, so the visible text uses the left quote instead.
@@ -1514,6 +1516,7 @@ tr.wk td {{ border-bottom: 0; padding-bottom: 2px; }} tr.wkh td {{ white-space: 
       {tomorrow}
     </section>
   </div>
+  {barbs}
   <section class="block" aria-labelledby="t-week">
     <h2 id="t-week">The week</h2>
     <div class="tablewrap"><table>
