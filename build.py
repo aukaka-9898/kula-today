@@ -3967,6 +3967,12 @@ def build() -> str:
     if cu:
         cu_clear = settle("cu_clear", cu_clear, now)
     mc = safely(morning_cloud, obs, now) if up is None and 6 <= now.hour < 12 and len(obs) else None
+    # The sky radiometers can't tell a mid-level deck from low cloud: 10-31 a
+    # grey layer well above the crest read 0.99 and the page said "Low cloud is
+    # down to about 3,500 ft" over a clear slope (Sam: "a mistaken
+    # observation?"). The camera seeing the slope clear overrules them.
+    if mc and mc.get("overhead") and cam_now and cam_now["clear"]:
+        mc.update(overhead=False, aloft=True)
     global PHASE
     # Dew-morning phases: the base is always all stations; in phase 2 the
     # highest stations forecast how far it lifts once the dew dries (Sam,
@@ -4003,7 +4009,8 @@ def build() -> str:
                      if mc.get("overhead") else
                      f'About <span class="num">{ft(round(mc["base"], -2))} ft</span>'
                      f'<div class="sub">{mc["n_wet"]} of {mc["n"]} slope stations near saturation; '
-                     f'no cloud overhead yet{dew}</div>')
+                     + (f'Kekoa camera sees the slope clear under a cloud layer overhead{dew}</div>'
+                        if mc.get("aloft") else f'no cloud overhead yet{dew}</div>'))
     elif up is None and now.hour < 12 and PHASE.get("morning") and (_fc := safely(slope_lcl, obs)):
         # The morning line has fired today but the slope has dried below it in
         # the sun, before the upslope registers (Sam, 2026-10-18: "latest
@@ -4194,7 +4201,8 @@ def build() -> str:
                 + (f" {said}" if said else ""))
     if mc:
         said = ((f"Low cloud is down to about {ft(round(mc['base'], -2))} ft" if mc.get("overhead") else
-                 f"No cloud over Kula yet. First clouds will form at about {ft(round(mc['base'], -2))} ft, "
+                 ("No low cloud on the slope (camera); a cloud layer is overhead. " if mc.get("aloft") else
+                  "No cloud over Kula yet. ") + f"First clouds will form at about {ft(round(mc['base'], -2))} ft, "
                  "a little higher if the slope warms first")
                 + (("; the night's dew is evaporating -- " if mc.get("dewy") else
                     "; " if mc.get("overhead") else ". ")
