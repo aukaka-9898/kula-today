@@ -300,7 +300,7 @@ $style
   }
   function draw() {
     if (done || !window.L) return; done = true;
-    var map = L.map("map", {scrollWheelZoom: false}).setView([20.785, -156.33], 13);
+    var map = L.map("map", {scrollWheelZoom: false}).setView([20.785, -156.33], 12);
     L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}", {
       maxZoom: 16, attribution: "Tiles &copy; Esri &mdash; Esri, HERE, Garmin, USGS, NGA, EPA, USDA, NPS"}).addTo(map);
     fetch("stations.json?" + Date.now()).then(function (r) { return r.json(); }).then(function (d) {
