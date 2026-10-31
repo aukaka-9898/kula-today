@@ -1063,22 +1063,31 @@ def night_signals(day) -> dict | None:
 # That morning phase 2 said "damp from the dew overnight" while Kula Ag had 2 mm
 # overnight and 3-4 more after 09:00, Keokea 2 and 7 (Flood Watch). The lower
 # slope's gauges over the last 12 hours decide the word.
+# Rain, not drip (10-31, Sam: "verify dew/rain"): Keokea tipped once every
+# 1.5-3 h all night at 96% humid (1.5 mm, mist or fog drip) while Kula Ag stayed
+# dry under a dew night. A shower tips the gauge at least twice within an hour
+# (10-29 night: Keokea 0.76 mm, Kula Ag 0.51 mm in 60 min; 10-31: 0.25).
 RAIN_GAUGES = "0119,0116"          # Kula Ag, Keokea
 RAIN_WET_MM = 1.0
+RAIN_HOUR_MM = 0.5                 # two 0.254 mm tips inside 60 minutes
 
 
 @functools.lru_cache(maxsize=4)
-def _recent_rain(stamp: str) -> float | None:
+def _recent_rain(stamp: str) -> tuple | None:
+    """(most 12-hour total, most in any 60 minutes) at one gauge, in mm."""
     end = datetime.strptime(stamp, "%Y-%m-%dT%H")
     rows = _retrying(mesonet.get)("/mesonet/db/measurements", location="hawaii",
                                   station_ids=RAIN_GAUGES, var_ids="RF_1_Tot300s",
                                   start_date=f"{end - timedelta(hours=12):%Y-%m-%dT%H:00:00}-10:00",
                                   end_date=f"{end:%Y-%m-%dT%H:59:59}-10:00", row_mode="json", limit=10000)
-    tot: dict = {}
-    for r in rows:
-        if r.get("value") is not None:
-            tot[r["station_id"]] = tot.get(r["station_id"], 0.0) + float(r["value"])
-    return max(tot.values()) if tot else None
+    x = pd.DataFrame([r for r in rows if r.get("value") is not None])
+    if x.empty:
+        return None
+    x["t"] = pd.to_datetime(x.timestamp)
+    x["value"] = x.value.astype(float)
+    hour = max(float(g.set_index("t").value.sort_index().rolling("60min").sum().max())
+               for _, g in x.groupby("station_id"))
+    return float(x.groupby("station_id").value.sum().max()), hour
 
 
 def rained(now: datetime) -> bool:
@@ -1087,7 +1096,7 @@ def rained(now: datetime) -> bool:
         mm = _recent_rain(f"{now:%Y-%m-%dT%H}")
     except Exception:
         return False
-    return mm is not None and mm >= RAIN_WET_MM
+    return mm is not None and mm[0] >= RAIN_WET_MM and mm[1] >= RAIN_HOUR_MM - 0.01
 
 
 def overnight_line(now: datetime) -> str | None:
