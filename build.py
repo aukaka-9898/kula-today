@@ -2717,6 +2717,40 @@ def sounding_base_hours(day) -> tuple[dict, datetime]:
     return out, sd.run_time(path)
 
 
+SOUNDING_BASE_FILE = HERE / "docs" / "sounding_base.json"
+
+
+def save_sounding_base(now: datetime) -> None:
+    """Keep the day's first sounding run that covers 09:00-16:00: by evening
+    the newest run no longer reaches back to the morning (Sam, 10-31: "On the
+    wrapup, show the full forecast curve")."""
+    try:
+        old = json.loads(SOUNDING_BASE_FILE.read_text(encoding="utf-8"))
+        if old.get("date") == f"{now:%Y-%m-%d}":
+            return
+    except Exception:
+        pass
+    hours, run = sounding_base_hours(now.date())
+    if all(h in hours for h in range(9, 17)):
+        SOUNDING_BASE_FILE.write_text(json.dumps({"date": f"{now:%Y-%m-%d}", "run": f"{run:%d %H}Z",
+                                                  "hours": {str(h): round(v, -1) for h, v in hours.items()}}),
+                                      encoding="utf-8")
+
+
+def sounding_forecast(day) -> dict | None:
+    """The saved sounding forecast for `day`, as a chart line, or None."""
+    try:
+        got = json.loads(SOUNDING_BASE_FILE.read_text(encoding="utf-8"))
+    except Exception:
+        return None
+    if got.get("date") != f"{day:%Y-%m-%d}":
+        return None
+    return {"points": sorted([int(h) * 60, v] for h, v in got["hours"].items()),
+            "label": "Forecast (sounding)",
+            "note": (f"Forecast: the RRFS Kahului sounding (run {got['run']}), its air at Kula Ag's height "
+                     f"lifted to condensation, hour by hour.")}
+
+
 def projection(now: datetime, start_ft: float, start_what: str) -> dict | None:
     hours, run = sounding_base_hours(now.date())
     if len(hours) < 2:
@@ -3787,7 +3821,8 @@ def base_chart(obs, now, up, end, cid="basechart", title="Cloudbase, derived vs 
     if proj:
         note += " " + proj["note"]
     return (chart_html(cid, derived, forecast if with_forecast else [], span, note, title=title, camera=cam,
-                       hidden=hid, nocall=noc, proj=proj["points"] if proj else None),
+                       hidden=hid, nocall=noc, proj=proj["points"] if proj else None,
+                       proj_label=(proj or {}).get("label", "Projection (sounding)")),
             derived, forecast)
 
 
@@ -3799,7 +3834,7 @@ FORECAST_BAND_FT = 700
 
 
 def chart_html(cid, derived, forecast, span, note, nocu=None, title="", camera=None, hidden=None, nocall=None,
-               proj=None) -> str:
+               proj=None, proj_label="Projection (sounding)") -> str:
     """Cloudbase line chart: derived (solid) and forecast (dashed) by minute of
     the day, the upslope shaded; derived and span may be empty for a forecast.
 
@@ -3834,7 +3869,7 @@ def chart_html(cid, derived, forecast, span, note, nocu=None, title="", camera=N
     fkey = ('<span><span style="display:inline-block;width:16px;border-top:2px dashed #eb6834;'
             'vertical-align:middle"></span> Forecast</span>' if forecast else "") + (
            '<span><span style="display:inline-block;width:16px;border-top:2px dashed #8a5cd6;'
-           'vertical-align:middle"></span> Projection (sounding)</span>' if proj else "")
+           f'vertical-align:middle"></span> {esc(proj_label)}</span>' if proj else "")
     aria = "Derived cloudbase against the forecast through the day" if forecast else "Derived cloudbase through the day"
     return f"""{head}<div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted,#6b6b66);margin:2px 0 4px">
 {fkey}
@@ -3997,7 +4032,7 @@ def day_review(obs, now, up, evening, rnet, word, model, fc_today, fc_pair, entr
     chart_html = "Not derived<div class=\"sub\">No upslope, so no slope air to derive it from</div>"
     derived, forecast = [], []
     if up is not None and len(obs):
-        got = safely(base_chart, obs, now, up, end, "basechart", "Cloudbase", False)
+        got = safely(base_chart, obs, now, up, end, "basechart", "Cloudbase", False, safely(sounding_forecast, now))
         if got and got[1]:
             chart, derived, forecast = got
             dv = [v for _, v in derived]
@@ -4534,6 +4569,8 @@ def build() -> str:
     # tomorrow + outlook
     if before_up:
         safely(save_morning_forecast, now)
+    if 5 <= now.hour < 16:
+        safely(save_sounding_base, now)
     # The next flying day: today until its upslope begins, then tomorrow.
     tom = now.date() + timedelta(days=0 if before_up else 1)
     t_html = "<p>Forecast unavailable.</p>"
