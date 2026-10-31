@@ -326,7 +326,7 @@ def log_dropouts(now: datetime) -> None:
     DROPOUT_LOG.write_text(json.dumps(log), encoding="utf-8")
 
 
-# A large badge on the live Today panel when the readings are thin (Sam,
+# A badge on the live Today panel when the readings are thin (Sam,
 # 2026-10-24: "The page needs a large badge on the today page" -- the NWS
 # mesonet frozen since 10-22, the Mesonet unreachable on half the builds).
 # Shown when under BADGE_MIN_SHARE of the stations have a reading in the last
@@ -344,9 +344,9 @@ def data_badge() -> str:
     if hcdp:
         sub += ("; the Mesonet could not be reached this update" if HCDP_FROM is None else
                 f"; the Mesonet could not be reached, its readings are from the {HCDP_FROM:%H:%M} update")
-    return (f'<div class="databadge"><div class="big">Limited data</div>'
-            f'<div>{esc(sub)}. Readings below rest on fewer stations than usual.</div>'
-            + (f'<div class="sub">Not reporting: {esc(", ".join(out))}</div>' if 0 < len(out) <= 6 else "")
+    # One quiet line, not a tile (Sam, 10-31: "it's too prominent").
+    return (f'<div class="datanote"><span class="chip fair">Limited data</span> {esc(sub)}.'
+            + (f' Not reporting: {esc(", ".join(out))}.' if 0 < len(out) <= 6 else "")
             + "</div>")
 
 
