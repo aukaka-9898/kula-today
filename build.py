@@ -63,6 +63,45 @@ cv.slope_parcel = functools.lru_cache(maxsize=4)(_retrying(cv.slope_parcel))
 cv.sun_forecast = _retrying(cv.sun_forecast)
 cv.trade_direction = _retrying(cv.trade_direction)
 
+
+# A slow Mesonet once per build, not once per request (Sam, 2026-10-31: "since
+# retries seem to delay updates significantly" -- one build ran 10 min). Each
+# request gets a 45 s answer limit and one retry; when that fails the Mesonet
+# is out for the rest of the build and every later request fails at once,
+# into the fallbacks the page already has (the last good fetch, the Limited
+# data line). MesonetDown is not a RequestException, so _retrying does not
+# retry it. Makapuu builds in this process and shares it.
+class MesonetDown(Exception):
+    pass
+
+
+MESONET_TIMEOUT = (10, 45)
+MESONET_TRIES = 2
+_MESONET_OUT = []
+
+
+def _mesonet_get(path: str, **params):
+    if _MESONET_OUT:
+        raise MesonetDown(f"Mesonet out this build ({_MESONET_OUT[0]})")
+    token = os.environ.get("HCDP_API_TOKEN")
+    if not token:
+        raise RuntimeError("HCDP_API_TOKEN is not set")
+    for i in range(MESONET_TRIES):
+        try:
+            r = requests.get(mesonet.BASE + path, params=params, timeout=MESONET_TIMEOUT,
+                             headers={"Authorization": f"Bearer {token}"})
+            r.raise_for_status()
+            return r.json()
+        except requests.RequestException as e:
+            if i == MESONET_TRIES - 1:
+                _MESONET_OUT.append(f"{type(e).__name__} on {path}")
+                OUTAGES.add("hcdp")
+                raise MesonetDown(f"Mesonet out this build: {type(e).__name__}: {e}") from e
+            time.sleep(3)
+
+
+mesonet.get = _mesonet_get
+
 HST = ZoneInfo("Pacific/Honolulu")
 RELEASE_FT = 3162                       # Kula Ag
 # Added to the forecast cloudbase: Open-Meteo's air runs cool at Kula Ag,
