@@ -122,6 +122,8 @@ $style
   function H(ft) { return sel("hu") === "m" ? Math.round(ft / 3.28084) : Math.round(ft); }
   function HU() { return sel("hu") === "m" ? " m" : " ft"; }
   function Tdisp(c) { return sel("tu") === "C" ? c.toFixed(1) + " °C" : cToF(c).toFixed(1) + " °F"; }
+  // The thermal index is a difference: x 1.8, no +32 (Sam, 10-31: in the selected units).
+  function TIdisp(c) { return sel("tu") === "C" ? c.toFixed(1) + " °C" : (c * 1.8).toFixed(1) + " °F"; }
   function n(v) { return v.toLocaleString(); }
   function stamp(key) {
     var d = new Date(key + ":00:00-10:00");
@@ -163,7 +165,7 @@ $style
     var soar = work.filter(function (x) { return x.ti <= D.bands[0][0]; }), use = soar.length ? soar[soar.length - 1].h : D.release_ft;
     var wet = c.filter(function (x) { return x.sat; }), lcl = wet.length ? wet[0].h : null;
     Q("#o-word").textContent = word(peak);
-    Q("#o-ti").textContent = "Thermal index " + peak.toFixed(1) + " °C at its strongest";
+    Q("#o-ti").textContent = "Thermal index " + TIdisp(peak) + " at its strongest";
     Q("#o-base").textContent = lcl === null ? "above " + n(H(D.top_ft)) + HU() : n(Math.floor(H(lcl) / 100) * 100) + HU();
     Q("#o-dew").textContent = "Dew point " + Tdisp(fToC(r.dew_f)) + ", " + r.from;
     Q("#o-use").textContent = use <= D.release_ft ? "None" : n(Math.floor(H(use) / 100) * 100) + HU();
@@ -217,7 +219,7 @@ $style
       c.forEach(function (x) { if (Math.abs(x.h - h) < Math.abs(best.h - h)) best = x; });
       var rh = 100 * Math.exp(17.625 * best.td / (243.04 + best.td) - 17.625 * best.t / (243.04 + best.t));
       var tip = Q("#tip");
-      tip.textContent = "Height        " + n(H(best.h)) + HU() + "\nThermal index " + best.ti.toFixed(1) + " °C\nTemperature   " + Tdisp(best.t) +
+      tip.textContent = "Height        " + n(H(best.h)) + HU() + "\nThermal index " + TIdisp(best.ti) + "\nTemperature   " + Tdisp(best.t) +
                         "\nDew point     " + Tdisp(best.td) + "\nHumidity      " + Math.round(rh) + "%" +
                         (best.wk === null || best.wk === undefined ? "" :
                          "\nWind          " + (best.wd === null ? "variable" : String(Math.round(best.wd)).padStart(3, "0") + "°") +
