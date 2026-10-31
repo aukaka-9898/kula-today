@@ -14,6 +14,7 @@
   --bg: #f3f6f8; --surface: #ffffff; --ink: #17242f; --muted: #5a6b78; --rule: #d7e0e7;
   --sky: #2b67a8; --grass: #5f8a2e; --tawny: #b88a1c; --shade: #7d8c98;
   --good: #3f7d2c; --warn: #a8661a; --fair: #5a6b78;
+  --chip-go: #2e7d32; --chip-caution: #b26a00; --chip-stop: #c62828;
   --display: "IBM Plex Sans Condensed", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
   --body: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
   --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
@@ -24,6 +25,7 @@
     --bg: #0f171e; --surface: #16212b; --ink: #e4ecf2; --muted: #9aabb8; --rule: #2a3946;
     --sky: #7fb2ea; --grass: #9cc46a; --tawny: #e0b84f; --shade: #6f808d;
     --good: #8cc47a; --warn: #e3a45a; --fair: #9aabb8;
+    --chip-go: #81c784; --chip-caution: #ffb74d; --chip-stop: #ef7070;
     color-scheme: dark;
   }
 }
@@ -49,7 +51,10 @@ h1 { font: 700 2.1rem/1.05 var(--display); letter-spacing: .01em; margin: 0; }
 .tomorrow .kind { color: var(--sky); }
 .head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
 .chip { font: 600 .72rem var(--display); letter-spacing: .08em; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; border: 1px solid currentColor; white-space: nowrap; }
-.chip.good { color: var(--good); } .chip.warn { color: var(--warn); } .chip.fair { color: var(--fair); }
+/* Traffic-light badges (Sam, 10-30: "Color code them"): green go, amber caution, red stop. */
+.chip.good { color: var(--chip-go); background: color-mix(in srgb, var(--chip-go) 14%, transparent); }
+.chip.fair { color: var(--chip-caution); background: color-mix(in srgb, var(--chip-caution) 16%, transparent); }
+.chip.warn { color: var(--chip-stop); background: color-mix(in srgb, var(--chip-stop) 14%, transparent); }
 dl { margin: 0; display: grid; grid-template-columns: max-content 1fr; gap: 8px 14px; }
 dt { font: 600 .74rem var(--display); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); padding-top: 3px; }
 dd { margin: 0; min-width: 0; }
