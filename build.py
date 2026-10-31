@@ -1639,7 +1639,7 @@ def line_now(obs: pd.DataFrame, now: datetime):
                 "why": (f"No trades: {cv.compass(m[0])} {m[1]:.0f} kt off the north coast (NWS marine forecast). "
                         "Sea breezes and upslope rule; no shear line.")}, lad
     rows = station_rows(obs, lad)
-    tr = safely(trace_line, rows)
+    tr = safely(trace_line, rows, m[0] if m is not None else None)
     # How many corridor stations are silent (Sam, 2026-10-22: "Lots of stations
     # not reporting today. Wreaked havoc with locating the shear" -- every
     # station via api.weather.gov stopped at 03:20).
@@ -2256,7 +2256,21 @@ TRACE_SPEED_FRAC = 0.5
 TRACE_SOUTH_LAT = 20.69
 
 
-def trace_line(rows: list) -> dict:
+# A light station may still be the origin when the line to it fits the ambient
+# wind (Sam, 2026-10-30: Olinda Rd at 3 mph, under the shear, with a cloud
+# street on the camera along Pulehu-Olinda; "Can ambient supercede the speed
+# minimum"). The line's trade side is north, so the flow it implies comes from
+# its bearing minus 90 deg; within TRACE_AMBIENT_DEG of the marine wind it fits.
+TRACE_AMBIENT_DEG = 90
+
+
+def _fits_ambient(a: dict, o: dict, ambient: float) -> bool:
+    k = math.cos(math.radians(a["lat"]))
+    bearing = math.degrees(math.atan2((o["lon"] - a["lon"]) * k, o["lat"] - a["lat"])) % 360
+    return abs((bearing - 90 - ambient + 180) % 360 - 180) <= TRACE_AMBIENT_DEG
+
+
+def trace_line(rows: list, ambient: float | None = None) -> dict:
     live = [r for r in rows if r.get("dir") is not None and r.get("mph") is not None
             and r["lat"] >= TRACE_SOUTH_LAT]
     trades = lambda r: cv._side(r["dir"]) == "trades"
@@ -2285,11 +2299,17 @@ def trace_line(rows: list) -> dict:
         return {"found": False, "why": "too few stations in the trades to compare with", "anchor": anchor["name"]}
     ref_dir = cv.mean_direction(pd.Series([r["dir"] for r in ref], dtype=float))
     ref_mph = float(np.median([r["mph"] for r in ref]))
-    solid = lambda r: (abs((r["dir"] - ref_dir + 180) % 360 - 180) <= TRACE_DIR_DEG
-                       and r["mph"] >= TRACE_SPEED_FRAC * ref_mph)
+    in_dir = lambda r: abs((r["dir"] - ref_dir + 180) % 360 - 180) <= TRACE_DIR_DEG
+    solid = lambda r: in_dir(r) and r["mph"] >= TRACE_SPEED_FRAC * ref_mph
     # East of the anchor (Sam, 2026-10-21: "For the origin, try highest station
     # east of anchor").
-    up = [r for r in live if solid(r) and r["lon"] > anchor["lon"] and r["lat"] >= anchor["lat"]
+    # A light station is under the shear, where the direction wanders: any
+    # trade-sector direction, when its line fits the ambient wind.
+    # Above the low band only: Piiholo (2,090 ft) reads light in full trades
+    # and on 10-27/28 made Makawao Ave -> Piiholo lines at Pukalani.
+    cand = lambda r: solid(r) or (elev(r) > LOW_BAND_FT and trades(r) and ambient is not None
+                                  and _fits_ambient(anchor, r, ambient))
+    up = [r for r in live if cand(r) and r["lon"] > anchor["lon"] and r["lat"] >= anchor["lat"]
           and elev(anchor) < elev(r) <= CORRIDOR_TOP_FT]
     if not up:
         return {"found": False, "why": "no trades above the anchor", "anchor": anchor["name"]}
