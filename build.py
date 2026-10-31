@@ -2275,6 +2275,21 @@ def hilo_raob(now: datetime):
     return None, []
 
 
+CAMERA_HOURS_FILE = HERE / "docs" / "camera_hours.json"
+
+
+def write_camera_hours(now: datetime) -> None:
+    """Today's Kekoa camera base by hour, for the details page's Cloudbase
+    (Sam, 10-31: "should be using the cam, when available"). Every build:
+    details.json is rewritten only hourly."""
+    c = camera_rows(f"{now:%Y-%m-%d}").dropna(subset=["camera_ft"])
+    hours = {}
+    for h, g in c.groupby(c.time.str[:2]):
+        hours[f"{now:%Y-%m-%d}T{h}"] = {"ft": round(float(g.camera_ft.median()), -1), "n": len(g),
+                                         "last": str(g.time.max())}
+    CAMERA_HOURS_FILE.write_text(json.dumps({"made": now.isoformat(), "hours": hours}), encoding="utf-8")
+
+
 def write_details(now: datetime, obs: pd.DataFrame) -> None:
     try:
         old = json.loads(DETAILS_FILE.read_text(encoding="utf-8"))
@@ -4617,6 +4632,7 @@ def build() -> str:
     safely(write_station_map, obs, lad if isinstance(lad, pd.DataFrame) else pd.DataFrame(), now, pos, west,
            {n: v for n, _, v in ladder})
     safely(write_details, now, obs)
+    safely(write_camera_hours, now)
     if 6 <= now.hour < 19:
         safely(log_dropouts, now)
     badge_html = safely(data_badge) or ""
