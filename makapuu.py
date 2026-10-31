@@ -726,7 +726,7 @@ def barb_chart(fc: dict, ob: dict) -> str:
             cx = left + col * i + col / 2
             word = rate(w["dir"], w["mph"], w.get("gust"))[0]
             colour = BARB_CLASS[RATING_CLASS.get(word, "fair")]
-            g = f' g{w["gust"]:.0f}' if w.get("gust") is not None else ""
+            g = f'g{w["gust"]:.0f}' if w.get("gust") is not None else ""
             parts.append(_barb(cx, cy, w["dir"], w["mph"], colour)
                          + f'<text x="{cx:.1f}" y="{cy + 44}" class="num" text-anchor="middle">{w["mph"]:.0f}{g}</text>'
                          + (f'<text x="{cx:.1f}" y="{cy + 64}" class="num" text-anchor="middle">{w["dir"]:03.0f}°</text>'
