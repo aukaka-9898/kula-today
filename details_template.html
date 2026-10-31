@@ -32,7 +32,7 @@ $style
         <label><input type="radio" name="clock" value="utc"> UTC</label>
       </fieldset>
       <fieldset><legend>Temperature at <span class="sitelbl">Kula Ag</span></legend>
-        <input id="temp" type="number" step="1" inputmode="numeric">
+        <input id="temp" type="number" step="any" inputmode="decimal">
         <label><input type="radio" name="tu" value="F" checked> &deg;F</label>
         <label><input type="radio" name="tu" value="C"> &deg;C</label>
         <button id="useyest" type="button" disabled>Use yesterday</button>
@@ -140,14 +140,22 @@ $style
   }
   function setTemp() {
     var r = D.surface[Q("#hour").value] || {};
-    if (r.temp_f === undefined) { Q("#temp").value = ""; return; }
-    Q("#temp").value = sel("tu") === "C" ? Math.round(fToC(r.temp_f)) : Math.round(r.temp_f);
+    if (r.temp_f === undefined) { Q("#temp").value = ""; tempF = NaN; return; }
+    showTemp(r.temp_f);
     var y = r.yesterday_f;
     Q("#yest").textContent = y === undefined ? "Yesterday at this hour: no " + LBL() + " reading" :
       "Yesterday at this hour: " + (sel("tu") === "C" ? fToC(y).toFixed(1) + " °C" : y.toFixed(1) + " °F");
     Q("#useyest").disabled = y === undefined;
   }
   var C = null;
+  // The surface temperature is kept exactly, in F; the box only shows it
+  // (Sam, 10-31: switching units rounded it -- 69 F -> 21 C -> 70 F -- and
+  // moved the thermal index). Whole F, tenths of a C.
+  var tempF = NaN;
+  function showTemp(f) {
+    tempF = f;
+    Q("#temp").value = sel("tu") === "C" ? (Math.round(fToC(f) * 10) / 10) : Math.round(f);
+  }
   function draw() {
     var L = levels(), r = D.surface[Q("#hour").value] || {}, src = D.sources[sel("src")];
     var tv = parseFloat(Q("#temp").value);
@@ -157,7 +165,7 @@ $style
       Q("#o-dew").textContent = r.dew_f === undefined ? "No surface dew point available" : "";
       Q("#o-ti").textContent = ""; Q("#o-top").textContent = ""; Q("#prof").innerHTML = ""; return;
     }
-    var surfF = sel("tu") === "C" ? cToF(tv) : tv;
+    var surfF = isNaN(tempF) ? (sel("tu") === "C" ? cToF(tv) : tv) : tempF;
     var c = curve(L, surfF, r.dew_f), top = null, i;
     for (i = 0; i < c.length; i++) if (c[i].ti >= 0) { top = c[i].h; break; }
     if (top === null) top = c[c.length - 1].h;
@@ -249,16 +257,19 @@ $style
   document.querySelectorAll('input[name="clock"]').forEach(function (e) { e.onchange = function () { fillHours(); }; });
   document.querySelectorAll('input[name="tu"]').forEach(function (e) {
     e.onchange = function () {
-      var v = parseFloat(Q("#temp").value);
-      if (!isNaN(v)) Q("#temp").value = Math.round(sel("tu") === "C" ? fToC(v) : cToF(v));
+      if (!isNaN(tempF)) showTemp(tempF);
       draw();
     };
   });
   Q("#hour").onchange = all;
-  Q("#temp").oninput = draw;
+  Q("#temp").oninput = function () {
+    var v = parseFloat(Q("#temp").value);
+    tempF = isNaN(v) ? NaN : (sel("tu") === "C" ? cToF(v) : v);
+    draw();
+  };
   Q("#useyest").onclick = function () {
     var y = (D.surface[Q("#hour").value] || {}).yesterday_f;
-    if (y !== undefined) { Q("#temp").value = Math.round(sel("tu") === "C" ? fToC(y) : y); draw(); }
+    if (y !== undefined) { showTemp(y); draw(); }
   };
 })();
 </script>
