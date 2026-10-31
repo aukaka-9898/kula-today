@@ -1,7 +1,8 @@
 {
- "made": "2026-10-30 17:52",
+ "made": "2026-10-30 18:07",
  "flags": [
-  "Camera check: cloud down to 2,800 ft (Red Hill camera vs derived base) disagreed by 2 h or more on 3 of 11 days (10-27, 10-28, 10-29)."
+  "Camera check: cloud at the tops (Puunianiau camera vs Park HQ) disagreed by 2 h or more on 3 of 12 days (10-21, 10-29, 10-30).",
+  "Camera check: cloud down to 2,800 ft (Red Hill camera vs derived base) disagreed by 2 h or more on 4 of 12 days (10-27, 10-28, 10-29, 10-30)."
  ],
  "stats": {
   "base_days": 23,
@@ -13,9 +14,9 @@
   "alert_days": 2,
   "alert_hits": 0,
   "intrusions_missed": 0,
-  "line_dropped_share_7d": 0.12,
-  "cam_puunianiau_cloud_min_days": 11,
-  "cam_redhill_cloud_min_days": 11,
+  "line_dropped_share_7d": 0.0,
+  "cam_puunianiau_cloud_min_days": 12,
+  "cam_redhill_cloud_min_days": 12,
   "station_days": 38,
   "accuracy": {
    "base_n": 3,
