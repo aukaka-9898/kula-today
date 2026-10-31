@@ -99,21 +99,21 @@ tr.wk td { border-bottom: 0; padding-bottom: 2px; } tr.wkh td { white-space: nor
 <div class="wrap">
   <header>
     <div><a class="homebtn" href="/">&larr; Home</a><div class="tag">Makapu&#8216;u soaring briefing</div><h1>Makapu&#8216;u Today</h1></div>
-    <div class="date">Updated Sat 31 Oct 2026 · 06:12 HST</div>
+    <div class="date">Updated Sat 31 Oct 2026 · 06:22 HST</div>
   </header>
   <div class="databadge"><div class="big">Under construction</div></div>
   <div>
-    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/760/details/camera/12783/full" title="Kāne&#8216;ohe Bay webcam, live, looking southeast down the Ko&#8216;olau toward Makapu&#8216;u" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="camera.jpg?2026-10-31T06:12" alt=""></div>
+    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/760/details/camera/12783/full" title="Kāne&#8216;ohe Bay webcam, live, looking southeast down the Ko&#8216;olau toward Makapu&#8216;u" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="camera.jpg?2026-10-31T06:22" alt=""></div>
     <div class="camcap">Kāne&#8216;ohe Bay webcam, live, looking southeast down the Ko&#8216;olau to Makapu&#8216;u. FAA WeatherCam. <a href="https://weathercams.faa.gov/cameras/state/HI/cameraSite/760/details/camera/12783/full" target="_blank" rel="noopener">Open full size</a> · <a href="https://weathercams.faa.gov/cameras/state/HI/cameraSite/588/details/camera/12153/full" target="_blank" rel="noopener">Makapu&#8216;u camera, at the point</a></div>
   </div>
   <div class="cols">
     <section class="panel today" aria-labelledby="t-today">
-      <div class="kind">Now · 06:12 HST</div>
+      <div class="kind">Now · 06:22 HST</div>
       <div class="head"><h2 id="t-today">Today</h2></div>
       
       <dl>
         <dt>On the ridge</dt><dd><strong>Flyable</strong></dd>
-        <dt>Wind</dt><dd><span class="num">ENE (060°) 12 mph, gusts 14</span><div class="sub">Bellows, 05:15</div></dd>
+        <dt>Wind</dt><dd><span class="num">ENE (060°) 12 mph, gusts 14</span><div class="sub">Bellows, 05:15 (via NOAA HADS)</div></dd>
         <dt>Cloudbase at launch</dt><dd><strong>Below launch</strong> (about 900 ft)<div class="sub">Condensation level of the air at HECO Mokuhano, 05:40.</div></dd>
         <dt>Cloudbase at Kāne&#8216;ohe</dt><dd><strong>Low</strong><div class="sub">Kaneohe's air would condense under launch height: wet air at the coast.</div><div class="sub">Kāne&#8216;ohe ceilometer: broken 2,300 ft (05:57).</div><div class="downret">Near the ideal 050°: a fair balance between going downrange and getting back.</div></dd>
         <dt>Thermals</dt><dd>Probably <strong>flat</strong> (forecast)<div class="sub">RRFS at Kaneohe, run 31 12Z: thermal index -2.9 °C, 10:00–14:00 (surface air: Open-Meteo at Kaneohe); no useable lift. Useful, not critical, at Makapu&#8216;u.</div></dd>
@@ -146,7 +146,7 @@ tr.wk td { border-bottom: 0; padding-bottom: 2px; } tr.wkh td { white-space: nor
 <!-- build problems: none -->
 <script>
 (function () {
-  var built = "2026-10-31T06:12";
+  var built = "2026-10-31T06:22";
   function check() {
     fetch("summary.json?" + Date.now(), {cache: "no-store"}).then(function (r) { return r.json(); })
       .then(function (j) { if (j && j.built && j.built > built) location.replace(location.pathname + "?v=" + Date.now()); })
