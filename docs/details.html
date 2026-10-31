@@ -99,7 +99,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><a class="homebtn" href="/">&larr; Home</a> <a class="homebtn" href="./">&larr; Kula Today</a><h1>Kula Details</h1></div>
-    <div class="date">Updated Sat 31 Oct 2026 · 12:11 HST</div>
+    <div class="date">Updated Sat 31 Oct 2026 · 12:15 HST</div>
   </header>
 
   <section class="block" aria-labelledby="t-thermal">
@@ -385,7 +385,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
   }
   function draw() {
     if (done || !window.L) return; done = true;
-    var map = L.map("map", {scrollWheelZoom: false}).setView([20.785, -156.33], 13);
+    var map = L.map("map", {scrollWheelZoom: false}).setView([20.785, -156.33], 12);
     L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}", {
       maxZoom: 16, attribution: "Tiles &copy; Esri &mdash; Esri, HERE, Garmin, USGS, NGA, EPA, USDA, NPS"}).addTo(map);
     fetch("stations.json?" + Date.now()).then(function (r) { return r.json(); }).then(function (d) {
@@ -459,7 +459,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <script>
 /* Reload when a newer build is out, like the main page. */
 (function () {
-  var built = "2026-10-31T12:11";
+  var built = "2026-10-31T12:15";
   function check() {
     fetch("stations.json?" + Date.now(), {cache: "no-store"})
       .then(function (r) { return r.json(); })
