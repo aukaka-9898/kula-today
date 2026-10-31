@@ -2267,7 +2267,40 @@ def write_details(now: datetime, obs: pd.DataFrame) -> None:
 def write_station_map(obs: pd.DataFrame, lad: pd.DataFrame, now: datetime, pos=None, west=None,
                       sun=None) -> None:
     rows = station_rows(obs, lad, sun or {})
+    k = safely(kahului_row, now)
+    if k:
+        rows.append(k)
     _write_map(rows, now, pos, west)
+
+
+# Kahului on the map (Sam, 2026-10-31: "put Kahului on the map"), for its trade
+# speed; "the direction will not be reliable" (the isthmus venturi turns it
+# north), so it is drawn but never in the line fit. The latest METAR from
+# aviationweather.gov: api.weather.gov's copy drops the wind from most reports
+# (10-31; the METARs carry the "$" maintenance flag).
+KAHULUI_LL = (20.8986, -156.4305, 54)
+KAHULUI_MAX_AGE = timedelta(minutes=90)
+
+
+def kahului_row(now: datetime) -> dict | None:
+    r = requests.get("https://aviationweather.gov/api/data/metar",
+                     params={"ids": "PHOG", "format": "json", "hours": 2}, headers=cv.HEAD, timeout=20)
+    r.raise_for_status()
+    obs = [m for m in r.json() if isinstance(m.get("wspd"), (int, float))]
+    if not obs:
+        return None
+    m = max(obs, key=lambda m: m["reportTime"])
+    # obsTime is when it was observed (10:54); reportTime rounds to the hour.
+    t = (pd.Timestamp(m["obsTime"], unit="s", tz="UTC") if isinstance(m.get("obsTime"), (int, float))
+         else pd.Timestamp(m["reportTime"])).tz_convert(HST)
+    if now - t.to_pydatetime() > KAHULUI_MAX_AGE:
+        return None
+    row = {"name": "Kahului", "lat": KAHULUI_LL[0], "lon": KAHULUI_LL[1], "elev_ft": KAHULUI_LL[2],
+           "dir": m["wdir"] if isinstance(m.get("wdir"), (int, float)) else None,
+           "mph": round(m["wspd"] * 1.15078), "at": f"{t:%H:%M}"}
+    if isinstance(m.get("wgst"), (int, float)):
+        row["gust"] = round(m["wgst"] * 1.15078)
+    return row
 
 
 def station_rows(obs: pd.DataFrame, lad: pd.DataFrame, sun: dict | None = None) -> list:
