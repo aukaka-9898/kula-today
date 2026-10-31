@@ -4631,8 +4631,8 @@ def build() -> str:
         # is unnecessary"): the rows below say it. said_t is still worked out
         # but not shown.
         t_html = push_html + f"""<dl>
-        <dt>Thermals</dt><dd>Probably {esc(strength_word(r['thermal']).lower())}<div class="sub">thermal.py on the forecast air (+3 F, it runs cool); within one category of the measured rating on every test day</div></dd>
-        <dt>Cloudbase</dt><dd>{esc(cb_head)}<div class="sub">{esc(cb_sub)}</div></dd>
+        <dt><a href="details.html#t-thermal">Thermals</a></dt><dd>Probably {esc(strength_word(r['thermal']).lower())}<div class="sub">thermal.py on the forecast air (+3 F, it runs cool); within one category of the measured rating on every test day</div></dd>
+        <dt><a href="details.html#t-thermal">Cloudbase</a></dt><dd>{esc(cb_head)}<div class="sub">{esc(cb_sub)}</div></dd>
         <dt>Sun</dt><dd><span class="num">{pct(r['sun'])}</span> of clear sky, 10:00–14:00 (GFS)<div class="sub">The model can't see the slope's own cumulus: when it says 90% or more, Kula has measured about 80%. Good flying days measure about 80%, overcast about 50%, socked in 20%.</div></dd>
         <dt>Shear line</dt><dd>{esc(line_t)}<div class="sub">Trades {esc(wind_t)}</div>{line_alert}</dd>
       </dl>
@@ -4701,10 +4701,10 @@ def build() -> str:
         built=f"{now:%Y-%m-%dT%H:%M}",
         today_chip=today_chip, data_badge=nws_html + badge_html, summary=summary_html, base_label=base_label,
         therm=therm_html, base=base_html, up=up_html, line=line_html,
-        base_row=(f"<dt>{base_label}</dt><dd>{base_html}</dd>" if base_html else ""),
-        sun_row=(f"<dt>Sun</dt><dd>{sun_html}</dd>" if sun_html is not None else ""),
+        base_row=(f'<dt><a href="details.html#t-thermal">{base_label}</a></dt><dd>{base_html}</dd>' if base_html else ""),
+        sun_row=(f'<dt><a href="details.html#t-ladder">Sun</a></dt><dd>{sun_html}</dd>' if sun_html is not None else ""),
         wind=wind_html,
-        ceil_row=(f"<dt>Ceiling</dt><dd>{ceil_html}</dd>" if ceil_html else ""),
+        ceil_row=(f'<dt><a href="details.html#t-thermal">Ceiling</a></dt><dd>{ceil_html}</dd>' if ceil_html else ""),
         tom_title=f"{'Tomorrow' if tom > now.date() else 'Today'} · {tom:%a %d %b}", tom_chip=tom_chip + nwsalerts.icon_html(icons.get(tom)), tomorrow=t_html,
         rows=rows_html, ladder=ladder_html or (f"<p>Night. First reading tomorrow about {first_at}.</p>"
                                                if night else

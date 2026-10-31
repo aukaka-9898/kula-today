@@ -57,6 +57,7 @@ h1 { font: 700 2.1rem/1.05 var(--display); letter-spacing: .01em; margin: 0; }
 .chip.warn { color: var(--chip-stop); background: color-mix(in srgb, var(--chip-stop) 14%, transparent); }
 dl { margin: 0; display: grid; grid-template-columns: max-content 1fr; gap: 8px 14px; }
 dt { font: 600 .74rem var(--display); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); padding-top: 3px; }
+dt a { color: inherit; text-decoration: underline dotted; text-underline-offset: 3px; }  /* row label -> its data on the details page (Sam, 10-31) */
 dd { margin: 0; min-width: 0; }
 .num { font: 500 1rem var(--mono); font-variant-numeric: tabular-nums; }
 .sub { color: var(--muted); font-size: .86rem; }
@@ -116,13 +117,13 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
       $data_badge
       $summary
       <dl>
-        <dt>Thermals</dt><dd>$therm</dd>
+        <dt><a href="details.html#t-thermal">Thermals</a></dt><dd>$therm</dd>
         $base_row
         $sun_row
-        <dt>Shear line</dt><dd>$line</dd>
+        <dt><a href="details.html#stationmap">Shear line</a></dt><dd>$line</dd>
         $ceil_row
-        <dt>Upslope</dt><dd>$up</dd>
-        <dt>Wind</dt><dd>$wind</dd>
+        <dt><a href="details.html#stationmap">Upslope</a></dt><dd>$up</dd>
+        <dt><a href="details.html#stationmap">Wind</a></dt><dd>$wind</dd>
       </dl>
     </section>
     <section class="panel tomorrow" aria-labelledby="t-tomorrow">
