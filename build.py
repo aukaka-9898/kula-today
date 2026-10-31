@@ -1679,6 +1679,75 @@ def marine_now(now: datetime):
     return None if d is None or kmh is None else (float(d), float(kmh) / KMH_PER_KT)
 
 
+# The map fit (Sam, 2026-10-31: "When I view the current station map I can
+# instantly see where the shear should be. perhaps the rules I gave you
+# (driving south) are not the best approach"). Every straight line across the
+# slope within LINE_EW_MAX_DEG of east-west is scored on the whole map:
+# trades north of it and upslope south count for it, the reverse against,
+# each station weighted by its speed (capped at FIT_CAP_MPH, so calm counts
+# for ~nothing); a reading in neither sector ("other directions should not be
+# disregarded") counts FIT_OTHER when within FIT_ZONE_MI of the line -- where
+# the flows meet. The best line is the call; no line without FIT_MIN_T of
+# trades on the slope north of it (the coast alone is not enough) and
+# FIT_MIN_U of upslope south of it. Blind tests against Sam's drawn lines
+# (review/2026-10-31_sheartest, _sheartest2): batch 2, unseen, median miss at
+# Kula Hwy 0.29 mi vs 0.48 for the trace + ladder, 13 of 16 within 0.5 mi vs 9
+# of 15; 10-27's 4-6 mi misses gone. Olinda and Waihou kept (dropping them
+# doubled the median miss).
+FIT_CAP_MPH = 10.0
+FIT_OTHER = 0.5
+FIT_ZONE_MI = 0.5
+FIT_MIN_T = 0.5
+FIT_MIN_U = 1.0
+FIT_TOP_FT = 4500
+FIT_SOUTH_LAT = 20.70
+FIT_L0 = np.arange(20.74, 20.9001, 0.0005)           # the line's latitude at Kula Highway
+FIT_K = (np.tan(np.radians(np.arange(-45, 46, 5)))     # within LINE_EW_MAX_DEG of east-west
+         * math.cos(math.radians(20.8)))            # latitude per degree of longitude
+FIT_WEST_LON, FIT_EAST_LON = -156.39, -156.28       # the line's drawn ends (Sam's lines span these)
+COAST_TRADES = ("Paia", "Hamakuapoko Rd", "Peahi Rd")  # trades here alone are no line on the slope
+
+
+def _fit_class(d):
+    d %= 360
+    return "T" if 20 <= d <= 160 else "U" if 185 <= d <= 320 else "O"
+
+
+def map_fit(rows: list) -> dict:
+    use = [r for r in rows if r.get("dir") is not None and r.get("mph") is not None
+           and r["lat"] >= FIT_SOUTH_LAT and (r.get("elev_ft") or 0) <= FIT_TOP_FT]
+    if len(use) < 6:
+        return {"found": False, "why": "too few stations reporting"}
+    lat = np.array([r["lat"] for r in use]); lon = np.array([r["lon"] for r in use])
+    w = np.array([min(r["mph"], FIT_CAP_MPH) / FIT_CAP_MPH for r in use])
+    c = np.array([_fit_class(r["dir"]) for r in use])
+    score = np.zeros((len(FIT_L0), len(FIT_K)))
+    for j, k in enumerate(FIT_K):
+        ll = FIT_L0[:, None] + k * (lon[None, :] - KULA_HWY_LON)
+        north = lat[None, :] > ll
+        v = (np.where(c == "T", np.where(north, w, -w), 0.0) + np.where(c == "U", np.where(north, -w, w), 0.0)
+             + np.where((c == "O") & (np.abs(lat[None, :] - ll) * cv.MILES_PER_DEG <= FIT_ZONE_MI), FIT_OTHER * w, 0.0))
+        score[:, j] = v.sum(axis=1)
+    i, j = np.nonzero(score >= score.max() - 1e-9)
+    l0, k = float(np.median(FIT_L0[i])), float(np.median(FIT_K[j]))
+    at = lambda x: l0 + k * (x - KULA_HWY_LON)
+    north = lat > at(lon)
+    slope_t = sum(w[n] for n, r in enumerate(use) if c[n] == "T" and north[n] and r["name"] not in COAST_TRADES)
+    up_s = float(w[(c == "U") & ~north].sum())
+    if slope_t < FIT_MIN_T:
+        return {"found": False, "why": "no trades on the slope yet"}
+    if up_s < FIT_MIN_U:
+        return {"found": False, "why": "no upslope south of the trades"}
+    # The stations either side nearest the line, for the words.
+    dist = lambda n: abs(lat[n] - at(lon[n]))
+    tn = [n for n in range(len(use)) if c[n] == "T" and north[n]]
+    us = [n for n in range(len(use)) if c[n] == "U" and not north[n]]
+    return {"found": True, "lat": l0, "north_of": use[min(tn, key=dist)]["name"],
+            "south_of": use[min(us, key=dist)]["name"], "score": round(float(score.max()), 2),
+            "west_ll": [round(at(FIT_WEST_LON), 5), FIT_WEST_LON], "east_ll": [round(at(FIT_EAST_LON), 5), FIT_EAST_LON],
+            "tilt": round(math.degrees(math.atan(k / math.cos(math.radians(20.8)))))}
+
+
 def line_now(obs: pd.DataFrame, now: datetime):
     """The traced line (Sam, 2026-10-21: "build it"), as the page's bracket:
     where the anchor->origin line crosses Kula Highway. The ladder's best split
@@ -1692,41 +1761,25 @@ def line_now(obs: pd.DataFrame, now: datetime):
                 "why": (f"No trades: {cv.compass(m[0])} {m[1]:.0f} kt off the north coast (NWS marine forecast). "
                         "Sea breezes and upslope rule; no shear line.")}, lad
     rows = station_rows(obs, lad)
-    tr = safely(trace_line, rows, m[0] if m is not None else None)
     # How many corridor stations are silent (Sam, 2026-10-22: "Lots of stations
     # not reporting today. Wreaked havoc with locating the shear" -- every
     # station via api.weather.gov stopped at 03:20).
     corridor = [r for r in rows if r["lat"] >= TRACE_SOUTH_LAT and (r.get("elev_ft") or 0) <= CORRIDOR_TOP_FT]
     silent = [r["name"] for r in corridor if r.get("dir") is None]
     note = (f"{len(silent)} of {len(corridor)} stations not reporting" if len(silent) >= LINE_SILENT_WARN else None)
-    if not tr or not tr.get("found"):
-        got = best_split(lad)
-        if got.get("found"):
-            got["traced"] = False
-            if note:
-                got = line_sane(got, (got["north_lat"] + got["south_lat"]) / 2, lad)
-        got["silent_note"] = note
-        return paia_check(got, lad), lad
-    (a_lat, a_lon), (o_lat, o_lon) = tr["anchor_ll"], tr["origin_ll"]
-    # Sam, 2026-10-23: "The shear will only run generally east - west (not
-    # strictly). A major deviation from this should result in a no call
-    # (Ulupalakua makes no sense)." No ladder fallback: the stations disagree.
-    tilt = abs(math.degrees(math.atan2(o_lat - a_lat, (o_lon - a_lon) * math.cos(math.radians(a_lat)))))
-    if tilt > LINE_EW_MAX_DEG:
-        return {"found": False, "no_call": True, "silent_note": note,
-                "why": f"the stations put it running {tilt:.0f}° off east-west"}, lad
-    # No wild extrapolation: a line close to north-south (under 0.02 deg of
-    # longitude between its ends) is not projected to the highway, and the
-    # crossing stays within the line's own latitudes and the Kula corridor.
-    if abs(o_lon - a_lon) < 0.02:
-        lat = (a_lat + o_lat) / 2
-    else:
-        lat = a_lat + (o_lat - a_lat) * (KULA_HWY_LON - a_lon) / (o_lon - a_lon)
-    lat = min(max(lat, min(a_lat, o_lat) - 0.01, TRACE_SOUTH_LAT), max(a_lat, o_lat) + 0.01)
-    got = {"found": True, "north_lat": lat, "south_lat": lat,
-           "north_of": tr["origin"], "south_of": tr["anchor"], "traced": True, "trace": tr,
+    # The old trace and ladder, logged beside the fit for comparison (Sam, 10-31).
+    tr = safely(trace_line, rows, m[0] if m is not None else None) or {}
+    old_lad = best_split(lad)
+    old = {"trace": [tr.get("origin"), tr.get("anchor")] if tr.get("found") else None,
+           "ladder": [str(old_lad["north_of"]), str(old_lad["south_of"])] if old_lad.get("found") else None}
+    f = safely(map_fit, rows) or {"found": False, "why": "the fit failed"}
+    if not f.get("found"):
+        return {"found": False, "why": f["why"], "silent_note": note, "old": old}, lad
+    lat = f["lat"]
+    got = {"found": True, "north_lat": lat, "south_lat": lat, "north_of": f["north_of"], "south_of": f["south_of"],
+           "traced": True, "fit": f, "trace": {"anchor_ll": f["west_ll"], "origin_ll": f["east_ll"]},
            "landmarks": [], "in_shear": False, "span_miles": 0.0,
-           "as_of": lad.observed_local.max(), "dropped": 0}
+           "as_of": lad.observed_local.max(), "dropped": 0, "old": old}
     if note:
         got = line_sane(got, lat, lad)
     got["silent_note"] = note
@@ -2437,6 +2490,8 @@ def log_trace(now: datetime, pos) -> None:
     got = trace_line(rows)
     got["t"] = f"{now:%H:%M}"
     got["ladder"] = ([str(pos["north_of"]), str(pos["south_of"])] if pos and pos.get("found") else None)
+    got["fit"] = ({k: pos["fit"][k] for k in ("lat", "tilt", "score")} if pos and pos.get("fit") else None)
+    got["old"] = pos.get("old") if pos else None
     entries.append(got)
     TRACE_LOG.write_text(json.dumps({"date": today, "entries": entries}), encoding="utf-8")
 
@@ -4114,7 +4169,9 @@ def build() -> str:
     # line text
     if pos and pos.get("found"):
         line_html = (f"{esc(_cap(line_between(pos['north_lat'], pos['south_lat'], pos['north_of'], pos['south_of'])))}"
-                     + (f"<div class=\"sub\">Traced from the backwind at {esc(pos['south_of'])} "
+                     + (f"<div class=\"sub\">Fitted to the station map: trades at {esc(pos['north_of'])}, "
+                        f"upslope at {esc(pos['south_of'])} nearest the line</div>" if pos.get("fit") else
+                        f"<div class=\"sub\">Traced from the backwind at {esc(pos['south_of'])} "
                         f"up to the trades at {esc(pos['north_of'])}</div>" if pos.get("traced") else
                         f"<div class=\"sub\">Last hour: trades at {esc(pos['north_of'])}, "
                         f"upslope at {esc(pos['south_of'])}</div>"))
