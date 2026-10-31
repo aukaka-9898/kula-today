@@ -1179,6 +1179,36 @@ def _recent_rain(stamp: str) -> tuple | None:
     return float(x.groupby("station_id").value.sum().max()), hour
 
 
+# Soaked, not just damp (Sam, 10-31: "the wet is not just dew. Pretty sure a
+# couple of days have soaked Kula"; 10-27..29 brought 37 mm at Kula Ag, 30 at
+# Keokea). 48 h: "If wet enough the low deck could persist for more than a day."
+SOAKED_HOURS = 48
+SOAKED_MM = 10.0
+
+
+@functools.lru_cache(maxsize=4)
+def _rain_total(stamp: str, hours: int) -> float | None:
+    """The most rain at one lower-slope gauge in the last `hours`, mm."""
+    end = datetime.strptime(stamp, "%Y-%m-%dT%H")
+    rows = _retrying(mesonet.get)("/mesonet/db/measurements", location="hawaii",
+                                  station_ids=RAIN_GAUGES, var_ids="RF_1_Tot300s",
+                                  start_date=f"{end - timedelta(hours=hours):%Y-%m-%dT%H:00:00}-10:00",
+                                  end_date=f"{end:%Y-%m-%dT%H:59:59}-10:00", row_mode="json", limit=100000)
+    tot: dict = {}
+    for r in rows:
+        if r.get("value") is not None:
+            tot[r["station_id"]] = tot.get(r["station_id"], 0.0) + float(r["value"])
+    return max(tot.values()) if tot else None
+
+
+def soaked(now: datetime) -> bool:
+    try:
+        mm = _rain_total(f"{now:%Y-%m-%dT%H}", SOAKED_HOURS)
+    except Exception:
+        return False
+    return mm is not None and mm >= SOAKED_MM
+
+
 def rained(now: datetime) -> bool:
     """Did the lower slope's gauges catch rain in the last 12 hours?"""
     try:
@@ -4299,16 +4329,18 @@ def build() -> str:
             if rained(now):
                 base_html = (f'<span class="num">About {ft(round(base["mid"], -2))} ft</span>'
                              f'<div class="sub">The lower slope is wet from the rain</div>')
-            elif side_sun is not None and side_sun < DRY_SUN_MIN:
+            else:
+                wet = ("The lower slope is still wet from recent rain" if soaked(now)
+                       else "The lower slope is still damp from the dew overnight")
                 # No sun, no drying (Sam, 10-31: "it's too wet to dry with no
                 # sun"; "wet ground = less sun"): no lift prediction.
+                if side_sun is not None and side_sun < DRY_SUN_MIN:
+                    sub = wet
+                else:
+                    sub = (f'{wet}. The highest station ({", ".join(_names)}) is at about '
+                           f'{ft(round(_up, -2))} ft: the base should lift toward that as it dries')
                 base_html = (f'<span class="num">About {ft(round(base["mid"], -2))} ft</span>'
-                             f'<div class="sub">The lower slope is still damp from the dew overnight</div>')
-            else:
-                base_html = (f'<span class="num">About {ft(round(base["mid"], -2))} ft</span>'
-                             f'<div class="sub">The lower slope is still damp from the dew overnight. The highest '
-                             f'station ({", ".join(_names)}) is at about {ft(round(_up, -2))} ft: the base should '
-                             f'lift toward that as the dew dries</div>')
+                             f'<div class="sub">{sub}</div>')
     if mc:
         base_label = "Morning<br>cloud" if mc.get("overhead") else "First<br>clouds"
         dew = (f"; Kula Ag {mc['ka_t']:.0f}/{mc['ka_td']:.0f} °F ({mc['ka_rh']:.0f}%)"
