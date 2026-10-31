@@ -2743,14 +2743,12 @@ def forecast_base_hours(day) -> dict:
             if not pd.isna(v)}
 
 
-# The sounding's afternoon from the latest call (Sam, 2026-10-31, after a
-# preview: "I'm sort of impressed, for today anyway. Include it on the page as
-# a projection from latest call"). The RRFS Kahului sounding's air at Kula
-# Ag's height, lifted to condensation, hour by hour; the page draws its CHANGE
-# from now on, started at the latest call -- the camera's last 30 minutes, or
-# the derived base. On 10-31 it ran 3,760-4,560 ft, 200-500 ft under the
-# camera, with the morning's dip and recovery about right. Free air over
-# Kahului: it cannot see the wet slope's own moisture feed.
+# The sounding forecast of the base (Sam, 2026-10-31, after a preview: "I'm
+# sort of impressed, for today anyway"). The RRFS Kahului sounding's air at
+# Kula Ag's height, lifted to condensation, hour by hour, drawn at its own
+# values on the live and wrap-up charts. Briefly a projection from the latest
+# call; Sam: adjusting it "defeats the purpose". On 10-31 it caught the
+# morning's moisture dip but ran 500-900 ft high after 11:30.
 def sounding_base_hours(day) -> tuple[dict, datetime]:
     """({hour: base ft}, run) from the RRFS Kahului sounding for `day`, 09-16."""
     path = sd.fetch("RRFS")
@@ -2799,20 +2797,6 @@ def sounding_forecast(day) -> dict | None:
             "label": "Forecast (sounding)",
             "note": (f"Forecast: the RRFS Kahului sounding (run {got['run']}), its air at Kula Ag's height "
                      f"lifted to condensation, hour by hour.")}
-
-
-def projection(now: datetime, start_ft: float, start_what: str) -> dict | None:
-    hours, run = sounding_base_hours(now.date())
-    if len(hours) < 2:
-        return None
-    hs = sorted(hours)
-    m = now.hour * 60 + now.minute
-    at = lambda x: float(np.interp(x, [h * 60 for h in hs], [hours[h] for h in hs]))
-    pts = [[m, round(start_ft, -1)]] + [[h * 60, round(start_ft + hours[h] - at(m), -1)] for h in hs if h * 60 > m]
-    if len(pts) < 2:
-        return None
-    return {"points": pts, "note": (f"Projection: the RRFS Kahului sounding's change through the afternoon "
-                                    f"(run {run:%d %H}Z), started from {start_what}.")}
 
 
 def forecast_cu_end(day):
@@ -3872,7 +3856,7 @@ def base_chart(obs, now, up, end, cid="basechart", title="Cloudbase, derived vs 
         note += " " + proj["note"]
     return (chart_html(cid, derived, forecast if with_forecast else [], span, note, title=title, camera=cam,
                        hidden=hid, nocall=noc, proj=proj["points"] if proj else None,
-                       proj_label=(proj or {}).get("label", "Projection (sounding)")),
+                       proj_label=(proj or {}).get("label", "Forecast (sounding)")),
             derived, forecast)
 
 
@@ -3884,7 +3868,7 @@ FORECAST_BAND_FT = 700
 
 
 def chart_html(cid, derived, forecast, span, note, nocu=None, title="", camera=None, hidden=None, nocall=None,
-               proj=None, proj_label="Projection (sounding)") -> str:
+               proj=None, proj_label="Forecast (sounding)") -> str:
     """Cloudbase line chart: derived (solid) and forecast (dashed) by minute of
     the day, the upslope shaded; derived and span may be empty for a forecast.
 
@@ -3955,7 +3939,7 @@ def chart_html(cid, derived, forecast, span, note, nocu=None, title="", camera=N
     data: {{ datasets: [
       {{ label: 'Derived', data: d.derived.map(pt), borderColor: '#2a78d6', borderWidth: 2, pointRadius: 0, tension: 0.3 }},
       {{ label: 'Forecast', data: d.forecast.map(pt), borderColor: '#eb6834', borderWidth: 2, borderDash: [6, 4], pointRadius: 3, pointBackgroundColor: '#eb6834', tension: 0.3 }},
-      {{ label: 'Projection', data: d.proj.map(pt), borderColor: '#8a5cd6', borderWidth: 2, borderDash: [3, 4], pointRadius: 0, tension: 0.3 }},
+      {{ label: 'Forecast (sounding)', data: d.proj.map(pt), borderColor: '#8a5cd6', borderWidth: 2, borderDash: [3, 4], pointRadius: 0, tension: 0.3 }},
       {{ label: 'Kekoa camera', data: d.camera.map(pt), showLine: false, pointRadius: 3, pointBackgroundColor: '#3f9d5a', borderColor: '#3f9d5a' }},
       {{ label: 'Camera hidden', data: d.hidden.map(function (m) {{ return {{x: m, y: ymin}}; }}), showLine: false, clip: false,
          pointRadius: 3, pointBackgroundColor: '#e0a100', borderColor: '#e0a100' }},
@@ -4568,12 +4552,11 @@ def build() -> str:
     # The day so far against the morning's forecast (Sam): the review's chart,
     # drawn live from the upslope to the newest reading.
     if up is not None and len(obs) and not day_over:
-        if cam_now and cam_now.get("ft"):
-            _start = (cam_now["ft"], f"the camera's {ft(cam_now['ft'])} ft ({cam_now['at']})")
-        else:
-            _start = (base["mid"], f"the derived {ft(round(base['mid'], -2))} ft") if base else None
-        proj = safely(projection, now, *_start) if _start and now.hour < 16 else None
-        live = safely(base_chart, obs, now, up, None, "livechart", "Cloudbase so far", False, proj)
+        # The sounding forecast's own values, all day (Sam, 10-31: a projection
+        # from the latest call "defeats the purpose" -- it cannot be judged).
+        safely(save_sounding_base, now)
+        live = safely(base_chart, obs, now, up, None, "livechart", "Cloudbase so far", False,
+                      safely(sounding_forecast, now))
         if live and live[1]:
             summary_html += live[0]
 
