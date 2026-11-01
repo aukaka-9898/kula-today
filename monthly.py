@@ -172,21 +172,37 @@ FLOWS = ("Trades", "Light / variable", "Non-trade")
 MIN_CELL_HOURS = 20
 
 
-def _upper_rh(first: str, last: str) -> pd.Series:
+# The combination (Sam, 11-01, "log the combo", after the base rose ~1,400 ft
+# above derived in the 10:00 sun with Park HQ drying, then fell back as the
+# sun faded): stirring x dryness of what is stirred in = Kula Ag's share of
+# clear-sky sun x (100 - upper RH)/100. Logged hourly beside the gap.
+SUN_STATION = "0119"                    # Kula Ag
+MIXING_LOG = HERE / "docs" / "base_mixing.csv"
+
+
+def _upper_rh(first: str, last: str) -> pd.DataFrame:
+    """Hourly mean upper-station RH and Kula Ag's sun fraction."""
     import mesonet
     parts = []
     for m in pd.period_range(first, last, freq="M"):
         s = max(pd.Timestamp(first), m.start_time)
         e = min(pd.Timestamp(last) + pd.Timedelta(days=1), m.end_time.normalize() + pd.Timedelta(days=1))
-        rows = mesonet.get("/mesonet/db/measurements", location="hawaii", station_ids=",".join(UPPER_RH),
-                           var_ids="RH_1_Avg", start_date=f"{s:%Y-%m-%d}T00:00:00-10:00",
+        rows = mesonet.get("/mesonet/db/measurements", location="hawaii",
+                           station_ids=",".join([*UPPER_RH, SUN_STATION]), var_ids="RH_1_Avg,SWin_1_Avg",
+                           start_date=f"{s:%Y-%m-%d}T00:00:00-10:00",
                            end_date=f"{e:%Y-%m-%d}T00:00:00-10:00", row_mode="json", limit=200000)
         parts.append(pd.DataFrame(rows))
-    w = pd.concat(parts)
+    w = pd.concat(parts, ignore_index=True)
     w["value"] = pd.to_numeric(w.value, errors="coerce")
     t = pd.to_datetime(w.timestamp).dt.tz_convert("Pacific/Honolulu")
     w["date"], w["hour"] = t.dt.strftime("%Y-%m-%d"), t.dt.hour
-    return w.groupby(["date", "hour", "station_id"]).value.mean().groupby(["date", "hour"]).mean()
+    up =w[w.station_id.isin(UPPER_RH) & (w.variable == "RH_1_Avg")]
+    rh = up.groupby(["date", "hour", "station_id"]).value.mean().groupby(["date", "hour"]).mean()
+    sw = w[(w.station_id == SUN_STATION) & (w.variable == "SWin_1_Avg")].dropna(subset=["value"]).copy()
+    sw["clear"] = mesonet.clear_sky(pd.DatetimeIndex(t.loc[sw.index]))
+    g = sw.groupby(["date", "hour"])[["value", "clear"]].sum()
+    sun = (g.value / g.clear).where(g.clear > 50)
+    return pd.DataFrame({"rh": rh, "sun": sun})
 
 
 def _flow(first: str, last: str) -> pd.Series:
@@ -220,9 +236,14 @@ def base_vs_aloft(last: str) -> dict:
     j["d_cam"] = j.groupby("date").cam.diff().where(step)
     j["d_der"] = j.groupby("date").derived.diff().where(step)
     j["gap"] = j.cam - j.derived
-    j = j.join(_upper_rh(j.date.min(), j.date.max()).rename("rh"), on=["date", "hour"])
+    j = j.join(_upper_rh(j.date.min(), j.date.max()), on=["date", "hour"])
     j = j.join(_flow(j.date.min(), j.date.max()), on=["date", "hour"]).dropna(subset=["rh", "flow"])
     j["aloft"] = pd.cut(j.rh, [-1] + [b for b, _ in RH_BANDS], labels=[n for _, n in RH_BANDS])
+    j["combo"] = j.sun * (100 - j.rh) / 100
+    j[["date", "hour", "cam", "derived", "gap", "rh", "sun", "combo", "flow"]].round(
+        {"cam": 0, "derived": 0, "gap": 0, "rh": 1, "sun": 2, "combo": 3}).to_csv(MIXING_LOG, index=False)
+    m = j.dropna(subset=["sun"])
+    r = {k: (round(float(m.gap.corr(m[k])), 2) if len(m) >= 10 else None) for k in ("combo", "rh", "sun")}
     cells = []
     for (aloft, flow), g in j.groupby(["aloft", "flow"], observed=True):
         moves = g.dropna(subset=["d_cam", "d_der"])
@@ -231,7 +252,7 @@ def base_vs_aloft(last: str) -> dict:
                       "swing": (round(float(moves.d_cam.std() / moves.d_der.std()), 1)
                                 if len(moves) >= 5 and moves.d_der.std() > 0 else None)})
     return {"from": j.date.min(), "to": j.date.max(), "hours": len(j), "days": int(j.date.nunique()),
-            "cells": cells}
+            "cells": cells, "r_gap": r, "r_hours": len(m)}
 
 
 def grid_lines(g: dict) -> list:
@@ -257,6 +278,11 @@ def grid_lines(g: dict) -> list:
                 row.append(f"{c['gap']:+,.0f} ft, x{c['swing'] if c['swing'] is not None else '--'} "
                            f"({c['hours']} h, {c['days']} d)")
         out.append(f"| {band} | " + " | ".join(row) + " |")
+    r = g.get("r_gap") or {}
+    if r.get("combo") is not None:
+        out += ["", f"Camera minus derived against the mixing combo (Kula Ag sun share x dryness aloft): "
+                    f"r {r['combo']:+.2f}; against upper RH alone {r['rh']:+.2f}, sun alone {r['sun']:+.2f} "
+                    f"({g['r_hours']} hours; hourly rows in docs/{MIXING_LOG.name})."]
     return out + [""]
 
 

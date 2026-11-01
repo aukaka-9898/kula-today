@@ -51,7 +51,7 @@ jobs:
         run: |
           git config user.name "kula-today bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add history docs/monthly_report.md docs/monthly_report.json docs/rules_status.json
+          git add history docs/monthly_report.md docs/monthly_report.json docs/rules_status.json docs/base_mixing.csv
           git diff --cached --quiet && exit 0
           git commit -m "Monthly rule check"
           for i in 1 2 3; do
