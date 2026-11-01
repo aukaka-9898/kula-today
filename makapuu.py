@@ -675,7 +675,8 @@ def inv_text(inv) -> str:
 # wind comes from, feathers on the clockwise side (northern hemisphere), short
 # 5, long 10, flag 50; calm is a circle. Coloured by the ridge rating; the
 # number under each barb is mph, as on the rest of the page.
-BARB_CLASS = {"good": "var(--good)", "fair": "var(--fair)", "warn": "var(--warn)"}
+# The badge's own colours (Sam, 11-01: "match badge colors").
+BARB_CLASS = {"good": "var(--chip-go)", "fair": "var(--chip-caution)", "warn": "var(--chip-stop)"}
 
 
 def _barb(cx: float, cy: float, dir_deg, mph, colour: str) -> str:
@@ -740,7 +741,7 @@ def barb_chart(fc: dict, ob: dict) -> str:
             '<style>.lbl{font:600 15px var(--display);fill:var(--muted)}.num{font:14px var(--mono);fill:var(--muted)}</style>'
             + "".join(parts) + '</svg></div>'
             '<div class="sub">Wind barbs in knots (short 5, long 10, flag 50; circle calm), pointing to where the wind '
-            'comes from; numbers are mph and gusts, then the direction in degrees. Green flyable, grey caution or light, amber not flyable.</div>')
+            'comes from; numbers are mph and gusts, then the direction in degrees. Coloured like the badge: green flyable, orange caution or light, red not flyable.</div>')
 
 
 # ---------------------------------------------------------------- The day's wrap-up
