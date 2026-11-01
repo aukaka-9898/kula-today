@@ -3562,6 +3562,24 @@ def _rh(t_f, td_f):
     return 100 * np.exp(17.625 * td / (243.04 + td)) / np.exp(17.625 * t / (243.04 + t))
 
 
+def slope_warming(obs: pd.DataFrame) -> bool:
+    """Kula Ag up WARM_F or more over the last hour with its humidity falling.
+    2026-11-01 under a deck and the mountain shadow it sat at 67.7 F from 06:00
+    while the page said "the slope is drying as it warms" (Sam: "Is it warming?")."""
+    ka = obs[obs.station_id == "001HI"].sort_values("observed")
+    if len(ka) < 2:
+        return False
+    k = ka.iloc[-1]
+    then = ka[ka.observed <= k.observed - pd.Timedelta("55min")]
+    if not len(then):
+        return False
+    p = then.iloc[-1]
+    return bool(k.temp_f - p.temp_f >= WARM_F and _rh(k.temp_f, k.dew_f) < _rh(p.temp_f, p.dew_f))
+
+
+WARM_F = 2.0
+
+
 def slope_lcl(obs: pd.DataFrame):
     """The middle of the slope stations' condensation levels now, or None."""
     core = _core(obs)
@@ -4485,9 +4503,9 @@ def build() -> str:
         # the sun, before the upslope registers (Sam, 2026-10-18: "latest
         # update lost the low cloud call" just as the first wisps formed).
         base_label = "First<br>clouds"
+        warm = "The slope is drying as it warms; the" if safely(slope_warming, obs) else "The"
         base_html = (f'About <span class="num">{ft(round(_fc, -2))} ft</span>'
-                     f'<div class="sub">The slope is drying as it warms; the derived base takes over '
-                     'once the upslope sets in</div>')
+                     f'<div class="sub">{warm} derived base takes over once the upslope sets in</div>')
     elif up is None and now.hour < 12:
         base_html = (f'Not yet<div class="sub">Derived once the upslope sets in, '
                      f"usually about {UPSLOPE_TYPICAL[now.month]}. Today's call is in the Forecast panel</div>")
