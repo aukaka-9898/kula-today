@@ -1815,8 +1815,10 @@ KULA_HWY_LON = -156.333
 # with defining trades. Today was not a trade day"; "If it's less than 8 knots
 # land/sea breezes will dominate anyway"). The marine grid off the north coast
 # -- the gradient wind, as convergence.trade_direction() reads it -- for this
-# hour: in the trade sector at 8 kt or more, or no line. Pāʻia's ENE 17 that
-# morning was the sea breeze, not the trades.
+# hour: in the trade sector at 8 kt or more, or no line. (Until 2026-11-01
+# this comment also called Pāʻia's ENE 17 that morning a sea breeze; that was
+# my inference, never Sam's. Until the same date the grid point was off
+# Oahu, not Maui -- see convergence.MARINE_GRID.)
 TRADE_DAY_MIN_KT = 8
 KMH_PER_KT = 1.852
 
