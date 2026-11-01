@@ -164,7 +164,7 @@ UPPER_RH = {"0151": "Park HQ", "0153": "Summit"}   # mean of the two
 RH_BANDS = ((60, "Dry aloft (under 60%)"), (90, "Moist (60-90%)"), (101, "Saturated (over 90%)"))
 # Offshore of Maui's north shore, the gradient wind before the island
 # bends it; Open-Meteo's archived model wind, hour by hour.
-FLOW_AT = (20.95, -156.15)
+FLOW_AT = (21.05, -156.12)              # convergence.MARINE_GRID's point, ~10 mi out
 FLOW_URL = "https://historical-forecast-api.open-meteo.com/v1/forecast"
 TRADE_DIRS = (20, 120)                  # from NNE through ESE
 LIGHT_MPH = 8
