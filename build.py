@@ -4447,10 +4447,14 @@ def build() -> str:
     # grey layer well above the crest read 0.99 and the page said "Low cloud is
     # down to about 3,500 ft" over a clear slope (Sam: "a mistaken
     # observation?"). The camera seeing the slope clear overrules them.
+    # The upper stations placing the layer above the slope count the same way
+    # (11-01 07:40: "Low cloud down to about 3,700 ft" under a deck based near
+    # 7,000 ft, the camera's last reading too old to overrule it).
+    deck = safely(upper_deck, obs, now) if up is None and 6 <= now.hour < 12 and len(obs) else None
     if mc and mc.get("overhead") and cam_now and cam_now["clear"]:
-        mc.update(overhead=False, aloft=True)
-    deck = (safely(upper_deck, obs, now)
-            if not mc and up is None and 6 <= now.hour < 12 and len(obs) else None)
+        mc.update(overhead=False, aloft="camera")
+    elif mc and mc.get("overhead") and deck:
+        mc.update(overhead=False, aloft="stations")
     global PHASE
     # Dew-morning phases: the base is always all stations; in phase 2 the
     # highest stations forecast how far it lifts once the dew dries (Sam,
@@ -4497,6 +4501,8 @@ def build() -> str:
                      f'About <span class="num">{ft(round(mc["base"], -2))} ft</span>'
                      f'<div class="sub">{mc["n_wet"]} of {mc["n"]} slope stations near saturation; '
                      + (f'Kekoa camera sees the slope clear under a cloud layer overhead{dew}</div>'
+                        if mc.get("aloft") == "camera" else
+                        f'a cloud layer is overhead, above the slope{dew}</div>'
                         if mc.get("aloft") else f'no cloud overhead yet{dew}</div>'))
     elif up is None and now.hour < 12 and PHASE.get("morning") and (_fc := safely(slope_lcl, obs)):
         # The morning line has fired today but the slope has dried below it in
