@@ -106,10 +106,10 @@
 "ft_am": 3900.0
 },
 "2026-11-02": {
-"base": "Normal",
-"rule": null,
+"base": "Leaning high",
+"rule": "B4",
 "thermal": "Strong",
-"made": "2026-11-01 11:31",
+"made": "2026-11-01 11:37",
 "ft": 4900.0
 }
 }
