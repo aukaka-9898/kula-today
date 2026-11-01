@@ -618,11 +618,6 @@ def _core(obs: pd.DataFrame) -> pd.DataFrame:
                & (obs.suspect == "")]
 
 
-def _sun_words(f: float) -> str:
-    return ("full sun" if f >= 0.9 else "mostly sun" if f >= 0.65 else
-            "about half sun" if f >= 0.4 else "mostly shade" if f >= 0.15 else "deep shade")
-
-
 # Off the Kula side: shaded by trade cloud to the north and west, not by the
 # Kula deck. With them in, the 11:30 replay of 2026-10-12 said the cloud
 # "tops out between Piiholo and Keokea".
@@ -772,6 +767,11 @@ def summary(obs: pd.DataFrame, ladder, up, verdict, pos, west, now: datetime,
             sun_change: float | None = None, evening=None, cu_clear: bool = False) -> str:
     """A few plain sentences on how the day is going, from rules, not a model.
 
+    Only what the rows below don't already say (Sam, 2026-11-01: "The Today
+    call and First Cloud call are redundant"): the base's trend, where the
+    cloud tops out, trade air on the lower west slope. Sun, upslope, wind,
+    thermals and the shear line are in their own rows.
+
     No cloudbase figures: an estimate from ground stations is not good to
     the foot, and the Cloudbase line already gives its range (Sam,
     2026-10-12). The base is told by its trend, the deck by the stations
@@ -839,7 +839,7 @@ def summary(obs: pd.DataFrame, ladder, up, verdict, pos, west, now: datetime,
         if all(s >= 0.75 for _, s in lit):
             out.append("The whole slope is in sun.")
         else:
-            text = f"Kula Ag had {_sun_words(ka)} over the last hour"
+            text = ""
             # Where the deck tops out (Sam, 2026-10-17): heights, and only from
             # the sunlight stations at 4,000 ft and up -- a shaded station
             # lower down sits UNDER the cloud ("between about 2,800 and 3,200
@@ -854,14 +854,14 @@ def summary(obs: pd.DataFrame, ladder, up, verdict, pos, west, now: datetime,
             if cu_clear:
                 pass        # no cumulus: a low reading is terrain shadow or haze, not a deck
             elif top == 0:
-                text += "; cloud reaches all the way to the Summit"
+                text = "Cloud reaches all the way to the Summit"
             else:
                 placed = False
                 if top is not None and above:
                     floor = max(high[top][1], cb["mid"]) if cb else high[top][1]
                     if floor < above[-1][1] - 200:
-                        text += (f"; the cloud tops out between about {round(floor, -2):,.0f} and "
-                                 f"{round(above[-1][1], -2):,.0f} ft, with sun above it")
+                        text = (f"The cloud tops out between about {round(floor, -2):,.0f} and "
+                                f"{round(above[-1][1], -2):,.0f} ft, with sun above it")
                         placed = True
                 # The lower Kula slope's average sun, as P4 uses: Kula Ag alone at
                 # 53% hid the tops while Keokea sat at 31% (Sam, 2026-10-17).
@@ -869,40 +869,15 @@ def summary(obs: pd.DataFrame, ladder, up, verdict, pos, west, now: datetime,
                 shaded_low = bool(lowk) and sum(lowk) / len(lowk) < 0.6
                 cam = safely(camera_now, "Puunianiau") if not placed and (shaded_low or top is not None) else None
                 if cam is not None:
-                    text += ("; cloud reaches about 6,900 ft (Puunianiau camera in cloud)" if cam
-                             else "; the cloud tops out below about 6,900 ft (Puunianiau camera clear)")
-            out.append(text + ".")
+                    text = ("Cloud reaches about 6,900 ft (Puunianiau camera in cloud)" if cam
+                            else "The cloud tops out below about 6,900 ft (Puunianiau camera clear)")
+            if text:
+                out.append(text + ".")
 
-    if evening and up is not None:
-        kind, since = evening
-        out.append({
-            "drain": f"Drainage has set in since about {since:%H:%M}; the upslope is over for the day.",
-            "over": f"The slope has been losing heat since about {since:%H:%M}, so the upslope is "
-                    f"over; drainage usually follows within about two hours.",
-            "ending": f"The upslope is ending: the slope has nearly stopped gaining heat since "
-                      f"about {since:%H:%M}.",
-        }[kind])
-    elif up is not None:
-        w = core[core.observed >= obs.observed.max() - pd.Timedelta("30min")].wind_mph.dropna()
-        if len(w):
-            mph = w.mean()
-            word = "a light" if mph < 6 else "a moderate" if mph < 10 else "a brisk"
-            line = f"Upslope has run since about {up:%H:%M} at {word} {mph:.0f} mph"
-        else:
-            line = f"Upslope has run since about {up:%H:%M}"
-        out.append(line + (f", and thermals seem {verdict.lower()}." if verdict and verdict != "--" else "."))
-    elif now.hour < 11:
-        out.append("Upslope has not set in yet.")
-
-    if pos and pos.get("found"):
-        tail = ("with trade air reaching the lower west slope at Pulehu" if west
-                else "with no trade air on the lower west slope")
-        out.append(f"Trades are holding the shear line "
-                   f"{line_text(pos)}, {tail}.")
-        if pos["north_lat"] <= NOT_FLYABLE_LAT:
-            out.append(NOT_FLYABLE)
-    elif west:
+    if west:
         out.append("Trade air is reaching the lower west slope at Pulehu.")
+    elif pos and pos.get("found"):
+        out.append("No trade air on the lower west slope.")
 
     return " ".join(out)
 
@@ -4458,7 +4433,6 @@ def build() -> str:
         mc.update(overhead=False, aloft=True)
     deck = (safely(upper_deck, obs, now)
             if not mc and up is None and 6 <= now.hour < 12 and len(obs) else None)
-    deck_sub = f'{deck["text"]} ({deck["why"]}). ' if deck else ""
     global PHASE
     # Dew-morning phases: the base is always all stations; in phase 2 the
     # highest stations forecast how far it lifts once the dew dries (Sam,
@@ -4512,10 +4486,10 @@ def build() -> str:
         # update lost the low cloud call" just as the first wisps formed).
         base_label = "First<br>clouds"
         base_html = (f'About <span class="num">{ft(round(_fc, -2))} ft</span>'
-                     f'<div class="sub">{deck_sub}The slope is drying as it warms; the derived base takes over '
+                     f'<div class="sub">The slope is drying as it warms; the derived base takes over '
                      'once the upslope sets in</div>')
     elif up is None and now.hour < 12:
-        base_html = (f'Not yet<div class="sub">{deck_sub}Derived once the upslope sets in, '
+        base_html = (f'Not yet<div class="sub">Derived once the upslope sets in, '
                      f"usually about {UPSLOPE_TYPICAL[now.month]}. Today's call is in the Forecast panel</div>")
     elif base and cu_clear:
         base_html = (f'No cumulus yet<div class="sub">They would form near about '
@@ -4688,28 +4662,13 @@ def build() -> str:
     said = safely(summary, obs, ladder, up, thermal_word, pos, west, now,
                   None if now.hour < first_hr + 1 else safely(sun_trend, now), evening,
                   cu_clear) if len(obs) else None
-    if up is None and now.hour < 12 and fc_today is not None:
-        ahead = safely(forecast_summary, fc_today, fc_pair, hours.get(now.date() - timedelta(days=1)),
-                       next((i for i in inv_today if i), None), "yesterday")
-        if ahead:
-            said = f"Today's forecast: {ahead}" + (f" {said}" if said else "")
-    if not mc and up is None and now.hour < 12 and PHASE.get("morning") and (_fc := safely(slope_lcl, obs)):
-        said = (f"First clouds will form at about {ft(round(_fc, -2))} ft; the slope is drying as it warms."
-                + (f" {said}" if said else ""))
+    # Mornings: the forecast, first clouds and low cloud are in their own
+    # rows; the paragraph keeps only the deck aloft and wet ground, which
+    # no row shows (Sam, 2026-11-01).
+    if WET_CAUSE and now.hour < 12 and not (mc and mc.get("dewy")) and PHASE.get("phase") != 2:
+        said = f"The ground is still wet from {WET_CAUSE}." + (f" {said}" if said else "")
     if deck:
         said = f'{deck["text"]} ({deck["why"]}).' + (f" {said}" if said else "")
-    if mc:
-        said = ((f"Low cloud is down to about {ft(round(mc['base'], -2))} ft" if mc.get("overhead") else
-                 ("No low cloud on the slope (camera); a cloud layer is overhead. " if mc.get("aloft") else
-                  "No cloud over Kula yet. ") + f"First clouds will form at about {ft(round(mc['base'], -2))} ft, "
-                 "a little higher if the slope warms first")
-                + ((f"; the ground is still wet from {WET_CAUSE} -- " if mc.get("dewy") and WET_CAUSE else
-                    "; the night's dew is evaporating -- " if mc.get("dewy") else
-                    "; " if mc.get("overhead") else ". ")
-                   + f"Kula Ag's dew point is up {mc['rise']:.0f} °F "
-                   f"since {mc['since']:%H:%M} and it is still {mc['ka_rh']:.0f}% humid."
-                   if mc.get("rise", 0) >= 1.5 else ".")
-                + (f" {said}" if said else ""))
     night = safely(overnight_line, now) if up is None or now.hour < 12 else None
     if night:
         said = night + (f" {said}" if said else "")
