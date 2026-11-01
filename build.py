@@ -1872,9 +1872,17 @@ COAST_TRADES = ("Paia", "Hamakuapoko Rd", "Peahi Rd")
 # calls. Re-anchor it before using it as a check (10-31).
 
 
+# Northerlies are trades (Sam, 2026-11-01: "Northy can occur and it will push
+# the shear south"; 10-30, Pulehu Rd 2 "from 15 deg at 17 mph ... This is not
+# a backwind"). The sector was 20-160, which let Pulehu at 015 count for
+# nothing and drew the line north of it. 345-160 on the blind tests: median
+# miss 0.35 / 0.28 mi against 0.43 / 0.29.
+FIT_TRADE_FROM = 345
+
+
 def _fit_class(d):
     d %= 360
-    return "T" if 20 <= d <= 160 else "U" if 185 <= d <= 320 else "O"
+    return "T" if d <= 160 or d >= FIT_TRADE_FROM else "U" if 185 <= d <= 320 else "O"
 
 
 def map_fit(rows: list) -> dict:
@@ -1927,7 +1935,7 @@ def line_now(obs: pd.DataFrame, now: datetime):
     # (Sam, 10-23: "Don't use forecasts to establish current conditions";
     # 10-31: the grid said SSW 5 kt while Paia had 100 at 21 mph).
     coast = [r for r in rows if r["name"] in COAST_TRADES and r.get("dir") is not None and r.get("mph") is not None
-             and cv._side(r["dir"]) == "trades" and r["mph"] >= TRADE_DAY_MIN_KT * 1.15078]
+             and _fit_class(r["dir"]) == "T" and r["mph"] >= TRADE_DAY_MIN_KT * 1.15078]
     if m is not None and not coast and (cv._side(m[0]) != "trades" or m[1] < TRADE_DAY_MIN_KT):
         return {"found": False, "no_call": True, "no_trades": True,
                 "why": (f"No trades: {cv.compass(m[0])} {m[1]:.0f} kt off the north coast (NWS marine forecast). "
@@ -1937,7 +1945,7 @@ def line_now(obs: pd.DataFrame, now: datetime):
     # whatever the forecast says. Paia silent: the forecast gate above stands.
     paia = next((r for r in rows if r["name"] == "Paia" and r.get("dir") is not None
                  and r.get("mph") is not None), None)
-    if paia and (cv._side(paia["dir"]) != "trades" or paia["mph"] < TRADE_DAY_MIN_KT * 1.15078):
+    if paia and (_fit_class(paia["dir"]) != "T" or paia["mph"] < TRADE_DAY_MIN_KT * 1.15078):
         return {"found": False, "no_call": True, "no_trades": True,
                 "why": (f"No trades at the coast: Paia {cv.compass(paia['dir'])} {paia['mph']:.0f} mph. "
                         "Sea breezes and upslope rule; no shear line.")}, lad
