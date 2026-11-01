@@ -1202,17 +1202,95 @@ def _rain_total(stamp: str, hours: int) -> float | None:
     return max(tot.values()) if tot else None
 
 
+# Still wet after the rain clock runs out (Sam, 11-01: "It didn't have a chance
+# to dry yesterday"; "absolutely include soil moisture"). The Mesonet probes,
+# at 06:00 each day -- in the rain itself they spike and fall back within a
+# day (Kula Ag 0.47 at 15:00 on 10-09, 0.39 next morning). Wet while a probe
+# is within SOIL_NEAR_PEAK of its post-soaking peak, and has stayed within it
+# since, after a rise of at least SOIL_SOAK. Two soakings to go on: after the
+# 10-09 front Kula Ag's air was back to dry-week humidity by 10-11 although the
+# probe stayed 0.07 high for two weeks; 0.03 calls 10-10/11 wet and 10-12 on
+# dry. Keokea rose only 0.055 in the front and dries slowly, which kept it
+# "wet" to 10-15; 10-27..30 rises were 0.10-0.20, hence 0.08. "Such soakings are not
+# common" -- logged daily to SOIL_LOG to check the margins.
+SOIL_PROBES = {"0119": "Kula Ag", "0116": "Keokea", "0118": "Pulehu"}
+SOIL_SOAK = 0.08                # volumetric water content
+SOIL_NEAR_PEAK = 0.03
+SOIL_DAYS = 14
+SOIL_LOG = HERE / "docs" / "soil_log.csv"
+
+
+@functools.lru_cache(maxsize=2)
+def soil_state(day: str) -> dict:
+    """Per probe: today's 06:00 soil moisture, the peak of the last
+    SOIL_DAYS mornings, the rise into it and whether the slope is still wet."""
+    d = datetime.strptime(day, "%Y-%m-%d")
+    rows = _retrying(mesonet.get)("/mesonet/db/measurements", location="hawaii",
+                                  station_ids=",".join(SOIL_PROBES), var_ids="SM_1_Avg",
+                                  start_date=f"{d - timedelta(days=SOIL_DAYS + 3):%Y-%m-%d}T06:00:00-10:00",
+                                  end_date=f"{d:%Y-%m-%d}T06:59:59-10:00", row_mode="json", limit=100000)
+    x = pd.DataFrame([r for r in rows if r.get("value") is not None])
+    out = {}
+    if x.empty:
+        return out
+    x["t"] = pd.to_datetime(x.timestamp).dt.tz_convert(HST).dt.tz_localize(None)
+    x["value"] = x.value.astype(float)
+    x = x[x.t.dt.hour == 6]
+    for sid, g in x.groupby("station_id"):
+        s = g.groupby(g.t.dt.date).value.mean()
+        if s.index[-1] != d.date():
+            continue
+        recent = s[s.index > (d - timedelta(days=SOIL_DAYS)).date()]
+        pk = recent.idxmax()
+        pre = s[(s.index < pk) & (s.index >= pk - timedelta(days=3))]
+        rise = float(recent.max() - pre.min()) if len(pre) else 0.0
+        below = float(recent.max() - s.iloc[-1])
+        held = float(recent.max() - s[s.index >= pk].min()) <= SOIL_NEAR_PEAK
+        out[SOIL_PROBES.get(sid, sid)] = {"sm": round(float(s.iloc[-1]), 3), "peak": round(float(recent.max()), 3),
+                                          "peak_day": f"{pk:%Y-%m-%d}", "rise": round(rise, 3),
+                                          "below": round(below, 3),
+                                          "wet": rise >= SOIL_SOAK and held and below <= SOIL_NEAR_PEAK}
+    return out
+
+
+def soil_wet(now: datetime) -> bool:
+    try:
+        return any(p["wet"] for p in soil_state(f"{now:%Y-%m-%d}").values())
+    except Exception:
+        return False
+
+
+def log_soil(now: datetime) -> None:
+    """One row per probe per day, the first build after 07:00."""
+    if now.hour < 7:
+        return
+    day = f"{now:%Y-%m-%d}"
+    if SOIL_LOG.exists() and f"\n{day}," in "\n" + SOIL_LOG.read_text(encoding="utf-8"):
+        return
+    st = soil_state(day)
+    if not st:
+        return
+    new = not SOIL_LOG.exists()
+    with SOIL_LOG.open("a", encoding="utf-8") as f:
+        if new:
+            f.write("date,probe,sm_06,peak,peak_day,rise,below_peak,wet\n")
+        for name, p in st.items():
+            f.write(f"{day},{name},{p['sm']},{p['peak']},{p['peak_day']},{p['rise']},{p['below']},{int(p['wet'])}\n")
+
+
 def wet_cause(now: datetime) -> str | None:
     """'rain for two days' or 'rain yesterday' when the slope is soaked (10 mm
-    in 48 h at a lower gauge), else None (Sam, 10-31: describe it that way and
-    "fix all references to dew"). Two days: 2 mm or more in each 24 h."""
+    in 48 h at a lower gauge), 'the rain earlier in the week' when the rain is
+    older but the soil probes say the slope is still wet, else None (Sam,
+    10-31: describe it that way and "fix all references to dew"). Two days:
+    2 mm or more in each 24 h."""
     try:
         last = _rain_total(f"{now:%Y-%m-%dT%H}", 24) or 0.0
         both = _rain_total(f"{now:%Y-%m-%dT%H}", SOAKED_HOURS) or 0.0
     except Exception:
-        return None
+        return "the rain earlier in the week" if soil_wet(now) else None
     if both < SOAKED_MM:
-        return None
+        return "the rain earlier in the week" if soil_wet(now) else None
     return "rain for two days" if last >= 2 and both - last >= 2 else "rain yesterday"
 
 
@@ -4686,6 +4764,7 @@ def build() -> str:
 
     entries = safely(log_line, now, pos) or []
     safely(log_cameras, now)
+    safely(log_soil, now)
     safely(log_forecast_latest, now)
     safely(review_summary, now)
     review, today_kind, today_title = None, f"Measured today · {now:%H:%M} HST", "Today"
