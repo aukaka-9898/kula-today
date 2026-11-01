@@ -3553,6 +3553,47 @@ def morning_cloud(obs: pd.DataFrame, now: datetime):
     return out
 
 
+# A deck above a dry slope. 2026-11-01 the sky read 0.98 all night, the
+# Kekoa camera saw the slope clear and Nene Nest and Summit sat at 98-99%
+# with Park HQ at 95%; morning_cloud found no damp slope, so the page said
+# only "First clouds will form at about 3,800 ft" (Sam: "kula has an
+# extensive deck"; the crater camera socked in; the soundings did not show
+# it). The upper stations place the layer between the highest one below it
+# and the lowest one in it.
+DECK_STATIONS = ("Kula 1", "Kamehamenui 1", "Park HQ", "Nene Nest", "Summit")
+DECK_RH = 97                    # per cent: an upper station in the cloud
+
+
+def upper_deck(obs: pd.DataFrame, now: datetime):
+    """{"text", "why"}: a cloud layer over a dry slope, placed by the upper
+    stations, or None when the sky is not overcast or no upper station is in it."""
+    up = obs[obs.name.isin(DECK_STATIONS) & (obs.suspect == "")]
+    last = up.sort_values("observed").groupby("station_id").tail(1)
+    last = last[last.observed > obs.observed.max() - pd.Timedelta("45min")].sort_values("elev_ft")
+    if not len(last):
+        return None
+    last = last.assign(rh=_rh(last.temp_f, last.dew_f))
+    inside = last[last.rh >= DECK_RH]
+    if not len(inside):
+        return None
+    end = now.replace(tzinfo=None)
+    sky = safely(kula_sky, end - timedelta(minutes=45), end)
+    if sky is None or not len(sky) or float(sky.iloc[-1]) < SKY_OVERCAST:
+        return None
+    low, high = inside.iloc[0], inside.iloc[-1]
+    below = last[last.elev_ft < low.elev_ft]
+    above = last[last.elev_ft > high.elev_ft]
+    base = (f"between about {ft(round(below.iloc[-1].elev_ft, -2))} and {ft(round(low.elev_ft, -2))} ft"
+            if len(below) else f"below about {ft(round(low.elev_ft, -2))} ft")
+    top = ("to the summit or above" if high["name"] == "Summit" else
+           f"to between about {ft(round(high.elev_ft, -2))} and {ft(round(above.iloc[0].elev_ft, -2))} ft"
+           if len(above) else f"to above {ft(round(high.elev_ft, -2))} ft")
+    names = list(inside["name"])
+    who = " and ".join(names) if len(names) <= 2 else ", ".join(names[:-1]) + " and " + names[-1]
+    return {"text": f"A cloud layer is overhead, from {base} {top}",
+            "why": f"{who} in it" + (f", {below.iloc[-1]['name']} below" if len(below) else "")}
+
+
 # -- sky over the Kula stations ---------------------------------------------
 # Sky emissivity (LWin / sigma T^4) from the Mesonet radiometers: high under
 # cloud, low under clear sky, whatever the sun angle. One station alone is
@@ -4337,6 +4378,9 @@ def build() -> str:
     # observation?"). The camera seeing the slope clear overrules them.
     if mc and mc.get("overhead") and cam_now and cam_now["clear"]:
         mc.update(overhead=False, aloft=True)
+    deck = (safely(upper_deck, obs, now)
+            if not mc and up is None and 6 <= now.hour < 12 and len(obs) else None)
+    deck_sub = f'{deck["text"]} ({deck["why"]}). ' if deck else ""
     global PHASE
     # Dew-morning phases: the base is always all stations; in phase 2 the
     # highest stations forecast how far it lifts once the dew dries (Sam,
@@ -4390,10 +4434,10 @@ def build() -> str:
         # update lost the low cloud call" just as the first wisps formed).
         base_label = "First<br>clouds"
         base_html = (f'About <span class="num">{ft(round(_fc, -2))} ft</span>'
-                     '<div class="sub">The slope is drying as it warms; the derived base takes over '
+                     f'<div class="sub">{deck_sub}The slope is drying as it warms; the derived base takes over '
                      'once the upslope sets in</div>')
     elif up is None and now.hour < 12:
-        base_html = ('Not yet<div class="sub">Derived once the upslope sets in, '
+        base_html = (f'Not yet<div class="sub">{deck_sub}Derived once the upslope sets in, '
                      f"usually about {UPSLOPE_TYPICAL[now.month]}. Today's call is in the Forecast panel</div>")
     elif base and cu_clear:
         base_html = (f'No cumulus yet<div class="sub">They would form near about '
@@ -4574,6 +4618,8 @@ def build() -> str:
     if not mc and up is None and now.hour < 12 and PHASE.get("morning") and (_fc := safely(slope_lcl, obs)):
         said = (f"First clouds will form at about {ft(round(_fc, -2))} ft; the slope is drying as it warms."
                 + (f" {said}" if said else ""))
+    if deck:
+        said = f'{deck["text"]} ({deck["why"]}).' + (f" {said}" if said else "")
     if mc:
         said = ((f"Low cloud is down to about {ft(round(mc['base'], -2))} ft" if mc.get("overhead") else
                  ("No low cloud on the slope (camera); a cloud layer is overhead. " if mc.get("aloft") else
