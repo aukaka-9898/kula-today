@@ -3966,7 +3966,9 @@ def camera_rows(day: str):
     if not CAMERA_BASE_LOG.exists():
         return pd.DataFrame()
     c = pd.read_csv(CAMERA_BASE_LOG, dtype={"date": str, "time": str})
-    return c[c.date == day]
+    # The log is appended as frames are read, not in frame order (12:45 lands
+    # before 12:36), and the chart drew the line back and forth (11-01).
+    return c[c.date == day].sort_values("time", kind="stable")
 
 
 def camera_recent(now: datetime) -> dict | None:
