@@ -101,29 +101,29 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><a class="homebtn" href="/">&larr; Home</a><div class="tag">Kula soaring briefing</div><h1>Kula Today</h1></div>
-    <div class="date">Updated Sun 01 Nov 2026 · 08:52 HST</div>
+    <div class="date">Updated Sun 01 Nov 2026 · 09:07 HST</div>
   </header>
 
   <div>
     <!-- The FAA viewer shows its station list before it opens the camera; the latest frame covers that until it has (Sam, 2026-10-25). -->
-    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" title="Red Hill webcam, live, looking south along the Kula slope" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="camera.jpg?2026-11-01T08:52" alt=""></div>
+    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" title="Red Hill webcam, live, looking south along the Kula slope" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="camera.jpg?2026-11-01T09:07" alt=""></div>
     <div class="camcap">Red Hill webcam, live. FAA WeatherCam (Kekoa). <a href="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" target="_blank" rel="noopener">Open full size</a></div>
   </div>
 
   <div class="cols">
     <section class="panel today" aria-labelledby="t-today">
-      <div class="kind">Measured today · 08:52 HST</div>
+      <div class="kind">Measured today · 09:07 HST</div>
       <div class="head"><h2 id="t-today">Today</h2><span class="chip warn">Flat</span></div>
       <div class="sub" style="display:flex;align-items:center;gap:6px;margin:2px 0 6px"><img src="https://api.weather.gov/icons/land/day/rain_showers,40/rain_showers,50?size=small" width="34" height="34" alt="Scattered Rain Showers (52%)" title="NWS: Scattered Rain Showers (52%)" loading="lazy" style="vertical-align:middle;border-radius:4px;margin-left:6px"><span>NWS today: Scattered Rain Showers (52%)</span></div>
-      <p class="summary">A cloud layer is overhead, from between about 6,600 and 6,600 ft to the summit or above (Kamehamenui 1, Park HQ, Nene Nest and Summit in it, Kula 1 below).</p><div class="watch"><div class="kind">What to watch</div><ul><li>Kula Ag&#x27;s dew point has stopped rising: the wet ground is giving up less moisture, so the base should start to lift. Possible cap: once it lifts, the wet slope can keep feeding moisture and hold the base down for hours. <span class="pid">P3 · Base will lift</span></li></ul></div>
+      <div class="watch"><div class="kind">What to watch</div><ul><li>Kula Ag&#x27;s dew point has stopped rising: the night&#x27;s dew is about spent, so the base should start to lift. Possible cap: once it lifts, the wet slope can keep feeding moisture and hold the base down for hours. <span class="pid">P3 · Base will lift</span></li></ul></div>
       <dl>
         <dt><a href="details.html#t-thermal">Thermals</a></dt><dd>Probably <strong>flat</strong> (forecast)<div class="sub">thermal.py on the forecast air; measured rating just after 10:00</div></dd>
-        <dt><a href="details.html#t-thermal">First<br>clouds</a></dt><dd>About <span class="num">3,500 ft</span><div class="sub">4 of 11 slope stations near saturation; a cloud layer is overhead, above the slope; Kula Ag 69/66 °F (91%), dew point up 4 °F since 06:30 as the wet ground dries</div></dd>
+        <dt><a href="details.html#t-thermal">First<br>clouds</a></dt><dd>About <span class="num">3,700 ft</span><div class="sub">3 of 11 slope stations near saturation; no cloud overhead yet; Kula Ag 69/66 °F (91%), dew point up 4 °F since 06:30 as the night's dew evaporates</div></dd>
         <dt><a href="details.html#t-ladder">Sun</a></dt><dd><span class="num">49%</span> of clear sky forecast, 10:00–14:00 (GFS)<div class="sub">Measured from about 09:30; Kula is in Haleakala's shadow until about 08:15</div></dd>
         <dt><a href="details.html#stationmap">Shear line</a></dt><dd>Crossing Kula Highway near Omaopio (forecast)<div class="sub">Trades NE (040°). Measured once the upslope sets in</div></dd>
         
-        <dt><a href="details.html#stationmap">Upslope</a></dt><dd>Not yet<div class="sub">Usually starts around 08:45</div></dd>
-        <dt><a href="details.html#stationmap">Wind</a></dt><dd><span class="num">1 mph</span>, gusts to 6<div class="sub">Lower elevations, 10 stations, last hour</div></dd>
+        <dt><a href="details.html#stationmap">Upslope</a></dt><dd>No clear upslope today</dd>
+        <dt><a href="details.html#stationmap">Wind</a></dt><dd><span class="num">1 mph</span>, gusts to 5<div class="sub">Lower elevations, 10 stations, last hour</div></dd>
       </dl>
     </section>
     <section class="panel tomorrow" aria-labelledby="t-tomorrow">
@@ -157,7 +157,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
   </div>
 
 </div>
-<!-- build problems: none -->
+<!-- build problems: HCDP observations, using the last good fetch: MesonetDown: Mesonet out this build: ConnectTimeout: HTTPSConnectionPool(host='api.hcdp.ikewai.org', port=443): Max retries exceeded with url: /mesonet/db/measurements?location=hawaii&station_ids=0115%2C0118%2C0144%2C0116%2C0119%2C0145%2C0151%2C0152%2C0153%2C0143&var_ids=Tair_1_Avg%2CRH_1_Avg%2CWS_1_Avg%2CWDrs_1_Avg%2CWS_1_Max&start_date=2026-11-01T00%3A00%3A00-10%3A00&row_mode=json&limit=100000 (Caused by ConnectTimeoutError(<HTTPSConnection(host='api.hcdp.ikewai.org', port=443) at 0x737e3dd36f30), 'Connection to api.hcdp.ikewai.org timed out. (connect timeout=10)')); Mesonet sun: MesonetDown: Mesonet out this build (ConnectTimeout on /mesonet/db/measurements); sun ladder from 07:30 reused; kula_sky: MesonetDown: Mesonet out this build (ConnectTimeout on /mesonet/db/measurements); kula_sky: MesonetDown: Mesonet out this build (ConnectTimeout on /mesonet/db/measurements); overnight_line: MesonetDown: Mesonet out this build (ConnectTimeout on /mesonet/db/measurements) -->
 <script>
 /* Catch up with a new build within ~2 minutes (Sam, 2026-10-17: "the page
    does not seem to autoupdate"). stations.json's "made" is the build time;
@@ -165,7 +165,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
    browser's 10-minute cached copy is bypassed. The 15-minute refresh stays
    as a backstop. */
 (function () {
-  var built = "2026-11-01T08:52";
+  var built = "2026-11-01T09:07";
   function check() {
     fetch("stations.json?" + Date.now(), {cache: "no-store"})
       .then(function (r) { return r.json(); })
