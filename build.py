@@ -1872,9 +1872,11 @@ COAST_TRADES = ("Paia", "Hamakuapoko Rd", "Peahi Rd")
 # calls. Re-anchor it before using it as a check (10-31).
 
 
-# Northerlies are trades (Sam, 2026-11-01: "Northy can occur and it will push
-# the shear south"; 10-30, Pulehu Rd 2 "from 15 deg at 17 mph ... This is not
-# a backwind"). The sector was 20-160, which let Pulehu at 015 count for
+# "T" is flow from the north side, whatever drives it -- not only the trades
+# (Sam, 2026-11-01: "Northy can occur and it will push the shear south";
+# "It's not really trades though. Don't get trapped by the term"; 10-30,
+# Pulehu Rd 2 "from 15 deg at 17 mph ... This is not a backwind"). The
+# sector was 20-160, which let Pulehu at 015 count for
 # nothing and drew the line north of it. 345-160 on the blind tests: median
 # miss 0.35 / 0.28 mi against 0.43 / 0.29.
 FIT_TRADE_FROM = 345
