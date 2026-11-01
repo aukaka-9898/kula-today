@@ -920,11 +920,11 @@ def forecast_summary(r, pair, today_pair, inv, today_word: str) -> str:
         out.append(f"Thermals probably {word.lower()}.")
     line = r["shear_location"]
     if line is None or pd.isna(line):
-        out.append("No trade line is expected.")
+        out.append("No shear line is expected.")
     elif not pd.isna(r["dir_deg"]):
         where = (line_at(dict(cv.LANDMARKS)[line]) if line in dict(cv.LANDMARKS)
                  else f"near {line}")
-        out.append(f"Trades from the {cv.compass(r['dir_deg'])} should put the shear line {where}.")
+        out.append(f"Wind from the {cv.compass(r['dir_deg'])} offshore should put the shear line {where}.")
         if dict(cv.LANDMARKS).get(line, 99) <= NOT_FLYABLE_LAT:
             out.append(NOT_FLYABLE)
     return " ".join(out)
@@ -1909,9 +1909,9 @@ def map_fit(rows: list) -> dict:
     north_t = float(w[(c == "T") & north].sum())
     up_s = float(w[(c == "U") & ~north].sum())
     if north_t < FIT_MIN_T:
-        return {"found": False, "why": "no trades north of the upslope"}
+        return {"found": False, "why": "no flow from the north side north of the upslope"}
     if up_s < FIT_MIN_U:
-        return {"found": False, "why": "no upslope south of the trades"}
+        return {"found": False, "why": "no upslope south of the north-side flow"}
     # The stations either side nearest the line, for the words.
     dist = lambda n: abs(lat[n] - at(lon[n]))
     tn = [n for n in range(len(use)) if c[n] == "T" and north[n]]
@@ -1936,9 +1936,9 @@ def line_now(obs: pd.DataFrame, now: datetime):
     # 10-31: the grid said SSW 5 kt while Paia had 100 at 21 mph).
     coast = [r for r in rows if r["name"] in COAST_TRADES and r.get("dir") is not None and r.get("mph") is not None
              and _fit_class(r["dir"]) == "T" and r["mph"] >= TRADE_DAY_MIN_KT * 1.15078]
-    if m is not None and not coast and (cv._side(m[0]) != "trades" or m[1] < TRADE_DAY_MIN_KT):
+    if m is not None and not coast and (_fit_class(m[0]) != "T" or m[1] < TRADE_DAY_MIN_KT):
         return {"found": False, "no_call": True, "no_trades": True,
-                "why": (f"No trades: {cv.compass(m[0])} {m[1]:.0f} kt off the north coast (NWS marine forecast). "
+                "why": (f"No flow from the north: {cv.compass(m[0])} {m[1]:.0f} kt off the north coast (NWS marine forecast). "
                         "Sea breezes and upslope rule; no shear line.")}, lad
     # Paia is the check (Sam, 2026-11-01: "Paia should be effective as a shear
     # check"): reporting but not in the trades at TRADE_DAY_MIN_KT, no line,
@@ -1947,7 +1947,7 @@ def line_now(obs: pd.DataFrame, now: datetime):
                  and r.get("mph") is not None), None)
     if paia and (_fit_class(paia["dir"]) != "T" or paia["mph"] < TRADE_DAY_MIN_KT * 1.15078):
         return {"found": False, "no_call": True, "no_trades": True,
-                "why": (f"No trades at the coast: Paia {cv.compass(paia['dir'])} {paia['mph']:.0f} mph. "
+                "why": (f"No flow from the north at the coast: Paia {cv.compass(paia['dir'])} {paia['mph']:.0f} mph. "
                         "Sea breezes and upslope rule; no shear line.")}, lad
     # How many corridor stations are silent (Sam, 2026-10-22: "Lots of stations
     # not reporting today. Wreaked havoc with locating the shear" -- every
@@ -2051,8 +2051,8 @@ def paia_check(got: dict, lad: pd.DataFrame) -> dict:
     if d is None or d <= LINE_SOUTH_MAX_DIR or d >= 330:
         return got
     return {"found": False, "no_call": True, "silent_note": got.get("silent_note"),
-            "why": (f"the stations put it at Naalae Road or further south, which takes trades from "
-                    f"the north; {where}'s trades from {d:03.0f}° put it well north of there")}
+            "why": (f"the stations put it at Naalae Road or further south, which takes wind from "
+                    f"the north; {where}'s wind from {d:03.0f}° puts it well north of there")}
 
 
 def line_sane(got: dict, lat: float, lad: pd.DataFrame) -> dict:
@@ -2065,10 +2065,10 @@ def line_sane(got: dict, lat: float, lad: pd.DataFrame) -> dict:
         d, where = trades_north_of(lad, lat)
     if d is not None and d <= LINE_SOUTH_MAX_DIR:
         return got
-    seen = (f"the trades at {where} are from {d:.0f}°" if d is not None
-            else "no station north of it is in the trades")
+    seen = (f"the wind at {where} is from {d:.0f}°" if d is not None
+            else "no station north of it has flow from the north side")
     return {"found": False, "no_call": True,
-            "why": f"the stations put it south of Kula Ag, which takes trades from the north; {seen}"}
+            "why": f"the stations put it south of Kula Ag, which takes wind from the north; {seen}"}
 
 
 # -- forecast ------------------------------------------------------------------
@@ -4574,18 +4574,18 @@ def build() -> str:
     # line text
     if pos and pos.get("found"):
         line_html = (f"{esc(_cap(line_text(pos)))}"
-                     + (f"<div class=\"sub\">Fitted to the station map: trades at {esc(pos['north_of'])}, "
+                     + (f"<div class=\"sub\">Fitted to the station map: flow from the north at {esc(pos['north_of'])}, "
                         f"upslope at {esc(pos['south_of'])} nearest the line</div>" if pos.get("fit") else
                         f"<div class=\"sub\">Traced from the backwind at {esc(pos['south_of'])} "
-                        f"up to the trades at {esc(pos['north_of'])}</div>" if pos.get("traced") else
-                        f"<div class=\"sub\">Last hour: trades at {esc(pos['north_of'])}, "
+                        f"up to the north-side flow at {esc(pos['north_of'])}</div>" if pos.get("traced") else
+                        f"<div class=\"sub\">Last hour: flow from the north at {esc(pos['north_of'])}, "
                         f"upslope at {esc(pos['south_of'])}</div>"))
         if pos["north_lat"] <= NOT_FLYABLE_LAT:
             line_html += f'<div class="alert">{esc(NOT_FLYABLE)}</div>'
         paia = lad[lad.name == "Paia"]
         if len(paia):
             p = paia.iloc[0]
-            line_html += (f"<div class=\"sub\">Trades at the coast: Paia "
+            line_html += (f"<div class=\"sub\">At the coast: Paia "
                           f"{p.wind_dir:03.0f}° at {p.wind_mph:.0f} mph</div>")
     elif pos:
         line_html = (f"{'No call' if pos.get('no_call') else 'Not found'}"
@@ -4623,9 +4623,9 @@ def build() -> str:
             if fc_today is not None:
                 name = fc_today["shear_location"]
                 lat = dict(cv.LANDMARKS).get(name) if isinstance(name, str) else None
-                where = _cap(line_at(lat)) if lat else "No trade line (trades absent)"
+                where = _cap(line_at(lat)) if lat else "No shear line (no flow from the north side)"
                 trades = ("" if pd.isna(fc_today["dir_deg"]) else
-                          f"Trades {cv.compass(fc_today['dir_deg'])} ({fc_today['dir_deg']:03.0f}°). ")
+                          f"Offshore wind {cv.compass(fc_today['dir_deg'])} ({fc_today['dir_deg']:03.0f}°). ")
                 line_html = (f"{esc(where)} (forecast)<div class=\"sub\">{trades}"
                              "Measured once the upslope sets in</div>")
                 if lat and lat <= NOT_FLYABLE_LAT:
@@ -4810,7 +4810,7 @@ def build() -> str:
         r = week.loc[tom]
         inv_t = next((i for i in (inv_tom if tom > now.date() else inv_today) if i), None)
         line_t = r["shear_location"]
-        line_t = ("No trade line (trades absent)" if line_t is None or pd.isna(line_t) else
+        line_t = ("No shear line (no flow from the north side)" if line_t is None or pd.isna(line_t) else
                   _cap(line_at(dict(cv.LANDMARKS)[line_t])) if line_t in dict(cv.LANDMARKS)
                   else f"Near {line_t}")
         line_alert = (f'<div class="alert">{esc(NOT_FLYABLE)}</div>'
@@ -4864,7 +4864,7 @@ def build() -> str:
         <dt><a href="details.html#t-thermal">Thermals</a></dt><dd>Probably {esc(strength_word(r['thermal']).lower())}<div class="sub">thermal.py on the forecast air (+3 F, it runs cool); within one category of the measured rating on every test day</div></dd>
         <dt><a href="details.html#t-thermal">Cloudbase</a></dt><dd>{esc(cb_head)}<div class="sub">{esc(cb_sub)}</div></dd>
         <dt>Sun</dt><dd><span class="num">{pct(r['sun'])}</span> of clear sky, 10:00–14:00 (GFS)<div class="sub">The model can't see the slope's own cumulus: when it says 90% or more, Kula has measured about 80%. Good flying days measure about 80%, overcast about 50%, socked in 20%.</div></dd>
-        <dt>Shear line</dt><dd>{esc(line_t)}<div class="sub">Trades {esc(wind_t)}</div>{line_alert}</dd>
+        <dt>Shear line</dt><dd>{esc(line_t)}<div class="sub">Offshore wind {esc(wind_t)}</div>{line_alert}</dd>
       </dl>
       <div class="sub">Forecast as of {fc_made.astimezone(HST):%H:%M} HST</div>{rules_line()}{safely(accuracy_line, now) or ""}"""
         if tom > now.date():
