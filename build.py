@@ -4601,7 +4601,10 @@ def build() -> str:
                       + (" than usual" if pos.get("found") else "") + "</div>")
     west = safely(west_intrusion, obs) if len(obs) else None
     if west:
-        line_html += f'<div class="alert">{esc(west)}; the line may be further south than shown</div>'
+        # Only beside a line: under "Not found" it read as if one were shown (Sam, 11-01).
+        line_html += (f'<div class="alert">{esc(west)}'
+                      + ("; the line may be further south than shown" if pos and pos.get("found") else "")
+                      + "</div>")
     # Like the base, the line only means something while the upslope runs:
     # before it the slope stations read the night's drainage, which the ladder
     # took for trades (07:55 on 2026-10-14 put the line "north of Pukalani").
