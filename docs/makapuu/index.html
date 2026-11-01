@@ -102,25 +102,50 @@ tr.wk td { border-bottom: 0; padding-bottom: 2px; } tr.wkh td { white-space: nor
 <div class="wrap">
   <header>
     <div><a class="homebtn" href="/">&larr; Home</a><div class="tag">Makapu&#8216;u soaring briefing</div><h1>Makapu&#8216;u Today</h1></div>
-    <div class="date">Updated Sat 31 Oct 2026 · 16:52 HST</div>
+    <div class="date">Updated Sat 31 Oct 2026 · 17:07 HST</div>
   </header>
   <div class="databadge"><div class="big">Under construction</div></div>
   <div>
-    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/760/details/camera/12783/full" title="Kāne&#8216;ohe Bay webcam, live, looking southeast down the Ko&#8216;olau toward Makapu&#8216;u" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="camera.jpg?2026-10-31T16:52" alt=""></div>
+    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/760/details/camera/12783/full" title="Kāne&#8216;ohe Bay webcam, live, looking southeast down the Ko&#8216;olau toward Makapu&#8216;u" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="camera.jpg?2026-10-31T17:07" alt=""></div>
     <div class="camcap">Kāne&#8216;ohe Bay webcam, live, looking southeast down the Ko&#8216;olau to Makapu&#8216;u. FAA WeatherCam. <a href="https://weathercams.faa.gov/cameras/state/HI/cameraSite/760/details/camera/12783/full" target="_blank" rel="noopener">Open full size</a> · <a href="https://weathercams.faa.gov/cameras/state/HI/cameraSite/588/details/camera/12153/full" target="_blank" rel="noopener">Makapu&#8216;u camera, at the point</a></div>
   </div>
   <div class="cols">
     <section class="panel today" aria-labelledby="t-today">
-      <div class="kind">Now · 16:52 HST</div>
-      <div class="head"><h2 id="t-today">Today</h2><span class="chip warn">Not flyable</span></div>
-      <div class="sub" style="display:flex;align-items:center;gap:6px;margin:2px 0 6px"><img src="https://api.weather.gov/icons/land/day/rain_showers,30?size=small" width="34" height="34" alt="Scattered Rain Showers (33%)" title="NWS: Scattered Rain Showers (33%)" loading="lazy" style="vertical-align:middle;border-radius:4px;margin-left:6px"><span>NWS today: Scattered Rain Showers (33%)</span></div>
-      <dl>
-        <dt>Wind</dt><dd><span class="num">E (088°) 11 mph, gusts 13</span><div class="sub">Bellows, 16:15</div></dd>
-        <dt>Cloudbase at launch</dt><dd><span class="num">About 1,200 ft</span><div class="sub">Condensation level of the air at HECO Mokuhano, 16:30.</div></dd>
-        <dt>Cloudbase at Kāne&#8216;ohe</dt><dd><strong>Low</strong><div class="sub">Kaneohe's air would condense under launch height: wet air at the coast.</div><div class="sub">Kāne&#8216;ohe ceilometer: broken 2,300 ft (16:33).</div><div class="downret">East of 050°: easier going downrange, harder getting back.</div></dd>
-        <dt>Thermals</dt><dd>Probably <strong>flat</strong> (forecast)<div class="sub">RRFS at Kaneohe, run 31 12Z: thermal index -1.6 °C, 10:00–14:00 (surface air: Open-Meteo at Kaneohe); no useable lift. Useful, not critical, at Makapu&#8216;u.</div></dd>
-        <dt>Inversion</dt><dd>None between 1,000 and 12,000 ft<div class="sub">RRFS at Kaneohe, 14:00: the trade lid</div></dd>
-      </dl>
+      <div class="kind">The day in review</div>
+      <div class="head"><h2 id="t-today">Today · Sat 31 Oct</h2><span class="chip fair">Light</span></div>
+      
+      <p class="summary">At Bellows: Light 14:00–15:00: run-off launch only. Midday E (084°) 12 mph, gusts 17.</p><p class="summary">Midday cloud sat on the Ko&#8216;olau crest: base at or below about 2,200 ft (Kāne&#8216;ohe Bay camera). Kaneohe&#x27;s air would condense at about 1,400 ft.</p><p class="summary">Thermals by the Kaneohe runway&#x27;s air against the RRFS profile, 10:00–14:00: flat (index -1.8 °C); the forecast said flat.</p><div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted);margin:2px 0 4px">
+<span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#3f9d5a;vertical-align:middle"></span> Kāne&#8216;ohe Bay camera (base no higher than)</span>
+<span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#e0a100;vertical-align:middle"></span> Crest in cloud or hidden</span></div>
+<div style="position:relative;width:100%;min-width:0;height:220px"><canvas id="wrapchart" role="img" aria-label="Downrange cloud base through the day"></canvas></div>
+<script>
+(function () {
+  var d = {"camera": [], "lost": [[488, "Crest in cloud"], [495, "Crest in cloud"], [506, "Crest in cloud"], [508, "Crest in cloud"], [517, "Crest in cloud"], [519, "Crest in cloud"], [525, "Crest in cloud"], [532, "Crest in cloud"], [540, "Crest in cloud"], [546, "Crest in cloud"], [547, "Crest in cloud"], [563, "Crest in cloud"], [577, "Crest in cloud"], [592, "Crest in cloud"], [594, "Crest in cloud"], [607, "Crest in cloud"], [630, "Crest in cloud"], [641, "Crest in cloud"], [650, "Crest in cloud"], [652, "Crest in cloud"], [654, "Crest in cloud"], [664, "Crest in cloud"], [667, "Crest in cloud"], [682, "Crest in cloud"], [691, "Crest in cloud"], [692, "Crest in cloud"], [693, "Crest in cloud"], [697, "Crest in cloud"], [703, "Crest in cloud"], [706, "Crest in cloud"], [713, "Crest in cloud"], [727, "Crest in cloud"], [731, "Crest in cloud"], [735, "Crest in cloud"], [742, "Crest in cloud"], [743, "Crest in cloud"], [744, "Crest in cloud"], [758, "Crest in cloud"], [765, "Crest in cloud"], [772, "Crest in cloud"], [773, "Crest in cloud"], [781, "Crest in cloud"], [782, "Crest in cloud"], [784, "Crest in cloud"], [787, "Crest in cloud"], [788, "Crest in cloud"], [797, "Crest in cloud"], [799, "Crest in cloud"], [803, "Crest in cloud"], [810, "Crest in cloud"], [814, "Crest in cloud"], [818, "Crest in cloud"], [832, "Hidden: cloud or rain"], [847, "Hidden: cloud or rain"], [862, "Hidden: cloud or rain"], [878, "Hidden: cloud or rain"], [893, "Hidden: cloud or rain"], [907, "Hidden: cloud or rain"], [923, "Crest in cloud"], [939, "Crest in cloud"], [952, "Crest in cloud"], [968, "Crest in cloud"], [979, "Crest in cloud"], [983, "Crest in cloud"], [997, "Crest in cloud"]]}, pt = function (a) { return {x: a[0], y: a[1]}; };
+  var dark = matchMedia('(prefers-color-scheme: dark)').matches, muted = '#898781', grid = dark ? '#2c2c2a' : '#e1e0d9';
+  var hm = function (m) { return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); };
+  var ys = d.camera.map(function (a) { return a[1]; });
+  var ymin = Math.min(1500, Math.floor(Math.min.apply(null, ys) / 500) * 500);
+  new Chart(document.getElementById('wrapchart'), {
+    type: 'line',
+    data: { datasets: [
+      { label: 'Camera', data: d.camera.map(pt), showLine: false, pointRadius: 3, pointBackgroundColor: '#3f9d5a', borderColor: '#3f9d5a' },
+      { label: 'Lost', data: d.lost.map(function (a) { return {x: a[0], y: ymin, t: a[1]}; }), showLine: false, clip: false,
+         pointRadius: 3, pointBackgroundColor: '#e0a100', borderColor: '#e0a100' }
+    ] },
+    options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'nearest', axis: 'x', intersect: false },
+      plugins: { legend: { display: false }, tooltip: { callbacks: {
+        title: function (i) { return hm(i[0].parsed.x); },
+        label: function (i) { return i.dataset.label === 'Lost' ? i.raw.t
+          : 'Base no higher than ' + Math.round(i.parsed.y).toLocaleString() + ' ft'; } } } },
+      scales: {
+        x: { type: 'linear', min: 480, max: 1005, ticks: { stepSize: 60, color: muted, callback: function (v) { return hm(v); } }, grid: { display: false } },
+        y: { min: ymin,
+              max: Math.max(4000, Math.ceil(Math.max.apply(null, ys) / 500) * 500),
+              ticks: { stepSize: 500, color: muted, callback: function (v) { return v.toLocaleString(); } }, grid: { color: grid } }
+      } }
+  });
+})();
+</script>
     </section>
     <section class="panel tomorrow" aria-labelledby="t-tomorrow">
       <div class="kind">Forecast</div>
@@ -146,7 +171,7 @@ tr.wk td { border-bottom: 0; padding-bottom: 2px; } tr.wkh td { white-space: nor
 <!-- build problems: none -->
 <script>
 (function () {
-  var built = "2026-10-31T16:52";
+  var built = "2026-10-31T17:07";
   function check() {
     fetch("summary.json?" + Date.now(), {cache: "no-store"}).then(function (r) { return r.json(); })
       .then(function (j) { if (j && j.built && j.built > built) location.replace(location.pathname + "?v=" + Date.now()); })
