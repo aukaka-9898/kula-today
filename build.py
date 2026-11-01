@@ -1932,6 +1932,15 @@ def line_now(obs: pd.DataFrame, now: datetime):
         return {"found": False, "no_call": True, "no_trades": True,
                 "why": (f"No trades: {cv.compass(m[0])} {m[1]:.0f} kt off the north coast (NWS marine forecast). "
                         "Sea breezes and upslope rule; no shear line.")}, lad
+    # Paia is the check (Sam, 2026-11-01: "Paia should be effective as a shear
+    # check"): reporting but not in the trades at TRADE_DAY_MIN_KT, no line,
+    # whatever the forecast says. Paia silent: the forecast gate above stands.
+    paia = next((r for r in rows if r["name"] == "Paia" and r.get("dir") is not None
+                 and r.get("mph") is not None), None)
+    if paia and (cv._side(paia["dir"]) != "trades" or paia["mph"] < TRADE_DAY_MIN_KT * 1.15078):
+        return {"found": False, "no_call": True, "no_trades": True,
+                "why": (f"No trades at the coast: Paia {cv.compass(paia['dir'])} {paia['mph']:.0f} mph. "
+                        "Sea breezes and upslope rule; no shear line.")}, lad
     # How many corridor stations are silent (Sam, 2026-10-22: "Lots of stations
     # not reporting today. Wreaked havoc with locating the shear" -- every
     # station via api.weather.gov stopped at 03:20).
