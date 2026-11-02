@@ -1,17 +1,18 @@
 {
- "made": "2026-11-01 18:52",
+ "made": "2026-11-02 00:04",
  "flags": [
   "Camera check: cloud at the tops (Puunianiau camera vs Park HQ) disagreed by 2 h or more on 4 of 14 days (10-21, 10-29, 10-30, 11-01).",
   "Camera check: cloud down to 2,800 ft (Red Hill camera vs derived base) disagreed by 2 h or more on 4 of 14 days (10-27, 10-28, 10-29, 10-30).",
-  "Accuracy: the thermal forecast ran 0.8 steps strong over 10 days (right on 3). Suggest: set apart the days the sun forecast missed (no air setting fixes those), then backtest the forecast-air warming (now +3 F) at +0/+1/+2 F on the rest before changing it."
+  "Accuracy: the thermal forecast ran 0.8 steps strong over 11 days (right on 3). Suggest: set apart the days the sun forecast missed (no air setting fixes those), then backtest the forecast-air warming (now +3 F) at +0/+1/+2 F on the rest before changing it.",
+  "Weekly accuracy, last 30 days: cloudbase within 500 ft on 1 of 6 days, typical miss 670 ft; thermals right on 3 of 11, within one step on 10 (pilot reports included)."
  ],
  "stats": {
-  "base_days": 21,
-  "base_mean": 302,
-  "base_raw_mean": -52,
-  "base_sd": 757,
-  "base_morning": 468,
-  "base_afternoon": 192,
+  "base_days": 20,
+  "base_mean": 263,
+  "base_raw_mean": -89,
+  "base_sd": 752,
+  "base_morning": 448,
+  "base_afternoon": 132,
   "alert_days": 2,
   "alert_hits": 0,
   "intrusions_missed": 0,
@@ -20,14 +21,14 @@
   "cam_redhill_cloud_min_days": 14,
   "station_days": 39,
   "accuracy": {
-   "base_n": 5,
+   "base_n": 6,
    "base_within": 1,
-   "base_typical": 660.0,
-   "base_bias": 410.0,
-   "thermal_n": 10,
+   "base_typical": 670.0,
+   "base_bias": 220.0,
+   "thermal_n": 11,
    "thermal_right": 3,
-   "thermal_within_one": 9,
-   "thermal_bias": 0.8,
+   "thermal_within_one": 10,
+   "thermal_bias": 0.82,
    "rules": {
     "B2": [
      1,
@@ -35,11 +36,11 @@
     ],
     "B1": [
      1,
-     2
+     3
     ]
    },
-   "camera_days": 7,
-   "derived_minus_camera": -180.0,
+   "camera_days": 8,
+   "derived_minus_camera": -250.0,
    "pilots": true
   }
  }
