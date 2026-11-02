@@ -1,8 +1,8 @@
 {
- "made": "2026-11-01 17:52",
+ "made": "2026-11-01 18:07",
  "flags": [
-  "Camera check: cloud at the tops (Puunianiau camera vs Park HQ) disagreed by 2 h or more on 3 of 13 days (10-21, 10-29, 10-30).",
-  "Camera check: cloud down to 2,800 ft (Red Hill camera vs derived base) disagreed by 2 h or more on 4 of 13 days (10-27, 10-28, 10-29, 10-30).",
+  "Camera check: cloud at the tops (Puunianiau camera vs Park HQ) disagreed by 2 h or more on 4 of 14 days (10-21, 10-29, 10-30, 11-01).",
+  "Camera check: cloud down to 2,800 ft (Red Hill camera vs derived base) disagreed by 2 h or more on 4 of 14 days (10-27, 10-28, 10-29, 10-30).",
   "Accuracy: the thermal forecast ran 0.8 steps strong over 10 days (right on 3). Suggest: set apart the days the sun forecast missed (no air setting fixes those), then backtest the forecast-air warming (now +3 F) at +0/+1/+2 F on the rest before changing it."
  ],
  "stats": {
@@ -16,9 +16,9 @@
   "alert_hits": 0,
   "intrusions_missed": 0,
   "line_dropped_share_7d": 0.0,
-  "cam_puunianiau_cloud_min_days": 13,
-  "cam_redhill_cloud_min_days": 13,
-  "station_days": 38,
+  "cam_puunianiau_cloud_min_days": 14,
+  "cam_redhill_cloud_min_days": 14,
+  "station_days": 39,
   "accuracy": {
    "base_n": 5,
    "base_within": 1,
