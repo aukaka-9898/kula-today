@@ -101,20 +101,20 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><a class="homebtn" href="/">&larr; Home</a><div class="tag">Kula soaring briefing</div><h1>Kula Today</h1></div>
-    <div class="date">Updated Mon 02 Nov 2026 · 06:22 HST</div>
+    <div class="date">Updated Mon 02 Nov 2026 · 06:37 HST</div>
   </header>
 
   <div>
     <!-- The FAA viewer shows its station list before it opens the camera; the latest frame covers that until it has (Sam, 2026-10-25). -->
-    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" title="Red Hill webcam, live, looking south along the Kula slope" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="camera.jpg?2026-11-02T06:22" alt=""></div>
+    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" title="Red Hill webcam, live, looking south along the Kula slope" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="camera.jpg?2026-11-02T06:37" alt=""></div>
     <div class="camcap">Red Hill webcam, live. FAA WeatherCam (Kekoa). <a href="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" target="_blank" rel="noopener">Open full size</a></div>
   </div>
 
   <div class="cols">
     <section class="panel today" aria-labelledby="t-today">
-      <div class="kind">Measured today · 06:22 HST</div>
+      <div class="kind">Measured today · 06:37 HST</div>
       <div class="head"><h2 id="t-today">Today</h2><span class="chip good">Moderate</span></div>
-      <div class="sub" style="display:flex;align-items:center;gap:6px;margin:2px 0 6px"><img src="https://api.weather.gov/icons/land/day/few?size=small" width="34" height="34" alt="Sunny (8%)" title="NWS: Sunny (8%)" loading="lazy" style="vertical-align:middle;border-radius:4px;margin-left:6px"><span>NWS today: Sunny (8%)</span></div><div class="datanote"><span class="chip fair">Limited data</span> 18 of 27 stations reporting.</div>
+      <div class="sub" style="display:flex;align-items:center;gap:6px;margin:2px 0 6px"><img src="https://api.weather.gov/icons/land/day/few?size=small" width="34" height="34" alt="Sunny (8%)" title="NWS: Sunny (8%)" loading="lazy" style="vertical-align:middle;border-radius:4px;margin-left:6px"><span>NWS today: Sunny (8%)</span></div><div class="datanote"><span class="chip fair">Limited data</span> 18 of 27 stations reporting; the Mesonet could not be reached, its readings are from the 06:22 update.</div>
       
       <dl>
         <dt><a href="details.html#t-thermal">Thermals</a></dt><dd>Probably <strong>moderate</strong> (forecast)<div class="sub">thermal.py on the forecast air; measured rating just after 10:00</div></dd>
@@ -131,7 +131,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
       <div class="head"><h2 id="t-tomorrow">Today · Mon 02 Nov</h2><span class="chip good">Moderate</span><img src="https://api.weather.gov/icons/land/day/few?size=small" width="30" height="30" alt="Sunny (8%)" title="NWS: Sunny (8%)" loading="lazy" style="vertical-align:middle;border-radius:4px;margin-left:6px"></div>
       <dl>
         <dt><a href="details.html#t-thermal">Thermals</a></dt><dd>Probably moderate<div class="sub">thermal.py on the forecast air (+3 F, it runs cool); within one category of the measured rating on every test day</div></dd>
-        <dt><a href="details.html#t-thermal">Cloudbase</a></dt><dd>About 4,900 ft<div class="sub">Normal for November is 4,500–5,500 ft.</div></dd>
+        <dt><a href="details.html#t-thermal">Cloudbase</a></dt><dd>About 5,000 ft<div class="sub">Normal for November is 4,500–5,500 ft.</div></dd>
         <dt>Sun</dt><dd><span class="num">83%</span> of clear sky, 10:00–14:00 (GFS)<div class="sub">The model can't see the slope's own cumulus: when it says 90% or more, Kula has measured about 80%. Good flying days measure about 80%, overcast about 50%, socked in 20%.</div></dd>
         <dt>Shear line</dt><dd>Crossing Kula Highway near Omaopio<div class="sub">Offshore wind ENE (067°)</div></dd>
       </dl>
@@ -157,7 +157,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
   </div>
 
 </div>
-<!-- build problems: none -->
+<!-- build problems: HCDP observations, using the last good fetch: MesonetDown: Mesonet out this build: ConnectTimeout: HTTPSConnectionPool(host='api.hcdp.ikewai.org', port=443): Max retries exceeded with url: /mesonet/db/measurements?location=hawaii&station_ids=0115%2C0118%2C0144%2C0116%2C0119%2C0145%2C0151%2C0152%2C0153%2C0143&var_ids=Tair_1_Avg%2CRH_1_Avg%2CWS_1_Avg%2CWDrs_1_Avg%2CWS_1_Max&start_date=2026-11-02T00%3A00%3A00-10%3A00&row_mode=json&limit=100000 (Caused by ConnectTimeoutError(<HTTPSConnection(host='api.hcdp.ikewai.org', port=443) at 0x779585dbfc80), 'Connection to api.hcdp.ikewai.org timed out. (connect timeout=10)')); Mesonet sun: MesonetDown: Mesonet out this build (ConnectTimeout on /mesonet/db/measurements); kula_sky: MesonetDown: Mesonet out this build (ConnectTimeout on /mesonet/db/measurements); overnight_line: MesonetDown: Mesonet out this build (ConnectTimeout on /mesonet/db/measurements) -->
 <script>
 /* Catch up with a new build within ~2 minutes (Sam, 2026-10-17: "the page
    does not seem to autoupdate"). stations.json's "made" is the build time;
@@ -165,7 +165,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
    browser's 10-minute cached copy is bypassed. The 15-minute refresh stays
    as a backstop. */
 (function () {
-  var built = "2026-11-02T06:22";
+  var built = "2026-11-02T06:37";
   function check() {
     fetch("stations.json?" + Date.now(), {cache: "no-store"})
       .then(function (r) { return r.json(); })
