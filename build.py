@@ -1253,6 +1253,64 @@ def log_soil(now: datetime) -> None:
             f.write(f"{day},{name},{p['sm']},{p['peak']},{p['peak_day']},{p['rise']},{p['below']},{int(p['wet'])}\n")
 
 
+# A north-side push (Sam, 2026-11-01: "A head's up about such a switch on the
+# today tile could be useful. but not enough confidence at this point" --
+# "log it"). 11-01: the offshore forecast turned NE around noon (day-ahead
+# ~2 h late), Red Hill went NNE 13 mph at 10:30 and Kula Ag NE at 12:00 with
+# its dewpoint falling 3.5 F, lifting the base above launch. One row a day,
+# the first build after 15:00 (Red Hill's 6 hours then reach back to 09:00),
+# to learn how often a forecast turn comes with a real push, and how often not.
+PUSH_LOG = HERE / "docs" / "north_push_log.csv"
+PUSH_HOURS = (8, 15)
+PUSH_FC_NE = 60                  # offshore forecast at or north of this: "turned NE"
+PUSH_SECTOR = (345, 75)          # N through ENE at a station
+PUSH_RED_HILL_MPH = 8
+PUSH_KULA_AG_MPH = 5
+
+
+def log_north_push(obs: pd.DataFrame, now: datetime) -> None:
+    if now.hour < 15:
+        return
+    day = f"{now:%Y-%m-%d}"
+    if PUSH_LOG.exists() and f"\n{day}," in "\n" + PUSH_LOG.read_text(encoding="utf-8"):
+        return
+    lat, lon = 21.05, -156.12            # convergence.MARINE_GRID's point
+    h = requests.get("https://previous-runs-api.open-meteo.com/v1/forecast", timeout=60, params={
+        "latitude": lat, "longitude": lon, "timezone": "Pacific/Honolulu", "start_date": day, "end_date": day,
+        "hourly": "wind_direction_10m_previous_day1,wind_direction_10m"}).json()["hourly"]
+    f = pd.DataFrame({"hour": pd.to_datetime(h["time"]).hour, "ahead": h["wind_direction_10m_previous_day1"],
+                      "latest": h["wind_direction_10m"]})
+    f = f[f.hour.between(*PUSH_HOURS)]
+    # Directions past north (300-360) count as north of NE, and are unwrapped for the minimum.
+    unwrap = lambda d: d - 360 if d >= 300 else d
+    first_ne = lambda s: next((f"{hr:02d}:00" for hr, d in zip(f.hour, s) if d is not None and unwrap(d) <= PUSH_FC_NE), "")
+    least = lambda s: f"{min(unwrap(d) for d in s if d is not None) % 360:.0f}"
+    north = lambda d: d >= PUSH_SECTOR[0] or d <= PUSH_SECTOR[1]
+    rh = safely(read_kekoa)
+    rh_first = ""
+    if rh is not None and len(rh):
+        hit = rh[(rh.observed.dt.hour.between(*PUSH_HOURS)) & rh.wind_dir.map(north)
+                 & (rh.wind_mph >= PUSH_RED_HILL_MPH)].sort_values("observed")
+        rh_first = f"{hit.observed.iloc[0]:%H:%M}" if len(hit) else ""
+        rh_from = f"{rh.observed.min():%H:%M}"
+    else:
+        rh_from = ""
+    ka = obs[(obs.station_id == "001HI") & obs.observed.dt.hour.between(*PUSH_HOURS)].dropna(subset=["wind_dir"])
+    ka = ka.sort_values("observed")
+    ok = ka.wind_dir.map(north) & (ka.wind_mph >= PUSH_KULA_AG_MPH)
+    hit = ka[ok & ok.shift(-1, fill_value=False)]          # two readings running, not a gust
+    ka_first = f"{hit.observed.iloc[0]:%H:%M}" if len(hit) else ""
+    td = lambda a, b: ka[ka.observed.dt.hour.between(a, b)].dew_f.mean()
+    drop = td(10, 11) - td(13, 14)
+    new = not PUSH_LOG.exists()
+    with PUSH_LOG.open("a", encoding="utf-8") as fh:
+        if new:
+            fh.write("date,fc_ahead_min_dir,fc_ahead_first_ne,fc_latest_min_dir,fc_latest_first_ne,"
+                     "red_hill_first_north,red_hill_from,kula_ag_first_north,kula_ag_dew_drop_f\n")
+        fh.write(f"{day},{least(f.ahead)},{first_ne(f.ahead)},{least(f.latest)},{first_ne(f.latest)},"
+                 f"{rh_first},{rh_from},{ka_first},{'' if pd.isna(drop) else f'{drop:.1f}'}\n")
+
+
 def wet_cause(now: datetime) -> str | None:
     """'rain for two days' or 'rain yesterday' when the slope is soaked (10 mm
     in 48 h at a lower gauge), 'the rain earlier in the week' when the rain is
@@ -4774,6 +4832,8 @@ def build() -> str:
     entries = safely(log_line, now, pos) or []
     safely(log_cameras, now)
     safely(log_soil, now)
+    if len(obs):
+        safely(log_north_push, obs, now)
     safely(log_forecast_latest, now)
     safely(review_summary, now)
     review, today_kind, today_title = None, f"Measured today · {now:%H:%M} HST", "Today"
