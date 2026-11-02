@@ -102,25 +102,50 @@ tr.wk td { border-bottom: 0; padding-bottom: 2px; } tr.wkh td { white-space: nor
 <div class="wrap">
   <header>
     <div><a class="homebtn" href="/">&larr; Home</a><div class="tag">Makapu&#8216;u soaring briefing</div><h1>Makapu&#8216;u Today</h1></div>
-    <div class="date">Updated Sun 01 Nov 2026 · 16:53 HST</div>
+    <div class="date">Updated Sun 01 Nov 2026 · 17:07 HST</div>
   </header>
   <div class="databadge"><div class="big">Under construction</div></div>
   <div>
-    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/760/details/camera/12783/full" title="Kāne&#8216;ohe Bay webcam, live, looking southeast down the Ko&#8216;olau toward Makapu&#8216;u" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="camera.jpg?2026-11-01T16:53" alt=""></div>
+    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/760/details/camera/12783/full" title="Kāne&#8216;ohe Bay webcam, live, looking southeast down the Ko&#8216;olau toward Makapu&#8216;u" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="camera.jpg?2026-11-01T17:07" alt=""></div>
     <div class="camcap">Kāne&#8216;ohe Bay webcam, live, looking southeast down the Ko&#8216;olau to Makapu&#8216;u. FAA WeatherCam. <a href="https://weathercams.faa.gov/cameras/state/HI/cameraSite/760/details/camera/12783/full" target="_blank" rel="noopener">Open full size</a> · <a href="https://weathercams.faa.gov/cameras/state/HI/cameraSite/588/details/camera/12153/full" target="_blank" rel="noopener">Makapu&#8216;u camera, at the point</a></div>
   </div>
   <div class="cols">
     <section class="panel today" aria-labelledby="t-today">
-      <div class="kind">Now · 16:53 HST</div>
-      <div class="head"><h2 id="t-today">Today</h2><span class="chip warn">Not flyable</span></div>
-      <div class="sub" style="display:flex;align-items:center;gap:6px;margin:2px 0 6px"><img src="https://api.weather.gov/icons/land/day/rain_showers,40?size=small" width="34" height="34" alt="Scattered Rain Showers (39%)" title="NWS: Scattered Rain Showers (39%)" loading="lazy" style="vertical-align:middle;border-radius:4px;margin-left:6px"><span>NWS today: Scattered Rain Showers (39%)</span></div>
-      <dl>
-        <dt>Wind</dt><dd><span class="num">NNE (032°) 18 mph, gusts 23</span><div class="sub">Bellows, 16:15 (via NOAA HADS)</div></dd>
-        <dt>Cloudbase at launch</dt><dd><span class="num">About 1,400 ft</span><div class="sub">Condensation level of the air at HECO Mokuhano, 16:10.</div></dd>
-        <dt>Cloudbase at Kāne&#8216;ohe</dt><dd><span class="num">About 2,100 ft</span>, cloud likely on the higher crest downrange<div class="sub">Condensation level of the air at Kaneohe (PHNG) 2,100 ft (15:57). Kaneohe's ceilometer: FEW 2,100 ft, OVC 4,800 ft.</div><div class="downret">North of 050°: easier to get back from downrange, the primary LZ less favourable.</div></dd>
-        <dt>Thermals</dt><dd>Probably <strong>flat</strong> (forecast)<div class="sub">RRFS at Kaneohe, run 01 12Z: thermal index -1.5 °C, 10:00–14:00 (surface air: Open-Meteo at Kaneohe); no useable lift. Useful, not critical, at Makapu&#8216;u.</div></dd>
-        <dt>Inversion</dt><dd>None between 1,000 and 12,000 ft<div class="sub">RRFS at Kaneohe, 14:00: the trade lid</div></dd>
-      </dl>
+      <div class="kind">The day in review</div>
+      <div class="head"><h2 id="t-today">Today · Sun 01 Nov</h2><span class="chip good">Flyable</span></div>
+      
+      <p class="summary">At Bellows: Flyable 08:00–10:00, 11:00–12:00; caution 12:00–14:00. Midday NNE (029°) 15 mph, gusts 23.</p><p class="summary">Midday cloud sat on the Ko&#8216;olau crest: base at or below about 2,200 ft (Kāne&#8216;ohe Bay camera). Kaneohe&#x27;s air would condense at about 1,400 ft.</p><p class="summary">Thermals by the Kaneohe runway&#x27;s air against the RRFS profile, 10:00–14:00: flat (index -1.7 °C); the forecast said flat.</p><div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted);margin:2px 0 4px">
+<span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#3f9d5a;vertical-align:middle"></span> Kāne&#8216;ohe Bay camera (base no higher than)</span>
+<span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#e0a100;vertical-align:middle"></span> Crest in cloud or hidden</span></div>
+<div style="position:relative;width:100%;min-width:0;height:220px"><canvas id="wrapchart" role="img" aria-label="Downrange cloud base through the day"></canvas></div>
+<script>
+(function () {
+  var d = {"camera": [], "lost": [[482, "Crest in cloud"], [487, "Crest in cloud"], [505, "Crest in cloud"], [518, "Crest in cloud"], [533, "Crest in cloud"], [548, "Crest in cloud"], [563, "Crest in cloud"], [578, "Crest in cloud"], [592, "Crest in cloud"], [607, "Crest in cloud"], [623, "Crest in cloud"], [626, "Crest in cloud"], [638, "Crest in cloud"], [652, "Crest in cloud"], [667, "Crest in cloud"], [682, "Crest in cloud"], [692, "Crest in cloud"], [698, "Crest in cloud"], [710, "Crest in cloud"], [712, "Crest in cloud"], [727, "Crest in cloud"], [758, "Crest in cloud"], [772, "Crest in cloud"], [788, "Crest in cloud"], [794, "Crest in cloud"], [802, "Crest in cloud"], [818, "Crest in cloud"], [847, "Crest in cloud"], [858, "Crest in cloud"], [863, "Crest in cloud"], [878, "Crest in cloud"], [892, "Crest in cloud"], [907, "Crest in cloud"], [923, "Crest in cloud"], [938, "Crest in cloud"], [953, "Crest in cloud"], [968, "Crest in cloud"], [982, "Crest in cloud"], [998, "Crest in cloud"]]}, pt = function (a) { return {x: a[0], y: a[1]}; };
+  var dark = matchMedia('(prefers-color-scheme: dark)').matches, muted = '#898781', grid = dark ? '#2c2c2a' : '#e1e0d9';
+  var hm = function (m) { return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); };
+  var ys = d.camera.map(function (a) { return a[1]; });
+  var ymin = Math.min(1500, Math.floor(Math.min.apply(null, ys) / 500) * 500);
+  new Chart(document.getElementById('wrapchart'), {
+    type: 'line',
+    data: { datasets: [
+      { label: 'Camera', data: d.camera.map(pt), showLine: false, pointRadius: 3, pointBackgroundColor: '#3f9d5a', borderColor: '#3f9d5a' },
+      { label: 'Lost', data: d.lost.map(function (a) { return {x: a[0], y: ymin, t: a[1]}; }), showLine: false, clip: false,
+         pointRadius: 3, pointBackgroundColor: '#e0a100', borderColor: '#e0a100' }
+    ] },
+    options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'nearest', axis: 'x', intersect: false },
+      plugins: { legend: { display: false }, tooltip: { callbacks: {
+        title: function (i) { return hm(i[0].parsed.x); },
+        label: function (i) { return i.dataset.label === 'Lost' ? i.raw.t
+          : 'Base no higher than ' + Math.round(i.parsed.y).toLocaleString() + ' ft'; } } } },
+      scales: {
+        x: { type: 'linear', min: 480, max: 1005, ticks: { stepSize: 60, color: muted, callback: function (v) { return hm(v); } }, grid: { display: false } },
+        y: { min: ymin,
+              max: Math.max(4000, Math.ceil(Math.max.apply(null, ys) / 500) * 500),
+              ticks: { stepSize: 500, color: muted, callback: function (v) { return v.toLocaleString(); } }, grid: { color: grid } }
+      } }
+  });
+})();
+</script>
     </section>
     <section class="panel tomorrow" aria-labelledby="t-tomorrow">
       <div class="kind">Forecast</div>
@@ -143,10 +168,10 @@ tr.wk td { border-bottom: 0; padding-bottom: 2px; } tr.wkh td { white-space: nor
     <p><strong>Notice.</strong> Information only, provided as is, with no guarantee of accuracy or availability. This is not an official forecast. Every pilot is responsible for their own decision to fly.</p>
   </div>
 </div>
-<!-- build problems: parcel MesonetDown: Mesonet out this build (ConnectTimeout on /mesonet/db/measur -->
+<!-- build problems: none -->
 <script>
 (function () {
-  var built = "2026-11-01T16:53";
+  var built = "2026-11-01T17:07";
   function check() {
     fetch("summary.json?" + Date.now(), {cache: "no-store"}).then(function (r) { return r.json(); })
       .then(function (j) { if (j && j.built && j.built > built) location.replace(location.pathname + "?v=" + Date.now()); })
