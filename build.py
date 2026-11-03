@@ -2032,7 +2032,7 @@ def line_now(obs: pd.DataFrame, now: datetime):
     if note:
         got = line_sane(got, lat, lad)
     got["silent_note"] = note
-    return paia_check(got, lad), lad
+    return paia_check(got, lad, rows), lad
 
 
 # A line traced more than this far off east-west is a no call (Sam, 10-23),
@@ -2095,13 +2095,40 @@ def honolua_trades():
     return float(np.rad2deg(np.arctan2(u, v)) % 360)
 
 
-def paia_check(got: dict, lad: pd.DataFrame) -> dict:
+# Kula outranks Paia when it is definite (Sam, 2026-11-02: at 09:37-09:52 the
+# check cancelled a Naalae line with Red Hill NE 21-24 mph, Lower Kimo 17,
+# Olinda and Pulehu Rd 2 NNE 11-22 just north of it and upslope south, while
+# Paia read ENE 068: "If I were driving from Pukalani to Waipoli road the
+# telltales along the road would have told me the shear was near Naalae. The
+# velocity at Red Hill, strong indication"). This many stations within
+# PAIA_DEFER_MI north of the line, in north-side flow at PAIA_DEFER_MPH or more,
+# and Paia is not asked.
+PAIA_DEFER_N = 2
+PAIA_DEFER_MI = 2.0
+PAIA_DEFER_MPH = 10
+
+
+def kula_definite(got: dict, rows: list) -> bool:
+    f = got.get("fit") or {}
+    (wl, wlon), (el, elon) = f.get("west_ll") or (None, None), f.get("east_ll") or (None, None)
+    if wl is None:
+        return False
+    line = lambda lon: wl + (el - wl) * (lon - wlon) / (elon - wlon)
+    near = [r for r in rows if r.get("dir") is not None and r.get("mph") is not None and r.get("lon") is not None
+            and 0 < (r["lat"] - line(r["lon"])) * cv.MILES_PER_DEG <= PAIA_DEFER_MI
+            and _fit_class(r["dir"]) == "T" and r["mph"] >= PAIA_DEFER_MPH]
+    return len(near) >= PAIA_DEFER_N
+
+
+def paia_check(got: dict, lad: pd.DataFrame, rows: list | None = None) -> dict:
     """A line at Naalae Road or further south takes trades with a north
     component; Paia from east of LINE_SOUTH_MAX_DIR says it is well north of
     there (Sam, 2026-10-31: "Paia reading should be an indication that the
     Naalae call is problematic"). Always on, unlike line_sane. Honolua stands
-    in when Paia is out or calm."""
+    in when Paia is out or calm. Not asked when Kula is definite."""
     if not got.get("found") or got["north_lat"] > NOT_FLYABLE_LAT:
+        return got
+    if rows and kula_definite(got, rows):
         return got
     paia = lad[(lad.name == "Paia") & lad.wind_dir.notna()] if len(lad) else lad
     if len(paia) and paia.wind_mph.iloc[0] >= PAIA_MIN_MPH:
