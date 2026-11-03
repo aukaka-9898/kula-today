@@ -4092,6 +4092,34 @@ def camera_points(day: datetime) -> list:
     return [[int(t[:2]) * 60 + int(t[3:5]), float(v)] for t, v in zip(c.time, c.camera_ft)]
 
 
+# The camera against derived through the day, for the wrap-up (Sam, 2026-11-02:
+# "the discrepancies are obvious. In the wrap up note the discrepancies as
+# trends across the day"). Each camera point is paired with the derived point
+# within CAM_PAIR_MIN; a part of the day needs CAM_TREND_MIN pairs.
+CAM_TREND_PARTS = (("morning", 0, 11 * 60), ("midday", 11 * 60, 14 * 60), ("afternoon", 14 * 60, 24 * 60))
+CAM_PAIR_MIN = 10
+CAM_TREND_MIN = 2
+CAM_CLOSE_FT = 200
+
+
+def camera_trend(derived: list, cam: list) -> str | None:
+    if not derived or not cam:
+        return None
+    parts = []
+    for name, lo, hi in CAM_TREND_PARTS:
+        gaps = []
+        for m, v in cam:
+            if lo <= m < hi:
+                dm, dv = min(derived, key=lambda p: abs(p[0] - m))
+                if abs(dm - m) <= CAM_PAIR_MIN:
+                    gaps.append(v - dv)
+        if len(gaps) >= CAM_TREND_MIN:
+            g = sum(gaps) / len(gaps)
+            parts.append(f"{name} within {CAM_CLOSE_FT} ft" if abs(g) < CAM_CLOSE_FT else
+                         f"{name} about {abs(round(g, -2)):,.0f} ft {'higher' if g > 0 else 'lower'}")
+    return ("Camera against derived: " + ", ".join(parts) + ".") if parts else None
+
+
 def camera_hidden(day: datetime, why: str = "hidden") -> list:
     """Minutes of the day the camera logged this why: "hidden" (cloud or rain
     at it) or "no edge" (no call)."""
@@ -4410,7 +4438,10 @@ def day_review(obs, now, up, evening, rnet, word, model, fc_today, fc_pair, entr
     decay = safely(decay_time, _day0, derived) if derived else None
     notes = (safely(day_notes, derived, forecast, inv, PHASE, _patterns_today(f"{now:%Y-%m-%d}"), decay) or []
              if up is not None and len(obs) and got and got[1] else [])
-    notes_html = ('<div class="watch"><div class="kind">What the day did</div><ul>'
+    trend = safely(camera_trend, derived, safely(camera_points, now) or []) if derived else None
+    if trend:
+        notes = notes + [trend]
+    notes_html =('<div class="watch"><div class="kind">What the day did</div><ul>'
                   + "".join(f"<li>{esc(n)}</li>" for n in notes) + "</ul></div>") if notes else ""
     gaps = safely(dropout_sentence, now)
     if gaps:
