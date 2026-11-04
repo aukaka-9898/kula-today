@@ -101,24 +101,24 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><a class="homebtn" href="/">&larr; Home</a><div class="tag">Kula soaring briefing</div><h1>Kula Today</h1></div>
-    <div class="date">Updated Tue 03 Nov 2026 · 17:22 HST</div>
+    <div class="date">Updated Tue 03 Nov 2026 · 17:37 HST</div>
   </header>
 
   <div>
     <!-- The FAA viewer shows its station list before it opens the camera; the latest frame covers that until it has (Sam, 2026-10-25). -->
-    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" title="Red Hill webcam, live, looking south along the Kula slope" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="camera.jpg?2026-11-03T17:22" alt=""></div>
+    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" title="Red Hill webcam, live, looking south along the Kula slope" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="camera.jpg?2026-11-03T17:37" alt=""></div>
     <div class="camcap">Red Hill webcam, live. FAA WeatherCam (Kekoa). <a href="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" target="_blank" rel="noopener">Open full size</a></div>
   </div>
 
   <div class="cols">
     <section class="panel today" aria-labelledby="t-today">
-      <div class="kind">Measured today · 17:22 HST</div>
-      <div class="head"><h2 id="t-today">Today</h2><span class="chip good">Moderate</span></div>
-      <div class="sub" style="display:flex;align-items:center;gap:6px;margin:2px 0 6px"><img src="https://api.weather.gov/icons/land/day/sct?size=small" width="34" height="34" alt="Mostly Sunny (5%)" title="NWS: Mostly Sunny (5%)" loading="lazy" style="vertical-align:middle;border-radius:4px;margin-left:6px"><span>NWS today: Mostly Sunny (5%)</span></div>
-      <p class="summary">Cloudbase is edging down. No trade air on the lower west slope.</p><div style="font-weight:600;font-size:.9rem;margin:10px 0 2px">Cloudbase so far</div><div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted,#6b6b66);margin:2px 0 4px">
+      <div class="kind">The day in review</div>
+      <div class="head"><h2 id="t-today">Today · Tue 03 Nov</h2><span class="chip fair">Light</span></div>
+      
+      <p class="summary">A light day (forecast moderate). Thermals stayed light all day. The upslope ran from about 08:45 to about 16:30. The evening before, the page called it normal, about 4,900 ft, a hit. Midday the base averaged about 5,400 ft by the Kekoa camera, 500 ft higher than the evening&#x27;s number; the morning update said about 4,500 ft, off by 900 ft. Most of the day the shear line was crossing Kula Highway near Kamehameha Schools; furthest north about 10:23, at Pukalani; furthest south about 16:37, crossing Kula Highway near Omaopio. Data gaps: no readings all day from 1 station (Kahikinui); Nakula stopped at 10:00; Upper Kahikinui stopped at 14:30; the Mesonet could not be reached on 16 of 50 updates.</p><div class="watch"><div class="kind">What the day did</div><ul><li>Base held flat at about 4,900 ft from 10:00 for about 2 hours, then the cloud decayed from the base up from about 14:45.</li><li>Watched for: Late-day decay (P7) from 15:07.</li><li>Camera against derived: morning about 800 ft higher, midday about 400 ft higher, afternoon about 600 ft higher.</li></ul></div><div style="font-weight:600;font-size:.9rem;margin:10px 0 2px">Cloudbase</div><div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted,#6b6b66);margin:2px 0 4px">
 <span><span style="display:inline-block;width:16px;border-top:2px dashed #8a5cd6;vertical-align:middle"></span> Forecast (sounding)</span>
 <span><span style="display:inline-block;width:16px;height:2px;background:#2a78d6;vertical-align:middle"></span> Derived (stations)</span><span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#3f9d5a;vertical-align:middle"></span> Kekoa camera</span></div>
-<div style="position:relative;width:100%;min-width:0;height:220px"><canvas id="livechart" role="img" aria-label="Derived cloudbase through the day"></canvas></div>
+<div style="position:relative;width:100%;min-width:0;height:220px"><canvas id="basechart" role="img" aria-label="Derived cloudbase through the day"></canvas></div>
 <div class="sub">Derived from the stations every 15 minutes during the upslope. Forecast: the RRFS Kahului sounding (run 03 06Z), its air at Kula Ag&#x27;s height lifted to condensation, hour by hour.</div>
 <script>
 (function () {
@@ -144,7 +144,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
   var ys = d.derived.map(function (a) { return a[1]; }).concat(d.forecast.map(function (a) { return a[1]; })).concat(d.camera.map(function (a) { return a[1]; })).concat(d.proj.map(function (a) { return a[1]; }));
   var xs = [540, 960];
   var ymin = Math.min(3500, Math.floor(Math.min.apply(null, ys) / 500) * 500);
-  new Chart(document.getElementById('livechart'), {
+  new Chart(document.getElementById('basechart'), {
     type: 'line',
     data: { datasets: [
       { label: 'Derived', data: d.derived.map(pt), borderColor: '#2a78d6', borderWidth: 2, pointRadius: 0, tension: 0.3 },
@@ -173,13 +173,13 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 })();
 </script>
       <dl>
-        <dt><a href="details.html#t-thermal">Thermals</a></dt><dd>Seem <strong>moderate</strong> as of 17:00<div class="sub">Kula Ag's last hour of air through the RRFS sounding (thermal.py)</div></dd>
-        <dt><a href="details.html#t-thermal">Cloudbase</a></dt><dd><span class="num">About 5,100 ft</span><div class="sub">Kekoa camera, the last 30 minutes to 17:15. Stations: about 4,500 ft (11 stations, 17:00).</div></dd>
-        <dt><a href="details.html#t-ladder">Sun</a></dt><dd><span class="num">99%</span> of clear sky, lower Kula slope<div class="sub">Last hour, as of 17:00; average of Kula Ag 100%, Keokea 100%, Pulehu 97%</div></dd>
-        <dt><a href="details.html#stationmap">Shear line</a></dt><dd>Crossing Kula Highway near Omaopio<div class="sub">Fitted to the station map: flow from the north at Red Hill, upslope at MECO Lower Kimo Dr nearest the line</div><div class="sub">At the coast: Paia 085° at 16 mph</div></dd>
+        <dt><a href="details.html#t-thermal">Thermals</a></dt><dd><strong>Light</strong> for the day, 10:00–14:00<div class="sub">Kula Ag's measured air through the RRFS sounding (thermal.py); forecast was Moderate</div></dd>
         
-        <dt><a href="details.html#stationmap">Upslope</a></dt><dd>Began about <span class="num">08:45</span>, now ending<div class="sub">Slope heating nearly stopped about 16:30</div></dd>
-        <dt><a href="details.html#stationmap">Wind</a></dt><dd><span class="num">4 mph</span>, gusts to 13<div class="sub">Lower elevations, 10 stations, last hour</div></dd>
+        
+        <dt><a href="details.html#stationmap">Shear line</a></dt><dd>Crossing Kula Highway near Kamehameha Schools<div class="sub">Most of the day, 37 updates. Furthest south about 16:37: Crossing Kula Highway near Omaopio</div></dd>
+        
+        <dt><a href="details.html#stationmap">Upslope</a></dt><dd><span class="num">08:45</span> to about <span class="num">16:30</span></dd>
+        <dt><a href="details.html#stationmap">Wind</a></dt><dd><span class="num">4 mph</span>, gusts to 12<div class="sub">Lower elevations, during the upslope</div></dd>
       </dl>
     </section>
     <section class="panel tomorrow" aria-labelledby="t-tomorrow">
@@ -221,7 +221,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
    browser's 10-minute cached copy is bypassed. The 15-minute refresh stays
    as a backstop. */
 (function () {
-  var built = "2026-11-03T17:22";
+  var built = "2026-11-03T17:37";
   function check() {
     fetch("stations.json?" + Date.now(), {cache: "no-store"})
       .then(function (r) { return r.json(); })
