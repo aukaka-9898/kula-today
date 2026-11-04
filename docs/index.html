@@ -101,28 +101,28 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><a class="homebtn" href="/">&larr; Home</a><div class="tag">Kula soaring briefing</div><h1>Kula Today</h1></div>
-    <div class="date">Updated Tue 03 Nov 2026 · 15:22 HST</div>
+    <div class="date">Updated Tue 03 Nov 2026 · 15:37 HST</div>
   </header>
 
   <div>
     <!-- The FAA viewer shows its station list before it opens the camera; the latest frame covers that until it has (Sam, 2026-10-25). -->
-    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" title="Red Hill webcam, live, looking south along the Kula slope" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="camera.jpg?2026-11-03T15:22" alt=""></div>
+    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" title="Red Hill webcam, live, looking south along the Kula slope" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="camera.jpg?2026-11-03T15:37" alt=""></div>
     <div class="camcap">Red Hill webcam, live. FAA WeatherCam (Kekoa). <a href="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" target="_blank" rel="noopener">Open full size</a></div>
   </div>
 
   <div class="cols">
     <section class="panel today" aria-labelledby="t-today">
-      <div class="kind">Measured today · 15:22 HST</div>
+      <div class="kind">Measured today · 15:37 HST</div>
       <div class="head"><h2 id="t-today">Today</h2><span class="chip fair">Light</span></div>
       <div class="sub" style="display:flex;align-items:center;gap:6px;margin:2px 0 6px"><img src="https://api.weather.gov/icons/land/day/sct?size=small" width="34" height="34" alt="Mostly Sunny (5%)" title="NWS: Mostly Sunny (5%)" loading="lazy" style="vertical-align:middle;border-radius:4px;margin-left:6px"><span>NWS today: Mostly Sunny (5%)</span></div>
-      <p class="summary">Cloudbase is steady. No trade air on the lower west slope.</p><div style="font-weight:600;font-size:.9rem;margin:10px 0 2px">Cloudbase so far</div><div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted,#6b6b66);margin:2px 0 4px">
+      <p class="summary">Cloudbase is steady. No trade air on the lower west slope.</p><div class="watch"><div class="kind">What to watch</div><ul><li>Clouds decaying: the base has held near 4,900 ft and the sky is clearing at the stations. A base that looks higher now is cloud evaporating from below, not new lift. <span class="pid">P7 · Late-day decay</span></li></ul></div><div style="font-weight:600;font-size:.9rem;margin:10px 0 2px">Cloudbase so far</div><div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted,#6b6b66);margin:2px 0 4px">
 <span><span style="display:inline-block;width:16px;border-top:2px dashed #8a5cd6;vertical-align:middle"></span> Forecast (sounding)</span>
 <span><span style="display:inline-block;width:16px;height:2px;background:#2a78d6;vertical-align:middle"></span> Derived (stations)</span><span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#3f9d5a;vertical-align:middle"></span> Kekoa camera</span></div>
 <div style="position:relative;width:100%;min-width:0;height:220px"><canvas id="livechart" role="img" aria-label="Derived cloudbase through the day"></canvas></div>
 <div class="sub">Derived from the stations every 15 minutes during the upslope. Forecast: the RRFS Kahului sounding (run 03 06Z), its air at Kula Ag&#x27;s height lifted to condensation, hour by hour.</div>
 <script>
 (function () {
-  var d = {"derived": [[540, 4800.0], [555, 4760.0], [570, 4810.0], [585, 4950.0], [600, 4880.0], [615, 4860.0], [630, 4880.0], [645, 4870.0], [660, 4830.0], [675, 4910.0], [690, 4940.0], [705, 4910.0], [720, 4860.0], [735, 4990.0], [750, 5100.0], [765, 5100.0], [780, 4860.0], [795, 4910.0], [810, 4890.0], [825, 4910.0], [840, 5020.0], [855, 4930.0], [870, 4920.0], [885, 4880.0]], "forecast": [], "camera": [[633, 5910.0], [641, 5560.0], [650, 5670.0], [658, 5600.0], [667, 5410.0], [675, 5450.0], [684, 5430.0], [693, 5450.0], [701, 5360.0], [710, 5340.0], [718, 5280.0], [727, 5360.0], [735, 5400.0], [744, 5470.0], [752, 5280.0], [761, 5280.0], [769, 5480.0], [778, 5340.0], [786, 5450.0], [795, 5310.0], [803, 5360.0], [812, 5240.0], [820, 5210.0], [829, 5280.0], [846, 4460.0], [855, 5750.0], [863, 5470.0], [872, 5210.0], [889, 5580.0], [897, 5540.0], [914, 5640.0]], "hidden": [], "proj": [[540, 6270.0], [600, 4840.0], [660, 5920.0], [720, 6120.0], [780, 6430.0], [840, 5870.0], [900, 5390.0], [960, 3950.0]], "nocall": [], "up": [540, 890], "nocu": null}, pt = function (a) { return {x: a[0], y: a[1]}; };
+  var d = {"derived": [[540, 4800.0], [555, 4760.0], [570, 4810.0], [585, 4950.0], [600, 4880.0], [615, 4860.0], [630, 4880.0], [645, 4870.0], [660, 4830.0], [675, 4910.0], [690, 4940.0], [705, 4910.0], [720, 4860.0], [735, 4990.0], [750, 5100.0], [765, 5100.0], [780, 4860.0], [795, 4910.0], [810, 4890.0], [825, 4910.0], [840, 5020.0], [855, 4930.0], [870, 4920.0], [885, 4880.0], [900, 4830.0], [915, 4870.0]], "forecast": [], "camera": [[633, 5910.0], [641, 5560.0], [650, 5670.0], [658, 5600.0], [667, 5410.0], [675, 5450.0], [684, 5430.0], [693, 5450.0], [701, 5360.0], [710, 5340.0], [718, 5280.0], [727, 5360.0], [735, 5400.0], [744, 5470.0], [752, 5280.0], [761, 5280.0], [769, 5480.0], [778, 5340.0], [786, 5450.0], [795, 5310.0], [803, 5360.0], [812, 5240.0], [820, 5210.0], [829, 5280.0], [846, 4460.0], [855, 5750.0], [863, 5470.0], [872, 5210.0], [889, 5580.0], [897, 5540.0], [914, 5640.0], [923, 5070.0]], "hidden": [], "proj": [[540, 6270.0], [600, 4840.0], [660, 5920.0], [720, 6120.0], [780, 6430.0], [840, 5870.0], [900, 5390.0], [960, 3950.0]], "nocall": [], "up": [540, 915], "nocu": null}, pt = function (a) { return {x: a[0], y: a[1]}; };
   var dark = matchMedia('(prefers-color-scheme: dark)').matches, muted = '#898781', grid = dark ? '#2c2c2a' : '#e1e0d9';
   var nocu = { id: 'nocu', beforeDatasetsDraw: function (c) { if (!d.nocu) return; var x = c.scales.x, a = c.chartArea, g = c.ctx,
     x0 = x.getPixelForValue(d.nocu[0]), x1 = x.getPixelForValue(d.nocu[1]);
@@ -173,10 +173,10 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 })();
 </script>
       <dl>
-        <dt><a href="details.html#t-thermal">Thermals</a></dt><dd>Seem <strong>light</strong> as of 14:45<div class="sub">Kula Ag's last hour of air through the RRFS sounding (thermal.py)</div></dd>
-        <dt><a href="details.html#t-thermal">Cloudbase</a></dt><dd><span class="num">About 5,600 ft</span><div class="sub">Kekoa camera, the last 30 minutes to 15:14. Stations: about 5,000 ft (11 stations, 14:50).</div></dd>
-        <dt><a href="details.html#t-ladder">Sun</a></dt><dd><span class="num">84%</span> of clear sky, lower Kula slope<div class="sub">Last hour, as of 14:45; average of Kula Ag 73%, Keokea 80%, Pulehu 100%</div></dd>
-        <dt><a href="details.html#stationmap">Shear line</a></dt><dd>Crossing Kula Highway near Omaopio<div class="sub">Fitted to the station map: flow from the north at Waihou Springs 1, upslope at Red Hill nearest the line</div><div class="sub">At the coast: Paia 061° at 26 mph</div></dd>
+        <dt><a href="details.html#t-thermal">Thermals</a></dt><dd>Seem <strong>light</strong> as of 15:15<div class="sub">Kula Ag's last hour of air through the RRFS sounding (thermal.py)</div></dd>
+        <dt><a href="details.html#t-thermal">Cloudbase</a></dt><dd><span class="num">About 5,400 ft</span><div class="sub">Kekoa camera, the last 30 minutes to 15:32. Stations: about 4,900 ft (11 stations, 15:15).</div></dd>
+        <dt><a href="details.html#t-ladder">Sun</a></dt><dd><span class="num">95%</span> of clear sky, lower Kula slope<div class="sub">Last hour, as of 15:15; average of Kula Ag 90%, Keokea 95%, Pulehu 100%</div></dd>
+        <dt><a href="details.html#stationmap">Shear line</a></dt><dd>Crossing Kula Highway near Omaopio<div class="sub">Fitted to the station map: flow from the north at Waihou Springs 1, upslope at Red Hill nearest the line</div><div class="sub">At the coast: Paia 070° at 24 mph</div></dd>
         
         <dt><a href="details.html#stationmap">Upslope</a></dt><dd>On since about <span class="num">08:45</span><div class="sub">Drainage ended about 08:00</div></dd>
         <dt><a href="details.html#stationmap">Wind</a></dt><dd><span class="num">4 mph</span>, gusts to 13<div class="sub">Lower elevations, 10 stations, last hour</div></dd>
@@ -191,7 +191,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
         <dt>Sun</dt><dd><span class="num">94%</span> of clear sky, 10:00–14:00 (GFS)<div class="sub">The model can't see the slope's own cumulus: when it says 90% or more, Kula has measured about 80%. Good flying days measure about 80%, overcast about 50%, socked in 20%.</div></dd>
         <dt>Shear line</dt><dd>At Pukalani<div class="sub">Offshore wind E (090°)</div></dd>
       </dl>
-      <div class="sub">Forecast as of 14:37 HST</div><div class="sub">Forecast rules last checked October 2026: all holding.</div><div class="sub">Accuracy, last 30 days, the evening call against the day: cloudbase within 500 ft on 1 of 7 days (typical miss 730 ft); thermals right on 3 of 12, within one step on 11. Scored against pilot reports where there are any, otherwise the camera and stations.</div>
+      <div class="sub">Forecast as of 15:37 HST</div><div class="sub">Forecast rules last checked October 2026: all holding.</div><div class="sub">Accuracy, last 30 days, the evening call against the day: cloudbase within 500 ft on 1 of 7 days (typical miss 730 ft); thermals right on 3 of 12, within one step on 11. Scored against pilot reports where there are any, otherwise the camera and stations.</div>
     </section>
   </div>
 
@@ -213,7 +213,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
   </div>
 
 </div>
-<!-- build problems: HCDP observations, using the last good fetch: MesonetDown: Mesonet out this build: ConnectTimeout: HTTPSConnectionPool(host='api.hcdp.ikewai.org', port=443): Max retries exceeded with url: /mesonet/db/measurements?location=hawaii&station_ids=0115%2C0118%2C0144%2C0116%2C0119%2C0145%2C0151%2C0152%2C0153%2C0143&var_ids=Tair_1_Avg%2CRH_1_Avg%2CWS_1_Avg%2CWDrs_1_Avg%2CWS_1_Max&start_date=2026-11-03T00%3A00%3A00-10%3A00&row_mode=json&limit=100000 (Caused by ConnectTimeoutError(<HTTPSConnection(host='api.hcdp.ikewai.org', port=443) at 0x7a07c5f66030), 'Connection to api.hcdp.ikewai.org timed out. (connect timeout=10)')); net_radiation: MesonetDown: Mesonet out this build (ConnectTimeout on /mesonet/db/measurements); Mesonet sun: MesonetDown: Mesonet out this build (ConnectTimeout on /mesonet/db/measurements); sun ladder from 13:45 reused; first_cumulus: MesonetDown: Mesonet out this build (ConnectTimeout on /mesonet/db/measurements); window_sun: MesonetDown: Mesonet out this build (ConnectTimeout on /mesonet/db/measurements); sun_trend: MesonetDown: Mesonet out this build (ConnectTimeout on /mesonet/db/measurements); sky_now: MesonetDown: Mesonet out this build (ConnectTimeout on /mesonet/db/measurements); summit_spill: MesonetDown: Mesonet out this build (ConnectTimeout on /mesonet/db/measurements) -->
+<!-- build problems: none -->
 <script>
 /* Catch up with a new build within ~2 minutes (Sam, 2026-10-17: "the page
    does not seem to autoupdate"). stations.json's "made" is the build time;
@@ -221,7 +221,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
    browser's 10-minute cached copy is bypassed. The 15-minute refresh stays
    as a backstop. */
 (function () {
-  var built = "2026-11-03T15:22";
+  var built = "2026-11-03T15:37";
   function check() {
     fetch("stations.json?" + Date.now(), {cache: "no-store"})
       .then(function (r) { return r.json(); })
