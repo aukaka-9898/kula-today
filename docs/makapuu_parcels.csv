@@ -2452,3 +2452,9 @@ date,time,station,obs_time,temp_f,dew_f,dew_from,lcl_ft,ti_c,word,camera,camera_
 2026-11-05,11:55,Nonokio,11:00,79.7,71.3,own,1930.0,-2.05,Flat,"Cloud base at or below about 2,400 ft. Konahuanui is in clouds.",2420.0
 2026-11-05,11:55,Mokuhano,11:00,79.5,70.8,own,1970.0,-1.88,Flat,"Cloud base at or below about 2,400 ft. Konahuanui is in clouds.",2420.0
 2026-11-05,11:55,Moku o Loe,11:48,80.1,,,,,,"Cloud base at or below about 2,400 ft. Konahuanui is in clouds.",2420.0
+2026-11-05,12:17,Kaneohe runway,11:57,82.0,69.1,own,2950.0,-2.91,Flat,"Cloud base at or below about 2,500 ft. Konahuanui is in clouds.",2460.0
+2026-11-05,12:17,Heeia,11:30,81.3,74.8,own,1490.0,-3.11,Flat,"Cloud base at or below about 2,500 ft. Konahuanui is in clouds.",2460.0
+2026-11-05,12:17,Maunawili,12:00,79.7,71.7,own,1830.0,-1.85,Flat,"Cloud base at or below about 2,500 ft. Konahuanui is in clouds.",2460.0
+2026-11-05,12:17,Nonokio,12:00,80.6,70.6,own,2290.0,-2.25,Flat,"Cloud base at or below about 2,500 ft. Konahuanui is in clouds.",2460.0
+2026-11-05,12:17,Mokuhano,12:00,79.8,69.9,own,2260.0,-1.74,Flat,"Cloud base at or below about 2,500 ft. Konahuanui is in clouds.",2460.0
+2026-11-05,12:17,Moku o Loe,12:12,79.7,,,,,,"Cloud base at or below about 2,500 ft. Konahuanui is in clouds.",2460.0
