@@ -101,21 +101,21 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><a class="homebtn" href="/">&larr; Home</a><div class="tag">Kula soaring briefing</div><h1>Kula Today</h1></div>
-    <div class="date">Updated Wed 04 Nov 2026 · 17:07 HST</div>
+    <div class="date">Updated Wed 04 Nov 2026 · 17:22 HST</div>
   </header>
 
   <div>
     <!-- The FAA viewer shows its station list before it opens the camera; the latest frame covers that until it has (Sam, 2026-10-25). -->
-    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" title="Red Hill webcam, live, looking south along the Kula slope" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="camera.jpg?2026-11-04T17:07" alt=""></div>
+    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" title="Red Hill webcam, live, looking south along the Kula slope" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="camera.jpg?2026-11-04T17:22" alt=""></div>
     <div class="camcap">Red Hill webcam, live. FAA WeatherCam (Kekoa). <a href="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" target="_blank" rel="noopener">Open full size</a></div>
   </div>
 
   <div class="cols">
     <section class="panel today" aria-labelledby="t-today">
-      <div class="kind">Measured today · 17:07 HST</div>
+      <div class="kind">Measured today · 17:22 HST</div>
       <div class="head"><h2 id="t-today">Today</h2><span class="chip fair">Light</span></div>
       <div class="sub" style="display:flex;align-items:center;gap:6px;margin:2px 0 6px"><img src="https://api.weather.gov/icons/land/day/rain_showers,20?size=small" width="34" height="34" alt="Isolated Rain Showers (18%)" title="NWS: Isolated Rain Showers (18%)" loading="lazy" style="vertical-align:middle;border-radius:4px;margin-left:6px"><span>NWS today: Isolated Rain Showers (18%)</span></div>
-      <p class="summary">Cloudbase is steady. The cloud tops out between about 6,600 and 6,900 ft, with sun above it. Trade air is reaching the lower west slope at Pulehu.</p><div class="watch"><div class="kind">What to watch</div><ul><li>Summit spillover: moist trade air has been over the summit since 07:00. Crater cloud spilling west gets mixed into Kula&#x27;s thermals, so expect a lower base that stalls rather than climbs. Low day about 4 times in 10 (usually under 2 in 10). <span class="pid">P8 · Summit spillover</span></li></ul></div><div style="font-weight:600;font-size:.9rem;margin:10px 0 2px">Cloudbase so far</div><div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted,#6b6b66);margin:2px 0 4px">
+      <p class="summary">Conditions are going downhill: base lowering and sun fading. Cloudbase is lowering. The cloud tops out between about 6,600 and 6,900 ft, with sun above it. Trade air is reaching the lower west slope at Pulehu.</p><div class="watch"><div class="kind">What to watch</div><ul><li>Summit spillover: moist trade air has been over the summit since 07:00. Crater cloud spilling west gets mixed into Kula&#x27;s thermals, so expect a lower base that stalls rather than climbs. Low day about 4 times in 10 (usually under 2 in 10). <span class="pid">P8 · Summit spillover</span></li></ul></div><div style="font-weight:600;font-size:.9rem;margin:10px 0 2px">Cloudbase so far</div><div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted,#6b6b66);margin:2px 0 4px">
 <span><span style="display:inline-block;width:16px;border-top:2px dashed #8a5cd6;vertical-align:middle"></span> Forecast (sounding)</span>
 <span><span style="display:inline-block;width:16px;height:2px;background:#2a78d6;vertical-align:middle"></span> Derived (stations)</span><span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#3f9d5a;vertical-align:middle"></span> Kekoa camera</span><span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;border:1.5px solid #898781;box-sizing:border-box;vertical-align:middle"></span> Camera, no call</span></div>
 <div style="position:relative;width:100%;min-width:0;height:220px"><canvas id="livechart" role="img" aria-label="Derived cloudbase through the day"></canvas></div>
@@ -174,12 +174,12 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 </script>
       <dl>
         <dt><a href="details.html#t-thermal">Thermals</a></dt><dd>Seem <strong>light</strong> as of 16:45<div class="sub">Kula Ag's last hour of air through the RRFS sounding (thermal.py)</div></dd>
-        <dt><a href="details.html#t-thermal">Cloudbase</a></dt><dd><span class="num">About 5,200 ft</span><div class="sub">Kekoa camera, the last 30 minutes to 17:00. Stations: about 4,900 ft (11 stations, 16:49).</div></dd>
+        <dt><a href="details.html#t-thermal">Cloudbase</a></dt><dd><span class="num">About 5,400 ft</span><div class="sub">Kekoa camera, the last 30 minutes to 17:17. Stations: about 4,700 ft (11 stations, 17:00).</div></dd>
         <dt><a href="details.html#t-ladder">Sun</a></dt><dd><span class="num">86%</span> of clear sky, lower Kula slope<div class="sub">Last hour, as of 16:45; average of Kula Ag 100%, Keokea 72%; Pulehu left out, in trade air</div></dd>
-        <dt><a href="details.html#stationmap">Shear line</a></dt><dd>Crossing Kula Highway at the middle Lower Kula Road junction<div class="sub">Fitted to the station map: flow from the north at MECO Lower Kimo Dr, upslope at MECO Kula nearest the line</div><div class="sub">At the coast: Paia 083° at 22 mph</div><div class="alert">Trade air reaching the lower west slope: Pulehu NE at 12 mph; the line may be further south than shown</div></dd>
+        <dt><a href="details.html#stationmap">Shear line</a></dt><dd>Crossing Kula Highway at the middle Lower Kula Road junction<div class="sub">Fitted to the station map: flow from the north at MECO Lower Kimo Dr, upslope at MECO Kula nearest the line</div><div class="alert">The line is at Naalae Road or further south, where Kula is usually not flyable.</div><div class="sub">At the coast: Paia 082° at 24 mph</div><div class="alert">Trade air reaching the lower west slope: Pulehu NNE at 13 mph; the line may be further south than shown</div></dd>
         
         <dt><a href="details.html#stationmap">Upslope</a></dt><dd>On since about <span class="num">08:15</span><div class="sub">Drainage ended about 08:00</div></dd>
-        <dt><a href="details.html#stationmap">Wind</a></dt><dd><span class="num">4 mph</span>, gusts to 13<div class="sub">Lower elevations, 10 stations, last hour</div></dd>
+        <dt><a href="details.html#stationmap">Wind</a></dt><dd><span class="num">4 mph</span>, gusts to 19<div class="sub">Lower elevations, 10 stations, last hour</div></dd>
       </dl>
     </section>
     <section class="panel tomorrow" aria-labelledby="t-tomorrow">
@@ -221,7 +221,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
    browser's 10-minute cached copy is bypassed. The 15-minute refresh stays
    as a backstop. */
 (function () {
-  var built = "2026-11-04T17:07";
+  var built = "2026-11-04T17:22";
   function check() {
     fetch("stations.json?" + Date.now(), {cache: "no-store"})
       .then(function (r) { return r.json(); })
