@@ -101,29 +101,29 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><a class="homebtn" href="/">&larr; Home</a><div class="tag">Kula soaring briefing</div><h1>Kula Today</h1></div>
-    <div class="date">Updated Thu 05 Nov 2026 · 08:22 HST</div>
+    <div class="date">Updated Thu 05 Nov 2026 · 08:37 HST</div>
   </header>
 
   <div>
     <!-- The FAA viewer shows its station list before it opens the camera; the latest frame covers that until it has (Sam, 2026-10-25). -->
-    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" title="Red Hill webcam, live, looking south along the Kula slope" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="camera.jpg?2026-11-05T08:22" alt=""></div>
+    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" title="Red Hill webcam, live, looking south along the Kula slope" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="camera.jpg?2026-11-05T08:37" alt=""></div>
     <div class="camcap">Red Hill webcam, live. FAA WeatherCam (Kekoa). <a href="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" target="_blank" rel="noopener">Open full size</a></div>
   </div>
 
   <div class="cols">
     <section class="panel today" aria-labelledby="t-today">
-      <div class="kind">Measured today · 08:22 HST</div>
+      <div class="kind">Measured today · 08:37 HST</div>
       <div class="head"><h2 id="t-today">Today</h2><span class="chip good">Moderate</span></div>
       <div class="sub" style="display:flex;align-items:center;gap:6px;margin:2px 0 6px"><img src="https://api.weather.gov/icons/land/day/sct?size=small" width="34" height="34" alt="Mostly Sunny (8%)" title="NWS: Mostly Sunny (8%)" loading="lazy" style="vertical-align:middle;border-radius:4px;margin-left:6px"><span>NWS today: Mostly Sunny (8%)</span></div>
       
       <dl>
         <dt><a href="details.html#t-thermal">Thermals</a></dt><dd>Probably <strong>moderate</strong> (forecast)<div class="sub">thermal.py on the forecast air; measured rating just after 10:00</div></dd>
-        <dt><a href="details.html#t-thermal">First<br>clouds</a></dt><dd>About <span class="num">3,500 ft</span><div class="sub">The slope is drying as it warms; the derived base takes over once the upslope sets in</div></dd>
+        <dt><a href="details.html#t-thermal">First<br>clouds</a></dt><dd>About <span class="num">3,700 ft</span><div class="sub">3 of 10 slope stations near saturation; no cloud overhead yet; Kula Ag 65/61 °F (86%), dew point up 5 °F since 06:55</div></dd>
         <dt><a href="details.html#t-ladder">Sun</a></dt><dd><span class="num">90%</span> of clear sky forecast, 10:00–14:00 (GFS)<div class="sub">Measured from about 09:30; Kula is in Haleakala's shadow until about 08:15</div></dd>
         <dt><a href="details.html#stationmap">Shear line</a></dt><dd>At Pukalani (forecast)<div class="sub">Offshore wind E (090°). Measured once the upslope sets in</div></dd>
         
         <dt><a href="details.html#stationmap">Upslope</a></dt><dd>Not yet<div class="sub">Usually starts around 08:45</div></dd>
-        <dt><a href="details.html#stationmap">Wind</a></dt><dd><span class="num">3 mph</span>, gusts to 7<div class="sub">Lower elevations, 10 stations, last hour</div></dd>
+        <dt><a href="details.html#stationmap">Wind</a></dt><dd><span class="num">2 mph</span>, gusts to 7<div class="sub">Lower elevations, 10 stations, last hour</div></dd>
       </dl>
     </section>
     <section class="panel tomorrow" aria-labelledby="t-tomorrow">
@@ -165,7 +165,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
    browser's 10-minute cached copy is bypassed. The 15-minute refresh stays
    as a backstop. */
 (function () {
-  var built = "2026-11-05T08:22";
+  var built = "2026-11-05T08:37";
   function check() {
     fetch("stations.json?" + Date.now(), {cache: "no-store"})
       .then(function (r) { return r.json(); })
