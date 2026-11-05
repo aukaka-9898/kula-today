@@ -101,12 +101,12 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><a class="homebtn" href="/">&larr; Home</a><div class="tag">Kula soaring briefing</div><h1>Kula Today</h1></div>
-    <div class="date">Updated Wed 04 Nov 2026 · 18:07 HST</div>
+    <div class="date">Updated Wed 04 Nov 2026 · 18:22 HST</div>
   </header>
 
   <div>
     <!-- The FAA viewer shows its station list before it opens the camera; the latest frame covers that until it has (Sam, 2026-10-25). -->
-    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" title="Red Hill webcam, live, looking south along the Kula slope" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="camera.jpg?2026-11-04T18:07" alt=""></div>
+    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" title="Red Hill webcam, live, looking south along the Kula slope" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="camera.jpg?2026-11-04T18:22" alt=""></div>
     <div class="camcap">Red Hill webcam, live. FAA WeatherCam (Kekoa). <a href="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" target="_blank" rel="noopener">Open full size</a></div>
   </div>
 
@@ -115,7 +115,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
       <div class="kind">The day in review</div>
       <div class="head"><h2 id="t-today">Today · Wed 04 Nov</h2><span class="chip fair">Light</span></div>
       
-      <p class="summary">A light day (forecast moderate). Thermals stayed light all day. The upslope ran from about 08:15 to about 16:45. The evening before, the page called it normal, about 4,400 ft, a hit. Midday the base averaged about 5,300 ft by the Kekoa camera, 900 ft higher than the evening&#x27;s number; the morning update said about 4,900 ft, off by 400 ft. Most of the day the shear line was crossing Kula Highway near Omaopio; furthest north about 12:52, crossing Kula Highway near Kamehameha Schools; furthest south about 17:22, crossing Kula Highway at the middle Lower Kula Road junction. Data gaps: no readings all day from 2 stations (Kahikinui, Nakula); Upper Kahikinui stopped at 12:15; the Mesonet could not be reached on 20 of 52 updates.</p><div class="watch"><div class="kind">What the day did</div><ul><li>Watched for: Summit spillover (P8) from 09:37.</li><li>Camera against derived: morning about 900 ft higher, midday about 700 ft higher, afternoon about 400 ft higher.</li></ul></div><div style="font-weight:600;font-size:.9rem;margin:10px 0 2px">Cloudbase</div><div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted,#6b6b66);margin:2px 0 4px">
+      <p class="summary">A light day (forecast moderate). Thermals stayed light all day. The upslope ran from about 08:15 to about 16:45. The evening before, the page called it normal, about 4,400 ft, a hit. Midday the base averaged about 5,300 ft by the Kekoa camera, 900 ft higher than the evening&#x27;s number; the morning update said about 4,900 ft, off by 400 ft. Most of the day the shear line was crossing Kula Highway near Omaopio; furthest north about 12:52, crossing Kula Highway near Kamehameha Schools; furthest south about 17:22, crossing Kula Highway at the middle Lower Kula Road junction. Data gaps: no readings all day from 2 stations (Kahikinui, Nakula); the Mesonet could not be reached on 20 of 53 updates.</p><div class="watch"><div class="kind">What the day did</div><ul><li>Watched for: Summit spillover (P8) from 09:37.</li><li>Camera against derived: morning about 900 ft higher, midday about 700 ft higher, afternoon about 400 ft higher.</li></ul></div><div style="font-weight:600;font-size:.9rem;margin:10px 0 2px">Cloudbase</div><div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted,#6b6b66);margin:2px 0 4px">
 <span><span style="display:inline-block;width:16px;border-top:2px dashed #8a5cd6;vertical-align:middle"></span> Forecast (sounding)</span>
 <span><span style="display:inline-block;width:16px;height:2px;background:#2a78d6;vertical-align:middle"></span> Derived (stations)</span><span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#3f9d5a;vertical-align:middle"></span> Kekoa camera</span><span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;border:1.5px solid #898781;box-sizing:border-box;vertical-align:middle"></span> Camera, no call</span></div>
 <div style="position:relative;width:100%;min-width:0;height:220px"><canvas id="basechart" role="img" aria-label="Derived cloudbase through the day"></canvas></div>
@@ -185,13 +185,13 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
     <section class="panel tomorrow" aria-labelledby="t-tomorrow">
       <div class="kind">Forecast</div>
       <div class="head"><h2 id="t-tomorrow">Tomorrow · Thu 05 Nov</h2><span class="chip good">Moderate</span><img src="https://api.weather.gov/icons/land/day/sct?size=small" width="30" height="30" alt="Mostly Sunny (13%)" title="NWS: Mostly Sunny (13%)" loading="lazy" style="vertical-align:middle;border-radius:4px;margin-left:6px"></div>
-      <dl>
+      <div class="alert">Possible summit cloud push-over during the day: the model has moist trade air pushed over the summit ridge on an easterly. If it comes, Kula can lose its sun, thermals weaken and the day ends early; the moist air mixed in also holds the base lower. <b>Check the summit ridge in the morning</b> (Red Hill camera): clouds there are the sign. <span class="pid">P1 · Summit cloud pushed over</span></div><dl>
         <dt><a href="details.html#t-thermal">Thermals</a></dt><dd>Probably moderate<div class="sub">thermal.py on the forecast air (+3 F, it runs cool); within one category of the measured rating on every test day</div></dd>
         <dt><a href="details.html#t-thermal">Cloudbase</a></dt><dd>About 5,000 ft<div class="sub">Normal for November is 4,500–5,500 ft.</div></dd>
         <dt>Sun</dt><dd><span class="num">87%</span> of clear sky, 10:00–14:00 (GFS)<div class="sub">The model can't see the slope's own cumulus: when it says 90% or more, Kula has measured about 80%. Good flying days measure about 80%, overcast about 50%, socked in 20%.</div></dd>
         <dt>Shear line</dt><dd>At Pukalani<div class="sub">Offshore wind E (094°)</div></dd>
       </dl>
-      <div class="sub">Forecast as of 17:07 HST</div><div class="sub">Forecast rules last checked October 2026: all holding.</div><div class="sub">Accuracy, last 30 days, the evening call against the day: cloudbase within 500 ft on 2 of 8 days (typical miss 700 ft); thermals right on 3 of 13, within one step on 12. Scored against pilot reports where there are any, otherwise the camera and stations.</div>
+      <div class="sub">Forecast as of 18:22 HST</div><div class="sub">Forecast rules last checked October 2026: all holding.</div><div class="sub">Accuracy, last 30 days, the evening call against the day: cloudbase within 500 ft on 2 of 8 days (typical miss 700 ft); thermals right on 3 of 13, within one step on 12. Scored against pilot reports where there are any, otherwise the camera and stations.</div>
     </section>
   </div>
 
@@ -221,7 +221,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
    browser's 10-minute cached copy is bypassed. The 15-minute refresh stays
    as a backstop. */
 (function () {
-  var built = "2026-11-04T18:07";
+  var built = "2026-11-04T18:22";
   function check() {
     fetch("stations.json?" + Date.now(), {cache: "no-store"})
       .then(function (r) { return r.json(); })
