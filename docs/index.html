@@ -101,28 +101,28 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><a class="homebtn" href="/">&larr; Home</a><div class="tag">Kula soaring briefing</div><h1>Kula Today</h1></div>
-    <div class="date">Updated Thu 05 Nov 2026 · 12:52 HST</div>
+    <div class="date">Updated Thu 05 Nov 2026 · 13:07 HST</div>
   </header>
 
   <div>
     <!-- The FAA viewer shows its station list before it opens the camera; the latest frame covers that until it has (Sam, 2026-10-25). -->
-    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" title="Red Hill webcam, live, looking south along the Kula slope" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="camera.jpg?2026-11-05T12:52" alt=""></div>
+    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" title="Red Hill webcam, live, looking south along the Kula slope" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="camera.jpg?2026-11-05T13:07" alt=""></div>
     <div class="camcap">Red Hill webcam, live. FAA WeatherCam (Kekoa). <a href="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" target="_blank" rel="noopener">Open full size</a></div>
   </div>
 
   <div class="cols">
     <section class="panel today" aria-labelledby="t-today">
-      <div class="kind">Measured today · 12:52 HST</div>
+      <div class="kind">Measured today · 13:07 HST</div>
       <div class="head"><h2 id="t-today">Today</h2><span class="chip fair">Light</span></div>
-      <div class="sub" style="display:flex;align-items:center;gap:6px;margin:2px 0 6px"><img src="https://api.weather.gov/icons/land/day/sct?size=small" width="34" height="34" alt="Mostly Sunny (8%)" title="NWS: Mostly Sunny (8%)" loading="lazy" style="vertical-align:middle;border-radius:4px;margin-left:6px"><span>NWS today: Mostly Sunny (8%)</span></div>
-      <p class="summary">Cloudbase is edging up. The whole slope is in sun. No trade air on the lower west slope.</p><div style="font-weight:600;font-size:.9rem;margin:10px 0 2px">Cloudbase so far</div><div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted,#6b6b66);margin:2px 0 4px">
+      <div class="sub" style="display:flex;align-items:center;gap:6px;margin:2px 0 6px"><img src="https://api.weather.gov/icons/land/day/sct?size=small" width="34" height="34" alt="Mostly Sunny (11%)" title="NWS: Mostly Sunny (11%)" loading="lazy" style="vertical-align:middle;border-radius:4px;margin-left:6px"><span>NWS today: Mostly Sunny (11%)</span></div>
+      <p class="summary">Cloudbase is rising. No trade air on the lower west slope.</p><div style="font-weight:600;font-size:.9rem;margin:10px 0 2px">Cloudbase so far</div><div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted,#6b6b66);margin:2px 0 4px">
 <span><span style="display:inline-block;width:16px;border-top:2px dashed #8a5cd6;vertical-align:middle"></span> Forecast (sounding)</span>
 <span><span style="display:inline-block;width:16px;height:2px;background:#2a78d6;vertical-align:middle"></span> Derived (stations)</span><span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#3f9d5a;vertical-align:middle"></span> Kekoa camera</span><span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;border:1.5px solid #898781;box-sizing:border-box;vertical-align:middle"></span> Camera, no call</span></div>
 <div style="position:relative;width:100%;min-width:0;height:220px"><canvas id="livechart" role="img" aria-label="Derived cloudbase through the day"></canvas></div>
 <div class="sub">Derived from the stations every 15 minutes during the upslope. Forecast: the RRFS Kahului sounding (run 05 12Z), its air at Kula Ag&#x27;s height lifted to condensation, hour by hour.</div>
 <script>
 (function () {
-  var d = {"derived": [[540, 4010.0], [555, 4120.0], [570, 4120.0], [585, 3950.0], [600, 3970.0], [615, 4120.0], [630, 4230.0], [645, 4250.0], [660, 4360.0], [675, 4500.0], [690, 4660.0], [705, 4860.0], [720, 4830.0], [735, 4820.0], [750, 4940.0]], "forecast": [], "camera": [[555, 4390.0], [564, 5280.0], [581, 5740.0], [590, 5600.0], [598, 5100.0], [607, 3650.0], [615, 4050.0], [624, 4410.0], [632, 3620.0], [641, 5080.0], [649, 3400.0], [658, 4260.0], [667, 4730.0], [675, 5010.0], [719, 5190.0], [727, 3920.0], [745, 3440.0]], "hidden": [], "proj": [[540, 4290.0], [600, 4360.0], [660, 4740.0], [720, 3820.0], [780, 4370.0], [840, 3790.0], [900, 3250.0], [960, 3490.0]], "nocall": [693, 702, 711, 736], "up": [540, 750], "nocu": null}, pt = function (a) { return {x: a[0], y: a[1]}; };
+  var d = {"derived": [[540, 4010.0], [555, 4120.0], [570, 4120.0], [585, 3950.0], [600, 3970.0], [615, 4120.0], [630, 4230.0], [645, 4250.0], [660, 4360.0], [675, 4500.0], [690, 4660.0], [705, 4860.0], [720, 4830.0], [735, 4820.0], [750, 5100.0], [765, 5080.0]], "forecast": [], "camera": [[555, 4390.0], [564, 5280.0], [581, 5740.0], [590, 5600.0], [598, 5100.0], [607, 3650.0], [615, 4050.0], [624, 4410.0], [632, 3620.0], [641, 5080.0], [649, 3400.0], [658, 4260.0], [667, 4730.0], [675, 5010.0], [719, 5190.0], [727, 3920.0], [745, 3440.0], [780, 5470.0], [789, 5640.0]], "hidden": [], "proj": [[540, 4290.0], [600, 4360.0], [660, 4740.0], [720, 3820.0], [780, 4370.0], [840, 3790.0], [900, 3250.0], [960, 3490.0]], "nocall": [693, 702, 711, 736], "up": [540, 770], "nocu": null}, pt = function (a) { return {x: a[0], y: a[1]}; };
   var dark = matchMedia('(prefers-color-scheme: dark)').matches, muted = '#898781', grid = dark ? '#2c2c2a' : '#e1e0d9';
   var nocu = { id: 'nocu', beforeDatasetsDraw: function (c) { if (!d.nocu) return; var x = c.scales.x, a = c.chartArea, g = c.ctx,
     x0 = x.getPixelForValue(d.nocu[0]), x1 = x.getPixelForValue(d.nocu[1]);
@@ -173,25 +173,25 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 })();
 </script>
       <dl>
-        <dt><a href="details.html#t-thermal">Thermals</a></dt><dd>Seem <strong>light</strong> as of 12:30<div class="sub">Kula Ag's last hour of air through the RRFS sounding (thermal.py)</div></dd>
-        <dt><a href="details.html#t-thermal">Cloudbase</a></dt><dd><span class="num">About 3,400 ft</span><div class="sub">Kekoa camera, the last 30 minutes to 12:52. Stations: about 5,000 ft (11 stations, 12:30).</div></dd>
-        <dt><a href="details.html#t-ladder">Sun</a></dt><dd><span class="num">82%</span> of clear sky, lower Kula slope<div class="sub">Last hour, as of 12:30; average of Kula Ag 78%, Keokea 84%, Pulehu 83%</div></dd>
-        <dt><a href="details.html#stationmap">Shear line</a></dt><dd>Crossing Kula Highway near Omaopio<div class="sub">Fitted to the station map: flow from the north at MECO Olinda Rd, upslope at Waihou Springs 1 nearest the line</div><div class="sub">At the coast: Paia 085° at 21 mph</div></dd>
+        <dt><a href="details.html#t-thermal">Thermals</a></dt><dd>Seem <strong>light</strong> as of 12:45<div class="sub">Kula Ag's last hour of air through the RRFS sounding (thermal.py)</div></dd>
+        <dt><a href="details.html#t-thermal">Cloudbase</a></dt><dd><span class="num">About 5,600 ft</span><div class="sub">Kekoa camera, the last 30 minutes to 13:09. Stations: about 5,200 ft (11 stations, 12:50).</div></dd>
+        <dt><a href="details.html#t-ladder">Sun</a></dt><dd><span class="num">81%</span> of clear sky, lower Kula slope<div class="sub">Last hour, as of 12:45; average of Kula Ag 82%, Keokea 65%, Pulehu 95%</div></dd>
+        <dt><a href="details.html#stationmap">Shear line</a></dt><dd>Crossing Kula Highway near Omaopio<div class="sub">Fitted to the station map: flow from the north at Waihou Springs 1, upslope at Red Hill nearest the line</div><div class="sub">At the coast: Paia 085° at 24 mph</div></dd>
         
         <dt><a href="details.html#stationmap">Upslope</a></dt><dd>On since about <span class="num">08:45</span><div class="sub">Drainage ended about 08:30</div></dd>
-        <dt><a href="details.html#stationmap">Wind</a></dt><dd><span class="num">4 mph</span>, gusts to 10<div class="sub">Lower elevations, 9 stations, last hour</div></dd>
+        <dt><a href="details.html#stationmap">Wind</a></dt><dd><span class="num">4 mph</span>, gusts to 12<div class="sub">Lower elevations, 10 stations, last hour</div></dd>
       </dl>
     </section>
     <section class="panel tomorrow" aria-labelledby="t-tomorrow">
       <div class="kind">Forecast</div>
-      <div class="head"><h2 id="t-tomorrow">Tomorrow · Fri 06 Nov</h2><span class="chip fair">Light</span><img src="https://api.weather.gov/icons/land/day/rain_showers,20/bkn?size=small" width="30" height="30" alt="Isolated Rain Showers then Partly Sunny (24%)" title="NWS: Isolated Rain Showers then Partly Sunny (24%)" loading="lazy" style="vertical-align:middle;border-radius:4px;margin-left:6px"></div>
+      <div class="head"><h2 id="t-tomorrow">Tomorrow · Fri 06 Nov</h2><span class="chip good">Moderate</span><img src="https://api.weather.gov/icons/land/day/rain_showers,40?size=small" width="30" height="30" alt="Scattered Rain Showers (40%)" title="NWS: Scattered Rain Showers (40%)" loading="lazy" style="vertical-align:middle;border-radius:4px;margin-left:6px"></div>
       <div class="alert">Possible summit cloud push-over during the day: the model has moist trade air pushed over the summit ridge on an easterly. If it comes, Kula can lose its sun, thermals weaken and the day ends early; the moist air mixed in also holds the base lower. <b>Check the summit ridge in the morning</b> (Red Hill camera): clouds there are the sign. <span class="pid">P1 · Summit cloud pushed over</span></div><dl>
-        <dt><a href="details.html#t-thermal">Thermals</a></dt><dd>Probably light<div class="sub">thermal.py on the forecast air (+3 F, it runs cool); within one category of the measured rating on every test day</div></dd>
+        <dt><a href="details.html#t-thermal">Thermals</a></dt><dd>Probably moderate<div class="sub">thermal.py on the forecast air (+3 F, it runs cool); within one category of the measured rating on every test day</div></dd>
         <dt><a href="details.html#t-thermal">Cloudbase</a></dt><dd>About 4,400 ft<div class="sub">80% chance of a low day: moist air aloft and a low forecast base.</div></dd>
         <dt>Sun</dt><dd><span class="num">82%</span> of clear sky, 10:00–14:00 (GFS)<div class="sub">The model can't see the slope's own cumulus: when it says 90% or more, Kula has measured about 80%. Good flying days measure about 80%, overcast about 50%, socked in 20%.</div></dd>
-        <dt>Shear line</dt><dd>At Pukalani<div class="sub">Offshore wind E (080°)</div></dd>
+        <dt>Shear line</dt><dd>Crossing Kula Highway near Omaopio<div class="sub">Offshore wind E (080°)</div></dd>
       </dl>
-      <div class="sub">Forecast as of 11:52 HST</div><div class="sub">Forecast rules last checked October 2026: all holding.</div><div class="sub">Accuracy, last 30 days, the evening call against the day: cloudbase within 500 ft on 2 of 9 days (typical miss 710 ft); thermals right on 3 of 14, within one step on 13. Scored against pilot reports where there are any, otherwise the camera and stations.</div>
+      <div class="sub">Forecast as of 13:07 HST</div><div class="sub">Forecast rules last checked October 2026: all holding.</div><div class="sub">Accuracy, last 30 days, the evening call against the day: cloudbase within 500 ft on 2 of 9 days (typical miss 710 ft); thermals right on 3 of 14, within one step on 13. Scored against pilot reports where there are any, otherwise the camera and stations.</div>
     </section>
   </div>
 
@@ -199,7 +199,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
     <h2 id="t-week">The week</h2>
     <div class="tablewrap"><table>
       <thead><tr><th>Day</th><th class="n">Sun</th><th>Base</th><th>Thermals</th><th>Shear line</th><th></th></tr></thead>
-      <tbody><tr><td>Fri 06</td><td class="n">82%</td><td>Low</td><td>Light</td><td>Pukalani</td><td class="wx"><img src="https://api.weather.gov/icons/land/day/rain_showers,20/bkn?size=small" width="40" height="40" alt="Isolated Rain Showers then Partly Sunny (24%)" title="NWS: Isolated Rain Showers then Partly Sunny (24%)" loading="lazy" style="vertical-align:middle;border-radius:4px;margin-left:6px"></td></tr><tr><td>Sat 07</td><td class="n">83%</td><td>Normal</td><td>Moderate</td><td>Omaopio</td><td class="wx"><img src="https://api.weather.gov/icons/land/day/rain_showers,20/bkn?size=small" width="40" height="40" alt="Isolated Rain Showers then Partly Sunny (19%)" title="NWS: Isolated Rain Showers then Partly Sunny (19%)" loading="lazy" style="vertical-align:middle;border-radius:4px;margin-left:6px"></td></tr><tr><td>Sun 08</td><td class="n">90%</td><td>Normal</td><td>Light</td><td>Pukalani</td><td class="wx"><img src="https://api.weather.gov/icons/land/day/sct?size=small" width="40" height="40" alt="Mostly Sunny (4%)" title="NWS: Mostly Sunny (4%)" loading="lazy" style="vertical-align:middle;border-radius:4px;margin-left:6px"></td></tr><tr><td>Mon 09</td><td class="n">92%</td><td>Normal</td><td>Moderate</td><td>Pukalani</td><td class="wx"><img src="https://api.weather.gov/icons/land/day/sct?size=small" width="40" height="40" alt="Mostly Sunny (4%)" title="NWS: Mostly Sunny (4%)" loading="lazy" style="vertical-align:middle;border-radius:4px;margin-left:6px"></td></tr><tr><td>Tue 10</td><td class="n">91%</td><td>Normal</td><td>Light</td><td>Omaopio</td><td class="wx"><img src="https://api.weather.gov/icons/land/day/sct?size=small" width="40" height="40" alt="Mostly Sunny (3%)" title="NWS: Mostly Sunny (3%)" loading="lazy" style="vertical-align:middle;border-radius:4px;margin-left:6px"></td></tr><tr><td>Wed 11</td><td class="n">96%</td><td>Normal</td><td>Moderate</td><td>Omaopio</td><td class="wx"><img src="https://api.weather.gov/icons/land/day/sct?size=small" width="40" height="40" alt="Mostly Sunny (3%)" title="NWS: Mostly Sunny (3%)" loading="lazy" style="vertical-align:middle;border-radius:4px;margin-left:6px"></td></tr><tr><td>Thu 12</td><td class="n">100%</td><td>Normal</td><td>Moderate</td><td>Omaopio</td><td class="wx"></td></tr></tbody>
+      <tbody><tr><td>Fri 06</td><td class="n">82%</td><td>Low</td><td>Moderate</td><td>Omaopio</td><td class="wx"><img src="https://api.weather.gov/icons/land/day/rain_showers,40?size=small" width="40" height="40" alt="Scattered Rain Showers (40%)" title="NWS: Scattered Rain Showers (40%)" loading="lazy" style="vertical-align:middle;border-radius:4px;margin-left:6px"></td></tr><tr><td>Sat 07</td><td class="n">83%</td><td>Normal</td><td>Moderate</td><td>Pukalani</td><td class="wx"><img src="https://api.weather.gov/icons/land/day/sct?size=small" width="40" height="40" alt="Mostly Sunny (10%)" title="NWS: Mostly Sunny (10%)" loading="lazy" style="vertical-align:middle;border-radius:4px;margin-left:6px"></td></tr><tr><td>Sun 08</td><td class="n">90%</td><td>Normal</td><td>Light</td><td>Pukalani</td><td class="wx"><img src="https://api.weather.gov/icons/land/day/sct?size=small" width="40" height="40" alt="Mostly Sunny (1%)" title="NWS: Mostly Sunny (1%)" loading="lazy" style="vertical-align:middle;border-radius:4px;margin-left:6px"></td></tr><tr><td>Mon 09</td><td class="n">92%</td><td>Normal</td><td>Moderate</td><td>Pukalani</td><td class="wx"><img src="https://api.weather.gov/icons/land/day/few?size=small" width="40" height="40" alt="Sunny (1%)" title="NWS: Sunny (1%)" loading="lazy" style="vertical-align:middle;border-radius:4px;margin-left:6px"></td></tr><tr><td>Tue 10</td><td class="n">91%</td><td>Normal</td><td>Light</td><td>Pukalani</td><td class="wx"><img src="https://api.weather.gov/icons/land/day/few?size=small" width="40" height="40" alt="Sunny (1%)" title="NWS: Sunny (1%)" loading="lazy" style="vertical-align:middle;border-radius:4px;margin-left:6px"></td></tr><tr><td>Wed 11</td><td class="n">96%</td><td>Normal</td><td>Moderate</td><td>Omaopio</td><td class="wx"><img src="https://api.weather.gov/icons/land/day/few?size=small" width="40" height="40" alt="Sunny (1%)" title="NWS: Sunny (1%)" loading="lazy" style="vertical-align:middle;border-radius:4px;margin-left:6px"></td></tr><tr><td>Thu 12</td><td class="n">100%</td><td>Normal</td><td>Moderate</td><td>Pukalani</td><td class="wx"></td></tr></tbody>
     </table></div>
     <p>Sun is the GFS forecast for 10:00–14:00. The model can't see the slope's own cumulus, so its high numbers run about 10 points above what Kula measures.</p>
   </section>
@@ -221,7 +221,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
    browser's 10-minute cached copy is bypassed. The 15-minute refresh stays
    as a backstop. */
 (function () {
-  var built = "2026-11-05T12:52";
+  var built = "2026-11-05T13:07";
   function check() {
     fetch("stations.json?" + Date.now(), {cache: "no-store"})
       .then(function (r) { return r.json(); })
