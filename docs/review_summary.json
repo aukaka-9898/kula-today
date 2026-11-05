@@ -1,18 +1,18 @@
 {
- "made": "2026-11-04 22:36",
+ "made": "2026-11-05 03:05",
  "flags": [
   "Camera check: cloud at the tops (Puunianiau camera vs Park HQ) disagreed by 2 h or more on 4 of 14 days (10-21, 10-29, 10-30, 11-01).",
   "Camera check: cloud down to 2,800 ft (Red Hill camera vs derived base) disagreed by 2 h or more on 4 of 14 days (10-27, 10-28, 10-29, 10-30).",
   "Per-station forecast base: 42 days logged. On the later half, per-station corrections miss the derived base by 607 ft typically, the page's Kula Ag + 0 ft by 670 ft. Ready to decide whether to switch.",
-  "Accuracy: the thermal forecast ran 0.8 steps strong over 13 days (right on 3). Suggest: set apart the days the sun forecast missed (no air setting fixes those), then backtest the forecast-air warming (now +3 F) at +0/+1/+2 F on the rest before changing it."
+  "Accuracy: the thermal forecast ran 0.9 steps strong over 14 days (right on 3). Suggest: set apart the days the sun forecast missed (no air setting fixes those), then backtest the forecast-air warming (now +3 F) at +0/+1/+2 F on the rest before changing it."
  ],
  "stats": {
-  "base_days": 21,
-  "base_mean": 362,
-  "base_raw_mean": 68,
-  "base_sd": 729,
-  "base_morning": 539,
-  "base_afternoon": 245,
+  "base_days": 20,
+  "base_mean": 378,
+  "base_raw_mean": 90,
+  "base_sd": 738,
+  "base_morning": 543,
+  "base_afternoon": 281,
   "alert_days": 4,
   "alert_hits": 0,
   "intrusions_missed": 0,
@@ -21,14 +21,14 @@
   "cam_redhill_cloud_min_days": 14,
   "station_days": 42,
   "accuracy": {
-   "base_n": 8,
+   "base_n": 9,
    "base_within": 2,
-   "base_typical": 700.0,
-   "base_bias": 250.0,
-   "thermal_n": 13,
+   "base_typical": 710.0,
+   "base_bias": 130.0,
+   "thermal_n": 14,
    "thermal_right": 3,
-   "thermal_within_one": 12,
-   "thermal_bias": 0.85,
+   "thermal_within_one": 13,
+   "thermal_bias": 0.86,
    "rules": {
     "B2": [
      1,
@@ -39,8 +39,8 @@
      3
     ]
    },
-   "camera_days": 10,
-   "derived_minus_camera": -210.0,
+   "camera_days": 11,
+   "derived_minus_camera": -250.0,
    "pilots": true
   }
  }
