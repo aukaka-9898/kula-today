@@ -1,18 +1,19 @@
 {
- "made": "2026-11-05 23:29",
+ "made": "2026-11-06 02:53",
  "flags": [
   "Camera check: cloud at the tops (Puunianiau camera vs Park HQ) disagreed by 2 h or more on 4 of 14 days (10-21, 10-29, 10-30, 11-01).",
   "Camera check: cloud down to 2,800 ft (Red Hill camera vs derived base) disagreed by 2 h or more on 4 of 14 days (10-27, 10-28, 10-29, 10-30).",
   "Per-station forecast base: 43 days logged. On the later half, per-station corrections miss the derived base by 594 ft typically, the page's Kula Ag + 0 ft by 663 ft. Ready to decide whether to switch.",
+  "Accuracy: the cloudbase number was within 500 ft on only 3 of 10 days (tested at 2 in 3). Suggest: look at the misses for a pattern.",
   "Accuracy: the thermal forecast ran 0.9 steps strong over 14 days (right on 3). Suggest: set apart the days the sun forecast missed (no air setting fixes those), then backtest the forecast-air warming (now +3 F) at +0/+1/+2 F on the rest before changing it."
  ],
  "stats": {
-  "base_days": 21,
-  "base_mean": 378,
-  "base_raw_mean": 103,
-  "base_sd": 731,
-  "base_morning": 563,
-  "base_afternoon": 259,
+  "base_days": 20,
+  "base_mean": 447,
+  "base_raw_mean": 180,
+  "base_sd": 685,
+  "base_morning": 634,
+  "base_afternoon": 335,
   "alert_days": 4,
   "alert_hits": 0,
   "intrusions_missed": 0,
@@ -21,10 +22,10 @@
   "cam_redhill_cloud_min_days": 14,
   "station_days": 43,
   "accuracy": {
-   "base_n": 9,
-   "base_within": 2,
-   "base_typical": 710.0,
-   "base_bias": 130.0,
+   "base_n": 10,
+   "base_within": 3,
+   "base_typical": 650.0,
+   "base_bias": 110.0,
    "thermal_n": 14,
    "thermal_right": 3,
    "thermal_within_one": 13,
@@ -39,8 +40,8 @@
      3
     ]
    },
-   "camera_days": 11,
-   "derived_minus_camera": -250.0,
+   "camera_days": 12,
+   "derived_minus_camera": -230.0,
    "pilots": true
   }
  }
