@@ -1,1 +1,1 @@
-{"behind": {}, "date": "2026-11-07", "first_cloud": null, "morning_ridge_cloud": null, "morning_window": ["07:35", "08:25"], "points": {}}
+{"behind": {"06:35": 0.736, "06:44": 0.96}, "date": "2026-11-07", "first_cloud": null, "morning_ridge_cloud": null, "morning_window": ["07:35", "08:25"], "points": {"06:35": 0.23, "06:44": 0.393}}
