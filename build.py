@@ -5054,6 +5054,7 @@ def build() -> str:
     v = dict(
         updated=f"{now:%a %d %b %Y · %H:%M} HST", today_kind=today_kind, today_title=today_title,
         built=f"{now:%Y-%m-%dT%H:%M}",
+        cover=(safely(home_camera_url, 931, HOME_CAMERA) if HOME_CAMERA else None) or "",
         today_chip=today_chip, data_badge=nws_html + badge_html, summary=summary_html, base_label=base_label,
         therm=therm_html, base=base_html, up=up_html, line=line_html,
         base_row=(f'<dt><a href="details.html#t-thermal">{base_label}</a></dt><dd>{base_html}</dd>' if base_html else ""),
@@ -5084,21 +5085,19 @@ def build() -> str:
 # option 1: a home page at aukaka-9898.github.io, one card per site). Each
 # site writes docs/summary.json; the home page reads it from the same origin.
 # The card's camera frame is the one direction Sam picks (HOME_CAMERA, an FAA
-# camera id; None = no picture), saved small and overwritten each build.
+# camera id; None = no picture). The FAA image's own address, not a copy: a
+# copy committed every build put ~3 MB a day into the repo's history (Sam,
+# 2026-11-07: "do 1"). FAA keeps ~5 hours of frames, so overnight the cover and
+# the card can go blank until the morning build; the cover hides itself then.
 SUMMARY_FILE = HERE / "docs" / "summary.json"
 HOME_CAMERA = 13417          # Kekoa South (Sam, 2026-10-25)
-# Cards for sites still being built get their picture from this build too,
-# until they have pages of their own: (FAA site, camera, file under docs/).
-OTHER_CARD_CAMERAS: list = []        # Makapuʻu's moved to makapuu.py (10-25)
 
 
 def write_summary(v: dict, now: datetime) -> None:
     import re
     summ = re.search(r'<p class="summary">(.*?)</p>', v.get("summary", ""), re.S)
     chip_m = re.search(r'class="chip (\w+)">([^<]*)<', v.get("today_chip", ""))
-    camera = safely(save_home_camera, 931, HOME_CAMERA, "camera.jpg") if HOME_CAMERA else None
-    for site, cam, name in OTHER_CARD_CAMERAS:
-        safely(save_home_camera, site, cam, name)
+    camera = v.get("cover") or None
     out = {"site": "Kula", "title": "Kula Today", "page": "kula-today/", "built": v.get("built"),
            "updated": v.get("updated"), "kind": v.get("today_kind"), "heading": v.get("today_title"),
            "chip": None if not chip_m else {"class": chip_m.group(1), "word": chip_m.group(2)},
@@ -5108,21 +5107,12 @@ def write_summary(v: dict, now: datetime) -> None:
     SUMMARY_FILE.write_text(json.dumps(out), encoding="utf-8")
 
 
-def save_home_camera(site: int, camera: int, name: str) -> str | None:
-    from io import BytesIO
-    from PIL import Image
+def home_camera_url(site: int, camera: int) -> str | None:
+    """The newest frame's address on the FAA image server."""
     j = requests.get(KEKOA_URL, params={"siteId": site}, timeout=30,
                      headers={"Referer": f"https://weathercams.faa.gov/cameras/state/HI/cameraSite/{site}/summary"}).json()
     cam = next(c for c in j["payload"]["site"]["cameras"] if c["cameraId"] == camera)
-    im = max(cam["currentImages"], key=lambda x: x["imageDatetime"])
-    raw = requests.get(im["imageUri"], timeout=30).content
-    pic = Image.open(BytesIO(raw)).convert("RGB")
-    pic.thumbnail((800, 450))
-    out = HERE / "docs" / name
-    out.parent.mkdir(exist_ok=True)
-    pic.save(out, quality=80)
-    when = datetime.fromisoformat(im["imageDatetime"].replace("Z", "+00:00")).astimezone(HST)
-    return f"{name}?{when:%Y%m%d%H%M}"
+    return max(cam["currentImages"], key=lambda x: x["imageDatetime"])["imageUri"]
 
 
 PAGE = Template((HERE / "template.html").read_text(encoding="utf-8"))

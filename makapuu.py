@@ -541,18 +541,13 @@ def hour_table(rows) -> str:
 
 
 def save_camera() -> str | None:
-    from io import BytesIO
-    from PIL import Image
+    """The newest frame's address on the FAA image server -- not a copy in the
+    repo (Kula's build.home_camera_url, 2026-11-07)."""
     site, cam_id = CAMERA
     j = requests.get("https://weathercams.faa.gov/api/summary", params={"siteId": site}, timeout=30,
                      headers={"Referer": f"https://weathercams.faa.gov/cameras/state/HI/cameraSite/{site}/summary"}).json()
     cam = next(c for c in j["payload"]["site"]["cameras"] if c["cameraId"] == cam_id)
-    im = max(cam["currentImages"], key=lambda x: x["imageDatetime"])
-    pic = Image.open(BytesIO(requests.get(im["imageUri"], timeout=30).content)).convert("RGB")
-    pic.thumbnail((800, 450))
-    pic.save(OUT / "camera.jpg", quality=80)
-    when = datetime.fromisoformat(im["imageDatetime"].replace("Z", "+00:00")).astimezone(HST)
-    return f"camera.jpg?{when:%Y%m%d%H%M}"
+    return max(cam["currentImages"], key=lambda x: x["imageDatetime"])["imageUri"]
 
 
 # The air aloft (Sam, 10-25: yes to RRFS): the RRFS BUFKIT point at Kaneohe
@@ -1110,7 +1105,8 @@ def write(now: datetime) -> None:
     raw = (HERE / "template.html").read_text(encoding="utf-8")
     style = "".join("<style>" + part.split("</style>")[0] + "</style>" for part in raw.split("<style>")[1:])
     built = f"{now:%Y-%m-%dT%H:%M}"
-    page = PAGE.format(style=style, updated=f"{now:%a %d %b %Y · %H:%M} HST", webcam=WEBCAM, webcam_launch=WEBCAM_LAUNCH,
+    camera = _try(save_camera, problems=problems)
+    page = PAGE.format(cover=camera or "", style=style, updated=f"{now:%a %d %b %Y · %H:%M} HST", webcam=WEBCAM, webcam_launch=WEBCAM_LAUNCH,
                        kind=kind, chip=today_chip, today_title=today_title, today_body=today_body,
                        tom_title=f"Tomorrow · {tom:%a %d %b}",
                        tom_chip=(chip(tword) if tword else "") + nwsalerts.icon_html(icons.get(tom)), tomorrow=tom_html, barbs=barbs, week=week, built=built, alerts=alerts,
@@ -1122,7 +1118,6 @@ def write(now: datetime) -> None:
     _try(write_station_map, now, k, problems=problems)
     _try(write_details, now, problems=problems)
     (OUT / "details.html").write_text(details_page(now, built), encoding="utf-8")
-    camera = _try(save_camera, problems=problems)
     (OUT / "summary.json").write_text(json.dumps({
         "site": "Makapuu", "title": "Makapu‘u Today", "page": "kula-today/makapuu/", "built": built,
         "updated": f"{now:%a %d %b %Y · %H:%M} HST", "kind": kind,
@@ -1502,7 +1497,7 @@ tr.wk td {{ border-bottom: 0; padding-bottom: 2px; }} tr.wkh td {{ white-space: 
   </header>
   <div class="databadge"><div class="big">Under construction</div></div>
   <div>
-    <div class="cam"><iframe src="{webcam}" title="Kāneʻohe Bay webcam, live, looking southeast down the Koʻolau toward Makapuʻu" onload="setTimeout(function(){{var c=document.getElementById('camcover');if(c){{c.style.opacity=0;setTimeout(function(){{c.remove()}},700)}}}},3500)"></iframe><img id="camcover" src="camera.jpg?{built}" alt=""></div>
+    <div class="cam"><iframe src="{webcam}" title="Kāneʻohe Bay webcam, live, looking southeast down the Koʻolau toward Makapuʻu" onload="setTimeout(function(){{var c=document.getElementById('camcover');if(c){{c.style.opacity=0;setTimeout(function(){{c.remove()}},700)}}}},3500)"></iframe><img id="camcover" src="{cover}" alt="" onerror="this.remove()"></div>
     <div class="camcap">Kāneʻohe Bay webcam, live, looking southeast down the Koʻolau to Makapuʻu. FAA WeatherCam. <a href="{webcam}" target="_blank" rel="noopener">Open full size</a> · <a href="{webcam_launch}" target="_blank" rel="noopener">Makapuʻu camera, at the point</a></div>
   </div>
   <div class="cols">
