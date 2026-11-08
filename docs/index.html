@@ -101,18 +101,18 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><a class="homebtn" href="/">&larr; Home</a><div class="tag">Kula soaring briefing</div><h1>Kula Today</h1></div>
-    <div class="date">Updated Sun 08 Nov 2026 · 11:22 HST</div>
+    <div class="date">Updated Sun 08 Nov 2026 · 11:37 HST</div>
   </header>
 
   <div>
     <!-- The FAA viewer shows its station list before it opens the camera; the latest frame covers that until it has (Sam, 2026-10-25). -->
-    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" title="Red Hill webcam, live, looking south along the Kula slope" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="https://images.wcams-static.faa.gov/webimages/931/8/13417-1794173131455.jpg" alt="" onerror="this.remove()"></div>
+    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" title="Red Hill webcam, live, looking south along the Kula slope" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="https://images.wcams-static.faa.gov/webimages/931/8/13417-1794174204098.jpg" alt="" onerror="this.remove()"></div>
     <div class="camcap">Red Hill webcam, live. FAA WeatherCam (Kekoa). <a href="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" target="_blank" rel="noopener">Open full size</a></div>
   </div>
 
   <div class="cols">
     <section class="panel today" aria-labelledby="t-today">
-      <div class="kind">Measured today · 11:22 HST</div>
+      <div class="kind">Measured today · 11:37 HST</div>
       <div class="head"><h2 id="t-today">Today</h2></div>
       <div class="sub" style="display:flex;align-items:center;gap:6px;margin:2px 0 6px"><img src="https://api.weather.gov/icons/land/day/few?size=small" width="34" height="34" alt="Sunny (4%)" title="NWS: Sunny (4%)" loading="lazy" style="vertical-align:middle;border-radius:4px;margin-left:6px"><span>NWS today: Sunny (4%)</span></div><div class="datanote"><span class="chip fair">Limited data</span> 20 of 27 stations reporting; the Mesonet could not be reached, its readings are from the 11:08 update.</div>
       <p class="summary">Cloudbase is lowering. No trade air on the lower west slope.</p><div style="font-weight:600;font-size:.9rem;margin:10px 0 2px">Cloudbase so far</div><div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted,#6b6b66);margin:2px 0 4px">
@@ -122,7 +122,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="sub">Derived from the stations every 15 minutes during the upslope. Forecast: the RRFS Kahului sounding (run 08 12Z), its air at Kula Ag&#x27;s height lifted to condensation, hour by hour.</div>
 <script>
 (function () {
-  var d = {"derived": [], "forecast": [], "camera": [[625, 5600.0], [633, 5280.0], [642, 5010.0], [651, 5070.0], [659, 5070.0], [668, 5070.0], [677, 5070.0], [686, 5010.0]], "hidden": [], "proj": [[540, 3830.0], [600, 4730.0], [660, 4370.0], [720, 5310.0], [780, 6070.0], [840, 5030.0], [900, 4580.0], [960, 4330.0]], "nocall": [], "up": [540, 530], "nocu": null}, pt = function (a) { return {x: a[0], y: a[1]}; };
+  var d = {"derived": [], "forecast": [], "camera": [[625, 5600.0], [633, 5280.0], [642, 5010.0], [651, 5070.0], [659, 5070.0], [668, 5070.0], [677, 5070.0], [686, 5010.0], [694, 5100.0], [704, 5340.0]], "hidden": [], "proj": [[540, 3830.0], [600, 4730.0], [660, 4370.0], [720, 5310.0], [780, 6070.0], [840, 5030.0], [900, 4580.0], [960, 4330.0]], "nocall": [], "up": [540, 530], "nocu": null}, pt = function (a) { return {x: a[0], y: a[1]}; };
   var dark = matchMedia('(prefers-color-scheme: dark)').matches, muted = '#898781', grid = dark ? '#2c2c2a' : '#e1e0d9';
   var nocu = { id: 'nocu', beforeDatasetsDraw: function (c) { if (!d.nocu) return; var x = c.scales.x, a = c.chartArea, g = c.ctx,
     x0 = x.getPixelForValue(d.nocu[0]), x1 = x.getPixelForValue(d.nocu[1]);
@@ -174,7 +174,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 </script>
       <dl>
         <dt><a href="details.html#t-thermal">Thermals</a></dt><dd>Unavailable<div class="sub">Kula Ag's readings did not come through this update</div></dd>
-        <dt><a href="details.html#t-thermal">Cloudbase</a></dt><dd><span class="num">About 5,100 ft</span><div class="sub">Kekoa camera, the last 30 minutes to 11:26. Stations: about 4,500 ft (11 stations, 08:50).</div></dd>
+        <dt><a href="details.html#t-thermal">Cloudbase</a></dt><dd><span class="num">About 5,100 ft</span><div class="sub">Kekoa camera, the last 30 minutes to 11:44. Stations: about 4,500 ft (11 stations, 08:50).</div></dd>
         <dt><a href="details.html#t-ladder">Sun</a></dt><dd>Unavailable</dd>
         <dt><a href="details.html#stationmap">Shear line</a></dt><dd>Crossing Kula Highway near Kamehameha Schools<div class="sub">Fitted to the station map: flow from the north at Piiholo, upslope at Waihou Springs 1 nearest the line</div><div class="alert">7 of 21 stations not reporting: the line is less certain than usual</div></dd>
         
@@ -191,7 +191,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
         <dt>Sun</dt><dd><span class="num">96%</span> of clear sky, 10:00–14:00 (GFS)<div class="sub">The model can't see the slope's own cumulus: when it says 90% or more, Kula has measured about 80%. Good flying days measure about 80%, overcast about 50%, socked in 20%.</div></dd>
         <dt>Shear line</dt><dd>At Pukalani<div class="sub">Offshore wind E (100°)</div></dd>
       </dl>
-      <div class="sub">Forecast as of 10:33 HST</div><div class="sub">Forecast rules last checked October 2026: all holding.</div><div class="sub">Accuracy, last 30 days, the evening call against the day: cloudbase within 500 ft on 5 of 12 days (typical miss 620 ft); thermals right on 3 of 14, within one step on 13. Scored against pilot reports where there are any, otherwise the camera and stations.</div>
+      <div class="sub">Forecast as of 11:37 HST</div><div class="sub">Forecast rules last checked October 2026: all holding.</div><div class="sub">Accuracy, last 30 days, the evening call against the day: cloudbase within 500 ft on 5 of 12 days (typical miss 620 ft); thermals right on 3 of 14, within one step on 13. Scored against pilot reports where there are any, otherwise the camera and stations.</div>
     </section>
   </div>
 
@@ -213,7 +213,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
   </div>
 
 </div>
-<!-- build problems: HCDP observations, using api.weather.gov: MesonetDown: Mesonet out this build: ConnectTimeout: HTTPSConnectionPool(host='api.hcdp.ikewai.org', port=443): Max retries exceeded with url: /mesonet/db/measurements?location=hawaii&station_ids=0115%2C0118%2C0144%2C0116%2C0119%2C0145%2C0151%2C0152%2C0153%2C0143&var_ids=Tair_1_Avg%2CRH_1_Avg%2CWS_1_Avg%2CWDrs_1_Avg%2CWS_1_Max&start_date=2026-11-08T00%3A00%3A00-10%3A00&row_mode=json&limit=100000 (Caused by ConnectTimeoutError(<HTTPSConnection(host='api.hcdp.ikewai.org', port=443) at 0x732def7062a0), 'Connection to api.hcdp.ikewai.org timed out. (connect timeout=10)')); Mesonet sun: MesonetDown: Mesonet out this build (ConnectTimeout on /mesonet/db/measurements); RAWS sun HKUL: ReadTimeout: HTTPSConnectionPool(host='wrcc-archive.dri.edu', port=443): Read timed out. (read timeout=90); RAWS sun HKMH: ReadTimeout: HTTPSConnectionPool(host='wrcc-archive.dri.edu', port=443): Read timed out. (read timeout=90); first_cumulus: MesonetDown: Mesonet out this build (ConnectTimeout on /mesonet/db/measurements); sun_trend: MesonetDown: Mesonet out this build (ConnectTimeout on /mesonet/db/measurements); overnight_line: MesonetDown: Mesonet out this build (ConnectTimeout on /mesonet/db/measurements); summit_spill: MesonetDown: Mesonet out this build (ConnectTimeout on /mesonet/db/measurements); log_soil: MesonetDown: Mesonet out this build (ConnectTimeout on /mesonet/db/measurements) -->
+<!-- build problems: HCDP observations, using api.weather.gov: MesonetDown: Mesonet out this build: ConnectTimeout: HTTPSConnectionPool(host='api.hcdp.ikewai.org', port=443): Max retries exceeded with url: /mesonet/db/measurements?location=hawaii&station_ids=0115%2C0118%2C0144%2C0116%2C0119%2C0145%2C0151%2C0152%2C0153%2C0143&var_ids=Tair_1_Avg%2CRH_1_Avg%2CWS_1_Avg%2CWDrs_1_Avg%2CWS_1_Max&start_date=2026-11-08T00%3A00%3A00-10%3A00&row_mode=json&limit=100000 (Caused by ConnectTimeoutError(<HTTPSConnection(host='api.hcdp.ikewai.org', port=443) at 0x717af3d360c0), 'Connection to api.hcdp.ikewai.org timed out. (connect timeout=10)')); Mesonet sun: MesonetDown: Mesonet out this build (ConnectTimeout on /mesonet/db/measurements); RAWS sun HKUL: ReadTimeout: HTTPSConnectionPool(host='wrcc-archive.dri.edu', port=443): Read timed out. (read timeout=90); RAWS sun HKMH: ReadTimeout: HTTPSConnectionPool(host='wrcc-archive.dri.edu', port=443): Read timed out. (read timeout=90); first_cumulus: MesonetDown: Mesonet out this build (ConnectTimeout on /mesonet/db/measurements); sun_trend: MesonetDown: Mesonet out this build (ConnectTimeout on /mesonet/db/measurements); overnight_line: MesonetDown: Mesonet out this build (ConnectTimeout on /mesonet/db/measurements); summit_spill: MesonetDown: Mesonet out this build (ConnectTimeout on /mesonet/db/measurements); details yesterday: MesonetDown; log_soil: MesonetDown: Mesonet out this build (ConnectTimeout on /mesonet/db/measurements) -->
 <script>
 /* Catch up with a new build within ~2 minutes (Sam, 2026-10-17: "the page
    does not seem to autoupdate"). stations.json's "made" is the build time;
@@ -221,7 +221,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
    browser's 10-minute cached copy is bypassed. The 15-minute refresh stays
    as a backstop. */
 (function () {
-  var built = "2026-11-08T11:22";
+  var built = "2026-11-08T11:37";
   function check() {
     fetch("stations.json?" + Date.now(), {cache: "no-store"})
       .then(function (r) { return r.json(); })
