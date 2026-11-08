@@ -101,18 +101,18 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><a class="homebtn" href="/">&larr; Home</a><div class="tag">Kula soaring briefing</div><h1>Kula Today</h1></div>
-    <div class="date">Updated Sun 08 Nov 2026 · 12:22 HST</div>
+    <div class="date">Updated Sun 08 Nov 2026 · 12:37 HST</div>
   </header>
 
   <div>
     <!-- The FAA viewer shows its station list before it opens the camera; the latest frame covers that until it has (Sam, 2026-10-25). -->
-    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" title="Red Hill webcam, live, looking south along the Kula slope" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="https://images.wcams-static.faa.gov/webimages/931/8/13417-1794176822508.jpg" alt="" onerror="this.remove()"></div>
+    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" title="Red Hill webcam, live, looking south along the Kula slope" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="https://images.wcams-static.faa.gov/webimages/931/8/13417-1794177842625.jpg" alt="" onerror="this.remove()"></div>
     <div class="camcap">Red Hill webcam, live. FAA WeatherCam (Kekoa). <a href="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" target="_blank" rel="noopener">Open full size</a></div>
   </div>
 
   <div class="cols">
     <section class="panel today" aria-labelledby="t-today">
-      <div class="kind">Measured today · 12:22 HST</div>
+      <div class="kind">Measured today · 12:37 HST</div>
       <div class="head"><h2 id="t-today">Today</h2><span class="chip fair">Light</span></div>
       <div class="sub" style="display:flex;align-items:center;gap:6px;margin:2px 0 6px"><img src="https://api.weather.gov/icons/land/day/few?size=small" width="34" height="34" alt="Sunny (4%)" title="NWS: Sunny (4%)" loading="lazy" style="vertical-align:middle;border-radius:4px;margin-left:6px"><span>NWS today: Sunny (4%)</span></div>
       <p class="summary">Cloudbase is at its highest of the day and still rising. No trade air on the lower west slope.</p><div style="font-weight:600;font-size:.9rem;margin:10px 0 2px">Cloudbase so far</div><div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted,#6b6b66);margin:2px 0 4px">
@@ -122,7 +122,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="sub">Derived from the stations every 15 minutes during the upslope. Forecast: the RRFS Kahului sounding (run 08 12Z), its air at Kula Ag&#x27;s height lifted to condensation, hour by hour.</div>
 <script>
 (function () {
-  var d = {"derived": [[540, 4610.0], [660, 4550.0], [675, 4610.0], [690, 4800.0], [705, 4890.0]], "forecast": [], "camera": [[625, 5600.0], [633, 5280.0], [642, 5010.0], [651, 5070.0], [659, 5070.0], [668, 5070.0], [677, 5070.0], [686, 5010.0], [694, 5100.0], [704, 5340.0], [712, 5170.0], [721, 5070.0], [747, 5300.0]], "hidden": [], "proj": [[540, 3830.0], [600, 4730.0], [660, 4370.0], [720, 5310.0], [780, 6070.0], [840, 5030.0], [900, 4580.0], [960, 4330.0]], "nocall": [738], "up": [540, 710], "nocu": null}, pt = function (a) { return {x: a[0], y: a[1]}; };
+  var d = {"derived": [[540, 4610.0], [660, 4550.0], [675, 4610.0], [690, 4800.0], [705, 4890.0]], "forecast": [], "camera": [[625, 5600.0], [633, 5280.0], [642, 5010.0], [651, 5070.0], [659, 5070.0], [668, 5070.0], [677, 5070.0], [686, 5010.0], [694, 5100.0], [704, 5340.0], [712, 5170.0], [721, 5070.0], [747, 5300.0], [755, 5080.0], [764, 5200.0]], "hidden": [], "proj": [[540, 3830.0], [600, 4730.0], [660, 4370.0], [720, 5310.0], [780, 6070.0], [840, 5030.0], [900, 4580.0], [960, 4330.0]], "nocall": [738], "up": [540, 710], "nocu": null}, pt = function (a) { return {x: a[0], y: a[1]}; };
   var dark = matchMedia('(prefers-color-scheme: dark)').matches, muted = '#898781', grid = dark ? '#2c2c2a' : '#e1e0d9';
   var nocu = { id: 'nocu', beforeDatasetsDraw: function (c) { if (!d.nocu) return; var x = c.scales.x, a = c.chartArea, g = c.ctx,
     x0 = x.getPixelForValue(d.nocu[0]), x1 = x.getPixelForValue(d.nocu[1]);
@@ -174,12 +174,12 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 </script>
       <dl>
         <dt><a href="details.html#t-thermal">Thermals</a></dt><dd>Seem <strong>light</strong> as of 11:45<div class="sub">Kula Ag's last hour of air through the RRFS sounding (thermal.py)</div></dd>
-        <dt><a href="details.html#t-thermal">Cloudbase</a></dt><dd><span class="num">About 5,200 ft</span><div class="sub">Kekoa camera, the last 30 minutes to 12:27. Stations: about 5,000 ft (11 stations, 11:50).</div></dd>
+        <dt><a href="details.html#t-thermal">Cloudbase</a></dt><dd><span class="num">About 5,200 ft</span><div class="sub">Kekoa camera, the last 30 minutes to 12:44. Stations: about 5,000 ft (11 stations, 11:50).</div></dd>
         <dt><a href="details.html#t-ladder">Sun</a></dt><dd>Unavailable</dd>
-        <dt><a href="details.html#stationmap">Shear line</a></dt><dd>Crossing Kula Highway near Kamehameha Schools<div class="sub">Fitted to the station map: flow from the north at Piiholo, upslope at MECO Kula 2 nearest the line</div><div class="sub">At the coast: Paia 080° at 23 mph</div></dd>
+        <dt><a href="details.html#stationmap">Shear line</a></dt><dd>Crossing Kula Highway near Kamehameha Schools<div class="sub">Fitted to the station map: flow from the north at Piiholo, upslope at MECO Kula 2 nearest the line</div><div class="sub">At the coast: Paia 081° at 23 mph</div></dd>
         
         <dt><a href="details.html#stationmap">Upslope</a></dt><dd>On since about <span class="num">08:30</span><div class="sub">Drainage ended about 08:15</div></dd>
-        <dt><a href="details.html#stationmap">Wind</a></dt><dd><span class="num">3 mph</span>, gusts to 10<div class="sub">Lower elevations, 10 stations, last hour</div></dd>
+        <dt><a href="details.html#stationmap">Wind</a></dt><dd><span class="num">3 mph</span>, gusts to 11<div class="sub">Lower elevations, 10 stations, last hour</div></dd>
       </dl>
     </section>
     <section class="panel tomorrow" aria-labelledby="t-tomorrow">
@@ -191,7 +191,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
         <dt>Sun</dt><dd><span class="num">96%</span> of clear sky, 10:00–14:00 (GFS)<div class="sub">The model can't see the slope's own cumulus: when it says 90% or more, Kula has measured about 80%. Good flying days measure about 80%, overcast about 50%, socked in 20%.</div></dd>
         <dt>Shear line</dt><dd>At Pukalani<div class="sub">Offshore wind E (100°)</div></dd>
       </dl>
-      <div class="sub">Forecast as of 11:37 HST</div><div class="sub">Forecast rules last checked October 2026: all holding.</div><div class="sub">Accuracy, last 30 days, the evening call against the day: cloudbase within 500 ft on 5 of 12 days (typical miss 620 ft); thermals right on 3 of 14, within one step on 13. Scored against pilot reports where there are any, otherwise the camera and stations.</div>
+      <div class="sub">Forecast as of 12:37 HST</div><div class="sub">Forecast rules last checked October 2026: all holding.</div><div class="sub">Accuracy, last 30 days, the evening call against the day: cloudbase within 500 ft on 5 of 12 days (typical miss 620 ft); thermals right on 3 of 14, within one step on 13. Scored against pilot reports where there are any, otherwise the camera and stations.</div>
     </section>
   </div>
 
@@ -213,7 +213,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
   </div>
 
 </div>
-<!-- build problems: RAWS sun HKUL: ReadTimeout: HTTPSConnectionPool(host='wrcc-archive.dri.edu', port=443): Read timed out. (read timeout=90); RAWS sun HKMH: ReadTimeout: HTTPSConnectionPool(host='wrcc-archive.dri.edu', port=443): Read timed out. (read timeout=90); summit_spill: AttributeError: 'DataFrame' object has no attribute 'value'; shear line does not reach 5,000 ft within 8 km of its origin -->
+<!-- build problems: RAWS sun HKUL: ReadTimeout: HTTPSConnectionPool(host='wrcc-archive.dri.edu', port=443): Read timed out. (read timeout=90); RAWS sun HKMH: ReadTimeout: HTTPSConnectionPool(host='wrcc-archive.dri.edu', port=443): Read timed out. (read timeout=90); summit_spill: AttributeError: 'DataFrame' object has no attribute 'value' -->
 <script>
 /* Catch up with a new build within ~2 minutes (Sam, 2026-10-17: "the page
    does not seem to autoupdate"). stations.json's "made" is the build time;
@@ -221,7 +221,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
    browser's 10-minute cached copy is bypassed. The 15-minute refresh stays
    as a backstop. */
 (function () {
-  var built = "2026-11-08T12:22";
+  var built = "2026-11-08T12:37";
   function check() {
     fetch("stations.json?" + Date.now(), {cache: "no-store"})
       .then(function (r) { return r.json(); })
