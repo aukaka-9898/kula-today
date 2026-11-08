@@ -30,9 +30,11 @@ STATUS_FILE = Path(__file__).parent / "docs" / "rules_status.json"
 
 # Each month's normal base: the middle 60% of the history days (2024-01 to
 # 2026-10). Below the first is a low day for the month, above the second high.
+# October lowered 4,500 -> 4,300 from the monthly check (Sam, 2026-11-07: "Base
+# has seemed a little optimistic, lower the norm").
 MONTH_BASE_RANGE = {1: (4100, 5500), 2: (4200, 5100), 3: (4200, 5100), 4: (3900, 5200),
                     5: (4300, 5100), 6: (4300, 5300), 7: (4600, 5500), 8: (4300, 5500),
-                    9: (4700, 5300), 10: (4500, 5400), 11: (4500, 5500), 12: (4500, 5600)}
+                    9: (4700, 5300), 10: (4300, 5400), 11: (4500, 5500), 12: (4500, 5600)}
 
 
 def category(level, month) -> str | None:
