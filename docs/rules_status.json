@@ -11,6 +11,18 @@
   "P6": {
    "active": true,
    "live_fail_months": 0
+  },
+  "B3": {
+   "active": true,
+   "live_fail_months": 0
+  },
+  "B4": {
+   "active": true,
+   "live_fail_months": 0
+  },
+  "P8": {
+   "active": true,
+   "live_fail_months": 0
   }
  },
  "checked": "2026-10"

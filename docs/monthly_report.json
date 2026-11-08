@@ -1,91 +1,254 @@
 {
  "month": "2026-10",
- "made": "2026-10-17 18:36",
- "events": [],
+ "made": "2026-11-08 01:19",
+ "events": [
+  "1 change(s) proposed -- see the monthly report."
+ ],
  "active": [
   "B1",
   "B2",
-  "P6"
+  "P6",
+  "B3",
+  "B4",
+  "P8"
  ],
  "history": {
   "B1": {
-   "fired": 65,
-   "share": 0.065,
-   "right": 0.8,
+   "fired": 68,
+   "share": 0.068,
+   "right": 0.81,
    "base_rate": 0.2,
    "thirds": [
     {
-     "from": "2024-01",
-     "fired": 6,
-     "right": 1.0,
-     "base_rate": 0.16216216216216217
-    },
-    {
-     "from": "2024-12",
+     "from": "2024-02",
      "fired": 5,
-     "right": 0.6,
-     "base_rate": 0.1111111111111111
+     "right": 1.0,
+     "base_rate": 0.15315315315315314
     },
     {
-     "from": "2025-11",
-     "fired": 54,
-     "right": 0.7962962962962963,
-     "base_rate": 0.3213213213213213
+     "from": "2025-01",
+     "fired": 6,
+     "right": 0.6666666666666666,
+     "base_rate": 0.1144578313253012
+    },
+    {
+     "from": "2025-12",
+     "fired": 57,
+     "right": 0.8070175438596491,
+     "base_rate": 0.33433734939759036
     }
    ]
   },
   "B2": {
-   "fired": 57,
-   "share": 0.057,
-   "right": 0.65,
+   "fired": 58,
+   "share": 0.058,
+   "right": 0.66,
    "base_rate": 0.21,
    "thirds": [
     {
-     "from": "2024-01",
-     "fired": 23,
-     "right": 0.6086956521739131,
-     "base_rate": 0.26126126126126126
+     "from": "2024-02",
+     "fired": 25,
+     "right": 0.6,
+     "base_rate": 0.26426426426426425
     },
     {
-     "from": "2024-12",
-     "fired": 27,
-     "right": 0.6666666666666666,
-     "base_rate": 0.2672672672672673
+     "from": "2025-01",
+     "fired": 25,
+     "right": 0.68,
+     "base_rate": 0.2710843373493976
     },
     {
-     "from": "2025-11",
-     "fired": 7,
-     "right": 0.7142857142857143,
-     "base_rate": 0.0990990990990991
+     "from": "2025-12",
+     "fired": 8,
+     "right": 0.75,
+     "base_rate": 0.09337349397590361
+    }
+   ]
+  },
+  "B3": {
+   "fired": 161,
+   "share": 0.161,
+   "right": 0.53,
+   "base_rate": 0.21,
+   "thirds": [
+    {
+     "from": "2024-02",
+     "fired": 59,
+     "right": 0.5423728813559322,
+     "base_rate": 0.26426426426426425
+    },
+    {
+     "from": "2025-01",
+     "fired": 93,
+     "right": 0.5268817204301075,
+     "base_rate": 0.2710843373493976
+    },
+    {
+     "from": "2025-12",
+     "fired": 9,
+     "right": 0.5555555555555556,
+     "base_rate": 0.09337349397590361
+    }
+   ]
+  },
+  "B4": {
+   "fired": 113,
+   "share": 0.113,
+   "right": 0.44,
+   "base_rate": 0.21,
+   "thirds": [
+    {
+     "from": "2024-02",
+     "fired": 59,
+     "right": 0.4067796610169492,
+     "base_rate": 0.26426426426426425
+    },
+    {
+     "from": "2025-01",
+     "fired": 37,
+     "right": 0.4864864864864865,
+     "base_rate": 0.2710843373493976
+    },
+    {
+     "from": "2025-12",
+     "fired": 17,
+     "right": 0.47058823529411764,
+     "base_rate": 0.09337349397590361
+    }
+   ]
+  },
+  "P8": {
+   "fired": 85,
+   "share": 0.085,
+   "right": 0.46,
+   "base_rate": 0.2,
+   "thirds": [
+    {
+     "from": "2024-02",
+     "fired": 30,
+     "right": 0.4666666666666667,
+     "base_rate": 0.15315315315315314
+    },
+    {
+     "from": "2025-01",
+     "fired": 20,
+     "right": 0.3,
+     "base_rate": 0.1144578313253012
+    },
+    {
+     "from": "2025-12",
+     "fired": 35,
+     "right": 0.5428571428571428,
+     "base_rate": 0.33433734939759036
     }
    ]
   },
   "P6": {
    "fired": 93,
    "share": 0.093,
-   "right": 0.84,
+   "right": 0.85,
    "base_rate": 0.37,
    "thirds": [
     {
-     "from": "2024-01",
-     "fired": 36,
-     "right": 0.75,
-     "base_rate": 0.36036036036036034
+     "from": "2024-02",
+     "fired": 39,
+     "right": 0.7948717948717948,
+     "base_rate": 0.37537537537537535
     },
     {
-     "from": "2024-12",
-     "fired": 35,
-     "right": 0.8857142857142857,
-     "base_rate": 0.37237237237237236
+     "from": "2025-01",
+     "fired": 34,
+     "right": 0.8823529411764706,
+     "base_rate": 0.3825301204819277
     },
     {
-     "from": "2025-11",
-     "fired": 22,
-     "right": 0.9090909090909091,
-     "base_rate": 0.3813813813813814
+     "from": "2025-12",
+     "fired": 20,
+     "right": 0.9,
+     "base_rate": 0.3614457831325301
     }
    ]
   }
  },
- "live": {}
+ "live": {
+  "B1": {
+   "calls": 1,
+   "right": 1
+  },
+  "B2": {
+   "calls": 1,
+   "right": 1
+  },
+  "B3": {
+   "calls": 0,
+   "right": 0
+  },
+  "B4": {
+   "calls": 0,
+   "right": 0
+  },
+  "P6": {
+   "calls": 2,
+   "right": 1
+  },
+  "thermal": {
+   "days": 9,
+   "same": 2,
+   "off_by_2plus": 1
+  }
+ },
+ "base_vs_aloft": {
+  "from": "2026-10-23",
+  "to": "2026-10-31",
+  "hours": 43,
+  "days": 7,
+  "cells": [
+   {
+    "aloft": "Dry aloft (under 60%)",
+    "flow": "Light / variable",
+    "hours": 6,
+    "days": 1,
+    "gap": 490.0,
+    "swing": 0.9
+   },
+   {
+    "aloft": "Dry aloft (under 60%)",
+    "flow": "Trades",
+    "hours": 4,
+    "days": 1,
+    "gap": 770.0,
+    "swing": null
+   },
+   {
+    "aloft": "Moist (60-90%)",
+    "flow": "Non-trade",
+    "hours": 2,
+    "days": 1,
+    "gap": 260.0,
+    "swing": null
+   },
+   {
+    "aloft": "Moist (60-90%)",
+    "flow": "Trades",
+    "hours": 4,
+    "days": 1,
+    "gap": 80.0,
+    "swing": null
+   },
+   {
+    "aloft": "Saturated (over 90%)",
+    "flow": "Trades",
+    "hours": 27,
+    "days": 5,
+    "gap": 10.0,
+    "swing": 2.9
+   }
+  ],
+  "r_gap": {
+   "combo": 0.43,
+   "rh": -0.42,
+   "sun": 0.34
+  },
+  "r_hours": 40
+ }
 }
