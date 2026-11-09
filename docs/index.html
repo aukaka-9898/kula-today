@@ -101,26 +101,26 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><a class="homebtn" href="/">&larr; Home</a><div class="tag">Kula soaring briefing</div><h1>Kula Today</h1></div>
-    <div class="date">Updated Mon 09 Nov 2026 · 09:22 HST</div>
+    <div class="date">Updated Mon 09 Nov 2026 · 09:37 HST</div>
   </header>
 
   <div>
     <!-- The FAA viewer shows its station list before it opens the camera; the latest frame covers that until it has (Sam, 2026-10-25). -->
-    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" title="Red Hill webcam, live, looking south along the Kula slope" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="https://images.wcams-static.faa.gov/webimages/931/9/13417-1794252378372.jpg" alt="" onerror="this.remove()"></div>
+    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" title="Red Hill webcam, live, looking south along the Kula slope" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="https://images.wcams-static.faa.gov/webimages/931/9/13417-1794253401350.jpg" alt="" onerror="this.remove()"></div>
     <div class="camcap">Red Hill webcam, live. FAA WeatherCam (Kekoa). <a href="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" target="_blank" rel="noopener">Open full size</a></div>
   </div>
 
   <div class="cols">
     <section class="panel today" aria-labelledby="t-today">
-      <div class="kind">Measured today · 09:22 HST</div>
+      <div class="kind">Measured today · 09:37 HST</div>
       <div class="head"><h2 id="t-today">Today</h2><span class="chip fair">Light</span></div>
       <div class="sub" style="display:flex;align-items:center;gap:6px;margin:2px 0 6px"><img src="https://api.weather.gov/icons/land/day/sct?size=small" width="34" height="34" alt="Mostly Sunny (2%)" title="NWS: Mostly Sunny (2%)" loading="lazy" style="vertical-align:middle;border-radius:4px;margin-left:6px"><span>NWS today: Mostly Sunny (2%)</span></div>
-      
+      <p class="summary">The whole slope is in sun. No trade air on the lower west slope.</p>
       <dl>
         <dt><a href="details.html#t-thermal">Thermals</a></dt><dd>Probably <strong>light</strong> (forecast)<div class="sub">thermal.py on the forecast air; measured rating just after 10:00</div></dd>
         <dt><a href="details.html#t-thermal">Cloudbase</a></dt><dd>Not yet<div class="sub">Derived once the upslope sets in, usually about 08:45. Today's call is in the Forecast panel</div></dd>
-        <dt><a href="details.html#t-ladder">Sun</a></dt><dd><span class="num">98%</span> of clear sky forecast, 10:00–14:00 (GFS)<div class="sub">Measured from about 09:30; Kula is in Haleakala's shadow until about 08:15</div></dd>
-        <dt><a href="details.html#stationmap">Shear line</a></dt><dd>At Pukalani (forecast)<div class="sub">Offshore wind E (100°). Measured once the upslope sets in</div></dd>
+        <dt><a href="details.html#t-ladder">Sun</a></dt><dd><span class="num">100%</span> of clear sky, lower Kula slope<div class="sub">Last hour, as of 09:15; average of Kula Ag 100%; Pulehu left out, in trade air</div></dd>
+        <dt><a href="details.html#stationmap">Shear line</a></dt><dd>Crossing Kula Highway near Omaopio<div class="sub">Fitted to the station map: flow from the north at Pulehu, upslope at Red Hill nearest the line (before the upslope)</div></dd>
         
         <dt><a href="details.html#stationmap">Upslope</a></dt><dd>No clear upslope today</dd>
         <dt><a href="details.html#stationmap">Wind</a></dt><dd><span class="num">1 mph</span>, gusts to 5<div class="sub">Lower elevations, 10 stations, last hour</div></dd>
@@ -135,7 +135,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
         <dt>Sun</dt><dd><span class="num">98%</span> of clear sky, 10:00–14:00 (GFS)<div class="sub">The model can't see the slope's own cumulus: when it says 90% or more, Kula has measured about 80%. Good flying days measure about 80%, overcast about 50%, socked in 20%.</div></dd>
         <dt>Shear line</dt><dd>At Pukalani<div class="sub">Offshore wind E (100°)</div></dd>
       </dl>
-      <div class="sub">Forecast as of 08:23 HST</div><div class="sub">Forecast rules last checked October 2026: all holding.</div><div class="sub">Accuracy, last 30 days, the evening call against the day: cloudbase within 500 ft on 6 of 13 days (typical miss 570 ft); thermals right on 3 of 15, within one step on 14. Scored against pilot reports where there are any, otherwise the camera and stations.</div>
+      <div class="sub">Forecast as of 09:37 HST</div><div class="sub">Forecast rules last checked October 2026: all holding.</div><div class="sub">Accuracy, last 30 days, the evening call against the day: cloudbase within 500 ft on 6 of 13 days (typical miss 570 ft); thermals right on 3 of 15, within one step on 14. Scored against pilot reports where there are any, otherwise the camera and stations.</div>
     </section>
   </div>
 
@@ -157,7 +157,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
   </div>
 
 </div>
-<!-- build problems: RAWS sun HKUL: ReadTimeout: HTTPSConnectionPool(host='wrcc-archive.dri.edu', port=443): Read timed out. (read timeout=90); RAWS sun HKMH: ReadTimeout: HTTPSConnectionPool(host='wrcc-archive.dri.edu', port=443): Read timed out. (read timeout=90) -->
+<!-- build problems: RAWS sun HKUL: ReadTimeout: HTTPSConnectionPool(host='wrcc-archive.dri.edu', port=443): Read timed out. (read timeout=90); RAWS sun HKMH: ReadTimeout: HTTPSConnectionPool(host='wrcc-archive.dri.edu', port=443): Read timed out. (read timeout=90); station_forecast_lcl: ReadTimeout: HTTPSConnectionPool(host='api.open-meteo.com', port=443): Read timed out. (read timeout=60) -->
 <script>
 /* Catch up with a new build within ~2 minutes (Sam, 2026-10-17: "the page
    does not seem to autoupdate"). stations.json's "made" is the build time;
@@ -165,7 +165,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
    browser's 10-minute cached copy is bypassed. The 15-minute refresh stays
    as a backstop. */
 (function () {
-  var built = "2026-11-09T09:22";
+  var built = "2026-11-09T09:37";
   function check() {
     fetch("stations.json?" + Date.now(), {cache: "no-store"})
       .then(function (r) { return r.json(); })
