@@ -101,12 +101,12 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><a class="homebtn" href="/">&larr; Home</a><div class="tag">Kula soaring briefing</div><h1>Kula Today</h1></div>
-    <div class="date">Updated Mon 09 Nov 2026 · 18:39 HST</div>
+    <div class="date">Updated Mon 09 Nov 2026 · 18:52 HST</div>
   </header>
 
   <div>
     <!-- The FAA viewer shows its station list before it opens the camera; the latest frame covers that until it has (Sam, 2026-10-25). -->
-    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" title="Red Hill webcam, live, looking south along the Kula slope" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="https://images.wcams-static.faa.gov/webimages/931/10/13417-1794285524910.jpg" alt="" onerror="this.remove()"></div>
+    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" title="Red Hill webcam, live, looking south along the Kula slope" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="https://images.wcams-static.faa.gov/webimages/931/10/13417-1794286581539.jpg" alt="" onerror="this.remove()"></div>
     <div class="camcap">Red Hill webcam, live. FAA WeatherCam (Kekoa). <a href="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" target="_blank" rel="noopener">Open full size</a></div>
   </div>
 
@@ -115,7 +115,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
       <div class="kind">The day in review</div>
       <div class="head"><h2 id="t-today">Today · Mon 09 Nov</h2><span class="chip warn">Flat</span></div>
       
-      <p class="summary">A flat day (forecast light). Thermals stayed light all day. The upslope ran from about 09:15 to about 16:15. The evening before, the page called it normal, about 5,000 ft, a hit. Midday the base averaged about 5,100 ft by the Kekoa camera, 100 ft higher than the evening&#x27;s number; the morning update said about 5,400 ft, off by 300 ft. Most of the day the shear line was crossing Kula Highway near Kamehameha Schools; furthest north about 13:54, at Pukalani, running toward Kahului; furthest south about 09:37, crossing Kula Highway near Omaopio. Data gaps: no readings all day from 3 stations (Kahikinui, Nakula, Upper Kahikinui); the Mesonet could not be reached on 11 of 54 updates.</p><div class="watch"><div class="kind">What the day did</div><ul><li>The cloud decayed from the base up from about 16:30.</li><li>Watched for: Late-day decay (P7) from 16:37.</li><li>Camera against derived: midday within 200 ft, afternoon about 200 ft higher.</li></ul></div><div style="font-weight:600;font-size:.9rem;margin:10px 0 2px">Cloudbase</div><div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted,#6b6b66);margin:2px 0 4px">
+      <p class="summary">A flat day (forecast light). Thermals stayed light all day. The upslope ran from about 09:15 to about 16:15. The evening before, the page called it normal, about 5,000 ft, a hit. Midday the base averaged about 5,100 ft by the Kekoa camera, 100 ft higher than the evening&#x27;s number; the morning update said about 5,400 ft, off by 300 ft. Most of the day the shear line was crossing Kula Highway near Kamehameha Schools; furthest north about 13:54, at Pukalani, running toward Kahului; furthest south about 09:37, crossing Kula Highway near Omaopio. Data gaps: no readings all day from 3 stations (Kahikinui, Nakula, Upper Kahikinui); the Mesonet could not be reached on 11 of 55 updates.</p><div class="watch"><div class="kind">What the day did</div><ul><li>The cloud decayed from the base up from about 16:30.</li><li>Watched for: Late-day decay (P7) from 16:37.</li><li>Camera against derived: midday within 200 ft, afternoon about 200 ft higher.</li></ul></div><div style="font-weight:600;font-size:.9rem;margin:10px 0 2px">Cloudbase</div><div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted,#6b6b66);margin:2px 0 4px">
 <span><span style="display:inline-block;width:16px;border-top:2px dashed #8a5cd6;vertical-align:middle"></span> Forecast (sounding)</span>
 <span><span style="display:inline-block;width:16px;height:2px;background:#2a78d6;vertical-align:middle"></span> Derived (stations)</span><span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#3f9d5a;vertical-align:middle"></span> Kekoa camera</span></div>
 <div style="position:relative;width:100%;min-width:0;height:220px"><canvas id="basechart" role="img" aria-label="Derived cloudbase through the day"></canvas></div>
@@ -213,7 +213,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
   </div>
 
 </div>
-<!-- build problems: RAWS sun HKUL: ReadTimeout: HTTPSConnectionPool(host='wrcc-archive.dri.edu', port=443): Read timed out. (read timeout=90); RAWS sun HKMH: ReadTimeout: HTTPSConnectionPool(host='wrcc-archive.dri.edu', port=443): Read timed out. (read timeout=90) -->
+<!-- build problems: RAWS sun HKUL: ReadTimeout: HTTPSConnectionPool(host='wrcc-archive.dri.edu', port=443): Read timed out. (read timeout=90); RAWS sun HKMH: ReadTimeout: HTTPSConnectionPool(host='wrcc-archive.dri.edu', port=443): Read timed out. (read timeout=90); sun ladder from 17:15 reused -->
 <script>
 /* Catch up with a new build within ~2 minutes (Sam, 2026-10-17: "the page
    does not seem to autoupdate"). stations.json's "made" is the build time;
@@ -221,7 +221,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
    browser's 10-minute cached copy is bypassed. The 15-minute refresh stays
    as a backstop. */
 (function () {
-  var built = "2026-11-09T18:39";
+  var built = "2026-11-09T18:52";
   function check() {
     fetch("stations.json?" + Date.now(), {cache: "no-store"})
       .then(function (r) { return r.json(); })
