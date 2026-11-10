@@ -3869,13 +3869,18 @@ def airmass_noon(path, day) -> dict | None:
 # jumped between eras (+3,000 ft summer 2025, ~0 that winter, -400 now).
 # Refitted from the history files each build.
 @functools.cache
-def base_blend_fit(morning: bool = False):
+def base_blend_fit(morning: bool = False, dew: bool = False):
     """Fit on history. Evening: the day-ahead run (nam12_ahead lead 1) and
     today's base. Morning, before the upslope (Sam, 10-23: "the early Today
     panel"): the overnight 12Z run (nam12) and yesterday's base -- 411 ft
     typical miss against 430 the evening before. GOES at 06:00 added only
-    6 ft more and was skipped (Sam)."""
-    d = pd.read_csv(HERE / "history" / "days.csv", parse_dates=["date"])[["date", "level"]].dropna()
+    6 ft more and was skipped (Sam). dew: plus Kula Ag's 06:00 dew point
+    against its month's mean (Sam, 11-09: "Use the 6 am Kula Ag data"):
+    ~40 ft lower per degree wetter; 396 ft typical miss against 411, a year
+    held out at a time, 1,010 days."""
+    d = pd.read_csv(HERE / "history" / "days.csv", parse_dates=["date"])
+    td6 = dict(zip(d.date, d.td6)) if "td6" in d else {}
+    d = d[["date", "level"]].dropna()
     if morning:
         a = pd.read_csv(HERE / "history" / "nam12.csv", parse_dates=["date"])
     else:
@@ -3884,22 +3889,61 @@ def base_blend_fit(morning: bool = False):
     a = a[(a.rh_5_7k_12 <= 100) & (a.rh_7_10k_12 <= 100)]
     x = d.merge(a[["date", "rh_5_7k_12", "rh_7_10k_12"]], on="date")
     x["prev"] = x.date.map(dict(zip(d.date + pd.Timedelta(days=1), d.level)))
-    x = x.dropna(subset=["prev", "rh_5_7k_12", "rh_7_10k_12"])
+    cols = ["prev", "rh_5_7k_12", "rh_7_10k_12"]
+    if dew:
+        x["td6"] = x.date.map(td6)
+        cols.append("td6")
+    x = x.dropna(subset=cols)
     norm = x.groupby(x.date.dt.month)["level"].median()
     n = x.date.dt.month.map(norm)
-    A = np.column_stack([np.ones(len(x)), x.prev - n, x.rh_5_7k_12, x.rh_7_10k_12])
+    terms = [np.ones(len(x)), x.prev - n, x.rh_5_7k_12, x.rh_7_10k_12]
+    dew_mean = None
+    if dew:
+        dew_mean = x.groupby(x.date.dt.month)["td6"].mean()
+        terms.append(x.td6 - x.date.dt.month.map(dew_mean))
+        dew_mean = dew_mean.to_dict()
+    A = np.column_stack(terms)
     b, *_ = np.linalg.lstsq(A, x.level - n, rcond=None)
     q = np.quantile(x.level - n - A @ b, [0.1, 0.9])
-    return norm.to_dict(), b, round(float(q[1] - q[0]) / 2, -1)
+    return norm.to_dict(), b, round(float(q[1] - q[0]) / 2, -1), dew_mean
 
 
-def base_blend(day, air, level_before, morning: bool = False):
-    """(ft, band) or None. level_before: the day before's midday base."""
+def base_blend(day, air, level_before, morning: bool = False, dew6=None):
+    """(ft, band) or None. level_before: the day before's midday base.
+    dew6: Kula Ag's 06:00 dew point (F), morning only; None leaves it out."""
     if not air or level_before is None:
         return None
-    norm, b, band = base_blend_fit(morning)
+    use_dew = morning and dew6 is not None
+    norm, b, band, dew_mean = base_blend_fit(morning, use_dew)
     n = norm[day.month]
-    return round(float(n + b @ [1, level_before - n, air["rh_5_7k"], air["rh_7_10k"]]), -2), band
+    v = [1, level_before - n, air["rh_5_7k"], air["rh_7_10k"]]
+    if use_dew:
+        v.append(dew6 - dew_mean[day.month])
+    return round(float(n + b @ v), -2), band
+
+
+# Kula Ag's dew point over 06:00-06:59 (Sam, 11-09), for the morning number.
+# Taken from 06:15 on (three 5-minute readings); the history uses the full hour.
+@functools.lru_cache(maxsize=2)
+def _dew6_rows(day):
+    return _retrying(mesonet.get)("/mesonet/db/measurements", location="hawaii",
+                                  station_ids="0119", var_ids="Tair_1_Avg,RH_1_Avg",
+                                  start_date=f"{day}T06:00:00-10:00", end_date=f"{day}T06:59:59-10:00",
+                                  row_mode="json", limit=1000)
+
+
+def kula_ag_dew6(now: datetime):
+    """Kula Ag's mean 06:00-hour dew point (F) so far today, or None."""
+    if now.hour < 6 or (now.hour == 6 and now.minute < 15):
+        return None
+    rows = _dew6_rows(f"{now.date()}")
+    v = {}
+    for r in rows:
+        if r.get("value") is not None:
+            v.setdefault(r["timestamp"], {})[r["variable"]] = float(r["value"])
+    dews = [dewpoint_c(w["Tair_1_Avg"], min(w["RH_1_Avg"], 100)) * 1.8 + 32 for w in v.values()
+            if "Tair_1_Avg" in w and 1 < w.get("RH_1_Avg", 0) <= 103]
+    return round(sum(dews) / len(dews), 1) if len(dews) >= 3 else None
 
 
 def yesterday_level(now: datetime):
@@ -4969,7 +5013,8 @@ def build() -> str:
         cat_head = cb_head
         morning = tom == now.date()
         blend = safely(base_blend, tom, safely(airmass_noon, cap, tom) if cap else None,
-                       safely(yesterday_level, now) if morning else lvl, morning)
+                       safely(yesterday_level, now) if morning else lvl, morning,
+                       safely(kula_ag_dew6, now) if morning else None)
         # The number is the headline (Sam, 10-23: "The verbal calls are not what
         # I want. I want the number."); the rule, when one fires, becomes the
         # chance of a low or high day under it. The category is still settled
