@@ -2983,17 +2983,24 @@ def sounding_base_hours(day) -> tuple[dict, datetime]:
 SOUNDING_BASE_FILE = HERE / "docs" / "sounding_base.json"
 
 
+SOUNDING_FREEZE_HOUR = 10
+
+
 def save_sounding_base(now: datetime) -> None:
-    """Keep the day's first sounding run that covers 09:00-16:00: by evening
-    the newest run no longer reaches back to the morning (Sam, 10-31: "On the
-    wrapup, show the full forecast curve")."""
+    """Keep the day's sounding run that covers 09:00-16:00: by evening the
+    newest run no longer reaches back to the morning (Sam, 10-31: "On the
+    wrapup, show the full forecast curve"). Newer runs replace it until 10:00,
+    then it stays (Sam, 11-09: "use the run as close to 1000 as possible");
+    on 11-09 the 06Z run was kept from 06:21 although the 12Z came later."""
     try:
         old = json.loads(SOUNDING_BASE_FILE.read_text(encoding="utf-8"))
-        if old.get("date") == f"{now:%Y-%m-%d}":
-            return
     except Exception:
-        pass
+        old = {}
+    if old.get("date") == f"{now:%Y-%m-%d}" and now.hour >= SOUNDING_FREEZE_HOUR:
+        return
     hours, run = sounding_base_hours(now.date())
+    if old.get("date") == f"{now:%Y-%m-%d}" and old.get("run") == f"{run:%d %H}Z":
+        return
     if all(h in hours for h in range(9, 17)):
         SOUNDING_BASE_FILE.write_text(json.dumps({"date": f"{now:%Y-%m-%d}", "run": f"{run:%d %H}Z",
                                                   "hours": {str(h): round(v, -1) for h, v in hours.items()}}),
