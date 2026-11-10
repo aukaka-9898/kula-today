@@ -3869,7 +3869,7 @@ def airmass_noon(path, day) -> dict | None:
 # jumped between eras (+3,000 ft summer 2025, ~0 that winter, -400 now).
 # Refitted from the history files each build.
 @functools.cache
-def base_blend_fit(morning: bool = False, dew: bool = False):
+def base_blend_fit(morning: bool = False, dew: bool = False, b9: bool = False):
     """Fit on history. Evening: the day-ahead run (nam12_ahead lead 1) and
     today's base. Morning, before the upslope (Sam, 10-23: "the early Today
     panel"): the overnight 12Z run (nam12) and yesterday's base -- 411 ft
@@ -3877,9 +3877,12 @@ def base_blend_fit(morning: bool = False, dew: bool = False):
     6 ft more and was skipped (Sam). dew: plus Kula Ag's 06:00 dew point
     against its month's mean (Sam, 11-09: "Use the 6 am Kula Ag data"):
     ~40 ft lower per degree wetter; 396 ft typical miss against 411, a year
-    held out at a time, 1,010 days."""
+    held out at a time, 1,010 days. b9: plus the 09:00-hour base (Kula Ag,
+    Keokea, Pulehu) against its month's mean, for the Today tile's midday
+    number (Sam, 11-09, "use 1"): 356 ft typical miss."""
     d = pd.read_csv(HERE / "history" / "days.csv", parse_dates=["date"])
     td6 = dict(zip(d.date, d.td6)) if "td6" in d else {}
+    base9 = dict(zip(d.date, d.b9))
     d = d[["date", "level"]].dropna()
     if morning:
         a = pd.read_csv(HERE / "history" / "nam12.csv", parse_dates=["date"])
@@ -3893,6 +3896,9 @@ def base_blend_fit(morning: bool = False, dew: bool = False):
     if dew:
         x["td6"] = x.date.map(td6)
         cols.append("td6")
+    if b9:
+        x["b9"] = x.date.map(base9)
+        cols.append("b9")
     x = x.dropna(subset=cols)
     norm = x.groupby(x.date.dt.month)["level"].median()
     n = x.date.dt.month.map(norm)
@@ -3902,9 +3908,16 @@ def base_blend_fit(morning: bool = False, dew: bool = False):
         dew_mean = x.groupby(x.date.dt.month)["td6"].mean()
         terms.append(x.td6 - x.date.dt.month.map(dew_mean))
         dew_mean = dew_mean.to_dict()
+    b9_mean = None
+    if b9:
+        b9_mean = x.groupby(x.date.dt.month)["b9"].mean()
+        terms.append(x.b9 - x.date.dt.month.map(b9_mean))
+        b9_mean = b9_mean.to_dict()
     A = np.column_stack(terms)
     b, *_ = np.linalg.lstsq(A, x.level - n, rcond=None)
     q = np.quantile(x.level - n - A @ b, [0.1, 0.9])
+    if b9:
+        return norm.to_dict(), b, round(float(q[1] - q[0]) / 2, -1), dew_mean, b9_mean
     return norm.to_dict(), b, round(float(q[1] - q[0]) / 2, -1), dew_mean
 
 
@@ -3944,6 +3957,48 @@ def kula_ag_dew6(now: datetime):
     dews = [dewpoint_c(w["Tair_1_Avg"], min(w["RH_1_Avg"], 100)) * 1.8 + 32 for w in v.values()
             if "Tair_1_Avg" in w and 1 < w.get("RH_1_Avg", 0) <= 103]
     return round(sum(dews) / len(dews), 1) if len(dews) >= 3 else None
+
+
+# The 09:00-hour base as the history has it: Kula Ag, Keokea and Pulehu, each
+# station's hourly mean condensation level (six or more 5-minute readings),
+# all three required.
+NINE_ELEV = {"0119": 3162, "0116": 2849, "0118": 1402}
+
+
+def base_at_nine(day):
+    rows = _retrying(mesonet.get)("/mesonet/db/measurements", location="hawaii",
+                                  station_ids=",".join(NINE_ELEV), var_ids="Tair_1_Avg,RH_1_Avg",
+                                  start_date=f"{day}T09:00:00-10:00", end_date=f"{day}T09:59:59-10:00",
+                                  row_mode="json", limit=10000)
+    v = {}
+    for r in rows:
+        if r.get("value") is not None:
+            v.setdefault((r["station_id"], r["timestamp"]), {})[r["variable"]] = float(r["value"])
+    lcl = {}
+    for (sid, _), w in v.items():
+        if "Tair_1_Avg" in w and 1 < w.get("RH_1_Avg", 0) <= 103:
+            tf = w["Tair_1_Avg"] * 1.8 + 32
+            td = dewpoint_c(w["Tair_1_Avg"], min(w["RH_1_Avg"], 100)) * 1.8 + 32
+            lcl.setdefault(sid, []).append((tf - td) / 4.5 * 1000 + NINE_ELEV[sid])
+    if set(lcl) != set(NINE_ELEV) or min(len(x) for x in lcl.values()) < 6:
+        return None
+    return sum(sum(x) / len(x) for x in lcl.values()) / 3
+
+
+def midday_from_nine(now: datetime, cap):
+    """Today's 11:00-14:00 base forecast from the 09:00 base (Sam, 11-09), or None."""
+    air = airmass_noon(cap, now.date()) if cap else None
+    prev, b9 = yesterday_level(now), base_at_nine(now.date())
+    if not air or prev is None or b9 is None:
+        return None
+    dew6 = safely(kula_ag_dew6, now)
+    norm, b, band, dew_mean, b9_mean = base_blend_fit(True, dew6 is not None, True)
+    n = norm[now.month]
+    v = [1, prev - n, air["rh_5_7k"], air["rh_7_10k"]]
+    if dew6 is not None:
+        v.append(dew6 - dew_mean[now.month])
+    v.append(b9 - b9_mean[now.month])
+    return round(float(n + b @ v), -2)
 
 
 def yesterday_level(now: datetime):
@@ -4707,6 +4762,14 @@ def build() -> str:
         # read the drainage layer, not a cloudbase (Sam: gate the evening).
         base_html = ('Done for the day<div class="sub">The upslope is over; the derived '
                      "base returns with tomorrow's upslope</div>")
+    # The midday number from the 09:00 base (Sam, 11-09: "use 1"), under the
+    # measured base from 10:00 until the midday readings take over at noon.
+    if 10 <= now.hour < 12 and up is not None and base_html.endswith("</div>"):
+        noon_ft = safely(midday_from_nine, now, cap)
+        if noon_ft:
+            safely(log_call_ft, now.date(), "ft_9", noon_ft)
+            base_html += (f'<div class="sub">Midday (11:00–14:00): probably about {ft(noon_ft)} ft, '
+                          f'from the 09:00 base</div>')
 
     # No Ceiling row (Sam, 2026-10-17: "Kahului inversion is useless for our
     # purposes"): too low on 9/21 (the slope broke through), and on 10-17 it
