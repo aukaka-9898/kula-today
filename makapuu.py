@@ -1495,7 +1495,6 @@ tr.wk td {{ border-bottom: 0; padding-bottom: 2px; }} tr.wkh td {{ white-space: 
     <div><a class="homebtn" href="/">&larr; Home</a><div class="tag">Makapu&#8216;u soaring briefing</div><h1>Makapu&#8216;u Today</h1></div>
     <div class="date">Updated {updated}</div>
   </header>
-  <div class="databadge"><div class="big">Under construction</div></div>
   <div>
     <div class="cam"><iframe src="{webcam}" title="Kāneʻohe Bay webcam, live, looking southeast down the Koʻolau toward Makapuʻu" onload="setTimeout(function(){{var c=document.getElementById('camcover');if(c){{c.style.opacity=0;setTimeout(function(){{c.remove()}},700)}}}},3500)"></iframe><img id="camcover" src="{cover}" alt="" onerror="this.remove()"></div>
     <div class="camcap">Kāneʻohe Bay webcam, live, looking southeast down the Koʻolau to Makapuʻu. FAA WeatherCam. <a href="{webcam}" target="_blank" rel="noopener">Open full size</a> · <a href="{webcam_launch}" target="_blank" rel="noopener">Makapuʻu camera, at the point</a></div>
