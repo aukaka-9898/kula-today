@@ -4506,7 +4506,7 @@ def day_review(obs, now, up, evening, rnet, word, model, fc_today, fc_pair, entr
                             + (", a hit." if call["base"] in want else ", a miss."))
             # The numbers too, once the page gives one (Sam, 10-23: "Since a
             # cloudbase number is being provided the recap needs to reflect it").
-            if mid and (call.get("ft") or call.get("ft_am")):
+            if mid and (call.get("ft") or call.get("ft_am") or call.get("ft_9")):
                 m = round(sum(mid) / len(mid), -2)
                 vs = lambda v: ("right on" if abs(m - v) < 100 else
                                 f"{abs(m - v):,.0f} ft {'higher' if m > v else 'lower'} than")
@@ -4515,7 +4515,12 @@ def day_review(obs, now, up, evening, rnet, word, model, fc_today, fc_pair, entr
                             + (f"; the morning update said about {call['ft_am']:,.0f} ft"
                                + (" and was right on" if abs(m - call["ft_am"]) < 100 else
                                   f", off by {abs(m - call['ft_am']):,.0f} ft")
-                               if call.get("ft_am") else "") + ".")
+                               if call.get("ft_am") else "")
+                            # The 10:00 number from the 09:00 base (Sam, 11-09: "use the 10:00 for the wrapup").
+                            + (f"; at 10:00, from the 09:00 base, about {call['ft_9']:,.0f} ft"
+                               + (" and was right on" if abs(m - call["ft_9"]) < 100 else
+                                  f", off by {abs(m - call['ft_9']):,.0f} ft")
+                               if call.get("ft_9") else "") + ".")
 
     ld = line_day(entries)
     if ld:
