@@ -3021,6 +3021,51 @@ def sounding_forecast(day) -> dict | None:
                      f"lifted to condensation, hour by hour.")}
 
 
+# The month's usual shape of the day in place of the model's hourly curve
+# (Sam, 11-09: "Model does not handle Kula at all"; "Can you find a seasonal
+# pattern which might be applied in lieu of the model?"; "trend is the
+# priority"). From history/days.csv (3-station base, 2024-26): the mean of
+# each hour against the 11:00-14:59 level, and against 10:00. November peaks
+# about 11:00 and falls ~400 ft by 15:00; July rises ~270 ft into 14:00.
+# Anchored on the 10:00 base it beat holding 10:00 flat (389 vs 400 ft, a year
+# held out at a time); the RRFS curve shifted at 10:00 missed by 666 (10 days).
+# The sounding curve is still saved (sounding_base.json), just not drawn.
+@functools.cache
+def month_shape(month: int):
+    d = pd.read_csv(HERE / "history" / "days.csv", parse_dates=["date"])
+    d = d[d.date.dt.month == month].dropna(subset=[f"b{h}" for h in range(9, 16)] + ["level"])
+    vs_level = {h: float((d[f"b{h}"] - d["level"]).mean()) for h in range(9, 16)}
+    vs_ten = {h: float((d[f"b{h}"] - d["b10"]).mean()) for h in range(10, 16)}
+    return vs_level, vs_ten
+
+
+def shape_text(month: int) -> str:
+    vs_level, _ = month_shape(month)
+    name = datetime(2000, month, 1).strftime("%B")
+    peak = max(range(10, 16), key=lambda h: vs_level[h])
+    if peak >= 14:
+        rise = round(vs_level[peak] - vs_level[10], -2)
+        return (f"A usual {name} day: the base rises about {rise:,.0f} ft from 10:00 to {peak}:00."
+                if rise >= 100 else f"A usual {name} day: the base holds about level through the afternoon.")
+    fall = round(vs_level[peak] - vs_level[15], -2)
+    return (f"A usual {name} day: the base peaks about {peak}:00, then falls about {fall:,.0f} ft by 15:00."
+            if fall >= 100 else f"A usual {name} day: the base holds about level through the afternoon.")
+
+
+def shape_lines(now: datetime, derived: list):
+    """(evening line, 10:00 line) as [minute, ft] chart points; either may be None.
+    Each is drawn from its own number once and never redrawn."""
+    vs_level, vs_ten = month_shape(now.month)
+    try:
+        ft = (json.loads(CALLS_LOG.read_text(encoding="utf-8")).get(f"{now:%Y-%m-%d}") or {}).get("ft")
+    except Exception:
+        ft = None
+    evening = [[h * 60, round(ft + vs_level[h], -1)] for h in range(9, 16)] if ft else None
+    near = [v for m, v in derived if 590 <= m <= 610]
+    ten = [[h * 60, round(near[0] + vs_ten[h], -1)] for h in range(10, 16)] if near else None
+    return evening, ten
+
+
 def forecast_cu_end(day):
     """The hour the forecast thermals stop working for the rest of the day
     (no cumulus from then), or None if they run to 16:00."""
@@ -4236,7 +4281,7 @@ def camera_hidden(day: datetime, why: str = "hidden") -> list:
 
 
 def base_chart(obs, now, up, end, cid="basechart", title="Cloudbase, derived vs forecast",
-               with_forecast=True, proj=None) -> tuple[str, list, list]:
+               with_forecast=True, proj=None, shapes=False) -> tuple[str, list, list]:
     """(html, derived, forecast): the derived base every 15 minutes through
     the upslope against that morning's forecast by hour."""
     day = now.replace(tzinfo=None, hour=0, minute=0, second=0, microsecond=0)
@@ -4262,11 +4307,23 @@ def base_chart(obs, now, up, end, cid="basechart", title="Cloudbase, derived vs 
     cam = safely(camera_points, day) or []
     hid = safely(camera_hidden, day) or []
     noc = safely(camera_hidden, day, "no edge") or []
-    if proj:
+    fc_draw, fc_label = (forecast if with_forecast else []), "Forecast"
+    if shapes:
+        ev, ten = safely(shape_lines, now, derived) or (None, None)
+        name = f"{now:%B}"
+        proj = None
+        if ev:
+            fc_draw, fc_label = ev, f"Evening call + usual {name} day"
+        if ten:
+            proj = {"points": ten, "label": f"10:00 + usual {name} day", "note": ""}
+        if ev or ten:
+            note += (f" Lines: the evening call's number and the 10:00 derived base, each carried along "
+                     f"a usual {name} day (2024-26 history), drawn once and never redrawn.")
+    if proj and proj.get("note"):
         note += " " + proj["note"]
-    return (chart_html(cid, derived, forecast if with_forecast else [], span, note, title=title, camera=cam,
+    return (chart_html(cid, derived, fc_draw, span, note, title=title, camera=cam,
                        hidden=hid, nocall=noc, proj=proj["points"] if proj else None,
-                       proj_label=(proj or {}).get("label", "Forecast (sounding)")),
+                       proj_label=(proj or {}).get("label", "Forecast (sounding)"), fc_label=fc_label),
             derived, forecast)
 
 
@@ -4278,7 +4335,7 @@ FORECAST_BAND_FT = 700
 
 
 def chart_html(cid, derived, forecast, span, note, nocu=None, title="", camera=None, hidden=None, nocall=None,
-               proj=None, proj_label="Forecast (sounding)") -> str:
+               proj=None, proj_label="Forecast (sounding)", fc_label="Forecast") -> str:
     """Cloudbase line chart: derived (solid) and forecast (dashed) by minute of
     the day, the upslope shaded; derived and span may be empty for a forecast.
 
@@ -4311,7 +4368,7 @@ def chart_html(cid, derived, forecast, span, note, nocu=None, title="", camera=N
     # The Forecast key only when there is a forecast line (Sam, 2026-10-17:
     # the derived-only charts still showed it).
     fkey = ('<span><span style="display:inline-block;width:16px;border-top:2px dashed #eb6834;'
-            'vertical-align:middle"></span> Forecast</span>' if forecast else "") + (
+            f'vertical-align:middle"></span> {esc(fc_label)}</span>' if forecast else "") + (
            '<span><span style="display:inline-block;width:16px;border-top:2px dashed #8a5cd6;'
            f'vertical-align:middle"></span> {esc(proj_label)}</span>' if proj else "")
     aria = "Derived cloudbase against the forecast through the day" if forecast else "Derived cloudbase through the day"
@@ -4477,7 +4534,7 @@ def day_review(obs, now, up, evening, rnet, word, model, fc_today, fc_pair, entr
     chart_html = "Not derived<div class=\"sub\">No upslope, so no slope air to derive it from</div>"
     derived, forecast = [], []
     if up is not None and len(obs):
-        got = safely(base_chart, obs, now, up, end, "basechart", "Cloudbase", False, safely(sounding_forecast, now))
+        got = safely(base_chart, obs, now, up, end, "basechart", "Cloudbase", False, None, True)
         if got and got[1]:
             chart, derived, forecast = got
             dv = [v for _, v in derived]
@@ -4992,8 +5049,7 @@ def build() -> str:
         # The sounding forecast's own values, all day (Sam, 10-31: a projection
         # from the latest call "defeats the purpose" -- it cannot be judged).
         safely(save_sounding_base, now)
-        live = safely(base_chart, obs, now, up, None, "livechart", "Cloudbase so far", False,
-                      safely(sounding_forecast, now))
+        live = safely(base_chart, obs, now, up, None, "livechart", "Cloudbase so far", False, None, True)
         if live and live[1]:
             summary_html += live[0]
 
@@ -5099,6 +5155,7 @@ def build() -> str:
                 safely(log_call_ft, tom, "ft_am", blend[0])
             lo_m, hi_m = MONTH_BASE_RANGE[tom.month]
             cb_sub = CALL_CHANCE.get(CALL_RULE.get(f"{tom}")) or f"Normal for {tom:%B} is {lo_m:,}–{hi_m:,} ft."
+            cb_sub += " " + (safely(shape_text, tom.month) or "")
             if CALL_RULE.get(f"{tom}") == "B4" and (tom - now.date()).days > 1:
                 cb_sub = cb_sub.replace("About 45%", "About 40%")
             cb_head = f"About {blend[0]:,.0f} ft"
