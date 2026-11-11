@@ -101,29 +101,29 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><a class="homebtn" href="/">&larr; Home</a><div class="tag">Kula soaring briefing</div><h1>Kula Today</h1></div>
-    <div class="date">Updated Wed 11 Nov 2026 · 08:07 HST</div>
+    <div class="date">Updated Wed 11 Nov 2026 · 08:22 HST</div>
   </header>
 
   <div>
     <!-- The FAA viewer shows its station list before it opens the camera; the latest frame covers that until it has (Sam, 2026-10-25). -->
-    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" title="Red Hill webcam, live, looking south along the Kula slope" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="https://images.wcams-static.faa.gov/webimages/931/11/13417-1794420091612.jpg" alt="" onerror="this.remove()"></div>
+    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" title="Red Hill webcam, live, looking south along the Kula slope" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="https://images.wcams-static.faa.gov/webimages/931/11/13417-1794421121143.jpg" alt="" onerror="this.remove()"></div>
     <div class="camcap">Red Hill webcam, live. FAA WeatherCam (Kekoa). <a href="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" target="_blank" rel="noopener">Open full size</a></div>
   </div>
 
   <div class="cols">
     <section class="panel today" aria-labelledby="t-today">
-      <div class="kind">Measured today · 08:07 HST</div>
+      <div class="kind">Measured today · 08:22 HST</div>
       <div class="head"><h2 id="t-today">Today</h2><span class="chip good">Moderate</span></div>
       <div class="sub" style="display:flex;align-items:center;gap:6px;margin:2px 0 6px"><img src="https://api.weather.gov/icons/land/day/rain_showers,20/few?size=small" width="34" height="34" alt="Isolated Rain Showers then Sunny (15%)" title="NWS: Isolated Rain Showers then Sunny (15%)" loading="lazy" style="vertical-align:middle;border-radius:4px;margin-left:6px"><span>NWS today: Isolated Rain Showers then Sunny (15%)</span></div>
       
       <dl>
         <dt><a href="details.html#t-thermal">Thermals</a></dt><dd>Probably <strong>moderate</strong> (forecast)<div class="sub">thermal.py on the forecast air; measured rating just after 10:00</div></dd>
-        <dt><a href="details.html#t-thermal">First<br>clouds</a></dt><dd>About <span class="num">3,600 ft</span><div class="sub">The derived base takes over once the upslope sets in</div></dd>
-        <dt><a href="details.html#t-ladder">Sun</a></dt><dd><span class="num">94%</span> of clear sky forecast, 10:00–14:00 (GFS)<div class="sub">Measured from about 09:30; Kula is in Haleakala's shadow until about 08:15</div></dd>
+        <dt><a href="details.html#t-thermal">First<br>clouds</a></dt><dd>About <span class="num">3,500 ft</span><div class="sub">The slope is drying as it warms; the derived base takes over once the upslope sets in</div></dd>
+        <dt><a href="details.html#t-ladder">Sun</a></dt><dd><span class="num">90%</span> of clear sky forecast, 10:00–14:00 (GFS)<div class="sub">Measured from about 09:30; Kula is in Haleakala's shadow until about 08:15</div></dd>
         <dt><a href="details.html#stationmap">Shear line</a></dt><dd>Crossing Kula Highway near Omaopio (forecast)<div class="sub">Offshore wind E (080°). Measured once the upslope sets in</div></dd>
         
         <dt><a href="details.html#stationmap">Upslope</a></dt><dd>Not yet<div class="sub">Usually starts around 08:45</div></dd>
-        <dt><a href="details.html#stationmap">Wind</a></dt><dd><span class="num">4 mph</span>, gusts to 11<div class="sub">Lower elevations, 10 stations, last hour</div></dd>
+        <dt><a href="details.html#stationmap">Wind</a></dt><dd><span class="num">3 mph</span>, gusts to 11<div class="sub">Lower elevations, 10 stations, last hour</div></dd>
       </dl>
     </section>
     <section class="panel tomorrow" aria-labelledby="t-tomorrow">
@@ -156,10 +156,10 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
   });
 })();
 </script></dd>
-        <dt>Sun</dt><dd><span class="num">94%</span> of clear sky, 10:00–14:00 (GFS)<div class="sub">The model can't see the slope's own cumulus: when it says 90% or more, Kula has measured about 80%. Good flying days measure about 80%, overcast about 50%, socked in 20%.</div></dd>
+        <dt>Sun</dt><dd><span class="num">90%</span> of clear sky, 10:00–14:00 (GFS)<div class="sub">The model can't see the slope's own cumulus: when it says 90% or more, Kula has measured about 80%. Good flying days measure about 80%, overcast about 50%, socked in 20%.</div></dd>
         <dt>Shear line</dt><dd>Crossing Kula Highway near Omaopio<div class="sub">Offshore wind E (080°)</div></dd>
       </dl>
-      <div class="sub">Forecast as of 07:22 HST</div><div class="sub">Forecast rules last checked October 2026: all holding.</div><div class="sub">Accuracy, last 30 days, the evening call against the day: cloudbase within 500 ft on 8 of 15 days (typical miss 520 ft); afternoon trend (rising, holding or falling, 12:00 to 15:00) right on 4 of 15; thermals right on 4 of 17, within one step on 16. Scored against pilot reports where there are any, otherwise the camera and stations.</div><p class="sub">A guide, not a promise: Kula makes its own weather, and no model sees it. The cloudbase number is the season, yesterday and the air aloft. It typically misses by about 500 ft. How well the thermal call holds up we don’t yet know: the only checks so far are the stations, not pilots. If you fly Kula, your report or flight log (altitude and time only) is what will tell us: <a href="mailto:flyhiwx@gmail.com">flyhiwx@gmail.com</a>.</p>
+      <div class="sub">Forecast as of 08:22 HST</div><div class="sub">Forecast rules last checked October 2026: all holding.</div><div class="sub">Accuracy, last 30 days, the evening call against the day: cloudbase within 500 ft on 8 of 15 days (typical miss 520 ft); afternoon trend (rising, holding or falling, 12:00 to 15:00) right on 4 of 15; thermals right on 4 of 17, within one step on 16. Scored against pilot reports where there are any, otherwise the camera and stations.</div><p class="sub">A guide, not a promise: Kula makes its own weather, and no model sees it. The cloudbase number is the season, yesterday and the air aloft. It typically misses by about 500 ft. How well the thermal call holds up we don’t yet know: the only checks so far are the stations, not pilots. If you fly Kula, your report or flight log (altitude and time only) is what will tell us: <a href="mailto:flyhiwx@gmail.com">flyhiwx@gmail.com</a>.</p>
     </section>
   </div>
 
@@ -167,7 +167,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
     <h2 id="t-week">The week</h2>
     <div class="tablewrap"><table>
       <thead><tr><th>Day</th><th class="n">Sun</th><th>Base</th><th>Thermals</th><th>Shear line</th><th></th></tr></thead>
-      <tbody><tr><td>Wed 11</td><td class="n">94%</td><td>Normal</td><td>Moderate</td><td>Omaopio</td><td class="wx"><img src="https://api.weather.gov/icons/land/day/rain_showers,20/few?size=small" width="40" height="40" alt="Isolated Rain Showers then Sunny (15%)" title="NWS: Isolated Rain Showers then Sunny (15%)" loading="lazy" style="vertical-align:middle;border-radius:4px;margin-left:6px"></td></tr><tr><td>Thu 12</td><td class="n">84%</td><td>Normal</td><td>Moderate</td><td>Omaopio</td><td class="wx"><img src="https://api.weather.gov/icons/land/day/few?size=small" width="40" height="40" alt="Sunny (12%)" title="NWS: Sunny (12%)" loading="lazy" style="vertical-align:middle;border-radius:4px;margin-left:6px"></td></tr><tr><td>Fri 13</td><td class="n">89%</td><td>Normal</td><td>Moderate</td><td>Pukalani</td><td class="wx"><img src="https://api.weather.gov/icons/land/day/few?size=small" width="40" height="40" alt="Sunny (6%)" title="NWS: Sunny (6%)" loading="lazy" style="vertical-align:middle;border-radius:4px;margin-left:6px"></td></tr><tr><td>Sat 14</td><td class="n">86%</td><td>Normal</td><td>Light</td><td>Pukalani</td><td class="wx"><img src="https://api.weather.gov/icons/land/day/few?size=small" width="40" height="40" alt="Sunny (6%)" title="NWS: Sunny (6%)" loading="lazy" style="vertical-align:middle;border-radius:4px;margin-left:6px"></td></tr><tr><td>Sun 15</td><td class="n">95%</td><td>Normal</td><td>Moderate</td><td>Pukalani</td><td class="wx"><img src="https://api.weather.gov/icons/land/day/few?size=small" width="40" height="40" alt="Sunny (6%)" title="NWS: Sunny (6%)" loading="lazy" style="vertical-align:middle;border-radius:4px;margin-left:6px"></td></tr><tr><td>Mon 16</td><td class="n">52%</td><td>Normal</td><td>Light</td><td>Makawao</td><td class="wx"><img src="https://api.weather.gov/icons/land/day/few?size=small" width="40" height="40" alt="Sunny (6%)" title="NWS: Sunny (6%)" loading="lazy" style="vertical-align:middle;border-radius:4px;margin-left:6px"></td></tr><tr><td>Tue 17</td><td class="n">71%</td><td>Normal</td><td>Flat</td><td>Makawao</td><td class="wx"><img src="https://api.weather.gov/icons/land/day/few?size=small" width="40" height="40" alt="Sunny (6%)" title="NWS: Sunny (6%)" loading="lazy" style="vertical-align:middle;border-radius:4px;margin-left:6px"></td></tr><tr><td>Wed 18</td><td class="n">84%</td><td>Normal</td><td>--</td><td>Pukalani</td><td class="wx"></td></tr></tbody>
+      <tbody><tr><td>Wed 11</td><td class="n">90%</td><td>Normal</td><td>Moderate</td><td>Omaopio</td><td class="wx"><img src="https://api.weather.gov/icons/land/day/rain_showers,20/few?size=small" width="40" height="40" alt="Isolated Rain Showers then Sunny (15%)" title="NWS: Isolated Rain Showers then Sunny (15%)" loading="lazy" style="vertical-align:middle;border-radius:4px;margin-left:6px"></td></tr><tr><td>Thu 12</td><td class="n">84%</td><td>Normal</td><td>Moderate</td><td>Omaopio</td><td class="wx"><img src="https://api.weather.gov/icons/land/day/few?size=small" width="40" height="40" alt="Sunny (12%)" title="NWS: Sunny (12%)" loading="lazy" style="vertical-align:middle;border-radius:4px;margin-left:6px"></td></tr><tr><td>Fri 13</td><td class="n">91%</td><td>Normal</td><td>Moderate</td><td>Pukalani</td><td class="wx"><img src="https://api.weather.gov/icons/land/day/few?size=small" width="40" height="40" alt="Sunny (6%)" title="NWS: Sunny (6%)" loading="lazy" style="vertical-align:middle;border-radius:4px;margin-left:6px"></td></tr><tr><td>Sat 14</td><td class="n">87%</td><td>Normal</td><td>Light</td><td>Pukalani</td><td class="wx"><img src="https://api.weather.gov/icons/land/day/few?size=small" width="40" height="40" alt="Sunny (6%)" title="NWS: Sunny (6%)" loading="lazy" style="vertical-align:middle;border-radius:4px;margin-left:6px"></td></tr><tr><td>Sun 15</td><td class="n">88%</td><td>Normal</td><td>Moderate</td><td>Pukalani</td><td class="wx"><img src="https://api.weather.gov/icons/land/day/few?size=small" width="40" height="40" alt="Sunny (6%)" title="NWS: Sunny (6%)" loading="lazy" style="vertical-align:middle;border-radius:4px;margin-left:6px"></td></tr><tr><td>Mon 16</td><td class="n">57%</td><td>Normal</td><td>Light</td><td>Makawao</td><td class="wx"><img src="https://api.weather.gov/icons/land/day/few?size=small" width="40" height="40" alt="Sunny (6%)" title="NWS: Sunny (6%)" loading="lazy" style="vertical-align:middle;border-radius:4px;margin-left:6px"></td></tr><tr><td>Tue 17</td><td class="n">75%</td><td>Normal</td><td>Flat</td><td>Makawao</td><td class="wx"><img src="https://api.weather.gov/icons/land/day/few?size=small" width="40" height="40" alt="Sunny (6%)" title="NWS: Sunny (6%)" loading="lazy" style="vertical-align:middle;border-radius:4px;margin-left:6px"></td></tr><tr><td>Wed 18</td><td class="n">29%</td><td>Normal</td><td>--</td><td>Pukalani</td><td class="wx"></td></tr></tbody>
     </table></div>
     <p>Sun is the GFS forecast for 10:00–14:00. The model can't see the slope's own cumulus, so its high numbers run about 10 points above what Kula measures.</p>
   </section>
@@ -181,7 +181,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
   </div>
 
 </div>
-<!-- build problems: none -->
+<!-- build problems: station_forecast_lcl: ReadTimeout: HTTPSConnectionPool(host='api.open-meteo.com', port=443): Read timed out. (read timeout=60) -->
 <script>
 /* Catch up with a new build within ~2 minutes (Sam, 2026-10-17: "the page
    does not seem to autoupdate"). stations.json's "made" is the build time;
@@ -189,7 +189,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
    browser's 10-minute cached copy is bypassed. The 15-minute refresh stays
    as a backstop. */
 (function () {
-  var built = "2026-11-11T08:07";
+  var built = "2026-11-11T08:22";
   function check() {
     fetch("stations.json?" + Date.now(), {cache: "no-store"})
       .then(function (r) { return r.json(); })
