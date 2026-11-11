@@ -4361,13 +4361,16 @@ def camera_trend(derived: list, cam: list) -> str | None:
 
 # The camera against the predictions (Sam, 11-10: "A second graph showing the
 # variance might be instructive"; "as a curve"; "with obs smoothed"; then "the
-# point is to validate (or not) the prediction(s)"): the camera smoothed over
-# 30 minutes minus the evening line and minus the 10:00 line (each carried
+# point is to validate (or not) the prediction(s)"): the camera's 1-hour line
+# minus the evening line and minus the 10:00 line (each carried
 # along the usual day), at each frame. Zero = the prediction held. For the
 # wrap-up, under the chart.
-VAR_SHORT_MIN = 15          # half-window of the camera smoothing (30 minutes)
+# The same 1-hour camera line the main chart draws (Sam, 11-10: "evening call
+# shows two intersections. I see none" -- the 30-minute line touched the evening
+# line where the chart's 1-hour line did not).
+VAR_SHORT_MIN = 30          # half-window of the camera smoothing: the chart's 1-hour line
 VAR_MIN_FRAMES = 6
-VARIANCE_CAPTION = ("How far the camera's cloudbase, smoothed over 30 minutes, strayed from each prediction. "
+VARIANCE_CAPTION = ("How far the camera's cloudbase (the chart's 1-hour line) strayed from each prediction. "
                     "On the zero line: the prediction held. A steady offset: the level was off but the trend "
                     "held. A curve drifting away: the trend was wrong. Short dips and spikes: cloud or moist air "
                     "passing through.")
