@@ -4762,6 +4762,17 @@ def build() -> str:
             base_html = (f'<span class="num">Slope hidden</span>'
                          f'<div class="sub">Kekoa camera, the last 30 minutes to {cam_now["at"]}: '
                          f'cloud or rain at the camera. Stations: {stations}.</div>')
+        elif cam_now["clear"] and base and safely(camera_sees_cloud, now):
+            # Cumulus in view but none over the read box yet (Sam, 11-10:
+            # "clouds away from the slope can't be measured ... find visible
+            # cumies and assume the station call is correct until a definitive
+            # cam call"): 11-10 the ridge log saw cloud from 11:33, the box
+            # first read a base at 12:24.
+            _first = (json.loads(RIDGE_FILE.read_text(encoding="utf-8")).get("first_cloud") or "")
+            base_html = (f'<span class="num">About {ft(round(base["mid"], -2))} ft</span>'
+                         f'<div class="sub">Cumulus in view{" since " + _first if _first else ""}, not yet over the '
+                         f"camera's slope: the stations' estimate ({base['n']} stations, {base['at']:%H:%M}) "
+                         f'until the Kekoa camera reads a base.</div>')
         elif cam_now["clear"]:
             # No number: a clear slope says no cloud sits ON it up to the
             # skyline (~7,300 ft), not that every cloud is above that.
