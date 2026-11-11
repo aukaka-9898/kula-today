@@ -4218,7 +4218,7 @@ def camera_rows(day: str):
 
 
 def camera_recent(now: datetime) -> dict | None:
-    """{ft, at, clear, hidden}: the mean of the last 30 minutes' camera readings,
+    """{ft, at, clear, hidden}: the median of the last 30 minutes' camera readings,
     clear=True when every frame then saw the visible slope clear of cloud, or
     hidden=True when most frames had the slope lost in cloud or rain."""
     c = camera_rows(f"{now:%Y-%m-%d}")
@@ -4231,7 +4231,9 @@ def camera_recent(now: datetime) -> dict | None:
     last = c.time.max()
     v = c.camera_ft.dropna()
     if len(v):
-        return {"ft": round(float(v.mean()), -2), "at": last, "clear": False}
+        # Median, not mean (Sam, 11-10: "use the median"): one jumpy frame
+        # (6,280 at 12:24 on 11-10) no longer pulls the row once there are 3+.
+        return {"ft": round(float(v.median()), -2), "at": last, "clear": False}
     if (c.why.fillna("") == "slope clear").all():
         return {"ft": None, "at": last, "clear": True}
     if (c.why.fillna("") == "hidden").mean() >= 0.5:
