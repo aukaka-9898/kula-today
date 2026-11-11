@@ -102,24 +102,49 @@ tr.wk td { border-bottom: 0; padding-bottom: 2px; } tr.wkh td { white-space: nor
 <div class="wrap">
   <header>
     <div><a class="homebtn" href="/">&larr; Home</a><div class="tag">Makapu&#8216;u soaring briefing</div><h1>Makapu&#8216;u Today</h1></div>
-    <div class="date">Updated Tue 10 Nov 2026 · 16:47 HST</div>
+    <div class="date">Updated Tue 10 Nov 2026 · 17:00 HST</div>
   </header>
   <div>
-    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/760/details/camera/12783/full" title="Kāne&#8216;ohe Bay webcam, live, looking southeast down the Ko&#8216;olau toward Makapu&#8216;u" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="https://images.wcams-static.faa.gov/webimages/760/11/12783-1794365182966.jpg" alt="" onerror="this.remove()"></div>
+    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/760/details/camera/12783/full" title="Kāne&#8216;ohe Bay webcam, live, looking southeast down the Ko&#8216;olau toward Makapu&#8216;u" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="https://images.wcams-static.faa.gov/webimages/760/11/12783-1794365710439.jpg" alt="" onerror="this.remove()"></div>
     <div class="camcap">Kāne&#8216;ohe Bay webcam, live, looking southeast down the Ko&#8216;olau to Makapu&#8216;u. FAA WeatherCam. <a href="https://weathercams.faa.gov/cameras/state/HI/cameraSite/760/details/camera/12783/full" target="_blank" rel="noopener">Open full size</a> · <a href="https://weathercams.faa.gov/cameras/state/HI/cameraSite/588/details/camera/12153/full" target="_blank" rel="noopener">Makapu&#8216;u camera, at the point</a></div>
   </div>
   <div class="cols">
     <section class="panel today" aria-labelledby="t-today">
-      <div class="kind">Now · 16:47 HST</div>
-      <div class="head"><h2 id="t-today">Today</h2><span class="chip warn">Not flyable</span></div>
-      <div class="sub" style="display:flex;align-items:center;gap:6px;margin:2px 0 6px"><img src="https://api.weather.gov/icons/land/day/rain_showers,30?size=small" width="34" height="34" alt="Scattered Rain Showers (25%)" title="NWS: Scattered Rain Showers (25%)" loading="lazy" style="vertical-align:middle;border-radius:4px;margin-left:6px"><span>NWS today: Scattered Rain Showers (25%)</span></div>
-      <dl>
-        <dt>Wind</dt><dd><span class="num">NE (051°) 21 mph</span><div class="sub">Bellows, 16:15</div></dd>
-        <dt>Cloudbase at launch</dt><dd><span class="num">About 2,800 ft</span><div class="sub">Condensation level of the air at HECO Mokuhano, 15:50.</div></dd>
-        <dt>Cloudbase at Kāne&#8216;ohe</dt><dd><span class="num">About 3,400 ft</span>, above the crest downrange<div class="sub">Condensation level of the air at Kaneohe (PHNG) 3,400 ft (15:57). Kaneohe's ceilometer: clear below 12,000 ft.</div><div class="downret">Near 050°: a fair balance between going downrange and getting back.</div></dd>
-        <dt>Thermals</dt><dd>Probably <strong>flat</strong> (forecast)<div class="sub">RRFS at Kaneohe, run 10 18Z: thermal index -1.5 °C, 10:00–14:00 (surface air: Open-Meteo at Kaneohe); no useable lift. Useful, not critical, at Makapu&#8216;u.</div></dd>
-        <dt>Inversion</dt><dd>About 5,700 ft (+9.9 °F)<div class="sub">RRFS at Kaneohe, 14:00: the trade lid</div></dd>
-      </dl>
+      <div class="kind">The day in review</div>
+      <div class="head"><h2 id="t-today">Today · Tue 10 Nov</h2><span class="chip fair">Caution</span></div>
+      
+      <p class="summary">At Bellows: Caution 13:00–14:00. Midday NE (054°) 19 mph, gusts 24.</p><p class="summary">Midday the downrange base was no higher than about 2,600 ft by the Kāne&#8216;ohe Bay camera.</p><p class="summary">Thermals by the Kaneohe runway&#x27;s air against the RRFS profile, 10:00–14:00: flat (index -2.4 °C); the forecast said flat.</p><div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted);margin:2px 0 4px">
+<span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#3f9d5a;vertical-align:middle"></span> Kāne&#8216;ohe Bay camera (base no higher than)</span>
+</div>
+<div style="position:relative;width:100%;min-width:0;height:220px"><canvas id="wrapchart" role="img" aria-label="Downrange cloud base through the day"></canvas></div>
+<script>
+(function () {
+  var d = {"camera": [[482, 3230.0], [498, 2960.0], [512, 2850.0], [529, 2860.0], [542, 2860.0], [557, 2640.0], [572, 2640.0], [587, 2640.0], [617, 2610.0], [632, 2640.0], [647, 2640.0], [658, 2640.0], [668, 2610.0], [680, 2600.0], [692, 2600.0], [707, 2600.0], [718, 2600.0], [729, 2610.0], [741, 2620.0], [752, 2600.0], [767, 2600.0], [782, 2580.0], [797, 2580.0], [812, 2590.0], [827, 2570.0], [842, 2570.0], [857, 2570.0], [887, 2510.0], [902, 2510.0], [918, 2510.0], [933, 2540.0], [944, 2540.0], [955, 2510.0], [966, 2500.0], [977, 2520.0], [992, 2520.0]], "lost": []}, pt = function (a) { return {x: a[0], y: a[1]}; };
+  var dark = matchMedia('(prefers-color-scheme: dark)').matches, muted = '#898781', grid = dark ? '#2c2c2a' : '#e1e0d9';
+  var hm = function (m) { return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); };
+  var ys = d.camera.map(function (a) { return a[1]; });
+  var ymin = Math.min(1500, Math.floor(Math.min.apply(null, ys) / 500) * 500);
+  new Chart(document.getElementById('wrapchart'), {
+    type: 'line',
+    data: { datasets: [
+      { label: 'Camera', data: d.camera.map(pt), showLine: false, pointRadius: 3, pointBackgroundColor: '#3f9d5a', borderColor: '#3f9d5a' },
+      { label: 'Lost', data: d.lost.map(function (a) { return {x: a[0], y: ymin, t: a[1]}; }), showLine: false, clip: false,
+         pointRadius: 3, pointBackgroundColor: '#e0a100', borderColor: '#e0a100' }
+    ] },
+    options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'nearest', axis: 'x', intersect: false },
+      plugins: { legend: { display: false }, tooltip: { callbacks: {
+        title: function (i) { return hm(i[0].parsed.x); },
+        label: function (i) { return i.dataset.label === 'Lost' ? i.raw.t
+          : 'Base no higher than ' + Math.round(i.parsed.y).toLocaleString() + ' ft'; } } } },
+      scales: {
+        x: { type: 'linear', min: 480, max: 1005, ticks: { stepSize: 60, color: muted, callback: function (v) { return hm(v); } }, grid: { display: false } },
+        y: { min: ymin,
+              max: Math.max(4000, Math.ceil(Math.max.apply(null, ys) / 500) * 500),
+              ticks: { stepSize: 500, color: muted, callback: function (v) { return v.toLocaleString(); } }, grid: { color: grid } }
+      } }
+  });
+})();
+</script>
     </section>
     <section class="panel tomorrow" aria-labelledby="t-tomorrow">
       <div class="kind">Forecast</div>
@@ -145,7 +170,7 @@ tr.wk td { border-bottom: 0; padding-bottom: 2px; } tr.wkh td { white-space: nor
 <!-- build problems: none -->
 <script>
 (function () {
-  var built = "2026-11-10T16:47";
+  var built = "2026-11-10T17:00";
   function check() {
     fetch("summary.json?" + Date.now(), {cache: "no-store"}).then(function (r) { return r.json(); })
       .then(function (j) { if (j && j.built && j.built > built) location.replace(location.pathname + "?v=" + Date.now()); })
