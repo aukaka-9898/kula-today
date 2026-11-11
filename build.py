@@ -3324,6 +3324,7 @@ def log_call_ft(day, key: str, v) -> None:
 FUZZY_LOG = HERE / "docs" / "fuzzy_log.json"
 FUZZY_MOIST_SPREAD_F = 5.0
 FUZZY_LEVELS = (3162, 3500, 4000, 4500, 5000, 5500, 6000, 6500, 7000, 8000, 9000, 10000)
+P9_RH, P9_TOP_FT, P9_LOWER_FT = 85, 4500, 300
 
 
 def _fuzzy_read() -> dict:
@@ -3368,6 +3369,19 @@ def log_fuzzy_inputs(now: datetime, day, cap, season_ft) -> None:
                     if dz > -100:
                         prof_rh[str(z)] = round(100 * math.exp(17.625 * dz / (243.04 + dz) - 17.625 * tz / (243.04 + tz)))
                 rec["rh_by_ft"] = prof_rh
+                # P9 candidate "Moist low layer", tracked silently (Sam, 11-10: "At best,
+                # perhaps a 'warning' of low base tomorrow. Against the seasonal";
+                # "We'll track it for a while"): RRFS >= 85% from Kula Ag's height to
+                # at least 4,500 ft. Hit if the day's midday base comes in 300+ ft
+                # under the season's number (log_fuzzy_outcome).
+                top = None
+                for z in FUZZY_LEVELS:
+                    if prof_rh.get(str(z), 0) >= P9_RH:
+                        top = z
+                    else:
+                        break
+                rec["p9_moist_to_ft"] = top
+                rec["p9_fires"] = bool(top and top >= P9_TOP_FT)
                 below = q[(q.height_ft >= RELEASE_FT) & (q.height_ft <= (inv["base_ft"] if inv else 10000))
                           & (q.temp_f - q.dewpoint_f <= FUZZY_MOIST_SPREAD_F)]
                 rec["moist_top_ft"] = round(float(below.height_ft.max()), -1) if len(below) else None
@@ -3415,6 +3429,10 @@ def log_fuzzy_outcome(now: datetime) -> None:
                 rec.update(obs_source="derived", obs_mid_ft=round(sum(v) / len(v), -1))
         except Exception:
             pass
+    if rec.get("obs_mid_ft") is not None and log[day].get("season_ft"):
+        rec["obs_low_vs_season"] = rec["obs_mid_ft"] <= log[day]["season_ft"] - P9_LOWER_FT
+        if log[day].get("p9_fires") is not None:
+            rec["p9_hit"] = bool(log[day]["p9_fires"]) == rec["obs_low_vs_season"]
     log[day] = {**log[day], **rec}
     FUZZY_LOG.write_text(json.dumps(log, indent=0), encoding="utf-8")
 
