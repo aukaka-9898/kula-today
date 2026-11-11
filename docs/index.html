@@ -101,18 +101,18 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><a class="homebtn" href="/">&larr; Home</a><div class="tag">Kula soaring briefing</div><h1>Kula Today</h1></div>
-    <div class="date">Updated Wed 11 Nov 2026 · 10:57 HST</div>
+    <div class="date">Updated Wed 11 Nov 2026 · 11:07 HST</div>
   </header>
 
   <div>
     <!-- The FAA viewer shows its station list before it opens the camera; the latest frame covers that until it has (Sam, 2026-10-25). -->
-    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" title="Red Hill webcam, live, looking south along the Kula slope" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="https://images.wcams-static.faa.gov/webimages/931/11/13417-1794430393531.jpg" alt="" onerror="this.remove()"></div>
+    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" title="Red Hill webcam, live, looking south along the Kula slope" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="https://images.wcams-static.faa.gov/webimages/931/11/13417-1794430918659.jpg" alt="" onerror="this.remove()"></div>
     <div class="camcap">Red Hill webcam, live. FAA WeatherCam (Kekoa). <a href="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" target="_blank" rel="noopener">Open full size</a></div>
   </div>
 
   <div class="cols">
     <section class="panel today" aria-labelledby="t-today">
-      <div class="kind">Measured today · 10:57 HST</div>
+      <div class="kind">Measured today · 11:07 HST</div>
       <div class="head"><h2 id="t-today">Today</h2><span class="chip warn">Flat</span></div>
       <div class="sub" style="display:flex;align-items:center;gap:6px;margin:2px 0 6px"><img src="https://api.weather.gov/icons/land/day/rain_showers,20/few?size=small" width="34" height="34" alt="Isolated Rain Showers then Sunny (15%)" title="NWS: Isolated Rain Showers then Sunny (15%)" loading="lazy" style="vertical-align:middle;border-radius:4px;margin-left:6px"><span>NWS today: Isolated Rain Showers then Sunny (15%)</span></div>
       <p class="summary">Cloudbase is at its highest of the day and still edging up. No trade air on the lower west slope.</p><div style="font-weight:600;font-size:.9rem;margin:10px 0 2px">Cloudbase so far</div><div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted,#6b6b66);margin:2px 0 4px">
@@ -122,7 +122,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="sub">Derived from the stations every 15 minutes during the upslope. Lines: the evening call&#x27;s number and the 10:00 derived base, each carried along a usual November day (2024-26 history), drawn once and never redrawn.</div>
 <script>
 (function () {
-  var d = {"derived": [[540, 4270.0], [555, 4180.0], [570, 4290.0], [585, 4260.0], [600, 4350.0], [615, 4630.0], [630, 4780.0], [645, 4830.0]], "forecast": [[540, 4970.0], [600, 5180.0], [660, 5300.0], [720, 5290.0], [780, 5140.0], [840, 5070.0], [900, 4890.0], [960, 4580.0]], "camera": [[542, 3340.0], [567, 3340.0], [593, 4560.0], [602, 4730.0], [611, 4780.0], [619, 4820.0], [628, 4960.0], [636, 5000.0], [645, 5050.0], [653, 5120.0]], "camsub": [], "hidden": [], "proj": [[600, 4350.0], [660, 4470.0], [720, 4460.0], [780, 4310.0], [840, 4240.0], [900, 4060.0], [960, 3750.0]], "nocall": [550, 559, 576, 585], "up": [540, 645], "nocu": null}, pt = function (a) { return {x: a[0], y: a[1]}; };
+  var d = {"derived": [[540, 4270.0], [555, 4180.0], [570, 4290.0], [585, 4260.0], [600, 4390.0], [615, 4570.0], [630, 4780.0], [645, 4760.0]], "forecast": [[540, 4970.0], [600, 5180.0], [660, 5300.0], [720, 5290.0], [780, 5140.0], [840, 5070.0], [900, 4890.0], [960, 4580.0]], "camera": [[542, 3340.0], [567, 3340.0], [593, 4560.0], [602, 4730.0], [611, 4780.0], [619, 4820.0], [628, 4960.0], [636, 5050.0], [645, 5080.0], [653, 5120.0], [662, 5150.0]], "camsub": [], "hidden": [], "proj": [[600, 4390.0], [660, 4510.0], [720, 4500.0], [780, 4350.0], [840, 4280.0], [900, 4100.0], [960, 3790.0]], "nocall": [550, 559, 576, 585], "up": [540, 648], "nocu": null}, pt = function (a) { return {x: a[0], y: a[1]}; };
   var dark = matchMedia('(prefers-color-scheme: dark)').matches, muted = '#898781', grid = dark ? '#2c2c2a' : '#e1e0d9';
   var nocu = { id: 'nocu', beforeDatasetsDraw: function (c) { if (!d.nocu) return; var x = c.scales.x, a = c.chartArea, g = c.ctx,
     x0 = x.getPixelForValue(d.nocu[0]), x1 = x.getPixelForValue(d.nocu[1]);
@@ -175,9 +175,9 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 </script>
       <dl>
         <dt><a href="details.html#t-thermal">Thermals</a></dt><dd>Seem <strong>flat</strong> as of 10:45<div class="sub">Kula Ag's last hour of air through the RRFS sounding (thermal.py)</div></dd>
-        <dt><a href="details.html#t-thermal">Cloudbase</a></dt><dd><span class="num">About 5,000 ft</span><div class="sub">Kekoa camera, median of the last hour to 10:53. Stations: about 4,800 ft (11 stations, 10:45).</div><div class="sub">Midday (11:00–14:00): probably about 4,900 ft, from the 09:00 base</div></dd>
+        <dt><a href="details.html#t-thermal">Cloudbase</a></dt><dd><span class="num">About 5,000 ft</span><div class="sub">Kekoa camera, median of the last hour to 11:02. Stations: about 4,800 ft (11 stations, 10:47).</div><div class="sub">Midday (11:00–14:00): probably about 4,900 ft, from the 09:00 base</div></dd>
         <dt><a href="details.html#t-ladder">Sun</a></dt><dd><span class="num">73%</span> of clear sky, lower Kula slope<div class="sub">Last hour, as of 10:45; average of Kula Ag 66%, Keokea 80%, Pulehu 72%</div></dd>
-        <dt><a href="details.html#stationmap">Shear line</a></dt><dd>Crossing Kula Highway near Omaopio<div class="sub">Fitted to the station map: flow from the north at MECO Olinda Rd, upslope at Waihou Springs 1 nearest the line</div><div class="sub">At the coast: Paia 092° at 17 mph</div></dd>
+        <dt><a href="details.html#stationmap">Shear line</a></dt><dd>Crossing Kula Highway near Omaopio<div class="sub">Fitted to the station map: flow from the north at MECO Olinda Rd, upslope at Waihou Springs 1 nearest the line</div><div class="sub">At the coast: Paia 088° at 18 mph</div></dd>
         
         <dt><a href="details.html#stationmap">Upslope</a></dt><dd>On since about <span class="num">09:00</span><div class="sub">Drainage ended about 08:15</div></dd>
         <dt><a href="details.html#stationmap">Wind</a></dt><dd><span class="num">2 mph</span>, gusts to 8<div class="sub">Lower elevations, 10 stations, last hour</div></dd>
@@ -246,7 +246,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
    browser's 10-minute cached copy is bypassed. The 15-minute refresh stays
    as a backstop. */
 (function () {
-  var built = "2026-11-11T10:57";
+  var built = "2026-11-11T11:07";
   function check() {
     fetch("stations.json?" + Date.now(), {cache: "no-store"})
       .then(function (r) { return r.json(); })
