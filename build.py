@@ -4383,7 +4383,15 @@ def base_chart(obs, now, up, end, cid="basechart", title="Cloudbase, derived vs 
         noc = sorted(set(noc) | {m for w in ("slope clear", "bright")
                                   for m in (safely(camera_hidden, day, w) or []) if m > cam[0][0]})
     cam_line = safely(camera_smooth, cam) or []
-    stand_in = safely(camera_stand_in, derived, cam_line, safely(first_cumulus_min, day)) or []
+    stand_in = safely(camera_stand_in, derived, cam, safely(first_cumulus_min, day)) or []
+    if stand_in and cam:
+        # One running median across the stand-in and the camera frames, then
+        # split at the first height, so dashed runs into solid without a step
+        # (Sam, 11-10: "the transition from green dashed to green solid should
+        # be smoothed").
+        both = safely(camera_smooth, stand_in[:-1] + cam) or []
+        stand_in = [q for q in both if q[0] <= cam[0][0]]
+        cam_line = [q for q in both if q[0] >= cam[0][0]]
     fc_draw, fc_label = (forecast if with_forecast else []), "Forecast"
     if shapes:
         ev, ten = safely(shape_lines, now, derived) or (None, None)
