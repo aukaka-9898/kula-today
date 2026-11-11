@@ -3623,3 +3623,7 @@ date,time,station,obs_time,temp_f,dew_f,dew_from,lcl_ft,ti_c,word,camera,camera_
 2026-11-11,12:08,Kaneohe runway,11:57,80.1,68.0,own,2750.0,-2.66,Flat,,
 2026-11-11,12:08,Heeia,11:30,79.0,69.5,own,2170.0,-2.22,Flat,,
 2026-11-11,12:08,Moku o Loe,12:00,79.0,,,,,,,
+2026-11-11,12:22,Kaneohe runway,11:57,80.1,68.0,own,2750.0,-2.66,Flat,,
+2026-11-11,12:22,Heeia,11:30,79.0,69.5,own,2170.0,-2.22,Flat,,
+2026-11-11,12:22,Maunawili,12:00,79.5,68.4,own,2540.0,-2.39,Flat,,
+2026-11-11,12:22,Moku o Loe,12:18,78.8,,,,,,,
