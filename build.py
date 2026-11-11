@@ -3033,9 +3033,10 @@ def sounding_forecast(day) -> dict | None:
 @functools.cache
 def month_shape(month: int):
     d = pd.read_csv(HERE / "history" / "days.csv", parse_dates=["date"])
-    d = d[d.date.dt.month == month].dropna(subset=[f"b{h}" for h in range(9, 16)] + ["level"])
-    vs_level = {h: float((d[f"b{h}"] - d["level"]).mean()) for h in range(9, 16)}
-    vs_ten = {h: float((d[f"b{h}"] - d["b10"]).mean()) for h in range(10, 16)}
+    # To 16:00 (Sam, 11-10: "extend the guesses to 1600").
+    d = d[d.date.dt.month == month].dropna(subset=[f"b{h}" for h in range(9, 17)] + ["level"])
+    vs_level = {h: float((d[f"b{h}"] - d["level"]).mean()) for h in range(9, 17)}
+    vs_ten = {h: float((d[f"b{h}"] - d["b10"]).mean()) for h in range(10, 17)}
     return vs_level, vs_ten
 
 
@@ -3060,9 +3061,9 @@ def shape_lines(now: datetime, derived: list):
         ft = (json.loads(CALLS_LOG.read_text(encoding="utf-8")).get(f"{now:%Y-%m-%d}") or {}).get("ft")
     except Exception:
         ft = None
-    evening = [[h * 60, round(ft + vs_level[h], -1)] for h in range(9, 16)] if ft else None
+    evening = [[h * 60, round(ft + vs_level[h], -1)] for h in range(9, 17)] if ft else None
     near = [v for m, v in derived if 590 <= m <= 610]
-    ten = [[h * 60, round(near[0] + vs_ten[h], -1)] for h in range(10, 16)] if near else None
+    ten = [[h * 60, round(near[0] + vs_ten[h], -1)] for h in range(10, 17)] if near else None
     return evening, ten
 
 
