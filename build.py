@@ -3313,6 +3313,102 @@ def log_call_ft(day, key: str, v) -> None:
     CALLS_LOG.write_text(json.dumps(log, indent=0), encoding="utf-8")
 
 
+# Season against RRFS, kept from 11-11 on for fuzzy reasoning (Sam, 11-10:
+# "Season says A but RRFS says B"; "Let's start this section clean. Tomorrow
+# and forward."). Each evening, until 18:00 like the call: the season's number,
+# RRFS's own answer (its Kula Ag air lifted, 11:00-14:00), its lid (strongest
+# inversion 3,500-10,000 ft: base, warming, drying), how high its moist layer
+# reaches under the lid, its humidity aloft and low-level wind, and the recent
+# camera-minus-call. The wrap-up adds what the day did. Nothing on the page
+# uses it yet; rules get built and tested on these days only.
+FUZZY_LOG = HERE / "docs" / "fuzzy_log.json"
+FUZZY_MOIST_SPREAD_F = 5.0
+
+
+def _fuzzy_read() -> dict:
+    try:
+        return json.loads(FUZZY_LOG.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+
+
+def log_fuzzy_inputs(now: datetime, day, cap, season_ft) -> None:
+    log = _fuzzy_read()
+    old = log.get(f"{day}") or {}
+    if str(old.get("made", "")) >= f"{day - timedelta(days=1)} 18:00":
+        return
+    rec = {"made": f"{now:%Y-%m-%d %H:%M}", "season_ft": season_ft}
+    if cap:
+        prof = _profiles(cap)
+        rec["rrfs_run"] = f"{sd.run_time(cap):%Y-%m-%d %HZ}"
+        lcl, surf = [], []
+        for h in (11, 12, 13, 14):
+            k = pd.Timestamp(f"{day} {h:02d}:00").tz_localize(HST).tz_convert("UTC")
+            near = min(prof, key=lambda t: abs(t - k))
+            if abs(near - k) > pd.Timedelta("90min"):
+                continue
+            t = prof[near].sort_values("height_ft")
+            tt = float(np.interp(RELEASE_FT, t.height_ft, t.temp_c)) * 1.8 + 32
+            td = float(np.interp(RELEASE_FT, t.height_ft, t.dewpoint_c)) * 1.8 + 32
+            lcl.append(RELEASE_FT + (tt - td) / 4.4 * 1000)
+            surf.append((tt, td))
+            if h == 12:
+                q = t.assign(temp_f=t.temp_c * 1.8 + 32, dewpoint_f=t.dewpoint_c * 1.8 + 32)
+                inv = sd.inversion(q, floor_ft=3500)
+                if inv:
+                    rec.update(cap_base_ft=round(float(inv["base_ft"]), -1), cap_top_ft=round(float(inv["top_ft"]), -1),
+                               cap_warming_f=round(float(inv["warming_f"]), 1), cap_drying_f=round(float(inv["drying_f"]), 1))
+                below = q[(q.height_ft >= RELEASE_FT) & (q.height_ft <= (inv["base_ft"] if inv else 10000))
+                          & (q.temp_f - q.dewpoint_f <= FUZZY_MOIST_SPREAD_F)]
+                rec["moist_top_ft"] = round(float(below.height_ft.max()), -1) if len(below) else None
+                try:
+                    import history
+                    a = history.airmass(q)
+                    rec.update(wdir_low=a.get("wdir_low"), wspd_low=a.get("wspd_low"))
+                except Exception:
+                    pass
+        if lcl:
+            rec["rrfs_parcel_ft"] = round(sum(lcl) / len(lcl), -1)
+            rec["rrfs_kula_t_f"] = round(sum(x for x, _ in surf) / len(surf), 1)
+            rec["rrfs_kula_td_f"] = round(sum(y for _, y in surf) / len(surf), 1)
+        air = safely(airmass_noon, cap, day)
+        if air:
+            rec.update({k: round(v) for k, v in air.items()})
+    rv = safely(recent_evening_variance, day)
+    if rv:
+        rec["recent_cam_minus_call"] = [x for _, x, _ in rv["days"]]
+    log[f"{day}"] = {**{k: v for k, v in old.items() if k.startswith("obs_")}, **rec}
+    keep = sorted(log)[-200:]
+    FUZZY_LOG.write_text(json.dumps({k: log[k] for k in keep}, indent=0), encoding="utf-8")
+
+
+def log_fuzzy_outcome(now: datetime) -> None:
+    """What the day did, from the camera's 1-hour line (derived when no camera)."""
+    day = f"{now:%Y-%m-%d}"
+    log = _fuzzy_read()
+    if day not in log:
+        return
+    cam = camera_points(now)
+    line = camera_smooth(cam) if len(cam) >= VAR_MIN_FRAMES else []
+    at = lambda m: min((q for q in line if abs(q[0] - m) <= 20), key=lambda q: abs(q[0] - m), default=[0, None])[1]
+    mid = [v for m, v in line if 660 <= m <= 840]
+    rec = {"obs_source": "camera" if mid else None,
+           "obs_mid_ft": round(sum(mid) / len(mid), -1) if mid else None,
+           "obs_max_ft": round(max(v for _, v in line), -1) if line else None,
+           "obs_12_ft": at(720), "obs_15_ft": at(900), "obs_first_cu": (json.loads(RIDGE_FILE.read_text(encoding="utf-8"))
+                                                                      .get("first_cloud") if RIDGE_FILE.exists() else None)}
+    if not mid:
+        try:
+            dl = json.loads(DERIVED_LOG.read_text(encoding="utf-8"))
+            v = [p[0] for m, p in dl.get("points", {}).items() if dl.get("date") == day and 660 <= int(m) <= 840]
+            if v:
+                rec.update(obs_source="derived", obs_mid_ft=round(sum(v) / len(v), -1))
+        except Exception:
+            pass
+    log[day] = {**log[day], **rec}
+    FUZZY_LOG.write_text(json.dumps(log, indent=0), encoding="utf-8")
+
+
 def log_call(day, base: str, thermal: str, now: datetime, base_ft=None) -> None:
     try:
         log = json.loads(CALLS_LOG.read_text(encoding="utf-8"))
@@ -4919,6 +5015,8 @@ def day_review(obs, now, up, evening, rnet, word, model, fc_today, fc_pair, entr
     gaps = safely(dropout_sentence, now)
     if gaps:
         said.append(gaps)
+    if now.hour >= 16:
+        safely(log_fuzzy_outcome, now)
     return {"date": f"{now:%Y-%m-%d}", "word": word, "summary": " ".join(said),
             "therm": therm, "base": chart_html, "notes": notes,
             # The variance chart left the wrap-up for the Forecast panel's recent
@@ -5493,6 +5591,7 @@ def build() -> str:
                                    "May be high" if cat_head.startswith("May be a high") else
                                    "Leaning high" if cat_head == "Leaning high" else "Normal"),
                    strength_word(r["thermal"]), now, blend[0] if blend else None)
+            safely(log_fuzzy_inputs, now, tom, cap, blend[0] if blend else None)
         for day, w in week.iterrows():
             if day < tom:
                 continue
