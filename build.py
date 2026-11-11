@@ -4244,6 +4244,26 @@ def camera_points(day: datetime) -> list:
     return [[int(t[:2]) * 60 + int(t[3:5]), float(v)] for t, v in zip(c.time, c.camera_ft)]
 
 
+# The charts draw the camera as a running median, not frame by frame (Sam,
+# 11-10: "camera show a few rapid changes"; "just show the smoothed curve"):
+# each frame's value is the median of the frames within 30 minutes either side.
+# A gap over CAM_GAP_MIN breaks the line. Scoring still uses the frames.
+CAM_SMOOTH_MIN = 30
+CAM_GAP_MIN = 40
+
+
+def camera_smooth(cam: list) -> list:
+    cam = sorted(cam)
+    out = []
+    for i, (m, _) in enumerate(cam):
+        if i and m - cam[i - 1][0] > CAM_GAP_MIN:
+            out.append([(m + cam[i - 1][0]) // 2, None])
+        vals = sorted(v for mm, v in cam if abs(mm - m) <= CAM_SMOOTH_MIN)
+        n = len(vals)
+        out.append([m, round(vals[n // 2] if n % 2 else (vals[n // 2 - 1] + vals[n // 2]) / 2, -1)])
+    return out
+
+
 # The camera against derived through the day, for the wrap-up (Sam, 2026-11-02:
 # "the discrepancies are obvious. In the wrap up note the discrepancies as
 # trends across the day"). Each camera point is paired with the derived point
@@ -4322,7 +4342,7 @@ def base_chart(obs, now, up, end, cid="basechart", title="Cloudbase, derived vs 
                      f"a usual {name} day (2024-26 history), drawn once and never redrawn.")
     if proj and proj.get("note"):
         note += " " + proj["note"]
-    return (chart_html(cid, derived, fc_draw, span, note, title=title, camera=cam,
+    return (chart_html(cid, derived, fc_draw, span, note, title=title, camera=safely(camera_smooth, cam) or [],
                        hidden=hid, nocall=noc, proj=proj["points"] if proj else None,
                        proj_label=(proj or {}).get("label", "Forecast (sounding)"), fc_label=fc_label),
             derived, forecast)
@@ -4358,7 +4378,7 @@ def chart_html(cid, derived, forecast, span, note, nocu=None, title="", camera=N
                        "nocall": nocall, "up": span, "nocu": nocu})
     legend = ("" if not derived else
               '<span><span style="display:inline-block;width:16px;height:2px;background:#2a78d6;vertical-align:middle"></span> Derived (stations)</span>'
-              '') + ('<span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#3f9d5a;vertical-align:middle"></span> Kekoa camera</span>'
+              '') + ('<span><span style="display:inline-block;width:16px;height:2px;background:#3f9d5a;vertical-align:middle"></span> Kekoa camera (1-hour median)</span>'
                      if camera else "") + (
               '<span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#e0a100;vertical-align:middle"></span> Camera hidden (cloud or rain)</span>'
               if hidden else "") + (
@@ -4399,7 +4419,7 @@ def chart_html(cid, derived, forecast, span, note, nocu=None, title="", camera=N
       g.setLineDash([]); g.fillStyle = muted; g.font = '11px sans-serif'; g.textAlign = 'right';
       g.fillText(m[1], a.right - 4, py - 4); g.restore(); }}); }} }};
   var hm = function (m) {{ return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); }};
-  var ys = d.derived.map(function (a) {{ return a[1]; }}).concat(d.forecast.map(function (a) {{ return a[1]; }})).concat(d.camera.map(function (a) {{ return a[1]; }})).concat(d.proj.map(function (a) {{ return a[1]; }}));
+  var ys = d.derived.map(function (a) {{ return a[1]; }}).concat(d.forecast.map(function (a) {{ return a[1]; }})).concat(d.camera.map(function (a) {{ return a[1]; }})).concat(d.proj.map(function (a) {{ return a[1]; }})).filter(function (v) {{ return v !== null; }});
   var xs = [540, 960];
   var ymin = Math.min(3500, Math.floor(Math.min.apply(null, ys) / 500) * 500);
   new Chart(document.getElementById('{cid}'), {{
@@ -4408,7 +4428,7 @@ def chart_html(cid, derived, forecast, span, note, nocu=None, title="", camera=N
       {{ label: 'Derived', data: d.derived.map(pt), borderColor: '#2a78d6', borderWidth: 2, pointRadius: 0, tension: 0.3 }},
       {{ label: 'Forecast', data: d.forecast.map(pt), borderColor: '#eb6834', borderWidth: 2, borderDash: [6, 4], pointRadius: 3, pointBackgroundColor: '#eb6834', tension: 0.3 }},
       {{ label: 'Forecast (sounding)', data: d.proj.map(pt), borderColor: '#8a5cd6', borderWidth: 2, borderDash: [3, 4], pointRadius: 0, tension: 0.3 }},
-      {{ label: 'Kekoa camera', data: d.camera.map(pt), showLine: false, pointRadius: 3, pointBackgroundColor: '#3f9d5a', borderColor: '#3f9d5a' }},
+      {{ label: 'Kekoa camera', data: d.camera.map(pt), borderColor: '#3f9d5a', borderWidth: 2, pointRadius: 0, tension: 0.3 }},
       {{ label: 'Camera hidden', data: d.hidden.map(function (m) {{ return {{x: m, y: ymin}}; }}), showLine: false, clip: false,
          pointRadius: 3, pointBackgroundColor: '#e0a100', borderColor: '#e0a100' }},
       {{ label: 'Camera, no call', data: d.nocall.map(function (m) {{ return {{x: m, y: ymin}}; }}), showLine: false, clip: false,
