@@ -1,0 +1,24 @@
+{
+"2026-11-11": {
+"made": "2026-11-10 20:05",
+"season_ft": 5100.0,
+"rrfs_run": "2026-11-11 00Z",
+"cap_base_ft": 5040.0,
+"cap_top_ft": 7190.0,
+"cap_warming_f": 3.4,
+"cap_drying_f": -43.3,
+"moist_top_ft": 5040.0,
+"wdir_low": 72.0,
+"wspd_low": 29.3,
+"rrfs_parcel_ft": 3790.0,
+"rrfs_kula_t_f": 62.7,
+"rrfs_kula_td_f": 60.0,
+"rh_5_7k": 64,
+"rh_7_10k": 10,
+"recent_cam_minus_call": [
+400.0,
+-20.0,
+240.0
+]
+}
+}
