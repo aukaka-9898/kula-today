@@ -3438,6 +3438,39 @@ def accuracy(now: datetime, days: int | None = None) -> dict:
             "pilots": "pilots" in src}
 
 
+# Afternoon trend (Sam, 11-10: "General trend scoring sounds like a good
+# idea"): rising / holding / falling from 12:00 to 15:00 by the camera's 1-hour
+# line, +-TREND_HOLD_FT, against the usual day for the month (what the evening
+# and 10:00 lines carry). Until the shape varies by flow, the forecast trend is
+# the month's, so this says how often the month's usual trend happened.
+TREND_HOLD_FT = 200
+
+
+def _trend_word(ch: float) -> str:
+    return "rising" if ch > TREND_HOLD_FT else "falling" if ch < -TREND_HOLD_FT else "holding"
+
+
+def trend_score(now: datetime):
+    """(right, days) over the last ACCURACY_DAYS, or None."""
+    c = pd.read_csv(CAMERA_BASE_LOG, dtype={"date": str, "time": str}).dropna(subset=["camera_ft"])
+    first = f"{now.date() - timedelta(days=ACCURACY_DAYS)}"
+    right = n = 0
+    for d, g in c[(c.date >= first) & (c.date < f"{now:%Y-%m-%d}")].groupby("date"):
+        pts = sorted([int(t[:2]) * 60 + int(t[3:5]), float(v)] for t, v in zip(g.time, g.camera_ft))
+        line = camera_smooth(pts)
+        at = {}
+        for target in (720, 900):
+            near = [q for q in line if abs(q[0] - target) <= 20]
+            if near:
+                at[target] = min(near, key=lambda q: abs(q[0] - target))[1]
+        if len(at) < 2:
+            continue
+        vs_level, _ = month_shape(int(d[5:7]))
+        n += 1
+        right += _trend_word(at[900] - at[720]) == _trend_word(vs_level[15] - vs_level[12])
+    return (right, n) if n else None
+
+
 def accuracy_line(now: datetime) -> str:
     a = accuracy(now)
     if not a or not (a["base_n"] or a["thermal_n"]):
@@ -3448,6 +3481,9 @@ def accuracy_line(now: datetime) -> str:
                      f"(typical miss {a['base_typical']:,.0f} ft)")
     else:
         parts.append("cloudbase scored from 24 October (tested on 1,000 past days: within 500 ft on 2 days in 3)")
+    tr = safely(trend_score, now)
+    if tr:
+        parts.append(f"afternoon trend (rising, holding or falling, 12:00 to 15:00) right on {tr[0]} of {tr[1]}")
     if a["thermal_n"]:
         parts.append(f"thermals right on {a['thermal_right']} of {a['thermal_n']}, "
                      f"within one step on {a['thermal_within_one']}")
@@ -4323,6 +4359,65 @@ def camera_trend(derived: list, cam: list) -> str | None:
     return ("Camera against derived: " + ", ".join(parts) + ".") if parts else None
 
 
+# Short-term variation (Sam, 11-10: "A second graph showing the variance might
+# be instructive"; "show variance chart as a curve"; "with obs smoothed"; "I
+# like it ... Build that"): the camera smoothed over 30 minutes against its own
+# 1-hour line, at each frame. Lasting excursions (11-10 15:20, -650 ft for half
+# an hour) stay; one-frame jumps mostly go. For the wrap-up, under the chart.
+VAR_SHORT_MIN = 15          # half-window of the short smoothing (30 minutes)
+VAR_MIN_FRAMES = 6
+VARIANCE_CAPTION = ("How far the camera's cloudbase strayed from the day's trend, smoothed "
+                    "over 30 minutes. Near the line: a steady base you can plan on. Deep or long dips: cloud or "
+                    "moist air passing through. Allow extra margin on those days.")
+
+
+def camera_variance(cam: list) -> list:
+    """[[minute, ft from the 1-hour line]] at each camera frame."""
+    global CAM_SMOOTH_MIN
+    if len(cam) < VAR_MIN_FRAMES:
+        return []
+    keep = CAM_SMOOTH_MIN
+    try:
+        long_ = dict((m, v) for m, v in camera_smooth(cam))
+        CAM_SMOOTH_MIN = VAR_SHORT_MIN
+        short = camera_smooth(cam)
+    finally:
+        CAM_SMOOTH_MIN = keep
+    return [[m, round(v - long_[m], -1)] for m, v in short if m in long_]
+
+
+def variance_html(var: list) -> str:
+    if not var:
+        return ""
+    typ = round(sum(abs(v) for _, v in var) / len(var), -1)
+    m, v = max(var, key=lambda q: abs(q[1]))
+    big = (f"; the biggest, {abs(v):,.0f} ft {'below' if v < 0 else 'above'} at {m // 60:02d}:{m % 60:02d}"
+           if abs(v) >= 2 * typ and abs(v) >= 200 else "")
+    data = json.dumps([[m, v] for m, v in var if 540 <= m <= 960])
+    return f"""<div style="font-weight:600;font-size:.9rem;margin:12px 0 2px">Short-term variation</div>
+<div style="position:relative;width:100%;min-width:0;height:130px"><canvas id="varchart" role="img" aria-label="Camera cloudbase against the day's trend"></canvas></div>
+<div class="sub">Typically {typ:,.0f} ft either side of the trend{big}. {esc(VARIANCE_CAPTION)}</div>
+<script>
+(function () {{
+  var d = {data}, dark = matchMedia('(prefers-color-scheme: dark)').matches, muted = '#898781', grid = dark ? '#2c2c2a' : '#e1e0d9';
+  var hm = function (m) {{ return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); }};
+  var top = Math.max(500, Math.ceil(Math.max.apply(null, d.map(function (a) {{ return Math.abs(a[1]); }})) / 250) * 250);
+  new Chart(document.getElementById('varchart'), {{
+    type: 'line',
+    data: {{ datasets: [{{ label: 'From the trend', data: d.map(function (a) {{ return {{x: a[0], y: a[1]}}; }}),
+      borderColor: '#2a78d6', borderWidth: 2, pointRadius: 0, tension: 0.3,
+      fill: {{ target: 'origin', above: 'rgba(42,120,214,0.15)', below: 'rgba(208,102,27,0.22)' }} }}] }},
+    options: {{ responsive: true, maintainAspectRatio: false, animation: false,
+      plugins: {{ legend: {{ display: false }}, tooltip: {{ callbacks: {{
+        title: function (i) {{ return hm(i[0].parsed.x); }},
+        label: function (i) {{ var v = Math.round(i.parsed.y); return Math.abs(v).toLocaleString() + ' ft ' + (v < 0 ? 'below' : 'above') + ' the trend'; }} }} }} }},
+      scales: {{ x: {{ type: 'linear', min: 540, max: 960, ticks: {{ stepSize: 60, color: muted, callback: function (v) {{ return hm(v); }} }}, grid: {{ display: false }} }},
+                y: {{ min: -top, max: top, ticks: {{ stepSize: 250, color: muted }}, grid: {{ color: function (c) {{ return c.tick.value === 0 ? '#3f9d5a' : grid; }} }} }} }} }}
+  }});
+}})();
+</script>"""
+
+
 def first_cumulus_min(day: datetime):
     """Minute of the day the ridge log called first cloud, or None."""
     log = json.loads(RIDGE_FILE.read_text(encoding="utf-8"))
@@ -4715,7 +4810,8 @@ def day_review(obs, now, up, evening, rnet, word, model, fc_today, fc_pair, entr
         said.append(gaps)
     return {"date": f"{now:%Y-%m-%d}", "word": word, "summary": " ".join(said),
             "therm": therm, "base": chart_html, "notes": notes,
-            "chart": notes_html + (chart if up is not None and len(obs) and got and got[1] else ""),
+            "chart": notes_html + (chart if up is not None and len(obs) and got and got[1] else "")
+                     + (safely(variance_html, safely(camera_variance, safely(camera_points, now) or []) or []) or ""),
             "line": line_html,
             "up": up_html, "wind": wind_html}
 
