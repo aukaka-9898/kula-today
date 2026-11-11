@@ -4268,17 +4268,17 @@ def camera_points(day: datetime) -> list:
 # The charts draw the camera as a running median, not frame by frame (Sam,
 # 11-10: "camera show a few rapid changes"; "just show the smoothed curve"):
 # each frame's value is the median of the frames within 30 minutes either side.
-# A gap over CAM_GAP_MIN breaks the line. Scoring still uses the frames.
+# Gaps after the first height are bridged from the camera's own calls, the
+# frames with no height marked on the axis (Sam, 11-10: "After the first
+# determined height gaps should be smoothed from the cam calls (with the 'no
+# call' marked on the x axis)"). Scoring still uses the frames.
 CAM_SMOOTH_MIN = 30
-CAM_GAP_MIN = 40
 
 
 def camera_smooth(cam: list) -> list:
     cam = sorted(cam)
     out = []
     for i, (m, _) in enumerate(cam):
-        if i and m - cam[i - 1][0] > CAM_GAP_MIN:
-            out.append([(m + cam[i - 1][0]) // 2, None])
         vals = sorted(v for mm, v in cam if abs(mm - m) <= CAM_SMOOTH_MIN)
         n = len(vals)
         out.append([m, round(vals[n // 2] if n % 2 else (vals[n // 2 - 1] + vals[n // 2]) / 2, -1)])
@@ -4311,6 +4311,36 @@ def camera_trend(derived: list, cam: list) -> str | None:
             parts.append(f"{name} within {CAM_CLOSE_FT} ft" if abs(g) < CAM_CLOSE_FT else
                          f"{name} about {abs(round(g, -2)):,.0f} ft {'higher' if g > 0 else 'lower'}")
     return ("Camera against derived: " + ", ".join(parts) + ".") if parts else None
+
+
+def first_cumulus_min(day: datetime):
+    """Minute of the day the ridge log called first cloud, or None."""
+    log = json.loads(RIDGE_FILE.read_text(encoding="utf-8"))
+    fc = log.get("first_cloud") if log.get("date") == f"{day:%Y-%m-%d}" else None
+    return int(fc[:2]) * 60 + int(fc[3:5]) if fc else None
+
+
+def camera_stand_in(derived: list, cam: list, first_cu) -> list:
+    """The camera line from first cumulus to the camera's first height: the
+    camera sees cumulus but can't place them, so the derived base stands in
+    (Sam, 11-10: "The camera curve begins when the cam recognizes cumies (and
+    cannot determine height). Until height can be determined, derived is
+    substituted"). Drawn green dashed; joins the camera's first point."""
+    if first_cu is None or not derived:
+        return []
+    stop = cam[0][0] if cam else derived[-1][0]
+    if first_cu >= stop:
+        return []
+    xs = [m for m, _ in derived]
+    if first_cu < xs[0] or first_cu > xs[-1]:
+        return []
+    out = [[first_cu, round(float(np.interp(first_cu, xs, [v for _, v in derived])), -1)]]
+    out += [[m, v] for m, v in derived if first_cu < m < stop]
+    if cam:
+        out.append(list(cam[0]))
+    elif stop > first_cu:
+        out.append([stop, derived[-1][1]])
+    return out
 
 
 def camera_hidden(day: datetime, why: str = "hidden") -> list:
@@ -4349,6 +4379,11 @@ def base_chart(obs, now, up, end, cid="basechart", title="Cloudbase, derived vs 
     cam = safely(camera_points, day) or []
     hid = safely(camera_hidden, day) or []
     noc = safely(camera_hidden, day, "no edge") or []
+    if cam:      # after the first height every frame without one is a no call
+        noc = sorted(set(noc) | {m for w in ("slope clear", "bright")
+                                  for m in (safely(camera_hidden, day, w) or []) if m > cam[0][0]})
+    cam_line = safely(camera_smooth, cam) or []
+    stand_in = safely(camera_stand_in, derived, cam_line, safely(first_cumulus_min, day)) or []
     fc_draw, fc_label = (forecast if with_forecast else []), "Forecast"
     if shapes:
         ev, ten = safely(shape_lines, now, derived) or (None, None)
@@ -4363,7 +4398,7 @@ def base_chart(obs, now, up, end, cid="basechart", title="Cloudbase, derived vs 
                      f"a usual {name} day (2024-26 history), drawn once and never redrawn.")
     if proj and proj.get("note"):
         note += " " + proj["note"]
-    return (chart_html(cid, derived, fc_draw, span, note, title=title, camera=safely(camera_smooth, cam) or [],
+    return (chart_html(cid, derived, fc_draw, span, note, title=title, camera=cam_line, cam_sub=stand_in,
                        hidden=hid, nocall=noc, proj=proj["points"] if proj else None,
                        proj_label=(proj or {}).get("label", "Forecast (sounding)"), fc_label=fc_label),
             derived, forecast)
@@ -4377,7 +4412,7 @@ FORECAST_BAND_FT = 700
 
 
 def chart_html(cid, derived, forecast, span, note, nocu=None, title="", camera=None, hidden=None, nocall=None,
-               proj=None, proj_label="Forecast (sounding)", fc_label="Forecast") -> str:
+               proj=None, proj_label="Forecast (sounding)", fc_label="Forecast", cam_sub=None) -> str:
     """Cloudbase line chart: derived (solid) and forecast (dashed) by minute of
     the day, the upslope shaded; derived and span may be empty for a forecast.
 
@@ -4387,6 +4422,7 @@ def chart_html(cid, derived, forecast, span, note, nocu=None, title="", camera=N
     # Every chart shows 09:00-16:00 (Sam): the flying day, nothing outside it.
     clip = lambda pts: [q for q in pts if 540 <= q[0] <= 960]
     derived, forecast, camera, proj = clip(derived), clip(forecast), clip(camera or []), clip(proj or [])
+    cam_sub = clip(cam_sub or [])
     # Camera hidden (Sam, 10-29): a camera-sized dot in a caution colour on the
     # bottom axis for each frame with the slope lost in cloud or rain -- no height.
     hidden = [m for m in (hidden or []) if 540 <= m <= 960]
@@ -4395,12 +4431,14 @@ def chart_html(cid, derived, forecast, span, note, nocu=None, title="", camera=N
     nocall = [m for m in (nocall or []) if 540 <= m <= 960]
     if span:
         span = [max(span[0], 540), min(span[1], 960)]
-    data = json.dumps({"derived": derived, "forecast": forecast, "camera": camera, "hidden": hidden, "proj": proj,
+    data = json.dumps({"derived": derived, "forecast": forecast, "camera": camera, "camsub": cam_sub, "hidden": hidden, "proj": proj,
                        "nocall": nocall, "up": span, "nocu": nocu})
     legend = ("" if not derived else
               '<span><span style="display:inline-block;width:16px;height:2px;background:#2a78d6;vertical-align:middle"></span> Derived (stations)</span>'
               '') + ('<span><span style="display:inline-block;width:16px;height:2px;background:#3f9d5a;vertical-align:middle"></span> Kekoa camera (1-hour median)</span>'
                      if camera else "") + (
+              '<span><span style="display:inline-block;width:16px;border-top:2px dashed #3f9d5a;vertical-align:middle"></span> Cumulus seen, no camera height yet (stations)</span>'
+              if cam_sub else "") + (
               '<span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#e0a100;vertical-align:middle"></span> Camera hidden (cloud or rain)</span>'
               if hidden else "") + (
               '<span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;border:1.5px solid #898781;box-sizing:border-box;vertical-align:middle"></span> Camera, no call</span>'
@@ -4440,7 +4478,7 @@ def chart_html(cid, derived, forecast, span, note, nocu=None, title="", camera=N
       g.setLineDash([]); g.fillStyle = muted; g.font = '11px sans-serif'; g.textAlign = 'right';
       g.fillText(m[1], a.right - 4, py - 4); g.restore(); }}); }} }};
   var hm = function (m) {{ return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); }};
-  var ys = d.derived.map(function (a) {{ return a[1]; }}).concat(d.forecast.map(function (a) {{ return a[1]; }})).concat(d.camera.map(function (a) {{ return a[1]; }})).concat(d.proj.map(function (a) {{ return a[1]; }})).filter(function (v) {{ return v !== null; }});
+  var ys = d.derived.map(function (a) {{ return a[1]; }}).concat(d.forecast.map(function (a) {{ return a[1]; }})).concat(d.camera.map(function (a) {{ return a[1]; }})).concat(d.camsub.map(function (a) {{ return a[1]; }})).concat(d.proj.map(function (a) {{ return a[1]; }})).filter(function (v) {{ return v !== null; }});
   var xs = [540, 960];
   var ymin = Math.min(3500, Math.floor(Math.min.apply(null, ys) / 500) * 500);
   new Chart(document.getElementById('{cid}'), {{
@@ -4450,6 +4488,7 @@ def chart_html(cid, derived, forecast, span, note, nocu=None, title="", camera=N
       {{ label: 'Forecast', data: d.forecast.map(pt), borderColor: '#eb6834', borderWidth: 2, borderDash: [6, 4], pointRadius: 3, pointBackgroundColor: '#eb6834', tension: 0.3 }},
       {{ label: 'Forecast (sounding)', data: d.proj.map(pt), borderColor: '#8a5cd6', borderWidth: 2, borderDash: [3, 4], pointRadius: 0, tension: 0.3 }},
       {{ label: 'Kekoa camera', data: d.camera.map(pt), borderColor: '#3f9d5a', borderWidth: 2, pointRadius: 0, tension: 0.3 }},
+      {{ label: 'Cumulus seen, no camera height yet', data: d.camsub.map(pt), borderColor: '#3f9d5a', borderWidth: 2, borderDash: [5, 4], pointRadius: 0, tension: 0.3 }},
       {{ label: 'Camera hidden', data: d.hidden.map(function (m) {{ return {{x: m, y: ymin}}; }}), showLine: false, clip: false,
          pointRadius: 3, pointBackgroundColor: '#e0a100', borderColor: '#e0a100' }},
       {{ label: 'Camera, no call', data: d.nocall.map(function (m) {{ return {{x: m, y: ymin}}; }}), showLine: false, clip: false,
