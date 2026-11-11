@@ -3032,12 +3032,12 @@ def sounding_forecast(day) -> dict | None:
 
 # The Forecast panel's caveat (Sam, 11-10: "a 'disclaimer' for the
 # 'predictions'. Kula's microclimate"; "A is fine"; thermal accuracy unknown,
-# "solicit data"; contact "coming soon").
+# "solicit data"; contact flyhiwx@gmail.com from 11-10).
 FORECAST_CAVEAT = ('<p class="sub">A guide, not a promise: Kula makes its own weather, and no model sees it. '
                    'The cloudbase number is the season, yesterday and the air aloft. It typically misses by '
                    'about 500 ft. How well the thermal call holds up we don’t yet know: the only checks so far '
                    'are the stations, not pilots. If you fly Kula, your report or flight log (altitude and time '
-                   'only) is what will tell us. Contact: coming soon.</p>')
+                   'only) is what will tell us: <a href="mailto:flyhiwx@gmail.com">flyhiwx@gmail.com</a>.</p>')
 
 
 # The month's usual shape of the day in place of the model's hourly curve
