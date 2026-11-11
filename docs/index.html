@@ -101,7 +101,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><a class="homebtn" href="/">&larr; Home</a><div class="tag">Kula soaring briefing</div><h1>Kula Today</h1></div>
-    <div class="date">Updated Tue 10 Nov 2026 · 19:31 HST</div>
+    <div class="date">Updated Tue 10 Nov 2026 · 19:35 HST</div>
   </header>
 
   <div>
@@ -172,25 +172,27 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
     plugins: [nocu, marks]
   });
 })();
-</script><div style="font-weight:600;font-size:.9rem;margin:12px 0 2px">Short-term variation</div>
-<div style="position:relative;width:100%;min-width:0;height:130px"><canvas id="varchart" role="img" aria-label="Camera cloudbase against the day's trend"></canvas></div>
-<div class="sub">Typically 110 ft either side of the trend; the biggest, 650 ft below at 15:26. How far the camera&#x27;s cloudbase strayed from the day&#x27;s trend, smoothed over 30 minutes. Near the line: a steady base you can plan on. Deep or long dips: cloud or moist air passing through. Allow extra margin on those days.</div>
+</script><div style="font-weight:600;font-size:.9rem;margin:12px 0 2px">The camera against the predictions</div>
+<div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted,#6b6b66);margin:2px 0 4px"><span><span style="display:inline-block;width:16px;height:2px;background:#eb6834;vertical-align:middle"></span> Camera minus the evening call</span><span><span style="display:inline-block;width:16px;height:2px;background:#8a5cd6;vertical-align:middle"></span> Camera minus the 10:00 line</span></div>
+<div style="position:relative;width:100%;min-width:0;height:150px"><canvas id="varchart" role="img" aria-label="Camera cloudbase minus each prediction"></canvas></div>
+<div class="sub">Evening call: typically 390 ft off, mostly above it; 10:00 line: typically 320 ft off, mostly below it. How far the camera&#x27;s cloudbase, smoothed over 30 minutes, strayed from each prediction. On the zero line: the prediction held. A steady offset: the level was off but the trend held. A curve drifting away: the trend was wrong. Short dips and spikes: cloud or moist air passing through.</div>
 <script>
 (function () {
-  var d = [[744, 440.0], [753, 240.0], [762, -10.0], [770, 0.0], [779, 0.0], [787, 100.0], [796, 0.0], [805, 0.0], [814, -130.0], [823, -70.0], [831, 0.0], [840, 0.0], [848, 30.0], [857, -10.0], [866, 0.0], [874, 0.0], [892, 60.0], [900, 140.0], [909, -140.0], [917, -520.0], [926, -650.0], [934, 0.0], [943, 0.0], [952, 100.0], [960, 140.0]], dark = matchMedia('(prefers-color-scheme: dark)').matches, muted = '#898781', grid = dark ? '#2c2c2a' : '#e1e0d9';
+  var d = [{"label": "Evening call", "colour": "#eb6834", "points": [[744, 950.0], [753, 660.0], [762, 420.0], [770, 440.0], [779, 470.0], [787, 480.0], [796, 270.0], [805, 160.0], [814, 40.0], [823, 50.0], [831, 130.0], [840, 140.0], [848, 250.0], [857, 250.0], [866, 290.0], [874, 310.0], [892, 430.0], [900, 390.0], [909, 160.0], [917, -40.0], [926, 0.0], [934, 700.0], [943, 740.0], [952, 890.0], [960, 1020.0]]}, {"label": "10:00 line", "colour": "#8a5cd6", "points": [[744, 350.0], [753, 60.0], [762, -180.0], [770, -160.0], [779, -130.0], [787, -120.0], [796, -330.0], [805, -440.0], [814, -560.0], [823, -550.0], [831, -470.0], [840, -460.0], [848, -350.0], [857, -350.0], [866, -310.0], [874, -290.0], [892, -170.0], [900, -210.0], [909, -440.0], [917, -640.0], [926, -600.0], [934, 100.0], [943, 140.0], [952, 290.0], [960, 420.0]]}], dark = matchMedia('(prefers-color-scheme: dark)').matches, muted = '#898781', grid = dark ? '#2c2c2a' : '#e1e0d9';
   var hm = function (m) { return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); };
-  var top = Math.max(500, Math.ceil(Math.max.apply(null, d.map(function (a) { return Math.abs(a[1]); })) / 250) * 250);
+  var all = [].concat.apply([], d.map(function (s) { return s.points.map(function (a) { return Math.abs(a[1]); }); }));
+  var top = Math.max(500, Math.ceil(Math.max.apply(null, all) / 500) * 500);
   new Chart(document.getElementById('varchart'), {
     type: 'line',
-    data: { datasets: [{ label: 'From the trend', data: d.map(function (a) { return {x: a[0], y: a[1]}; }),
-      borderColor: '#2a78d6', borderWidth: 2, pointRadius: 0, tension: 0.3,
-      fill: { target: 'origin', above: 'rgba(42,120,214,0.15)', below: 'rgba(208,102,27,0.22)' } }] },
+    data: { datasets: d.map(function (s) { return { label: s.label, data: s.points.map(function (a) { return {x: a[0], y: a[1]}; }),
+      borderColor: s.colour, borderWidth: 2, pointRadius: 0, tension: 0.3 }; }) },
     options: { responsive: true, maintainAspectRatio: false, animation: false,
       plugins: { legend: { display: false }, tooltip: { callbacks: {
         title: function (i) { return hm(i[0].parsed.x); },
-        label: function (i) { var v = Math.round(i.parsed.y); return Math.abs(v).toLocaleString() + ' ft ' + (v < 0 ? 'below' : 'above') + ' the trend'; } } } },
+        label: function (i) { var v = Math.round(i.parsed.y); return i.dataset.label + ': camera ' + Math.abs(v).toLocaleString() + ' ft ' + (v < 0 ? 'below' : 'above'); } } } },
       scales: { x: { type: 'linear', min: 540, max: 960, ticks: { stepSize: 60, color: muted, callback: function (v) { return hm(v); } }, grid: { display: false } },
-                y: { min: -top, max: top, ticks: { stepSize: 250, color: muted }, grid: { color: function (c) { return c.tick.value === 0 ? '#3f9d5a' : grid; } } } } }
+                y: { min: -top, max: top, ticks: { stepSize: 500, color: muted, callback: function (v) { return v === 0 ? 'Prediction' : (v > 0 ? '+' : '') + v.toLocaleString(); } },
+                      grid: { color: function (c) { return c.tick.value === 0 ? muted : grid; }, lineWidth: function (c) { return c.tick.value === 0 ? 1.5 : 1; } } } } }
   });
 })();
 </script>
@@ -243,7 +245,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
    browser's 10-minute cached copy is bypassed. The 15-minute refresh stays
    as a backstop. */
 (function () {
-  var built = "2026-11-10T19:31";
+  var built = "2026-11-10T19:35";
   function check() {
     fetch("stations.json?" + Date.now(), {cache: "no-store"})
       .then(function (r) { return r.json(); })
