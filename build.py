@@ -4359,60 +4359,89 @@ def camera_trend(derived: list, cam: list) -> str | None:
     return ("Camera against derived: " + ", ".join(parts) + ".") if parts else None
 
 
-# Short-term variation (Sam, 11-10: "A second graph showing the variance might
-# be instructive"; "show variance chart as a curve"; "with obs smoothed"; "I
-# like it ... Build that"): the camera smoothed over 30 minutes against its own
-# 1-hour line, at each frame. Lasting excursions (11-10 15:20, -650 ft for half
-# an hour) stay; one-frame jumps mostly go. For the wrap-up, under the chart.
-VAR_SHORT_MIN = 15          # half-window of the short smoothing (30 minutes)
+# The camera against the predictions (Sam, 11-10: "A second graph showing the
+# variance might be instructive"; "as a curve"; "with obs smoothed"; then "the
+# point is to validate (or not) the prediction(s)"): the camera smoothed over
+# 30 minutes minus the evening line and minus the 10:00 line (each carried
+# along the usual day), at each frame. Zero = the prediction held. For the
+# wrap-up, under the chart.
+VAR_SHORT_MIN = 15          # half-window of the camera smoothing (30 minutes)
 VAR_MIN_FRAMES = 6
-VARIANCE_CAPTION = ("How far the camera's cloudbase strayed from the day's trend, smoothed "
-                    "over 30 minutes. Near the line: a steady base you can plan on. Deep or long dips: cloud or "
-                    "moist air passing through. Allow extra margin on those days.")
+VARIANCE_CAPTION = ("How far the camera's cloudbase, smoothed over 30 minutes, strayed from each prediction. "
+                    "On the zero line: the prediction held. A steady offset: the level was off but the trend "
+                    "held. A curve drifting away: the trend was wrong. Short dips and spikes: cloud or moist air "
+                    "passing through.")
 
 
-def camera_variance(cam: list) -> list:
-    """[[minute, ft from the 1-hour line]] at each camera frame."""
+def camera_short(cam: list) -> list:
+    """The camera smoothed over 30 minutes, at each frame."""
     global CAM_SMOOTH_MIN
     if len(cam) < VAR_MIN_FRAMES:
         return []
     keep = CAM_SMOOTH_MIN
     try:
-        long_ = dict((m, v) for m, v in camera_smooth(cam))
         CAM_SMOOTH_MIN = VAR_SHORT_MIN
-        short = camera_smooth(cam)
+        return camera_smooth(cam)
     finally:
         CAM_SMOOTH_MIN = keep
-    return [[m, round(v - long_[m], -1)] for m, v in short if m in long_]
 
 
-def variance_html(var: list) -> str:
-    if not var:
-        return ""
+def _line_at(line: list, m: int):
+    if not line or m < line[0][0] or m > line[-1][0]:
+        return None
+    return float(np.interp(m, [q[0] for q in line], [q[1] for q in line]))
+
+
+def camera_variance(short: list, line: list) -> list:
+    """[[minute, camera minus the prediction]] where both exist."""
+    out = []
+    for m, v in short:
+        f = _line_at(line, m)
+        if f is not None:
+            out.append([m, round(v - f, -1)])
+    return out
+
+
+def _var_words(name: str, var: list) -> str:
     typ = round(sum(abs(v) for _, v in var) / len(var), -1)
-    m, v = max(var, key=lambda q: abs(q[1]))
-    big = (f"; the biggest, {abs(v):,.0f} ft {'below' if v < 0 else 'above'} at {m // 60:02d}:{m % 60:02d}"
-           if abs(v) >= 2 * typ and abs(v) >= 200 else "")
-    data = json.dumps([[m, v] for m, v in var if 540 <= m <= 960])
-    return f"""<div style="font-weight:600;font-size:.9rem;margin:12px 0 2px">Short-term variation</div>
-<div style="position:relative;width:100%;min-width:0;height:130px"><canvas id="varchart" role="img" aria-label="Camera cloudbase against the day's trend"></canvas></div>
-<div class="sub">Typically {typ:,.0f} ft either side of the trend{big}. {esc(VARIANCE_CAPTION)}</div>
+    mean = sum(v for _, v in var) / len(var)
+    side = ("mostly above it" if mean > typ / 2 else "mostly below it" if mean < -typ / 2 else "either side")
+    return f"{name}: typically {typ:,.0f} ft off, {side}"
+
+
+def variance_html(cam: list, lines: list) -> str:
+    """lines: [(label, colour, points)] -- the predictions drawn on the main chart."""
+    short = camera_short(cam)
+    sets = [(lab, col, camera_variance(short, pts)) for lab, col, pts in lines if pts]
+    sets = [x for x in sets if x[2]]
+    if not sets:
+        return ""
+    words = "; ".join(_var_words(lab, v) for lab, _, v in sets)
+    data = json.dumps([{"label": lab, "colour": col, "points": [q for q in v if 540 <= q[0] <= 960]}
+                       for lab, col, v in sets])
+    keys = "".join(f'<span><span style="display:inline-block;width:16px;height:2px;background:{col};'
+                   f'vertical-align:middle"></span> Camera minus the {esc(lab.lower())}</span>' for lab, col, _ in sets)
+    return f"""<div style="font-weight:600;font-size:.9rem;margin:12px 0 2px">The camera against the predictions</div>
+<div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted,#6b6b66);margin:2px 0 4px">{keys}</div>
+<div style="position:relative;width:100%;min-width:0;height:150px"><canvas id="varchart" role="img" aria-label="Camera cloudbase minus each prediction"></canvas></div>
+<div class="sub">{esc(words)}. {esc(VARIANCE_CAPTION)}</div>
 <script>
 (function () {{
   var d = {data}, dark = matchMedia('(prefers-color-scheme: dark)').matches, muted = '#898781', grid = dark ? '#2c2c2a' : '#e1e0d9';
   var hm = function (m) {{ return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); }};
-  var top = Math.max(500, Math.ceil(Math.max.apply(null, d.map(function (a) {{ return Math.abs(a[1]); }})) / 250) * 250);
+  var all = [].concat.apply([], d.map(function (s) {{ return s.points.map(function (a) {{ return Math.abs(a[1]); }}); }}));
+  var top = Math.max(500, Math.ceil(Math.max.apply(null, all) / 500) * 500);
   new Chart(document.getElementById('varchart'), {{
     type: 'line',
-    data: {{ datasets: [{{ label: 'From the trend', data: d.map(function (a) {{ return {{x: a[0], y: a[1]}}; }}),
-      borderColor: '#2a78d6', borderWidth: 2, pointRadius: 0, tension: 0.3,
-      fill: {{ target: 'origin', above: 'rgba(42,120,214,0.15)', below: 'rgba(208,102,27,0.22)' }} }}] }},
+    data: {{ datasets: d.map(function (s) {{ return {{ label: s.label, data: s.points.map(function (a) {{ return {{x: a[0], y: a[1]}}; }}),
+      borderColor: s.colour, borderWidth: 2, pointRadius: 0, tension: 0.3 }}; }}) }},
     options: {{ responsive: true, maintainAspectRatio: false, animation: false,
       plugins: {{ legend: {{ display: false }}, tooltip: {{ callbacks: {{
         title: function (i) {{ return hm(i[0].parsed.x); }},
-        label: function (i) {{ var v = Math.round(i.parsed.y); return Math.abs(v).toLocaleString() + ' ft ' + (v < 0 ? 'below' : 'above') + ' the trend'; }} }} }} }},
+        label: function (i) {{ var v = Math.round(i.parsed.y); return i.dataset.label + ': camera ' + Math.abs(v).toLocaleString() + ' ft ' + (v < 0 ? 'below' : 'above'); }} }} }} }},
       scales: {{ x: {{ type: 'linear', min: 540, max: 960, ticks: {{ stepSize: 60, color: muted, callback: function (v) {{ return hm(v); }} }}, grid: {{ display: false }} }},
-                y: {{ min: -top, max: top, ticks: {{ stepSize: 250, color: muted }}, grid: {{ color: function (c) {{ return c.tick.value === 0 ? '#3f9d5a' : grid; }} }} }} }} }}
+                y: {{ min: -top, max: top, ticks: {{ stepSize: 500, color: muted, callback: function (v) {{ return v === 0 ? 'Prediction' : (v > 0 ? '+' : '') + v.toLocaleString(); }} }},
+                      grid: {{ color: function (c) {{ return c.tick.value === 0 ? muted : grid; }}, lineWidth: function (c) {{ return c.tick.value === 0 ? 1.5 : 1; }} }} }} }} }}
   }});
 }})();
 </script>"""
@@ -4811,7 +4840,10 @@ def day_review(obs, now, up, evening, rnet, word, model, fc_today, fc_pair, entr
     return {"date": f"{now:%Y-%m-%d}", "word": word, "summary": " ".join(said),
             "therm": therm, "base": chart_html, "notes": notes,
             "chart": notes_html + (chart if up is not None and len(obs) and got and got[1] else "")
-                     + (safely(variance_html, safely(camera_variance, safely(camera_points, now) or []) or []) or ""),
+                     + (safely(variance_html, safely(camera_points, now) or [],
+                               [(lab, col, pts) for lab, col, pts in zip(
+                                   ("Evening call", "10:00 line"), ("#eb6834", "#8a5cd6"),
+                                   (safely(shape_lines, now, derived) or (None, None)))]) or ""),
             "line": line_html,
             "up": up_html, "wind": wind_html}
 
