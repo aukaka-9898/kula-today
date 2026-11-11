@@ -3030,6 +3030,16 @@ def sounding_forecast(day) -> dict | None:
                      f"lifted to condensation, hour by hour.")}
 
 
+# The Forecast panel's caveat (Sam, 11-10: "a 'disclaimer' for the
+# 'predictions'. Kula's microclimate"; "A is fine"; thermal accuracy unknown,
+# "solicit data"; contact "coming soon").
+FORECAST_CAVEAT = ('<p class="sub">A guide, not a promise: Kula makes its own weather, and no model sees it. '
+                   'The cloudbase number is the season, yesterday and the air aloft. It typically misses by '
+                   'about 500 ft. How well the thermal call holds up we don’t yet know: the only checks so far '
+                   'are the stations, not pilots. If you fly Kula, your report or flight log (altitude and time '
+                   'only) is what will tell us. Contact: coming soon.</p>')
+
+
 # The month's usual shape of the day in place of the model's hourly curve
 # (Sam, 11-09: "Model does not handle Kula at all"; "Can you find a seasonal
 # pattern which might be applied in lieu of the model?"; "trend is the
@@ -5268,7 +5278,7 @@ def build() -> str:
         <dt>Sun</dt><dd><span class="num">{pct(r['sun'])}</span> of clear sky, 10:00–14:00 (GFS)<div class="sub">The model can't see the slope's own cumulus: when it says 90% or more, Kula has measured about 80%. Good flying days measure about 80%, overcast about 50%, socked in 20%.</div></dd>
         <dt>Shear line</dt><dd>{esc(line_t)}<div class="sub">Offshore wind {esc(wind_t)}</div>{line_alert}</dd>
       </dl>
-      <div class="sub">Forecast as of {fc_made.astimezone(HST):%H:%M} HST</div>{rules_line()}{safely(accuracy_line, now) or ""}"""
+      <div class="sub">Forecast as of {fc_made.astimezone(HST):%H:%M} HST</div>{rules_line()}{safely(accuracy_line, now) or ""}{FORECAST_CAVEAT}"""
         if tom > now.date():
             safely(log_call, tom, ("Low" if cat_head.startswith("Probably a low") else
                                    "May be high" if cat_head.startswith("May be a high") else
