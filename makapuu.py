@@ -838,6 +838,199 @@ def wrap_chart(camera: list, lost: list | None = None) -> str:
 </script>"""
 
 
+# The evening's forecast for the next day, kept for the wrap-up (Sam, 11-10:
+# "makapu'u wrapup needs more detail"): the one standing at 18:00 the evening
+# before, as Kula scores its calls.
+CALLS_LOG = HERE / "docs" / "makapuu_calls.json"
+
+
+def log_call(now: datetime, day, trows: list, word: str, base_ft) -> None:
+    try:
+        log = json.loads(CALLS_LOG.read_text(encoding="utf-8"))
+    except Exception:
+        log = {}
+    old = log.get(f"{day}") or {}
+    if str(old.get("made", "")) >= f"{day - timedelta(days=1)} 18:00":
+        return
+    log[f"{day}"] = {"made": f"{now:%Y-%m-%d %H:%M}", "word": word, "base_ft": base_ft,
+                     "hours": {f"{t.hour}": [w.get("dir"), w.get("mph"), w.get("gust")] for t, w in trows}}
+    keep = sorted(log)[-60:]
+    CALLS_LOG.write_text(json.dumps({k: log[k] for k in keep}, indent=0), encoding="utf-8")
+
+
+def _mean_dir(ds):
+    import numpy as np
+    ds = [d for d in ds if d is not None]
+    if not ds:
+        return None
+    r = np.radians(ds)
+    return float(np.degrees(np.arctan2(np.sin(r).mean(), np.cos(r).mean())) % 360)
+
+
+def _hr(h):
+    return f"{h:02d}:00"
+
+
+def wind_wrap(hours: list) -> list:
+    """(label, text) paragraphs from Bellows' hours: the wind, the best window,
+    direction, gusts."""
+    rated = [(h, w, *rate(w["dir"], w["mph"], w["gust"])) for h, w in hours if w.get("mph") is not None]
+    if not rated:
+        return []
+    out = []
+    word_of = {h: wd for h, _, wd, _ in rated}
+    good = {k: [h for h, wd in word_of.items() if wd == k] for k in ("Flyable", "Caution", "Light")}
+    head = []
+    for k in ("Flyable", "Caution", "Light"):
+        if good[k]:
+            n = len(good[k])
+            first = spans(good[k]) if n > 1 else _hr(good[k][0])
+            head.append(f"{'one' if n == 1 else n} {k.lower()} hour{'s' if n > 1 else ''}, {first}")
+    speed = [(h, w) for h, w, wd, why in rated if wd == "Not flyable" and "average" in why]
+    dirn = [(h, w, why) for h, w, wd, why in rated if wd == "Not flyable" and "average" not in why]
+    avgs = [(w["mph"] + (w["gust"] if w["gust"] is not None else w["mph"])) / 2 for _, w in speed]
+    lims = [next((r[3] for r in SECTORS if r[0] <= round(w["dir"]) % 360 <= r[1]), None) for _, w in speed
+            if w["dir"] is not None]
+    lims = [x for x in lims if x is not None]
+    lim = max(set(lims), key=lims.count) if lims else None
+    s1 = "; ".join(head)
+    s1 = s1[:1].upper() + s1[1:]
+    if good["Caution"] and len(head) == 1 and len(good["Caution"]) == 1:
+        h = good["Caution"][0]
+        w = dict(rated[[x[0] for x in rated].index(h)][1])
+        s1 += f" ({wind_text(w)})"
+    if speed:
+        lo, hi = min(avgs), max(avgs)
+        # 20.5 against a 20 limit must not read "20 against 20"
+        los = f"{lo:.1f}" if lim is not None and round(lo) <= lim else f"{lo:.0f}"
+        rng = f"{los}–{hi:.0f}" if round(lo) != round(hi) else los
+        over = f"wind and gust averaged {rng} mph" + (f", against {lim} for caution" if lim else "")
+        if not head and not dirn:
+            s1 = f"Not flyable all day: {over}."
+        elif not dirn:
+            s1 += f". Every other hour was just over the limit: {over}."
+        else:
+            s1 += (". " if s1 else "") + f"Over the limit at {', '.join(_hr(h) for h, _ in speed)}: {over}."
+    elif s1:
+        s1 += "."
+    for h, w, why in dirn:
+        s1 += f" Not flyable at {_hr(h)}, {why}."
+    mph = [w["mph"] for _, w, _, _ in rated]
+    gst = [w["gust"] for _, w, _, _ in rated if w["gust"] is not None]
+    md = _mean_dir([w["dir"] for _, w, _, _ in rated])
+    s1 += (f" Steady {compass(md) if md is not None else 'variable'} all day, {min(mph):.0f}–{max(mph):.0f} mph"
+           + (f", gusts {min(gst):.0f}–{max(gst):.0f}." if gst else "."))
+    out.append(("The wind", s1.strip()))
+    # Best window (Sam, 11-10: "add best window")
+    order = {"Flyable": 0, "Caution": 1, "Light": 2, "Not flyable": 3, "Unknown": 4}
+    bw = min(order[wd] for _, _, wd, _ in rated)
+    best = [(h, w) for h, w, wd, _ in rated if order[wd] == bw]
+    if bw >= 3:
+        h, w = min(best, key=lambda x: (x[1]["mph"] + (x[1]["gust"] or x[1]["mph"])) / 2)
+        out.append(("Closest to flyable", f"{_hr(h)}, {wind_text(w)}."))
+    else:
+        word = [wd for _, _, wd, _ in rated if order[wd] == bw][0].lower()
+        bh = [h for h, _ in best]
+        when = spans(bh) if len(bh) > 1 else _hr(bh[0])
+        bm = [w["mph"] for _, w in best]
+        bg = [w["gust"] for _, w in best if w["gust"] is not None]
+        bd = [round(w["dir"]) for _, w in best if w["dir"] is not None]
+        t = f"{when} ({word}), " + (f"{min(bm):.0f}–{max(bm):.0f}" if round(min(bm)) != round(max(bm)) else f"{bm[0]:.0f}") + " mph"
+        t += f", gusts {max(bg):.0f}" if bg else ""
+        if bd:
+            t += f", {min(bd):03d}–{max(bd):03d}°" if min(bd) != max(bd) else f", {bd[0]:03d}°"
+        out.append(("Best window", t + "."))
+    # Direction
+    ds = sorted(round(w["dir"]) % 360 for _, w, _, _ in rated if w["dir"] is not None)
+    if ds:
+        q1, q3 = ds[len(ds) // 4], ds[max(0, (3 * len(ds) + 3) // 4 - 1)]
+        t = f"{ds[0]:03d}–{ds[-1]:03d}°" if ds[0] != ds[-1] else f"{ds[0]:03d}°"
+        if (q1, q3) != (ds[0], ds[-1]) and q1 != q3:
+            t += f", mostly {q1:03d}–{q3:03d}°"
+        t += "."
+        east = [h for h, w, _, _ in rated if w["dir"] is not None and 60 < round(w["dir"]) % 360 <= 70]
+        if east:
+            ed = max(round(w["dir"]) for h, w, _, _ in rated if h in east)
+            t += f" East of 060° at {', '.join(_hr(h) for h in east)} ({ed:03d}°), close to the 070° Rabbit Island cutoff."
+        last_h, last_w = rated[-1][0], rated[-1][1]
+        if last_w["dir"] is not None and md is not None:
+            diff = ((last_w["dir"] - md + 540) % 360) - 180
+            if abs(diff) >= 10:
+                t += f" Swung {'north' if diff < 0 else 'east'} to {round(last_w['dir']):03d}° by {_hr(last_h)}."
+        out.append(("Direction", t))
+    # Gusts
+    fac = [w["gust"] - w["mph"] for _, w, _, _ in rated if w["gust"] is not None]
+    if fac:
+        hi = max(fac)
+        t = f"{min(fac):.0f}–{hi:.0f} mph over the steady wind" if round(min(fac)) != round(hi) else f"{hi:.0f} mph over the steady wind"
+        if hi <= 7:
+            t += f", well inside the {GUST_FACTOR_MAX} mph limit: smooth air" + (", just too much of it" if len(speed) >= len(rated) / 2 else "")
+        elif hi <= GUST_FACTOR_MAX:
+            t += f", near the {GUST_FACTOR_MAX} mph limit"
+        else:
+            over_h = [h for h, w, _, _ in rated if w["gust"] is not None and w["gust"] - w["mph"] > GUST_FACTOR_MAX]
+            t += f", over the {GUST_FACTOR_MAX} mph limit at {', '.join(_hr(h) for h in over_h)}"
+        out.append(("Gusts", t + "."))
+    return out
+
+
+def forecast_wrap(day, hours: list):
+    """Last evening's call against Bellows, or None when none was logged."""
+    try:
+        call = json.loads(CALLS_LOG.read_text(encoding="utf-8")).get(f"{day}")
+    except Exception:
+        return None
+    if not call or not call.get("hours"):
+        return None
+    fc = {int(h): v for h, v in call["hours"].items()}
+    pairs = [(fc[h], w) for h, w in hours
+             if h in fc and 9 <= h <= 16 and w.get("mph") is not None and fc[h][1] is not None]
+    if not pairs:
+        return None
+    fm = sum(f[1] for f, _ in pairs) / len(pairs)
+    om = sum(w["mph"] for _, w in pairs) / len(pairs)
+    fg = [f[2] for f, _ in pairs if f[2] is not None]
+    og = [w["gust"] for _, w in pairs if w["gust"] is not None]
+    fd = _mean_dir([f[0] for f, _ in pairs])
+    od = _mean_dir([w["dir"] for _, w in pairs])
+    word = (call.get("word") or "").lower()
+    t = (f"It said {word}" + (" all day" if word == "not flyable" else "") + ", "
+         + (f"{compass(fd)} {fd:03.0f}° " if fd is not None else "") + f"{fm:.0f} mph"
+         + (f", gusts {sum(fg) / len(fg):.0f}" if fg else "")
+         + f". Bellows came in at about {om:.0f} mph" + (f" with gusts {sum(og) / len(og):.0f}" if og else ""))
+    dm = fm - om
+    if abs(dm) >= 2:
+        t += f", so the forecast ran {abs(dm):.0f} mph {'high' if dm > 0 else 'low'}"
+        if fg and og:
+            dg = sum(fg) / len(fg) - sum(og) / len(og)
+            if abs(dg) >= 2:
+                t += f" and {abs(dg):.0f} {'high' if dg > 0 else 'low'} on gusts"
+    else:
+        t += ", about as forecast"
+    t += "."
+    if fd is not None and od is not None:
+        dd = ((fd - od + 540) % 360) - 180
+        if abs(dd) >= 5:
+            t += f" It had the direction {abs(dd):.0f}° too far {'east' if dd > 0 else 'north'}."
+    return t
+
+
+PEAK = r"([A-Z][^\s;,.]*)"
+
+
+def peaks_wrap(texts: list) -> str:
+    """'Konahuanui was in cloud all day; Greenwall stayed clear.' from the camera lines."""
+    clear, cloud, n = {}, {}, len(texts)
+    for t in texts:
+        for name in set(re.findall(PEAK + r" is clear", str(t))):
+            clear[name] = clear.get(name, 0) + 1
+        for name in set(re.findall(PEAK + r"(?: and lower peaks)? (?:is|are) in clouds?", str(t))):
+            cloud[name] = cloud.get(name, 0) + 1
+    bits = [f"{k} was in cloud all day" for k, v in cloud.items() if v >= 0.9 * n]
+    bits += [f"{k} stayed clear" for k, v in clear.items() if v >= 0.9 * n]
+    return ("; ".join(bits) + ".") if bits and n >= 3 else ""
+
+
 def day_wrap(now: datetime, forecast_word: str | None, problems: list) -> str:
     """(the Today tile's body, the day's best word) from WRAP_FROM, else None.
     It replaces the tile, as Kula's day in review does (Sam, 10-26)."""
@@ -848,15 +1041,14 @@ def day_wrap(now: datetime, forecast_word: str | None, problems: list) -> str:
     said, best = [], None
     hours = _try(bellows_day, now.date(), problems=problems) or []
     if hours:
-        best, line = day_line([(datetime.combine(now.date(), datetime.min.time()).replace(hour=h), rate(w["dir"], w["mph"], w["gust"])[0])
+        best, _ = day_line([(datetime.combine(now.date(), datetime.min.time()).replace(hour=h), rate(w["dir"], w["mph"], w["gust"])[0])
                             for h, w in hours])
-        mid = [w for h, w in hours if 11 <= h < 14]
-        if mid:
-            r = np.radians([w["dir"] for w in mid if w["dir"] is not None])
-            md = float(np.degrees(np.arctan2(np.sin(r).mean(), np.cos(r).mean())) % 360) if len(r) else None
-            g = [w["gust"] for w in mid if w["gust"] is not None]
-            line += f' Midday {wind_text({"dir": md, "mph": float(np.mean([w["mph"] for w in mid])), "gust": max(g) if g else None})}.'
-        said.append(f"At Bellows: {line}")
+        # More of the day (Sam, 11-10: "makapu'u wrapup needs more detail to be
+        # interesting"; on the draft: "good as is, add best window").
+        said += _try(wind_wrap, hours, problems=problems) or []
+        fw = _try(forecast_wrap, now.date(), hours, problems=problems)
+        if fw:
+            said.append(("Against last evening's forecast", fw))
     p = _wrap_log(f"{now:%Y-%m-%d}")
     chart = ""
     if p is not None:
@@ -883,20 +1075,38 @@ def day_wrap(now: datetime, forecast_word: str | None, problems: list) -> str:
             elif share.get("hidden", 0) >= 0.5:
                 said.append("Midday the Koʻolau was hidden by cloud or rain." + air_txt)
             else:
-                v = [b for m, b in camera_pts if 660 <= m <= 840]
+                v = sorted(b for m, b in camera_pts)
                 if v:
-                    said.append(f"Midday the downrange base was no higher than about {round(float(np.mean(v)), -2):,.0f} ft "
-                                "by the Kāneʻohe Bay camera.")
+                    lo, hi = v[len(v) // 10], v[min(len(v) - 1, (9 * len(v)) // 10)]
+                    rng = (f"{round(lo, -2):,.0f}–{round(hi, -2):,.0f}" if round(lo, -2) != round(hi, -2)
+                           else f"{round(lo, -2):,.0f}")
+                    cl = (f"Downrange base no higher than about {rng} ft along the ridge, by the Kāneʻohe Bay camera. "
+                          + peaks_wrap(list(rows.camera)))
+                    la = p[(p.station == "Mokuhano") & (p.m >= 480) & (p.m <= 1050)].lcl_ft.dropna()
+                    if len(la):
+                        llo, lhi = round(float(la.quantile(0.1)), -2), round(float(la.quantile(0.9)), -2)
+                        cl += (f" At launch, Mokuhano's air would condense at about {llo:,.0f}–{lhi:,.0f} ft"
+                               + (", well above launch." if llo > 1700 else "."))
+                    try:
+                        fb = (json.loads(CALLS_LOG.read_text(encoding="utf-8")).get(f"{now:%Y-%m-%d}") or {}).get("base_ft")
+                    except Exception:
+                        fb = None
+                    if fb:
+                        cl += f" The forecast said about {fb:,.0f} ft downrange."
+                    said.append(("Cloud", cl.strip()))
         ti = runway[(runway.m >= 600) & (runway.m < 840)].ti_c.dropna()
         if len(ti):
             peak = float(ti.median())
-            said.append(f"Thermals by the Kaneohe runway's air against the RRFS profile, 10:00–14:00: {th.describe(peak).lower()} "
-                        f"(index {peak:.1f} °C)" + (f"; the forecast said {forecast_word.lower()}." if forecast_word else "."))
+            word = th.describe(peak)
+            said.append(("Thermals", f"{word} (index {peak:.1f} °C, the Kaneohe runway's air against the RRFS profile, "
+                         "10:00–14:00)" + (", as forecast." if forecast_word and forecast_word.lower() == word.lower()
+                                           else f"; the forecast said {forecast_word.lower()}." if forecast_word else ".")))
         if camera_pts or lost:
             chart = wrap_chart(camera_pts, lost)
     if not said and not chart:
         return None
-    return "".join(f'<p class="summary">{esc(s)}</p>' for s in said) + chart, best
+    return "".join(f'<p class="summary"><strong>{esc(s[0])}.</strong> {esc(s[1])}</p>' if isinstance(s, tuple)
+                   else f'<p class="summary">{esc(s)}</p>' for s in said) + chart, best
 
 
 def _try(fn, *a, problems: list):
@@ -1044,6 +1254,8 @@ def write(now: datetime) -> None:
     if ta:
         aloft = ((f' Downrange base low (under launch)' if ta["base_ft"] < BASE_FLOOR_FT else
                   f' Downrange base about {ta["base_ft"]:,} ft') if ta["base_ft"] is not None else " ") +                 f', thermals {ta["word"].lower()}, inversion {inv_text(ta["inv"])[0].lower() + inv_text(ta["inv"])[1:]} (RRFS).'
+    if trows and now.hour < 18:
+        _try(log_call, now, tom, trows, tword, ta["base_ft"] if ta else None, problems=problems)
     tnote = thermal_day(tword, ta["word"] if ta else None)
     tline = f"{tline} {tnote}" if tnote else tline
     tom_html = (f'<p class="summary">{esc(tline)} Midday: {esc(wind_text(noon))}. '
