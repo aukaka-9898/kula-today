@@ -286,6 +286,97 @@ def grid_lines(g: dict) -> list:
     return out + [""]
 
 
+# Shape of the day by flow (Sam, 11-10: on a plain strong-trade day the base
+# fell from 12:30 while the usual November day only eases; "monitor to include
+# in monthly review"). The history (NAM, 2024-10/2026) says the opposite:
+# strong-trade days HOLD the base through the afternoon (cool season +250 ft at
+# 14:00 from 10:00), light-trade and other-flow days fall off (-110 / -80; -480
+# / -430 by 16:00), and a flow-class shape beat the month's shape (402 vs 413 ft,
+# 331 vs 369 on cool strong-trade days). But 11-09 and 11-10, strong trades by
+# RRFS (25 / 23 kt), both fell. This checks each month whether RRFS-era days
+# follow the history, and whether RRFS winds sort days as NAM's did.
+FLOW_HOURS = (11, 12, 13, 14, 15, 16)
+FLOW_TRADE_DIR = (30, 130)
+
+
+def _flow_frame() -> pd.DataFrame:
+    H = Path(os.environ["KULA_HISTORY"])
+    d = pd.read_csv(H / "days.csv", parse_dates=["date"])
+    n = pd.read_csv(H / "nam12.csv", parse_dates=["date"])
+    n["model"] = n["model"].fillna("NAM") if "model" in n else "NAM"
+    x = d.merge(n[["date", "wdir_low_12", "wspd_low_12", "model"]], on="date")
+    x = x.dropna(subset=["b10", "wspd_low_12"] + [f"b{h}" for h in FLOW_HOURS if f"b{h}" in x])
+    x["mo"] = x.date.dt.month
+    x["cool"] = x.mo.isin([10, 11, 12, 1, 2, 3])
+    for h in FLOW_HOURS:
+        if f"b{h}" in x:
+            x[f"d{h}"] = x[f"b{h}"] - x.b10
+    return x
+
+
+def shape_by_flow(month: str) -> dict:
+    x = _flow_frame()
+    hs = [h for h in FLOW_HOURS if f"d{h}" in x]
+    trade = x.wdir_low_12.between(*FLOW_TRADE_DIR)
+    ref = x[trade & (x.model.fillna("NAM") == "NAM")].wspd_low_12
+    lo, hi = (float(v) for v in ref.quantile([1 / 3, 2 / 3]))
+    x["cls"] = np.where(~trade, "other flow", np.where(x.wspd_low_12 >= hi, "strong trades",
+                                                     np.where(x.wspd_low_12 >= lo, "moderate trades", "light trades")))
+    m = x[x.date.dt.to_period("M") == pd.Period(month)]
+    past = x[x.date < pd.Period(month).start_time]
+    season = m.cool.iloc[0] if len(m) else pd.Period(month).month in (10, 11, 12, 1, 2, 3)
+    hist = past[past.cool == season].groupby("cls")[[f"d{h}" for h in hs]].mean()
+    hn = past[past.cool == season].cls.value_counts()
+    # the month's days against the history's class shapes and the plain month shape
+    ms = {h: past.groupby("mo")[f"d{h}"].mean() for h in hs}
+    smean = past[past.cool == season][[f"d{h}" for h in hs]].mean()
+    rows, e_month, e_cls = [], [], []
+    for _, r in m.iterrows():
+        pm = [r.b10 + ms[h].get(r.mo, 0) for h in hs]
+        pc = [pm[i] + (hist.loc[r.cls, f"d{h}"] - smean[f"d{h}"] if r.cls in hist.index else 0) for i, h in enumerate(hs)]
+        ob = [r[f"b{h}"] for h in hs]
+        e_month += [abs(a - b) for a, b in zip(pm, ob)]
+        e_cls += [abs(a - b) for a, b in zip(pc, ob)]
+        rows.append({"date": f"{r.date:%Y-%m-%d}", "cls": r.cls, "wind_kt": round(float(r.wspd_low_12), 1),
+                     "dir": round(float(r.wdir_low_12)), "model": r.model,
+                     "d14": round(float(r.d14), -1) if "d14" in r else None,
+                     "d16": round(float(r.d16), -1) if "d16" in r and r.d16 == r.d16 else None})
+    by = (m.groupby("cls")[[f"d{h}" for h in hs]].mean().round(-1)).to_dict("index")
+    return {"cuts_kt": [round(lo, 1), round(hi, 1)], "season": "cool" if season else "warm",
+            "history": {c: {**{f"{h}": round(float(v), -1) for h, v in zip(hs, hist.loc[c])}, "n": int(hn.get(c, 0))}
+                        for c in hist.index},
+            "month": {c: {**{k[1:]: v for k, v in v_.items()}, "n": int((m.cls == c).sum())} for c, v_ in by.items()},
+            "days": rows, "mae_month_shape": round(float(np.mean(e_month)), -1) if e_month else None,
+            "mae_flow_shape": round(float(np.mean(e_cls)), -1) if e_cls else None,
+            "rrfs_speed_median": round(float(m[m.model == "RRFS"].wspd_low_12.median()), 1)
+            if (m.model == "RRFS").any() else None,
+            "nam_speed_median": round(float(ref.median()), 1)}
+
+
+def flow_lines(f: dict, month: str) -> list:
+    if "error" in f:
+        return [f"## Shape of the day by flow: skipped ({f['error']})", ""]
+    order = ["strong trades", "moderate trades", "light trades", "other flow"]
+    out = [f"## Shape of the day by flow, {month}",
+           f"Trades are 1,000-5,000 ft wind from {FLOW_TRADE_DIR[0]:03d}-{FLOW_TRADE_DIR[1]:03d} at noon; strong "
+           f"over {f['cuts_kt'][1]} kt, light under {f['cuts_kt'][0]} kt (NAM history terciles). "
+           f"Change of the 3-station base from 10:00, ft; {f['season']} season history beside this month.", "",
+           "| Flow | history 12 / 14 / 16 | this month 12 / 14 / 16 | days |", "|---|---|---|---|"]
+    for c in order:
+        hh, mm = f["history"].get(c), f["month"].get(c)
+        if not hh and not mm:
+            continue
+        fmt = lambda v: "--" if not v else " / ".join(f"{v.get(k, float('nan')):+,.0f}" for k in ("12", "14", "16"))
+        out.append(f"| {c} | {fmt(hh)} (n {hh['n'] if hh else 0}) | {fmt(mm)} | {mm['n'] if mm else 0} |")
+    num = lambda v: "--" if v is None else f"{v:,.0f}"
+    out += ["", f"- Typical miss 11:00-16:00 from the 10:00 base: month shape {num(f['mae_month_shape'])} ft, "
+                f"flow-class shape {num(f['mae_flow_shape'])} ft.",
+            f"- Trade speed, median: NAM history {f['nam_speed_median']} kt, RRFS this month "
+            + ("-- (no RRFS days yet)" if f["rrfs_speed_median"] is None else f"{f['rrfs_speed_median']} kt")
+            + " (if RRFS runs stronger, the cuts need their own RRFS terciles).", ""]
+    return out
+
+
 def main(month: str) -> None:
     history.update(month)
     x = features()
@@ -331,6 +422,19 @@ def main(month: str) -> None:
             f"{c['aloft'].split(' (')[0].lower()} with {c['flow'].lower()}, camera {abs(c['gap']):,.0f} ft "
             f"{'above' if c['gap'] > 0 else 'below'} derived ({c['hours']} h)" for c in big)
             + " -- see the monthly report.")
+    try:
+        flow = shape_by_flow(month)
+    except Exception as ex:
+        flow = {"error": f"{type(ex).__name__}: {ex}"}
+    st_m, st_h = (flow.get("month") or {}).get("strong trades"), (flow.get("history") or {}).get("strong trades")
+    if st_m and st_h and st_m["n"] >= 5 and abs(st_m.get("14", 0) - st_h["14"]) >= 300:
+        events.append(f"Shape of the day: strong-trade days changed {st_m['14']:+,.0f} ft by 14:00 this month "
+                      f"against {st_h['14']:+,.0f} in the history ({st_m['n']} days) -- see the monthly report.")
+    if flow.get("mae_month_shape") and flow.get("mae_flow_shape") is not None:
+        gain = flow["mae_month_shape"] - flow["mae_flow_shape"]
+        if abs(gain) >= 30:
+            events.append(f"Shape of the day: the flow-class shape {'beat' if gain > 0 else 'lost to'} the month's "
+                          f"shape by {abs(gain):.0f} ft this month -- see the monthly report.")
     props = proposals(x)
     if props:
         events.append(f"{len(props)} change(s) proposed -- see the monthly report.")
@@ -357,11 +461,12 @@ def main(month: str) -> None:
         lines += [f"## Thermal words on the page, {month}",
                   f"- {th['days']} days: same word {th['same']}, off by two or more {th['off_by_2plus']}", ""]
     lines += grid_lines(grid) if "error" not in grid else [f"## Camera base vs moisture aloft: skipped ({grid['error']})", ""]
+    lines += flow_lines(flow, month)
     lines += ["## Proposed (for a person; nothing here changes the page)"] + [f"- {p}" for p in props or ["none"]]
     REPORT_MD.write_text("\n".join(lines) + "\n", encoding="utf-8")
     REPORT_JSON.write_text(json.dumps({"month": month, "made": f"{datetime.now():%Y-%m-%d %H:%M}",
                                        "events": events, "active": held, "history": hist, "live": live,
-                                       "base_vs_aloft": grid},
+                                       "base_vs_aloft": grid, "shape_by_flow": flow},
                                       indent=1, default=str), encoding="utf-8")
     print("\n".join(lines))
     print("events:", events or "none")
