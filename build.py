@@ -1938,11 +1938,16 @@ COAST_TRADES = ("Paia", "Hamakuapoko Rd", "Peahi Rd")
 # nothing and drew the line north of it. 345-160 on the blind tests: median
 # miss 0.35 / 0.28 mi against 0.43 / 0.29.
 FIT_TRADE_FROM = 345
+# Upslope from 161 (Sam, 11-10: "Pulehu is showing backwind. Shear is
+# misplaced"): Pulehu 170, MECO Kula 173, Naalaea 176 counted for nothing and
+# the line tilted 43 deg to 20.781, south of Pulehu. 161-320 on the blind
+# tests: median miss 0.26 / 0.30 mi against 0.31 / 0.35, nothing worse.
+FIT_UP_FROM = 161
 
 
 def _fit_class(d):
     d %= 360
-    return "T" if d <= 160 or d >= FIT_TRADE_FROM else "U" if 185 <= d <= 320 else "O"
+    return "T" if d <= 160 or d >= FIT_TRADE_FROM else "U" if FIT_UP_FROM <= d <= 320 else "O"
 
 
 def map_fit(rows: list) -> dict:
