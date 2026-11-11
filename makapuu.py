@@ -888,11 +888,13 @@ def wind_wrap(hours: list) -> list:
             head.append(f"{'one' if n == 1 else n} {k.lower()} hour{'s' if n > 1 else ''}, {first}")
     speed = [(h, w) for h, w, wd, why in rated if wd == "Not flyable" and "average" in why]
     dirn = [(h, w, why) for h, w, wd, why in rated if wd == "Not flyable" and "average" not in why]
-    avgs = [(w["mph"] + (w["gust"] if w["gust"] is not None else w["mph"])) / 2 for _, w in speed]
-    lims = [next((r[3] for r in SECTORS if r[0] <= round(w["dir"]) % 360 <= r[1]), None) for _, w in speed
-            if w["dir"] is not None]
-    lims = [x for x in lims if x is not None]
-    lim = max(set(lims), key=lims.count) if lims else None
+    # How far each hour was over its own direction's caution limit (20 mph at
+    # 020-060, 15 at 061-065, 10 at 066-070).
+    over = []
+    for _, w in speed:
+        avg = (w["mph"] + (w["gust"] if w["gust"] is not None else w["mph"])) / 2
+        row = next((r for r in SECTORS if w["dir"] is not None and r[0] <= round(w["dir"]) % 360 <= r[1]), SECTORS[0])
+        over.append((avg - row[3], row))
     s1 = "; ".join(head)
     s1 = s1[:1].upper() + s1[1:]
     if good["Caution"] and len(head) == 1 and len(good["Caution"]) == 1:
@@ -900,17 +902,18 @@ def wind_wrap(hours: list) -> list:
         w = dict(rated[[x[0] for x in rated].index(h)][1])
         s1 += f" ({wind_text(w)})"
     if speed:
-        lo, hi = min(avgs), max(avgs)
-        # 20.5 against a 20 limit must not read "20 against 20"
-        los = f"{lo:.1f}" if lim is not None and round(lo) <= lim else f"{lo:.0f}"
-        rng = f"{los}–{hi:.0f}" if round(lo) != round(hi) else los
-        over = f"wind and gust averaged {rng} mph" + (f", against {lim} for caution" if lim else "")
+        lo, hi = min(o for o, _ in over), max(o for o, _ in over)
+        lot = "under 1" if lo < 1 else f"{lo:.0f}"
+        by = f"by {lot} to {hi:.0f} mph" if round(lo) != round(hi) or lo < 1 <= hi else f"by about {hi:.0f} mph"
+        strict = sorted({r for _, r in over if r[3] < 20}, key=lambda r: r[0])
+        note = "".join(f"; the limit drops to {r[3]} mph at {r[0]:03d}–{r[1]:03d}°" for r in strict)
+        txt = f"over the caution limit, {by} on the average of wind and gust{note}"
         if not head and not dirn:
-            s1 = f"Not flyable all day: {over}."
+            s1 = f"Not flyable all day: {txt}."
         elif not dirn:
-            s1 += f". Every other hour was just over the limit: {over}."
+            s1 += f". Every other hour was {txt}."
         else:
-            s1 += (". " if s1 else "") + f"Over the limit at {', '.join(_hr(h) for h, _ in speed)}: {over}."
+            s1 += (". " if s1 else "") + f"{', '.join(_hr(h) for h, _ in speed)} were {txt}."
     elif s1:
         s1 += "."
     for h, w, why in dirn:
