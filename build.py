@@ -4240,7 +4240,11 @@ def camera_recent(now: datetime) -> dict | None:
         # Median, not mean (Sam, 11-10: "use the median"): one jumpy frame
         # (6,280 at 12:24 on 11-10) no longer pulls the row once there are 3+.
         return {"ft": round(float(hour.camera_ft.dropna().median()), -2), "at": last, "clear": False}
-    if (c.why.fillna("") == "slope clear").all():
+    # "bright" (blue sky, no edge in the box) is no cloud in the box too (Sam,
+    # 11-10: "the cam could see cumies but not assign a height"): 11-10 the
+    # bright frames sent the row to the plain stations reading and the
+    # "Cumulus in view" note never showed.
+    if c.why.fillna("").isin(["slope clear", "bright"]).all():
         return {"ft": None, "at": last, "clear": True}
     if (c.why.fillna("") == "hidden").mean() >= 0.5:
         return {"ft": None, "at": last, "clear": False, "hidden": True}
