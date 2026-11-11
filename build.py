@@ -1428,7 +1428,7 @@ def evening_flow(obs: pd.DataFrame):
         return 2.5 if t.hour < 16 else 3.5 if t.hour < 17 else 4.5
 
     phase = pd.Series({t: "drain" if 70 <= x.d <= 160 else
-                       "up" if 185 <= x.d <= 320 and x.mph > floor_mph(t) else "mix"
+                       "up" if FIT_UP_FROM <= x.d <= 320 and x.mph > floor_mph(t) else "mix"
                        for t, x in g.iterrows()})
     if len(phase) < 2 or phase.index[-1].hour < 14 or "up" not in phase.values:
         return None
@@ -1938,6 +1938,10 @@ COAST_TRADES = ("Paia", "Hamakuapoko Rd", "Peahi Rd")
 # nothing and drew the line north of it. 345-160 on the blind tests: median
 # miss 0.35 / 0.28 mi against 0.43 / 0.29.
 FIT_TRADE_FROM = 345
+# Upslope from 161 everywhere on the page (line fit, end of the upslope, Pulehu
+# in the sunlight average). Kula Ag's evening drainage came from 70-158 on all
+# 52 evenings 09-10..11-09, so 161-184 is not the katabatic (Sam, 11-10:
+# "katabatic breeze should be cool" -- it is, 36 of 52 onsets cooled >= 1 F).
 # Upslope from 161 (Sam, 11-10: "Pulehu is showing backwind. Shear is
 # misplaced"): Pulehu 170, MECO Kula 173, Naalaea 176 counted for nothing and
 # the line tilted 43 deg to 20.781, south of Pulehu. 161-320 on the blind
@@ -4716,7 +4720,7 @@ def build() -> str:
     if sun_hour is not None and len(obs):
         pu = obs[(obs.station_id == "042HI") & obs.wind_dir.notna()
                  & obs.observed.between(sun_hour, sun_hour + timedelta(hours=1))]
-        if len(pu) >= 3 and 185 <= cv.mean_direction(pu.wind_dir) <= 320:
+        if len(pu) >= 3 and FIT_UP_FROM <= cv.mean_direction(pu.wind_dir) <= 320:
             sun_names.append("Pulehu")
         elif len(pu) >= 3:
             pulehu_out = True
