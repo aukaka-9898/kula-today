@@ -3323,6 +3323,7 @@ def log_call_ft(day, key: str, v) -> None:
 # uses it yet; rules get built and tested on these days only.
 FUZZY_LOG = HERE / "docs" / "fuzzy_log.json"
 FUZZY_MOIST_SPREAD_F = 5.0
+FUZZY_LEVELS = (3162, 3500, 4000, 4500, 5000, 5500, 6000, 6500, 7000, 8000, 9000, 10000)
 
 
 def _fuzzy_read() -> dict:
@@ -3358,6 +3359,15 @@ def log_fuzzy_inputs(now: datetime, day, cap, season_ft) -> None:
                 if inv:
                     rec.update(cap_base_ft=round(float(inv["base_ft"]), -1), cap_top_ft=round(float(inv["top_ft"]), -1),
                                cap_warming_f=round(float(inv["warming_f"]), 1), cap_drying_f=round(float(inv["drying_f"]), 1))
+                # The humidity at each height (Sam, 11-10: "My main concern is the Rh
+                # values" -- temperature and dew point close together through the
+                # low layer; the 5-7k average blurs it).
+                prof_rh = {}
+                for z in FUZZY_LEVELS:
+                    tz = float(np.interp(z, q.height_ft, q.temp_c)); dz = float(np.interp(z, q.height_ft, q.dewpoint_c))
+                    if dz > -100:
+                        prof_rh[str(z)] = round(100 * math.exp(17.625 * dz / (243.04 + dz) - 17.625 * tz / (243.04 + tz)))
+                rec["rh_by_ft"] = prof_rh
                 below = q[(q.height_ft >= RELEASE_FT) & (q.height_ft <= (inv["base_ft"] if inv else 10000))
                           & (q.temp_f - q.dewpoint_f <= FUZZY_MOIST_SPREAD_F)]
                 rec["moist_top_ft"] = round(float(below.height_ft.max()), -1) if len(below) else None
