@@ -4206,6 +4206,9 @@ def cloudbase_call(day, path, fc_hours: dict, level_today, leaning=False) -> tup
 # on the chart beside the derived line, and gives the review its midday base.
 # Read from docs/camera_base.csv, which log_camera_base fills every build.
 CAMERA_RECENT = timedelta(minutes=30)
+# The row's number is the median of the last hour's readings, as the chart's
+# line (Sam, 11-10: "use 1 hour"); clear / hidden still judged on 30 minutes.
+CAMERA_VALUE_WINDOW = timedelta(minutes=60)
 
 
 def camera_rows(day: str):
@@ -4218,14 +4221,17 @@ def camera_rows(day: str):
 
 
 def camera_recent(now: datetime) -> dict | None:
-    """{ft, at, clear, hidden}: the median of the last 30 minutes' camera readings,
+    """{ft, at, clear, hidden}: the median of the last hour's camera readings
+    (when the last 30 minutes have one),
     clear=True when every frame then saw the visible slope clear of cloud, or
     hidden=True when most frames had the slope lost in cloud or rain."""
     c = camera_rows(f"{now:%Y-%m-%d}")
     if c.empty:
         return None
     t = pd.to_datetime(c.date + " " + c.time)
-    c = c[t >= pd.Timestamp(now.replace(tzinfo=None)) - CAMERA_RECENT]
+    n = pd.Timestamp(now.replace(tzinfo=None))
+    hour = c[(t >= n - CAMERA_VALUE_WINDOW) & (t <= n)]
+    c = c[(t >= n - CAMERA_RECENT) & (t <= n)]
     if c.empty:
         return None
     last = c.time.max()
@@ -4233,7 +4239,7 @@ def camera_recent(now: datetime) -> dict | None:
     if len(v):
         # Median, not mean (Sam, 11-10: "use the median"): one jumpy frame
         # (6,280 at 12:24 on 11-10) no longer pulls the row once there are 3+.
-        return {"ft": round(float(v.median()), -2), "at": last, "clear": False}
+        return {"ft": round(float(hour.camera_ft.dropna().median()), -2), "at": last, "clear": False}
     if (c.why.fillna("") == "slope clear").all():
         return {"ft": None, "at": last, "clear": True}
     if (c.why.fillna("") == "hidden").mean() >= 0.5:
@@ -4783,7 +4789,7 @@ def build() -> str:
                          f'Stations: {stations}.</div>')
         else:
             base_html = (f'<span class="num">About {ft(cam_now["ft"])} ft</span>'
-                         f'<div class="sub">Kekoa camera, the last 30 minutes to {cam_now["at"]}. '
+                         f'<div class="sub">Kekoa camera, median of the last hour to {cam_now["at"]}. '
                          f'Stations: {stations}.</div>')
         base_label = "Cloudbase"
     if cu_clear and safely(camera_sees_cloud, now):
