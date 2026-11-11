@@ -101,12 +101,12 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><a class="homebtn" href="/">&larr; Home</a><div class="tag">Kula soaring briefing</div><h1>Kula Today</h1></div>
-    <div class="date">Updated Tue 10 Nov 2026 · 19:35 HST</div>
+    <div class="date">Updated Tue 10 Nov 2026 · 19:38 HST</div>
   </header>
 
   <div>
     <!-- The FAA viewer shows its station list before it opens the camera; the latest frame covers that until it has (Sam, 2026-10-25). -->
-    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" title="Red Hill webcam, live, looking south along the Kula slope" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="https://images.wcams-static.faa.gov/webimages/931/11/13417-1794374831295.jpg" alt="" onerror="this.remove()"></div>
+    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" title="Red Hill webcam, live, looking south along the Kula slope" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="https://images.wcams-static.faa.gov/webimages/931/11/13417-1794375355914.jpg" alt="" onerror="this.remove()"></div>
     <div class="camcap">Red Hill webcam, live. FAA WeatherCam (Kekoa). <a href="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" target="_blank" rel="noopener">Open full size</a></div>
   </div>
 
@@ -175,10 +175,10 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 </script><div style="font-weight:600;font-size:.9rem;margin:12px 0 2px">The camera against the predictions</div>
 <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted,#6b6b66);margin:2px 0 4px"><span><span style="display:inline-block;width:16px;height:2px;background:#eb6834;vertical-align:middle"></span> Camera minus the evening call</span><span><span style="display:inline-block;width:16px;height:2px;background:#8a5cd6;vertical-align:middle"></span> Camera minus the 10:00 line</span></div>
 <div style="position:relative;width:100%;min-width:0;height:150px"><canvas id="varchart" role="img" aria-label="Camera cloudbase minus each prediction"></canvas></div>
-<div class="sub">Evening call: typically 390 ft off, mostly above it; 10:00 line: typically 320 ft off, mostly below it. How far the camera&#x27;s cloudbase, smoothed over 30 minutes, strayed from each prediction. On the zero line: the prediction held. A steady offset: the level was off but the trend held. A curve drifting away: the trend was wrong. Short dips and spikes: cloud or moist air passing through.</div>
+<div class="sub">Evening call: typically 400 ft off, mostly above it; 10:00 line: typically 270 ft off, mostly below it. How far the camera&#x27;s cloudbase (the chart&#x27;s 1-hour line) strayed from each prediction. On the zero line: the prediction held. A steady offset: the level was off but the trend held. A curve drifting away: the trend was wrong. Short dips and spikes: cloud or moist air passing through.</div>
 <script>
 (function () {
-  var d = [{"label": "Evening call", "colour": "#eb6834", "points": [[744, 950.0], [753, 660.0], [762, 420.0], [770, 440.0], [779, 470.0], [787, 480.0], [796, 270.0], [805, 160.0], [814, 40.0], [823, 50.0], [831, 130.0], [840, 140.0], [848, 250.0], [857, 250.0], [866, 290.0], [874, 310.0], [892, 430.0], [900, 390.0], [909, 160.0], [917, -40.0], [926, 0.0], [934, 700.0], [943, 740.0], [952, 890.0], [960, 1020.0]]}, {"label": "10:00 line", "colour": "#8a5cd6", "points": [[744, 350.0], [753, 60.0], [762, -180.0], [770, -160.0], [779, -130.0], [787, -120.0], [796, -330.0], [805, -440.0], [814, -560.0], [823, -550.0], [831, -470.0], [840, -460.0], [848, -350.0], [857, -350.0], [866, -310.0], [874, -290.0], [892, -170.0], [900, -210.0], [909, -440.0], [917, -640.0], [926, -600.0], [934, 100.0], [943, 140.0], [952, 290.0], [960, 420.0]]}], dark = matchMedia('(prefers-color-scheme: dark)').matches, muted = '#898781', grid = dark ? '#2c2c2a' : '#e1e0d9';
+  var d = [{"label": "Evening call", "colour": "#eb6834", "points": [[744, 510.0], [753, 420.0], [762, 440.0], [770, 440.0], [779, 470.0], [787, 380.0], [796, 270.0], [805, 160.0], [814, 170.0], [823, 120.0], [831, 130.0], [840, 140.0], [848, 220.0], [857, 260.0], [866, 290.0], [874, 310.0], [892, 370.0], [900, 250.0], [909, 300.0], [917, 480.0], [926, 650.0], [934, 700.0], [943, 740.0], [952, 790.0], [960, 880.0]]}, {"label": "10:00 line", "colour": "#8a5cd6", "points": [[744, -90.0], [753, -180.0], [762, -160.0], [770, -160.0], [779, -130.0], [787, -220.0], [796, -330.0], [805, -440.0], [814, -430.0], [823, -480.0], [831, -470.0], [840, -460.0], [848, -380.0], [857, -340.0], [866, -310.0], [874, -290.0], [892, -230.0], [900, -350.0], [909, -300.0], [917, -120.0], [926, 50.0], [934, 100.0], [943, 140.0], [952, 190.0], [960, 280.0]]}], dark = matchMedia('(prefers-color-scheme: dark)').matches, muted = '#898781', grid = dark ? '#2c2c2a' : '#e1e0d9';
   var hm = function (m) { return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); };
   var all = [].concat.apply([], d.map(function (s) { return s.points.map(function (a) { return Math.abs(a[1]); }); }));
   var top = Math.max(500, Math.ceil(Math.max.apply(null, all) / 500) * 500);
@@ -245,7 +245,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
    browser's 10-minute cached copy is bypassed. The 15-minute refresh stays
    as a backstop. */
 (function () {
-  var built = "2026-11-10T19:35";
+  var built = "2026-11-10T19:38";
   function check() {
     fetch("stations.json?" + Date.now(), {cache: "no-store"})
       .then(function (r) { return r.json(); })
