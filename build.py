@@ -4450,6 +4450,85 @@ def variance_html(cam: list, lines: list) -> str:
 </script>"""
 
 
+RECENT_DAYS = 3
+RECENT_LOOKBACK = 10
+RECENT_GRID = list(range(720, 961, 15))      # 12:00-16:00
+
+
+def recent_evening_variance(before) -> dict | None:
+    """The camera's 1-hour line minus the evening call (carried along the usual
+    day) on the last RECENT_DAYS days before `before` with camera readings:
+    {days: [(date, mean, points)], mean: [[minute, ft]]}."""
+    try:
+        calls = json.loads(CALLS_LOG.read_text(encoding="utf-8"))
+    except Exception:
+        return None
+    days = []
+    for k in range(1, RECENT_LOOKBACK + 1):
+        d = before - timedelta(days=k)
+        ft = (calls.get(f"{d}") or {}).get("ft")
+        cam = camera_points(datetime.combine(d, datetime.min.time())) if ft else []
+        if not ft or len(cam) < VAR_MIN_FRAMES:
+            continue
+        vs_level, _ = month_shape(d.month)
+        ev = [[h * 60, ft + vs_level[h]] for h in range(9, 17)]
+        var = camera_variance(camera_short(cam), ev)
+        pts = [[m, v] for m, v in var if 720 <= m <= 960]
+        if len(pts) < 4:
+            continue
+        days.append((d, round(sum(v for _, v in pts) / len(pts), -1), pts))
+        if len(days) == RECENT_DAYS:
+            break
+    if not days:
+        return None
+    mean = []
+    for m in RECENT_GRID:
+        vals = [_line_at(pts, m) for _, _, pts in days]
+        vals = [v for v in vals if v is not None]
+        if len(vals) >= min(2, len(days)):
+            mean.append([m, round(sum(vals) / len(vals), -1)])
+    return {"days": days, "mean": mean}
+
+
+def recent_variance_html(before) -> str:
+    r = recent_evening_variance(before)
+    if not r:
+        return ""
+    days, mean = r["days"], r["mean"]
+    avg = round(sum(x for _, x, _ in days) / len(days), -2)
+    each = ", ".join(f"{x:+,.0f}" for _, x, _ in reversed(days))
+    n = len(days)
+    head = (f"Last {n} day{'s' if n > 1 else ''} the afternoon base ran about {abs(avg):,.0f} ft "
+            f"{'above' if avg > 0 else 'below'} the evening call ({each})" if abs(avg) >= 100 else
+            f"Last {n} day{'s' if n > 1 else ''} the afternoon base came in about on the evening call ({each})")
+    data = json.dumps({"days": [{"label": f"{d:%a %d}", "points": pts} for d, _, pts in days], "mean": mean})
+    return f"""<div class="sub" style="margin-top:6px">{esc(head)}.</div>
+<div style="position:relative;width:100%;min-width:0;height:120px;margin-top:4px"><canvas id="recentvar" role="img" aria-label="Recent days: camera cloudbase minus the evening call"></canvas></div>
+<div class="sub">Camera cloudbase minus the evening call, by time of day: the average (bold) and each day. Above the line: the base came in higher than called.</div>
+<script>
+(function () {{
+  var d = {data}, dark = matchMedia('(prefers-color-scheme: dark)').matches, muted = '#898781', grid = dark ? '#2c2c2a' : '#e1e0d9';
+  var hm = function (m) {{ return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); }};
+  var pt = function (a) {{ return {{x: a[0], y: a[1]}}; }};
+  var all = d.mean.map(function (a) {{ return Math.abs(a[1]); }});
+  d.days.forEach(function (s) {{ s.points.forEach(function (a) {{ all.push(Math.abs(a[1])); }}); }});
+  var top = Math.max(500, Math.ceil(Math.max.apply(null, all) / 500) * 500);
+  var sets = d.days.map(function (s) {{ return {{ label: s.label, data: s.points.map(pt), borderColor: 'rgba(235,104,52,0.35)', borderWidth: 1, pointRadius: 0, tension: 0.3 }}; }});
+  sets.push({{ label: 'Average', data: d.mean.map(pt), borderColor: '#eb6834', borderWidth: 2.5, pointRadius: 0, tension: 0.3 }});
+  new Chart(document.getElementById('recentvar'), {{
+    type: 'line', data: {{ datasets: sets }},
+    options: {{ responsive: true, maintainAspectRatio: false, animation: false,
+      plugins: {{ legend: {{ display: false }}, tooltip: {{ callbacks: {{
+        title: function (i) {{ return hm(i[0].parsed.x); }},
+        label: function (i) {{ var v = Math.round(i.parsed.y); return i.dataset.label + ': ' + Math.abs(v).toLocaleString() + ' ft ' + (v < 0 ? 'below' : 'above') + ' the call'; }} }} }} }},
+      scales: {{ x: {{ type: 'linear', min: 720, max: 960, ticks: {{ stepSize: 60, color: muted, callback: function (v) {{ return hm(v); }} }}, grid: {{ display: false }} }},
+                y: {{ min: -top, max: top, ticks: {{ stepSize: 500, color: muted, callback: function (v) {{ return v === 0 ? 'Call' : (v > 0 ? '+' : '') + v.toLocaleString(); }} }},
+                      grid: {{ color: function (c) {{ return c.tick.value === 0 ? muted : grid; }}, lineWidth: function (c) {{ return c.tick.value === 0 ? 1.5 : 1; }} }} }} }} }}
+  }});
+}})();
+</script>"""
+
+
 def first_cumulus_min(day: datetime):
     """Minute of the day the ridge log called first cloud, or None."""
     log = json.loads(RIDGE_FILE.read_text(encoding="utf-8"))
@@ -4842,11 +4921,10 @@ def day_review(obs, now, up, evening, rnet, word, model, fc_today, fc_pair, entr
         said.append(gaps)
     return {"date": f"{now:%Y-%m-%d}", "word": word, "summary": " ".join(said),
             "therm": therm, "base": chart_html, "notes": notes,
-            "chart": notes_html + (chart if up is not None and len(obs) and got and got[1] else "")
-                     + (safely(variance_html, safely(camera_points, now) or [],
-                               [(lab, col, pts) for lab, col, pts in zip(
-                                   ("Evening call", "10:00 line"), ("#eb6834", "#8a5cd6"),
-                                   (safely(shape_lines, now, derived) or (None, None)))]) or ""),
+            # The variance chart left the wrap-up for the Forecast panel's recent
+            # average (Sam, 11-10: "Drop the variance chart from the daily wrap up.
+            # Put the average variance chart on Tomorrow").
+            "chart": notes_html + (chart if up is not None and len(obs) and got and got[1] else ""),
             "line": line_html,
             "up": up_html, "wind": wind_html}
 
@@ -5405,7 +5483,7 @@ def build() -> str:
         # but not shown.
         t_html = push_html + f"""<dl>
         <dt><a href="details.html#t-thermal">Thermals</a></dt><dd>Probably {esc(strength_word(r['thermal']).lower())}<div class="sub">thermal.py on the forecast air (+3 F, it runs cool); within one category of the measured rating on every test day</div></dd>
-        <dt><a href="details.html#t-thermal">Cloudbase</a></dt><dd>{esc(cb_head)}<div class="sub">{esc(cb_sub)}</div></dd>
+        <dt><a href="details.html#t-thermal">Cloudbase</a></dt><dd>{esc(cb_head)}<div class="sub">{esc(cb_sub)}</div>{safely(recent_variance_html, tom) or ""}</dd>
         <dt>Sun</dt><dd><span class="num">{pct(r['sun'])}</span> of clear sky, 10:00–14:00 (GFS)<div class="sub">The model can't see the slope's own cumulus: when it says 90% or more, Kula has measured about 80%. Good flying days measure about 80%, overcast about 50%, socked in 20%.</div></dd>
         <dt>Shear line</dt><dd>{esc(line_t)}<div class="sub">Offshore wind {esc(wind_t)}</div>{line_alert}</dd>
       </dl>
