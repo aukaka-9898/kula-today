@@ -101,28 +101,28 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><a class="homebtn" href="/">&larr; Home</a><div class="tag">Kula soaring briefing</div><h1>Kula Today</h1></div>
-    <div class="date">Updated Wed 11 Nov 2026 · 12:52 HST</div>
+    <div class="date">Updated Wed 11 Nov 2026 · 13:07 HST</div>
   </header>
 
   <div>
     <!-- The FAA viewer shows its station list before it opens the camera; the latest frame covers that until it has (Sam, 2026-10-25). -->
-    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" title="Red Hill webcam, live, looking south along the Kula slope" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="https://images.wcams-static.faa.gov/webimages/931/11/13417-1794437100671.jpg" alt="" onerror="this.remove()"></div>
+    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" title="Red Hill webcam, live, looking south along the Kula slope" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="https://images.wcams-static.faa.gov/webimages/931/11/13417-1794438120959.jpg" alt="" onerror="this.remove()"></div>
     <div class="camcap">Red Hill webcam, live. FAA WeatherCam (Kekoa). <a href="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" target="_blank" rel="noopener">Open full size</a></div>
   </div>
 
   <div class="cols">
     <section class="panel today" aria-labelledby="t-today">
-      <div class="kind">Measured today · 12:52 HST</div>
+      <div class="kind">Measured today · 13:07 HST</div>
       <div class="head"><h2 id="t-today">Today</h2><span class="chip fair">Light</span></div>
-      <div class="sub" style="display:flex;align-items:center;gap:6px;margin:2px 0 6px"><img src="https://api.weather.gov/icons/land/day/rain_showers,20/few?size=small" width="34" height="34" alt="Isolated Rain Showers then Sunny (15%)" title="NWS: Isolated Rain Showers then Sunny (15%)" loading="lazy" style="vertical-align:middle;border-radius:4px;margin-left:6px"><span>NWS today: Isolated Rain Showers then Sunny (15%)</span></div>
-      <p class="summary">Cloudbase is edging up. The whole slope is in sun. No trade air on the lower west slope.</p><div style="font-weight:600;font-size:.9rem;margin:10px 0 2px">Cloudbase so far</div><div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted,#6b6b66);margin:2px 0 4px">
+      <div class="sub" style="display:flex;align-items:center;gap:6px;margin:2px 0 6px"><img src="https://api.weather.gov/icons/land/day/few?size=small" width="34" height="34" alt="Sunny (4%)" title="NWS: Sunny (4%)" loading="lazy" style="vertical-align:middle;border-radius:4px;margin-left:6px"><span>NWS today: Sunny (4%)</span></div>
+      <p class="summary">Cloudbase is steady. No trade air on the lower west slope.</p><div style="font-weight:600;font-size:.9rem;margin:10px 0 2px">Cloudbase so far</div><div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted,#6b6b66);margin:2px 0 4px">
 <span><span style="display:inline-block;width:16px;border-top:2px dashed #eb6834;vertical-align:middle"></span> Evening call + usual November day</span><span><span style="display:inline-block;width:16px;border-top:2px dashed #8a5cd6;vertical-align:middle"></span> 10:00 + usual November day</span>
 <span><span style="display:inline-block;width:16px;height:2px;background:#2a78d6;vertical-align:middle"></span> Derived (stations)</span><span><span style="display:inline-block;width:16px;height:2px;background:#3f9d5a;vertical-align:middle"></span> Kekoa camera (1-hour median)</span><span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;border:1.5px solid #898781;box-sizing:border-box;vertical-align:middle"></span> Camera, no call</span></div>
 <div style="position:relative;width:100%;min-width:0;height:220px"><canvas id="livechart" role="img" aria-label="Derived cloudbase against the forecast through the day"></canvas></div>
 <div class="sub">Derived from the stations every 15 minutes during the upslope. Lines: the evening call&#x27;s number and the 10:00 derived base, each carried along a usual November day (2024-26 history), drawn once and never redrawn.</div>
 <script>
 (function () {
-  var d = {"derived": [[540, 4270.0], [555, 4180.0], [570, 4290.0], [585, 4260.0], [600, 4390.0], [615, 4570.0], [630, 4780.0], [645, 4830.0], [660, 4930.0], [675, 4950.0], [690, 5100.0], [705, 5190.0], [720, 5300.0], [735, 5400.0], [750, 5500.0]], "forecast": [[540, 4970.0], [600, 5180.0], [660, 5300.0], [720, 5290.0], [780, 5140.0], [840, 5070.0], [900, 4890.0], [960, 4580.0]], "camera": [[542, 3340.0], [567, 3340.0], [593, 4560.0], [602, 4730.0], [611, 4780.0], [619, 4820.0], [628, 4960.0], [636, 5050.0], [645, 5080.0], [653, 5150.0], [662, 5200.0], [679, 5300.0], [688, 5450.0], [696, 5570.0], [705, 5570.0], [713, 5600.0], [722, 5640.0], [756, 6060.0]], "camsub": [], "hidden": [], "proj": [[600, 4390.0], [660, 4510.0], [720, 4500.0], [780, 4350.0], [840, 4280.0], [900, 4100.0], [960, 3790.0]], "nocall": [550, 559, 576, 585, 670, 730, 739, 748, 765], "up": [540, 750], "nocu": null}, pt = function (a) { return {x: a[0], y: a[1]}; };
+  var d = {"derived": [[540, 4270.0], [555, 4180.0], [570, 4290.0], [585, 4260.0], [600, 4390.0], [615, 4570.0], [630, 4780.0], [645, 4830.0], [660, 4930.0], [675, 4950.0], [690, 5100.0], [705, 5190.0], [720, 5300.0], [735, 5440.0], [750, 5500.0], [765, 5540.0]], "forecast": [[540, 4970.0], [600, 5180.0], [660, 5300.0], [720, 5290.0], [780, 5140.0], [840, 5070.0], [900, 4890.0], [960, 4580.0]], "camera": [[542, 3340.0], [567, 3340.0], [593, 4560.0], [602, 4730.0], [611, 4780.0], [619, 4820.0], [628, 4960.0], [636, 5050.0], [645, 5080.0], [653, 5150.0], [662, 5200.0], [679, 5300.0], [688, 5450.0], [696, 5570.0], [705, 5570.0], [713, 5600.0], [722, 5640.0], [756, 5940.0], [773, 5940.0], [782, 5940.0]], "camsub": [], "hidden": [], "proj": [[600, 4390.0], [660, 4510.0], [720, 4500.0], [780, 4350.0], [840, 4280.0], [900, 4100.0], [960, 3790.0]], "nocall": [550, 559, 576, 585, 670, 730, 739, 748, 765], "up": [540, 768], "nocu": null}, pt = function (a) { return {x: a[0], y: a[1]}; };
   var dark = matchMedia('(prefers-color-scheme: dark)').matches, muted = '#898781', grid = dark ? '#2c2c2a' : '#e1e0d9';
   var nocu = { id: 'nocu', beforeDatasetsDraw: function (c) { if (!d.nocu) return; var x = c.scales.x, a = c.chartArea, g = c.ctx,
     x0 = x.getPixelForValue(d.nocu[0]), x1 = x.getPixelForValue(d.nocu[1]);
@@ -174,13 +174,13 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 })();
 </script>
       <dl>
-        <dt><a href="details.html#t-thermal">Thermals</a></dt><dd>Seem <strong>light</strong> as of 12:30<div class="sub">Kula Ag's last hour of air through the RRFS sounding (thermal.py)</div></dd>
-        <dt><a href="details.html#t-thermal">Cloudbase</a></dt><dd><span class="num">About 5,800 ft</span><div class="sub">Kekoa camera, median of the last hour to 12:45. Stations: about 5,400 ft (11 stations, 12:30).</div></dd>
-        <dt><a href="details.html#t-ladder">Sun</a></dt><dd><span class="num">91%</span> of clear sky, lower Kula slope<div class="sub">Last hour, as of 12:30; average of Kula Ag 95%, Keokea 77%, Pulehu 100%</div></dd>
-        <dt><a href="details.html#stationmap">Shear line</a></dt><dd>Crossing Kula Highway near Omaopio<div class="sub">Fitted to the station map: flow from the north at MECO Kula 2, upslope at MECO Olinda Rd nearest the line</div><div class="sub">At the coast: Paia 091° at 22 mph</div></dd>
+        <dt><a href="details.html#t-thermal">Thermals</a></dt><dd>Seem <strong>light</strong> as of 12:45<div class="sub">Kula Ag's last hour of air through the RRFS sounding (thermal.py)</div></dd>
+        <dt><a href="details.html#t-thermal">Cloudbase</a></dt><dd><span class="num">About 5,900 ft</span><div class="sub">Kekoa camera, median of the last hour to 13:02. Stations: about 5,500 ft (11 stations, 12:45).</div></dd>
+        <dt><a href="details.html#t-ladder">Sun</a></dt><dd><span class="num">88%</span> of clear sky, lower Kula slope<div class="sub">Last hour, as of 12:45; average of Kula Ag 93%, Keokea 71%, Pulehu 100%</div></dd>
+        <dt><a href="details.html#stationmap">Shear line</a></dt><dd>Crossing Kula Highway near Omaopio<div class="sub">Fitted to the station map: flow from the north at MECO Kula 2, upslope at MECO Olinda Rd nearest the line</div><div class="sub">At the coast: Paia 088° at 22 mph</div></dd>
         
         <dt><a href="details.html#stationmap">Upslope</a></dt><dd>On since about <span class="num">09:00</span><div class="sub">Drainage ended about 08:15</div></dd>
-        <dt><a href="details.html#stationmap">Wind</a></dt><dd><span class="num">3 mph</span>, gusts to 11<div class="sub">Lower elevations, 10 stations, last hour</div></dd>
+        <dt><a href="details.html#stationmap">Wind</a></dt><dd><span class="num">4 mph</span>, gusts to 12<div class="sub">Lower elevations, 10 stations, last hour</div></dd>
       </dl>
     </section>
     <section class="panel tomorrow" aria-labelledby="t-tomorrow">
@@ -188,12 +188,12 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
       <div class="head"><h2 id="t-tomorrow">Tomorrow · Thu 12 Nov</h2><span class="chip good">Moderate</span><img src="https://api.weather.gov/icons/land/day/few?size=small" width="30" height="30" alt="Sunny (12%)" title="NWS: Sunny (12%)" loading="lazy" style="vertical-align:middle;border-radius:4px;margin-left:6px"></div>
       <dl>
         <dt><a href="details.html#t-thermal">Thermals</a></dt><dd>Probably moderate<div class="sub">thermal.py on the forecast air (+3 F, it runs cool); within one category of the measured rating on every test day</div></dd>
-        <dt><a href="details.html#t-thermal">Cloudbase</a></dt><dd>About 5,300 ft<div class="sub">Normal for November is 4,500–5,500 ft. A usual November day: the base peaks about 11:00, then falls about 400 ft by 15:00.</div><div class="sub" style="margin-top:6px">Last 3 days the afternoon base ran about 200 ft above the evening call (+240, -20, +400).</div>
+        <dt><a href="details.html#t-thermal">Cloudbase</a></dt><dd>About 5,300 ft<div class="sub">Normal for November is 4,500–5,500 ft. A usual November day: the base peaks about 11:00, then falls about 400 ft by 15:00.</div><div class="sub" style="margin-top:6px">Last 3 days the afternoon base ran about 400 ft above the evening call (-20, +400, +670).</div>
 <div style="position:relative;width:100%;min-width:0;height:120px;margin-top:4px"><canvas id="recentvar" role="img" aria-label="Recent days: camera cloudbase minus the evening call"></canvas></div>
 <div class="sub">Camera cloudbase minus the evening call, by time of day: the average (bold) and each day. Above the line: the base came in higher than called.</div>
 <script>
 (function () {
-  var d = {"days": [{"label": "Tue 10", "points": [[744, 510.0], [753, 420.0], [762, 430.0], [770, 440.0], [779, 460.0], [787, 380.0], [796, 270.0], [805, 160.0], [814, 170.0], [823, 120.0], [831, 130.0], [840, 140.0], [848, 230.0], [857, 260.0], [866, 290.0], [874, 310.0], [892, 370.0], [900, 250.0], [909, 300.0], [917, 480.0], [926, 660.0], [934, 700.0], [943, 740.0], [952, 790.0], [960, 880.0]]}, {"label": "Mon 09", "points": [[722, 140.0], [731, 110.0], [739, 140.0], [748, 160.0], [756, 180.0], [765, 200.0], [773, 220.0], [782, 230.0], [791, 80.0], [800, 90.0], [808, 50.0], [817, 40.0], [825, 10.0], [834, -320.0], [843, -300.0], [852, -270.0], [860, -250.0], [869, -220.0], [877, -210.0], [886, -180.0], [894, -150.0], [903, -70.0], [911, -80.0], [920, -50.0], [946, -80.0]]}, {"label": "Sun 08", "points": [[721, 80.0], [747, 60.0], [755, 140.0], [764, 160.0], [774, 120.0], [800, -240.0], [808, -350.0], [817, -280.0], [826, -210.0], [835, -190.0], [845, 100.0], [853, 120.0], [862, 220.0], [870, 360.0], [879, 430.0], [896, 480.0], [905, 530.0], [913, 580.0], [922, 640.0], [930, 750.0], [939, 790.0], [947, 890.0]]}], "mean": [[735, 100.0], [750, 240.0], [765, 260.0], [780, 240.0], [795, 70.0], [810, -40.0], [825, -30.0], [840, -70.0], [855, 40.0], [870, 150.0], [885, 200.0], [900, 220.0], [915, 320.0], [930, 460.0], [945, 510.0]]}, dark = matchMedia('(prefers-color-scheme: dark)').matches, muted = '#898781', grid = dark ? '#2c2c2a' : '#e1e0d9';
+  var d = {"days": [{"label": "Wed 11", "points": [[722, 350.0], [756, 740.0], [773, 780.0], [782, 800.0]]}, {"label": "Tue 10", "points": [[744, 510.0], [753, 420.0], [762, 430.0], [770, 440.0], [779, 460.0], [787, 380.0], [796, 270.0], [805, 160.0], [814, 170.0], [823, 120.0], [831, 130.0], [840, 140.0], [848, 230.0], [857, 260.0], [866, 290.0], [874, 310.0], [892, 370.0], [900, 250.0], [909, 300.0], [917, 480.0], [926, 660.0], [934, 700.0], [943, 740.0], [952, 790.0], [960, 880.0]]}, {"label": "Mon 09", "points": [[722, 140.0], [731, 110.0], [739, 140.0], [748, 160.0], [756, 180.0], [765, 200.0], [773, 220.0], [782, 230.0], [791, 80.0], [800, 90.0], [808, 50.0], [817, 40.0], [825, 10.0], [834, -320.0], [843, -300.0], [852, -270.0], [860, -250.0], [869, -220.0], [877, -210.0], [886, -180.0], [894, -150.0], [903, -70.0], [911, -80.0], [920, -50.0], [946, -80.0]]}], "mean": [[735, 310.0], [750, 430.0], [765, 460.0], [780, 490.0], [795, 180.0], [810, 110.0], [825, 70.0], [840, -80.0], [855, -0.0], [870, 40.0], [885, 80.0], [900, 80.0], [915, 180.0], [930, 310.0], [945, 340.0]]}, dark = matchMedia('(prefers-color-scheme: dark)').matches, muted = '#898781', grid = dark ? '#2c2c2a' : '#e1e0d9';
   var hm = function (m) { return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); };
   var pt = function (a) { return {x: a[0], y: a[1]}; };
   var all = d.mean.map(function (a) { return Math.abs(a[1]); });
@@ -216,7 +216,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
         <dt>Sun</dt><dd><span class="num">84%</span> of clear sky, 10:00–14:00 (GFS)<div class="sub">The model can't see the slope's own cumulus: when it says 90% or more, Kula has measured about 80%. Good flying days measure about 80%, overcast about 50%, socked in 20%.</div></dd>
         <dt>Shear line</dt><dd>Crossing Kula Highway near Omaopio<div class="sub">Offshore wind ENE (074°)</div></dd>
       </dl>
-      <div class="sub">Forecast as of 12:07 HST</div><div class="sub">Forecast rules last checked October 2026: all holding.</div><div class="sub">Accuracy, last 30 days, the evening call against the day: cloudbase within 500 ft on 8 of 15 days (typical miss 520 ft); afternoon trend (rising, holding or falling, 12:00 to 15:00) right on 4 of 15; thermals right on 4 of 17, within one step on 16. Scored against pilot reports where there are any, otherwise the camera and stations.</div><p class="sub">A guide, not a promise: Kula makes its own weather, and no model sees it. The cloudbase number is the season, yesterday and the air aloft. It typically misses by about 500 ft. How well the thermal call holds up we don’t yet know: the only checks so far are the stations, not pilots. If you fly Kula, your report or flight log (altitude and time only) is what will tell us: <a href="mailto:flyhiwx@gmail.com">flyhiwx@gmail.com</a>.</p>
+      <div class="sub">Forecast as of 13:07 HST</div><div class="sub">Forecast rules last checked October 2026: all holding.</div><div class="sub">Accuracy, last 30 days, the evening call against the day: cloudbase within 500 ft on 8 of 15 days (typical miss 520 ft); afternoon trend (rising, holding or falling, 12:00 to 15:00) right on 4 of 15; thermals right on 4 of 17, within one step on 16. Scored against pilot reports where there are any, otherwise the camera and stations.</div><p class="sub">A guide, not a promise: Kula makes its own weather, and no model sees it. The cloudbase number is the season, yesterday and the air aloft. It typically misses by about 500 ft. How well the thermal call holds up we don’t yet know: the only checks so far are the stations, not pilots. If you fly Kula, your report or flight log (altitude and time only) is what will tell us: <a href="mailto:flyhiwx@gmail.com">flyhiwx@gmail.com</a>.</p>
     </section>
   </div>
 
@@ -246,7 +246,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
    browser's 10-minute cached copy is bypassed. The 15-minute refresh stays
    as a backstop. */
 (function () {
-  var built = "2026-11-11T12:52";
+  var built = "2026-11-11T13:07";
   function check() {
     fetch("stations.json?" + Date.now(), {cache: "no-store"})
       .then(function (r) { return r.json(); })
