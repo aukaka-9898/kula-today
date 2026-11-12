@@ -4400,6 +4400,10 @@ def camera_recent(now: datetime) -> dict | None:
         return None
     t = pd.to_datetime(c.date + " " + c.time)
     n = pd.Timestamp(now.replace(tzinfo=None))
+    fc = safely(first_cumulus_min, now)
+    if fc is not None:                       # heights before first cumulus don't count (11-11)
+        early = (t.dt.hour * 60 + t.dt.minute) < fc
+        c.loc[early, "camera_ft"] = float("nan")
     hour = c[(t >= n - CAMERA_VALUE_WINDOW) & (t <= n)]
     c = c[(t >= n - CAMERA_RECENT) & (t <= n)]
     if c.empty:
@@ -4717,13 +4721,21 @@ def base_chart(obs, now, up, end, cid="basechart", title="Cloudbase, derived vs 
     # The forecast is still returned for the review notes and the scorecard,
     # just not drawn (Sam, 2026-10-17: derived-only charts).
     cam = safely(camera_points, day) or []
+    # No camera height before the camera has seen cumulus (Sam, 11-10: "The
+    # camera curve begins when the cam recognizes cumies"; 11-11: stray low
+    # readings at 08:18-08:27, ~900 ft under derived, before first cumulus 09:02
+    # -- "clouds away from the slope were used"). With no first cumulus logged,
+    # the frames stand as they are.
+    _fc = safely(first_cumulus_min, day)
+    if _fc is not None:
+        cam = [q for q in cam if q[0] >= _fc]
     hid = safely(camera_hidden, day) or []
     noc = safely(camera_hidden, day, "no edge") or []
     if cam:      # after the first height every frame without one is a no call
         noc = sorted(set(noc) | {m for w in ("slope clear", "bright")
                                   for m in (safely(camera_hidden, day, w) or []) if m > cam[0][0]})
     cam_line = safely(camera_smooth, cam) or []
-    stand_in = safely(camera_stand_in, derived, cam, safely(first_cumulus_min, day)) or []
+    stand_in = safely(camera_stand_in, derived, cam, _fc) or []
     if stand_in and cam:
         # One running median across the stand-in and the camera frames, then
         # split at the first height, so dashed runs into solid without a step
