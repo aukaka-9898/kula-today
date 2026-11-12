@@ -101,7 +101,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><a class="homebtn" href="/">&larr; Home</a><div class="tag">Kula soaring briefing</div><h1>Kula Today</h1></div>
-    <div class="date">Updated Thu 12 Nov 2026 · 11:22 HST</div>
+    <div class="date">Updated Thu 12 Nov 2026 · 11:26 HST</div>
   </header>
 
   <div>
@@ -112,8 +112,8 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 
   <div class="cols">
     <section class="panel today" aria-labelledby="t-today">
-      <div class="kind">Measured today · 11:22 HST</div>
-      <div class="head"><h2 id="t-today">Today</h2><span class="chip warn">Flat</span></div>
+      <div class="kind">Measured today · 11:26 HST</div>
+      <div class="head"><h2 id="t-today">Today</h2><span class="chip fair">Light</span></div>
       <div class="sub" style="display:flex;align-items:center;gap:6px;margin:2px 0 6px"><img src="https://api.weather.gov/icons/land/day/sct?size=small" width="34" height="34" alt="Mostly Sunny (14%)" title="NWS: Mostly Sunny (14%)" loading="lazy" style="vertical-align:middle;border-radius:4px;margin-left:6px"><span>NWS today: Mostly Sunny (14%)</span></div>
       <p class="summary">Cloudbase is steady. No trade air on the lower west slope.</p><div style="font-weight:600;font-size:.9rem;margin:10px 0 2px">Cloudbase so far</div><div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted,#6b6b66);margin:2px 0 4px">
 <span><span style="display:inline-block;width:16px;border-top:2px dashed #eb6834;vertical-align:middle"></span> Evening call + usual November day</span><span><span style="display:inline-block;width:16px;border-top:2px dashed #8a5cd6;vertical-align:middle"></span> 10:00 + usual November day</span>
@@ -122,7 +122,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="sub">Derived from the stations every 15 minutes during the upslope. Lines: the evening call&#x27;s number and the 10:00 derived base, each carried along a usual November day (2024-26 history), drawn once and never redrawn.</div><details class="sub" style="margin-top:6px"><summary style="cursor:pointer">How is the derived base worked out?</summary><div style="margin-top:6px;padding:8px 10px;border-left:3px solid var(--rule,#ddd)"><p style="margin:0 0 6px">Rising air cools about 5.4 &deg;F for every 1,000 ft it climbs, while its dew point drops only about 1 &deg;F. Where the two meet, the moisture condenses: that&rsquo;s the cloudbase. So a station&rsquo;s temperature and dew point tell how high its air would have to rise to make cloud: about 230 ft for every degree between them, added to the station&rsquo;s own height. 70 &deg;F with a 60 &deg;F dew point at Kula Ag (3,162 ft) gives about 5,400 ft.</p><p style="margin:0 0 6px">The page does this for about a dozen slope stations every 15 minutes once the upslope has started, and shows the middle value.</p><p style="margin:0">It can differ from the camera because the stations measure the air at the ground. Late in the day, or under cloud shade, that layer cools and moistens and no longer matches the air the thermals carry up, so the derived base reads low. Wet ground after dew or rain does the same in the morning. Before the upslope starts, the stations sit in the night&rsquo;s drainage air, so nothing is shown. When the camera has a reading, it leads.</p></div></details>
 <script>
 (function () {
-  var d = {"derived": [[540, 4230.0], [555, 4210.0], [570, 4320.0], [585, 4070.0], [600, 4220.0], [615, 4050.0], [630, 4300.0], [645, 4300.0], [660, 4350.0]], "forecast": [[540, 5170.0], [600, 5380.0], [660, 5500.0], [720, 5490.0], [780, 5340.0], [840, 5270.0], [900, 5090.0], [960, 4780.0]], "camera": [[567, 4880.0], [602, 5120.0], [610, 5080.0], [627, 5000.0], [636, 4840.0], [644, 4720.0], [653, 4700.0], [662, 4660.0], [670, 4620.0], [679, 4510.0]], "camsub": [[559, 4880.0], [567, 4880.0]], "hidden": [], "proj": [[600, 4220.0], [660, 4340.0], [720, 4330.0], [780, 4180.0], [840, 4110.0], [900, 3930.0], [960, 3620.0]], "nocall": [576, 584, 593, 619], "up": [540, 660], "nocu": null}, pt = function (a) { return {x: a[0], y: a[1]}; };
+  var d = {"derived": [[540, 4230.0], [555, 4210.0], [570, 4320.0], [585, 4070.0], [600, 4220.0], [615, 4050.0], [630, 4300.0], [645, 4300.0], [660, 4350.0], [675, 4290.0]], "forecast": [[540, 5170.0], [600, 5380.0], [660, 5500.0], [720, 5490.0], [780, 5340.0], [840, 5270.0], [900, 5090.0], [960, 4780.0]], "camera": [[567, 4880.0], [602, 5120.0], [610, 5080.0], [627, 5000.0], [636, 4840.0], [644, 4720.0], [653, 4700.0], [662, 4660.0], [670, 4620.0], [679, 4510.0]], "camsub": [[559, 4880.0], [567, 4880.0]], "hidden": [], "proj": [[600, 4220.0], [660, 4340.0], [720, 4330.0], [780, 4180.0], [840, 4110.0], [900, 3930.0], [960, 3620.0]], "nocall": [576, 584, 593, 619], "up": [540, 675], "nocu": null}, pt = function (a) { return {x: a[0], y: a[1]}; };
   var dark = matchMedia('(prefers-color-scheme: dark)').matches, muted = '#898781', grid = dark ? '#2c2c2a' : '#e1e0d9';
   var nocu = { id: 'nocu', beforeDatasetsDraw: function (c) { if (!d.nocu) return; var x = c.scales.x, a = c.chartArea, g = c.ctx,
     x0 = x.getPixelForValue(d.nocu[0]), x1 = x.getPixelForValue(d.nocu[1]);
@@ -174,13 +174,13 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 })();
 </script>
       <dl>
-        <dt><a href="details.html#t-thermal">Thermals</a></dt><dd>Seem <strong>flat</strong> as of 11:00<div class="sub">Kula Ag's last hour of air through the RRFS sounding (thermal.py)</div></dd>
-        <dt><a href="details.html#t-thermal">Cloudbase</a></dt><dd><span class="num">About 4,700 ft</span><div class="sub">Kekoa camera, median of the last hour to 11:19. Stations: about 4,300 ft (11 stations, 11:00).</div><div class="sub">Midday (11:00–14:00): probably about 4,900 ft, from the 09:00 base</div></dd>
-        <dt><a href="details.html#t-ladder">Sun</a></dt><dd><span class="num">66%</span> of clear sky, lower Kula slope<div class="sub">Last hour, as of 11:00; average of Kula Ag 100%, Keokea 46%, Pulehu 53%</div></dd>
+        <dt><a href="details.html#t-thermal">Thermals</a></dt><dd>Seem <strong>light</strong> as of 11:15<div class="sub">Kula Ag's last hour of air through the RRFS sounding (thermal.py)</div></dd>
+        <dt><a href="details.html#t-thermal">Cloudbase</a></dt><dd><span class="num">About 4,700 ft</span><div class="sub">Kekoa camera, median of the last hour to 11:19. Stations: about 4,300 ft (11 stations, 11:15).</div><div class="sub">Midday (11:00–14:00): probably about 4,900 ft, from the 09:00 base</div></dd>
+        <dt><a href="details.html#t-ladder">Sun</a></dt><dd><span class="num">65%</span> of clear sky, lower Kula slope<div class="sub">Last hour, as of 11:15; average of Kula Ag 100%, Keokea 42%, Pulehu 52%</div></dd>
         <dt><a href="details.html#stationmap">Shear line</a></dt><dd>Crossing Kula Highway near Omaopio<div class="sub">Fitted to the station map: flow from the north at MECO Olinda Rd, upslope at Waihou Springs 1 nearest the line</div><div class="sub">At the coast: Paia 075° at 31 mph</div></dd>
         
         <dt><a href="details.html#stationmap">Upslope</a></dt><dd>On since about <span class="num">08:45</span><div class="sub">Drainage ended about 08:15</div></dd>
-        <dt><a href="details.html#stationmap">Wind</a></dt><dd><span class="num">3 mph</span>, gusts to 10<div class="sub">Lower elevations, 10 stations, last hour</div></dd>
+        <dt><a href="details.html#stationmap">Wind</a></dt><dd><span class="num">3 mph</span>, gusts to 11<div class="sub">Lower elevations, 10 stations, last hour</div></dd>
       </dl>
     </section>
     <section class="panel tomorrow" aria-labelledby="t-tomorrow">
@@ -246,7 +246,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
    browser's 10-minute cached copy is bypassed. The 15-minute refresh stays
    as a backstop. */
 (function () {
-  var built = "2026-11-12T11:22";
+  var built = "2026-11-12T11:26";
   function check() {
     fetch("stations.json?" + Date.now(), {cache: "no-store"})
       .then(function (r) { return r.json(); })
