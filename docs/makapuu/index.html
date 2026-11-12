@@ -102,24 +102,49 @@ tr.wk td { border-bottom: 0; padding-bottom: 2px; } tr.wkh td { white-space: nor
 <div class="wrap">
   <header>
     <div><a class="homebtn" href="/">&larr; Home</a><div class="tag">Makapu&#8216;u soaring briefing</div><h1>Makapu&#8216;u Today</h1></div>
-    <div class="date">Updated Wed 11 Nov 2026 · 16:52 HST</div>
+    <div class="date">Updated Wed 11 Nov 2026 · 17:07 HST</div>
   </header>
   <div>
-    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/760/details/camera/12783/full" title="Kāne&#8216;ohe Bay webcam, live, looking southeast down the Ko&#8216;olau toward Makapu&#8216;u" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="https://images.wcams-static.faa.gov/webimages/760/12/12783-1794451595345.jpg" alt="" onerror="this.remove()"></div>
+    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/760/details/camera/12783/full" title="Kāne&#8216;ohe Bay webcam, live, looking southeast down the Ko&#8216;olau toward Makapu&#8216;u" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="https://images.wcams-static.faa.gov/webimages/760/12/12783-1794452615676.jpg" alt="" onerror="this.remove()"></div>
     <div class="camcap">Kāne&#8216;ohe Bay webcam, live, looking southeast down the Ko&#8216;olau to Makapu&#8216;u. FAA WeatherCam. <a href="https://weathercams.faa.gov/cameras/state/HI/cameraSite/760/details/camera/12783/full" target="_blank" rel="noopener">Open full size</a> · <a href="https://weathercams.faa.gov/cameras/state/HI/cameraSite/588/details/camera/12153/full" target="_blank" rel="noopener">Makapu&#8216;u camera, at the point</a></div>
   </div>
   <div class="cols">
     <section class="panel today" aria-labelledby="t-today">
-      <div class="kind">Now · 16:52 HST</div>
-      <div class="head"><h2 id="t-today">Today</h2><span class="chip warn">Not flyable</span></div>
-      <div class="sub" style="display:flex;align-items:center;gap:6px;margin:2px 0 6px"><img src="https://api.weather.gov/icons/land/day/wind_bkn?size=small" width="34" height="34" alt="Partly Sunny" title="NWS: Partly Sunny" loading="lazy" style="vertical-align:middle;border-radius:4px;margin-left:6px"><span>NWS today: Partly Sunny</span></div>
-      <dl>
-        <dt>Wind</dt><dd><span class="num">NE (054°) 21 mph, gusts 30</span><div class="sub">Bellows, 16:15</div></dd>
-        <dt>Cloudbase at launch</dt><dd>Unavailable</dd>
-        <dt>Cloudbase at Kāne&#8216;ohe</dt><dd><span class="num">About 2,700 ft</span>, cloud likely on the higher crest downrange<div class="sub">Condensation level of the air at Kaneohe (PHNG) 2,700 ft (15:57). Kaneohe's ceilometer: BKN 3,500 ft, OVC 5,000 ft.</div><div class="downret">Near 050°: a fair balance between going downrange and getting back.</div></dd>
-        <dt>Thermals</dt><dd>Probably <strong>flat</strong> (forecast)<div class="sub">RRFS at Kaneohe, run 11 18Z: thermal index -2.2 °C, 10:00–14:00 (surface air: Open-Meteo at Kaneohe); no useable lift. Useful, not critical, at Makapu&#8216;u.</div></dd>
-        <dt>Inversion</dt><dd>About 5,000 ft (+4.7 °F)<div class="sub">RRFS at Kaneohe, 14:00: the trade lid</div></dd>
-      </dl>
+      <div class="kind">The day in review</div>
+      <div class="head"><h2 id="t-today">Today · Wed 11 Nov</h2><span class="chip warn">Not flyable</span></div>
+      
+      <p class="summary"><strong>The wind.</strong> Not flyable all day: over the caution limit, by 3 to 8 mph on the average of wind and gust; the limit drops to 15 mph at 061–065°. Steady NE all day, 19–23 mph, gusts 25–30.</p><p class="summary"><strong>Closest to flyable.</strong> 12:00, ENE (061°) 20 mph, gusts 25.</p><p class="summary"><strong>Direction.</strong> 045–061°, mostly 050–054°. East of 060° at 12:00 (061°), close to the 070° Rabbit Island cutoff.</p><p class="summary"><strong>Gusts.</strong> 4–10 mph over the steady wind, over the 10 mph limit at 16:00.</p><p class="summary"><strong>Cloud.</strong> Downrange base no higher than about 2,500–2,800 ft along the ridge, by the Kāne&#8216;ohe Bay camera.  At launch, Mokuhano&#x27;s air would condense at about 1,800–2,800 ft, well above launch.</p><p class="summary"><strong>Thermals.</strong> Flat (index -2.4 °C, the Kaneohe runway&#x27;s air against the RRFS profile, 10:00–14:00), as forecast.</p><div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted);margin:2px 0 4px">
+<span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#3f9d5a;vertical-align:middle"></span> Kāne&#8216;ohe Bay camera (base no higher than)</span>
+</div>
+<div style="position:relative;width:100%;min-width:0;height:220px"><canvas id="wrapchart" role="img" aria-label="Downrange cloud base through the day"></canvas></div>
+<script>
+(function () {
+  var d = {"camera": [[487, 2670.0], [504, 2640.0], [517, 2640.0], [532, 2820.0], [547, 2770.0], [563, 2710.0], [578, 2620.0], [592, 2620.0], [608, 2600.0], [609, 2600.0], [657, 2650.0], [667, 2620.0], [682, 2620.0], [697, 2620.0], [803, 2540.0], [817, 2540.0], [832, 2540.0], [848, 2540.0], [863, 2660.0], [877, 3000.0], [892, 2960.0], [908, 2870.0], [923, 2780.0], [937, 2780.0], [939, 2780.0], [945, 2580.0], [946, 2580.0], [952, 2580.0], [958, 2510.0], [967, 2500.0], [983, 2520.0], [997, 2530.0]], "lost": []}, pt = function (a) { return {x: a[0], y: a[1]}; };
+  var dark = matchMedia('(prefers-color-scheme: dark)').matches, muted = '#898781', grid = dark ? '#2c2c2a' : '#e1e0d9';
+  var hm = function (m) { return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); };
+  var ys = d.camera.map(function (a) { return a[1]; });
+  var ymin = Math.min(1500, Math.floor(Math.min.apply(null, ys) / 500) * 500);
+  new Chart(document.getElementById('wrapchart'), {
+    type: 'line',
+    data: { datasets: [
+      { label: 'Camera', data: d.camera.map(pt), showLine: false, pointRadius: 3, pointBackgroundColor: '#3f9d5a', borderColor: '#3f9d5a' },
+      { label: 'Lost', data: d.lost.map(function (a) { return {x: a[0], y: ymin, t: a[1]}; }), showLine: false, clip: false,
+         pointRadius: 3, pointBackgroundColor: '#e0a100', borderColor: '#e0a100' }
+    ] },
+    options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'nearest', axis: 'x', intersect: false },
+      plugins: { legend: { display: false }, tooltip: { callbacks: {
+        title: function (i) { return hm(i[0].parsed.x); },
+        label: function (i) { return i.dataset.label === 'Lost' ? i.raw.t
+          : 'Base no higher than ' + Math.round(i.parsed.y).toLocaleString() + ' ft'; } } } },
+      scales: {
+        x: { type: 'linear', min: 480, max: 1005, ticks: { stepSize: 60, color: muted, callback: function (v) { return hm(v); } }, grid: { display: false } },
+        y: { min: ymin,
+              max: Math.max(4000, Math.ceil(Math.max.apply(null, ys) / 500) * 500),
+              ticks: { stepSize: 500, color: muted, callback: function (v) { return v.toLocaleString(); } }, grid: { color: grid } }
+      } }
+  });
+})();
+</script>
     </section>
     <section class="panel tomorrow" aria-labelledby="t-tomorrow">
       <div class="kind">Forecast</div>
@@ -145,7 +170,7 @@ tr.wk td { border-bottom: 0; padding-bottom: 2px; } tr.wkh td { white-space: nor
 <!-- build problems: none -->
 <script>
 (function () {
-  var built = "2026-11-11T16:52";
+  var built = "2026-11-11T17:07";
   function check() {
     fetch("summary.json?" + Date.now(), {cache: "no-store"}).then(function (r) { return r.json(); })
       .then(function (j) { if (j && j.built && j.built > built) location.replace(location.pathname + "?v=" + Date.now()); })
