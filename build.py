@@ -4404,6 +4404,9 @@ def camera_recent(now: datetime) -> dict | None:
     if fc is not None:                       # heights before first cumulus don't count (11-11)
         early = (t.dt.hour * 60 + t.dt.minute) < fc
         c.loc[early, "camera_ft"] = float("nan")
+    kept = {m for m, _ in (safely(camera_points, now) or [])}     # stray lone heights out (11-11)
+    stray = c.camera_ft.notna() & ~(t.dt.hour * 60 + t.dt.minute).isin(kept)
+    c.loc[stray, "camera_ft"] = float("nan")
     hour = c[(t >= n - CAMERA_VALUE_WINDOW) & (t <= n)]
     c = c[(t >= n - CAMERA_RECENT) & (t <= n)]
     if c.empty:
@@ -4434,9 +4437,26 @@ def camera_top_ft() -> int:
     return int(round(float(np.median(tops)), -2))
 
 
+# A lone camera height with no height in the frames either side, far under the
+# stations, is stray cloud between the camera and the slope (Sam, 11-11: "clouds
+# away from the slope were used"; 09:02 3,330 and 09:27 3,340 against derived
+# ~4,300). The newest frame counts as lone until the next one confirms it.
+CAM_STRAY_BELOW_FT = 700
+
+
 def camera_points(day: datetime) -> list:
-    c = camera_rows(f"{day:%Y-%m-%d}").dropna(subset=["camera_ft"])
-    return [[int(t[:2]) * 60 + int(t[3:5]), float(v)] for t, v in zip(c.time, c.camera_ft)]
+    c = camera_rows(f"{day:%Y-%m-%d}").reset_index(drop=True)
+    has = c.camera_ft.notna().tolist()
+    out = []
+    for i, r in c.iterrows():
+        if not has[i]:
+            continue
+        lone = (i == 0 or not has[i - 1]) and (i == len(c) - 1 or not has[i + 1])
+        d = r.get("derived_ft")
+        if lone and d == d and d is not None and r.camera_ft < float(d) - CAM_STRAY_BELOW_FT:
+            continue
+        out.append([int(r.time[:2]) * 60 + int(r.time[3:5]), float(r.camera_ft)])
+    return out
 
 
 # The charts draw the camera as a running median, not frame by frame (Sam,
