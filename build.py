@@ -4983,6 +4983,54 @@ def day_notes(derived: list, forecast: list, inv, phase: dict, fired: dict, deca
     return notes
 
 
+# Which surface air feeds Kula's thermals (Sam, 11-11: "lower elevation
+# stations may be more appropriate when taking upslope drift into account";
+# "log it"). Each afternoon, 10:00-14:00, each slope station's own air released
+# at its own height through the sounding: Kula Ag (the page's rating), the
+# lower stations' average (Pulehu to Lower Kimo Dr) and the strongest station
+# below Kula Ag. Kept for pilot reports to judge; the page is unchanged.
+THERMAL_SOURCES_LOG = HERE / "docs" / "thermal_sources.json"
+THERMAL_LOWER = ("Pulehu", "MECO Naalaea Rd", "Kaonoulu 1", "MECO Kula", "MECO Kaamana St", "MECO Lower Kimo Dr")
+THERMAL_BELOW_KA = THERMAL_LOWER + ("Keokea",)
+
+
+def log_thermal_sources(obs, now: datetime, cap) -> None:
+    if cap is None or not len(obs):
+        return
+    day = f"{now:%Y-%m-%d}"
+    o = obs[obs.observed.dt.date == now.date()].dropna(subset=["temp_f", "dew_f"])
+    o = o[o.observed.dt.hour.between(10, 14) & o.name.isin(THERMAL_BELOW_KA + ("Kula Ag",))]
+    per = {}
+    for name, g in o.groupby("name"):
+        hrs = g.groupby(g.observed.dt.hour).agg(temp_f=("temp_f", "mean"), dewpoint_f=("dew_f", "mean")).reset_index()
+        hrs = hrs.rename(columns={"observed": "hour"}).assign(day=day)
+        got = th.assess(hrs, float(g.elev_ft.iloc[0]), window=(10, 14), path=cap)
+        if not got.empty:
+            ti = float(got.ti_c.mean())
+            per[name] = {"elev_ft": float(g.elev_ft.iloc[0]), "ti_c": round(ti, 2), "word": th.describe(ti),
+                         "hours": int(len(got))}
+    if not per:
+        return
+    rec = {"made": f"{now:%Y-%m-%d %H:%M}", "sounding": f"{sd.run_time(cap):%Y-%m-%d %HZ}", "stations": per}
+    if "Kula Ag" in per:
+        rec["kula_ag"] = per["Kula Ag"]
+    low = [per[n]["ti_c"] for n in THERMAL_LOWER if n in per]
+    if low:
+        m = sum(low) / len(low)
+        rec["lower_mean"] = {"ti_c": round(m, 2), "word": th.describe(m), "stations": len(low)}
+    below = [(per[n]["ti_c"], n) for n in THERMAL_BELOW_KA if n in per]
+    if below:
+        ti, n = min(below)
+        rec["strongest_below"] = {"station": n, "ti_c": round(ti, 2), "word": th.describe(ti)}
+    try:
+        log = json.loads(THERMAL_SOURCES_LOG.read_text(encoding="utf-8"))
+    except Exception:
+        log = {}
+    log[day] = rec
+    keep = sorted(log)[-200:]
+    THERMAL_SOURCES_LOG.write_text(json.dumps({k: log[k] for k in keep}, indent=0), encoding="utf-8")
+
+
 def day_review(obs, now, up, evening, rnet, word, model, fc_today, fc_pair, entries, inv=None) -> dict:
     """The whole flying day, for the Today panel after the upslope ends."""
     day = now.replace(tzinfo=None, hour=0, minute=0, second=0, microsecond=0)
@@ -5573,6 +5621,7 @@ def build() -> str:
             safely(REVIEW_FILE.write_text, json.dumps(review), "utf-8")
             end_t = upslope_end(rnet, evening) if up is not None else None
             safely(write_scorecard, obs, now, up, end_t, day_word, entries)
+            safely(log_thermal_sources, obs, now, cap)
     elif before_up and now.hour < 6:            # live from 06:00 (Sam)
         try:
             saved = json.loads(REVIEW_FILE.read_text(encoding="utf-8"))
