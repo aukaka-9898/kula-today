@@ -1,20 +1,19 @@
 {
- "made": "2026-11-11 18:52",
+ "made": "2026-11-12 01:29",
  "flags": [
   "Camera check: cloud at the tops (Puunianiau camera vs Park HQ) disagreed by 2 h or more on 3 of 14 days (10-29, 10-30, 11-01).",
   "Per-station forecast base: 48 days logged. On the later half, per-station corrections miss the derived base by 572 ft typically, the page's Kula Ag + 0 ft by 653 ft. Ready to decide whether to switch.",
-  "Accuracy: the cloudbase number was within 500 ft on only 8 of 15 days (tested at 2 in 3). Suggest: look at the misses for a pattern.",
-  "Accuracy: the thermal forecast ran 0.8 steps strong over 17 days (right on 4). Suggest: set apart the days the sun forecast missed (no air setting fixes those), then backtest the forecast-air warming (now +3 F) at +0/+1/+2 F on the rest before changing it.",
-  "Derived vs camera: 17 days with camera readings; derived ran -170 ft against the camera at midday. Suggest: fit a first derived correction (option 2), to be refitted each season.",
+  "Accuracy: the thermal forecast ran 0.8 steps strong over 18 days (right on 4). Suggest: set apart the days the sun forecast missed (no air setting fixes those), then backtest the forecast-air warming (now +3 F) at +0/+1/+2 F on the rest before changing it.",
+  "Derived vs camera: 18 days with camera readings; derived ran -180 ft against the camera at midday. Suggest: fit a first derived correction (option 2), to be refitted each season.",
   "Monthly rule check (2026-10): 1 change(s) proposed -- see the monthly report."
  ],
  "stats": {
-  "base_days": 20,
-  "base_mean": 350,
-  "base_raw_mean": 176,
-  "base_sd": 610,
-  "base_morning": 634,
-  "base_afternoon": 137,
+  "base_days": 19,
+  "base_mean": 382,
+  "base_raw_mean": 224,
+  "base_sd": 608,
+  "base_morning": 701,
+  "base_afternoon": 152,
   "alert_days": 4,
   "alert_hits": 0,
   "intrusions_missed": 0,
@@ -23,14 +22,14 @@
   "cam_redhill_cloud_min_days": 14,
   "station_days": 48,
   "accuracy": {
-   "base_n": 15,
-   "base_within": 8,
-   "base_typical": 520.0,
-   "base_bias": 110.0,
-   "thermal_n": 17,
+   "base_n": 16,
+   "base_within": 9,
+   "base_typical": 510.0,
+   "base_bias": 80.0,
+   "thermal_n": 18,
    "thermal_right": 4,
-   "thermal_within_one": 16,
-   "thermal_bias": 0.82,
+   "thermal_within_one": 17,
+   "thermal_bias": 0.83,
    "rules": {
     "B2": [
      1,
@@ -41,8 +40,8 @@
      5
     ]
    },
-   "camera_days": 17,
-   "derived_minus_camera": -170.0,
+   "camera_days": 18,
+   "derived_minus_camera": -180.0,
    "pilots": true
   }
  }
