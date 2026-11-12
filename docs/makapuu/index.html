@@ -102,7 +102,7 @@ tr.wk td { border-bottom: 0; padding-bottom: 2px; } tr.wkh td { white-space: nor
 <div class="wrap">
   <header>
     <div><a class="homebtn" href="/">&larr; Home</a><div class="tag">Makapu&#8216;u soaring briefing</div><h1>Makapu&#8216;u Today</h1></div>
-    <div class="date">Updated Wed 11 Nov 2026 · 15:45 HST</div>
+    <div class="date">Updated Wed 11 Nov 2026 · 15:46 HST</div>
   </header>
   <div>
     <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/760/details/camera/12783/full" title="Kāne&#8216;ohe Bay webcam, live, looking southeast down the Ko&#8216;olau toward Makapu&#8216;u" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="https://images.wcams-static.faa.gov/webimages/760/12/12783-1794447363975.jpg" alt="" onerror="this.remove()"></div>
@@ -110,7 +110,7 @@ tr.wk td { border-bottom: 0; padding-bottom: 2px; } tr.wkh td { white-space: nor
   </div>
   <div class="cols">
     <section class="panel today" aria-labelledby="t-today">
-      <div class="kind">Now · 15:45 HST</div>
+      <div class="kind">Now · 15:46 HST</div>
       <div class="head"><h2 id="t-today">Today</h2><span class="chip warn">Not flyable</span></div>
       <div class="sub" style="display:flex;align-items:center;gap:6px;margin:2px 0 6px"><img src="https://api.weather.gov/icons/land/day/wind_bkn?size=small" width="34" height="34" alt="Partly Sunny" title="NWS: Partly Sunny" loading="lazy" style="vertical-align:middle;border-radius:4px;margin-left:6px"><span>NWS today: Partly Sunny</span></div>
       <dl>
@@ -145,7 +145,7 @@ tr.wk td { border-bottom: 0; padding-bottom: 2px; } tr.wkh td { white-space: nor
 <!-- build problems: camera outlier left out: Greenwall 4,610 ft; camera outlier left out: Kāne&#8216;ohe crest 2,340 ft -->
 <script>
 (function () {
-  var built = "2026-11-11T15:45";
+  var built = "2026-11-11T15:46";
   function check() {
     fetch("summary.json?" + Date.now(), {cache: "no-store"}).then(function (r) { return r.json(); })
       .then(function (j) { if (j && j.built && j.built > built) location.replace(location.pathname + "?v=" + Date.now()); })
