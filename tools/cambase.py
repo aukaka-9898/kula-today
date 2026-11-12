@@ -15,6 +15,7 @@ HERE = Path(__file__).resolve().parent
 COLS = (870, 890, 910, 930, 950, 970, 990)      # columns read across Sam's box
 ROWS = (590, 706)          # read window; extended down (Sam, 2026-10-19) to ~2,950 ft of slope
 MAX_SPREAD_FT = 600        # wider = cloud in front of the slope
+MAX_SPREAD_PX = 8          # ...unless the columns agree within this many pixels (near the ridge; 11-11)
 CLOUD_TOP_MIN = 150         # box top this bright before an edge counts (was 135; 11-11)
 SKYLINE_PX = 4             # an edge this close under the skyline is the ridge, not a base
 OVERCAST_BLUE = 20         # sky blue-minus-red at or below this: a grey, overcast sky
@@ -39,7 +40,7 @@ def edge_base(rgb, heights: dict):
     found an edge or they disagree by more than MAX_SPREAD_FT; top_edges counts
     columns whose only edge was the skyline (visible slope clear)."""
     a = rgb.mean(axis=2)
-    hs, top_edges = [], 0
+    hs, rows, top_edges = [], [], 0
     for x in COLS:
         col = a[ROWS[0]:ROWS[1], x - 6:x + 6].mean(axis=1)
         sm = np.convolve(col, np.ones(3) / 3, mode="same")
@@ -60,9 +61,14 @@ def edge_base(rgb, heights: dict):
             continue
         if i is not None and heights[x].get(ROWS[0] + i) is not None:
             hs.append(heights[x][ROWS[0] + i])
+            rows.append(ROWS[0] + i)
     if len(hs) >= 4:
         spread = float(np.percentile(hs, 75) - np.percentile(hs, 25))
-        if spread <= MAX_SPREAD_FT:
+        # Or agreement in pixels (Sam, 11-11: "It wasn't really a single high frame
+        # though"): near the ridge a pixel spans 50-200 ft, so a base along the top
+        # of the slope (15:03 / 15:21, 7.5 / 3 px apart) failed the 600 ft test.
+        px = float(np.percentile(rows, 75) - np.percentile(rows, 25))
+        if spread <= MAX_SPREAD_FT or px <= MAX_SPREAD_PX:
             return round(float(np.median(hs)), -1), round(spread, -1), top_edges
     return None, None, top_edges
 
