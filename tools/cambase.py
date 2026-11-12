@@ -15,6 +15,7 @@ HERE = Path(__file__).resolve().parent
 COLS = (870, 890, 910, 930, 950, 970, 990)      # columns read across Sam's box
 ROWS = (590, 706)          # read window; extended down (Sam, 2026-10-19) to ~2,950 ft of slope
 MAX_SPREAD_FT = 600        # wider = cloud in front of the slope
+CLOUD_TOP_MIN = 150         # box top this bright before an edge counts (was 135; 11-11)
 SKYLINE_PX = 4             # an edge this close under the skyline is the ridge, not a base
 OVERCAST_BLUE = 20         # sky blue-minus-red at or below this: a grey, overcast sky
 
@@ -43,7 +44,11 @@ def edge_base(rgb, heights: dict):
         col = a[ROWS[0]:ROWS[1], x - 6:x + 6].mean(axis=1)
         sm = np.convolve(col, np.ones(3) / 3, mode="same")
         top, bot = sm[:10].mean(), sm[-20:].mean()       # slope reference: the lowest rows
-        if top < 135 or top - bot < 40:          # blue sky above, or no clear edge
+        # Cloud-bright floor 150, was 135 (Sam, 11-11: "nothing in the box can be
+        # interpreted as that low" -- 15:47/15:56 read 3,400-3,500 from a sunlit
+        # pasture/haze step on the slope, box top 134-157; real cloud 155-187 that
+        # day). Watch grey-base days: a dark base under 150 falls to the backup.
+        if top < CLOUD_TOP_MIN or top - bot < 40:          # blue sky above, or no clear edge
             continue
         thr = (top + bot) / 2
         i = next((k for k in range(5, len(sm)) if sm[k] < thr <= sm[k - 1]), None)
