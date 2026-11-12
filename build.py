@@ -4759,6 +4759,25 @@ def base_chart(obs, now, up, end, cid="basechart", title="Cloudbase, derived vs 
 FORECAST_BAND_FT = 700
 
 
+# A sidebar on the derived base, under every Cloudbase chart (Sam, 11-11: "a
+# 'sidebar' explanation of derived heights would be helpful"; option a).
+DERIVED_EXPLAINER = (
+    '<details class="sub" style="margin-top:6px"><summary style="cursor:pointer">How is the derived base worked out?'
+    '</summary><div style="margin-top:6px;padding:8px 10px;border-left:3px solid var(--rule,#ddd)">'
+    '<p style="margin:0 0 6px">Rising air cools about 5.4 &deg;F for every 1,000 ft it climbs, while its dew point '
+    'drops only about 1 &deg;F. Where the two meet, the moisture condenses: that&rsquo;s the cloudbase. So a '
+    'station&rsquo;s temperature and dew point tell how high its air would have to rise to make cloud: about 230 ft '
+    'for every degree between them, added to the station&rsquo;s own height. 70 &deg;F with a 60 &deg;F dew point at '
+    'Kula Ag (3,162 ft) gives about 5,400 ft.</p>'
+    '<p style="margin:0 0 6px">The page does this for about a dozen slope stations every 15 minutes once the upslope '
+    'has started, and shows the middle value.</p>'
+    '<p style="margin:0">It can differ from the camera because the stations measure the air at the ground. Late in '
+    'the day, or under cloud shade, that layer cools and moistens and no longer matches the air the thermals carry up, '
+    'so the derived base reads low. Wet ground after dew or rain does the same in the morning. Before the upslope '
+    'starts, the stations sit in the night&rsquo;s drainage air, so nothing is shown. When the camera has a reading, '
+    'it leads.</p></div></details>')
+
+
 def chart_html(cid, derived, forecast, span, note, nocu=None, title="", camera=None, hidden=None, nocall=None,
                proj=None, proj_label="Forecast (sounding)", fc_label="Forecast", cam_sub=None) -> str:
     """Cloudbase line chart: derived (solid) and forecast (dashed) by minute of
@@ -4804,7 +4823,7 @@ def chart_html(cid, derived, forecast, span, note, nocu=None, title="", camera=N
 {fkey}
 {legend}</div>
 <div style="position:relative;width:100%;min-width:0;height:220px"><canvas id="{cid}" role="img" aria-label="{aria}"></canvas></div>
-{f'<div class="sub">{esc(note)}</div>' if note else ""}
+{f'<div class="sub">{esc(note)}</div>' if note else ""}{DERIVED_EXPLAINER if derived else ""}
 <script>
 (function () {{
   var d = {data}, pt = function (a) {{ return {{x: a[0], y: a[1]}}; }};
