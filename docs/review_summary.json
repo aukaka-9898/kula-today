@@ -1,5 +1,5 @@
 {
- "made": "2026-11-12 18:37",
+ "made": "2026-11-12 18:52",
  "flags": [
   "Per-station forecast base: 49 days logged. On the later half, per-station corrections miss the derived base by 551 ft typically, the page's Kula Ag + 0 ft by 639 ft. Ready to decide whether to switch.",
   "Accuracy: the thermal forecast ran 0.8 steps strong over 18 days (right on 4). Suggest: set apart the days the sun forecast missed (no air setting fixes those), then backtest the forecast-air warming (now +3 F) at +0/+1/+2 F on the rest before changing it.",
