@@ -3999,3 +3999,7 @@ date,time,station,obs_time,temp_f,dew_f,dew_from,lcl_ft,ti_c,word,camera,camera_
 2026-11-12,17:37,Nonokio,17:10,76.6,65.7,own,2480.0,0.06,Flat,,
 2026-11-12,17:37,Mokuhano,17:10,77.0,65.7,own,2590.0,-0.38,Flat,,
 2026-11-12,17:37,Moku o Loe,17:30,77.4,,,,,,,
+2026-11-12,17:59,Kaneohe runway,16:57,77.0,64.0,own,2950.0,-0.23,Flat,,
+2026-11-12,17:59,Heeia,17:30,76.3,68.4,own,1820.0,-0.23,Flat,,
+2026-11-12,17:59,Maunawili,17:45,76.1,66.2,own,2250.0,0.26,Flat,,
+2026-11-12,17:59,Moku o Loe,17:54,77.2,,,,,,,
