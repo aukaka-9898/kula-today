@@ -1,5 +1,5 @@
 {
- "made": "2026-11-13 10:07",
+ "made": "2026-11-13 10:22",
  "flags": [
   "Per-station forecast base: 49 days logged. On the later half, per-station corrections miss the derived base by 551 ft typically, the page's Kula Ag + 0 ft by 639 ft. Ready to decide whether to switch.",
   "Accuracy: the cloudbase number was within 500 ft on only 9 of 17 days (tested at 2 in 3). Suggest: look at the misses for a pattern.",
