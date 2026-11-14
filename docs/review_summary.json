@@ -1,10 +1,9 @@
 {
- "made": "2026-11-13 23:03",
+ "made": "2026-11-14 02:05",
  "flags": [
   "Per-station forecast base: 50 days logged. On the later half, per-station corrections miss the derived base by 541 ft typically, the page's Kula Ag + 0 ft by 627 ft. Ready to decide whether to switch.",
-  "Accuracy: the cloudbase number was within 500 ft on only 9 of 17 days (tested at 2 in 3). Suggest: look at the misses for a pattern.",
-  "Accuracy: the thermal forecast ran 0.8 steps strong over 19 days (right on 5). Suggest: set apart the days the sun forecast missed (no air setting fixes those), then backtest the forecast-air warming (now +3 F) at +0/+1/+2 F on the rest before changing it.",
-  "Derived vs camera: 19 days with camera readings; derived ran -170 ft against the camera at midday. Suggest: fit a first derived correction (option 2), to be refitted each season.",
+  "Accuracy: the thermal forecast ran 0.8 steps strong over 20 days (right on 5). Suggest: set apart the days the sun forecast missed (no air setting fixes those), then backtest the forecast-air warming (now +3 F) at +0/+1/+2 F on the rest before changing it.",
+  "Derived vs camera: 20 days with camera readings; derived ran -180 ft against the camera at midday. Suggest: fit a first derived correction (option 2), to be refitted each season.",
   "Monthly rule check (2026-10): 1 change(s) proposed -- see the monthly report."
  ],
  "stats": {
@@ -22,14 +21,14 @@
   "cam_redhill_cloud_min_days": 14,
   "station_days": 50,
   "accuracy": {
-   "base_n": 17,
-   "base_within": 9,
-   "base_typical": 520.0,
-   "base_bias": 110.0,
-   "thermal_n": 19,
+   "base_n": 18,
+   "base_within": 10,
+   "base_typical": 500.0,
+   "base_bias": 100.0,
+   "thermal_n": 20,
    "thermal_right": 5,
-   "thermal_within_one": 18,
-   "thermal_bias": 0.79,
+   "thermal_within_one": 19,
+   "thermal_bias": 0.8,
    "rules": {
     "B2": [
      1,
@@ -40,8 +39,8 @@
      5
     ]
    },
-   "camera_days": 19,
-   "derived_minus_camera": -170.0,
+   "camera_days": 20,
+   "derived_minus_camera": -180.0,
    "pilots": true
   }
  }
