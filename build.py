@@ -2251,6 +2251,32 @@ def cap_model(now: datetime) -> str:
     return "NAM" if utc < sd.RETIRED["NAM"] else "RRFS"
 
 
+# The day's measured rating sends Kula Ag's 10:00-14:00 air up through the
+# model's air aloft. It was re-rated every build after the day ended against
+# the newest run, and by evening the newest run starts after 14:00 HST: the
+# word flipped or went blank, and the night's last build won (found 11-14:
+# eight days blanked, 11-07 Flat > Light > blank, 11-12 Light > Moderate).
+# The day is rated against the run current at midday: that day's 18Z (08:00
+# HST), else its 12Z, from the archive; else the live run if it began by
+# 10:00 HST that day. None when there is none -- the scorecard then keeps
+# what it had.
+def midday_run(day):
+    model = "NAM" if pd.Timestamp(f"{day} 18:00") < sd.RETIRED["NAM"] else "RRFS"
+    for c in (18, 12):
+        try:
+            return sd.fetch(model, cycle=c, day=pd.Timestamp(f"{day}"))
+        except Exception:
+            pass
+    try:
+        live = sd.fetch(model)
+        t = sd.run_time(live).tz_convert("UTC").tz_localize(None)
+        if pd.Timestamp(f"{day} 06:00") <= t <= pd.Timestamp(f"{day} 20:00"):
+            return live
+    except Exception:
+        pass
+    return None
+
+
 def inversion_on(day, path, model):
     found = []
     for h in ("11:00", "14:00"):
@@ -3723,6 +3749,13 @@ def write_scorecard(obs, now, up, end, word, entries) -> None:
     ph_cloud = (int(10 * (_rh(ph.temp_f, ph.dew_f) >= 95).groupby(ph.observed.dt.floor("10min")).max().sum())
                 if len(ph) else None)
     rh_cloud = int(60 * sum(1 for r in hrs if r["derived"] is not None and r["derived"] <= 3300))
+    if not word and SCORE_DAYS.exists():           # never blank a word already kept (11-14)
+        try:
+            old = pd.read_csv(SCORE_DAYS, dtype={"date": str, "word": str}, keep_default_na=False)
+            old = old[old.date == d].word
+            word = old.iloc[0] if len(old) and old.iloc[0] else word
+        except Exception:
+            pass
     _replace_day(SCORE_DAYS, [{
         "date": d, "word": word, "fc_morning_made": mf.get("made"), "fc_sun": mf.get("sun"),
         "summit_alert": mf.get("summit_push"), "intrusion": intrusion,
@@ -5491,7 +5524,11 @@ def build() -> str:
     # The day's rating (10:00-14:00) is for the day in review; the live row
     # keeps the current call until the upslope ends (Sam: at 16:07 it said
     # "10:00-14:00" beside the newest readings).
+    noon_run = safely(midday_run, now.date()) if now.hour >= 15 and len(obs) else None
     if rated is not None and len(rated) and now.hour >= 15:
+        # Against the run current at midday, not the newest (see midday_run).
+        noon = safely(thermal_today, obs, now, noon_run) if noon_run else None
+        rated = noon[noon.index >= 10] if noon is not None else rated.iloc[0:0]
         mid = rated[(rated.index >= 10) & (rated.index <= 14)]
         day_word = strength_word(th.describe(mid.ti_c.mean())) if len(mid) else None
         day_sun = safely(window_sun, now)
@@ -5621,7 +5658,7 @@ def build() -> str:
             safely(REVIEW_FILE.write_text, json.dumps(review), "utf-8")
             end_t = upslope_end(rnet, evening) if up is not None else None
             safely(write_scorecard, obs, now, up, end_t, day_word, entries)
-            safely(log_thermal_sources, obs, now, cap)
+            safely(log_thermal_sources, obs, now, noon_run)
     elif before_up and now.hour < 6:            # live from 06:00 (Sam)
         try:
             saved = json.loads(REVIEW_FILE.read_text(encoding="utf-8"))
