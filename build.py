@@ -4477,6 +4477,24 @@ def camera_top_ft() -> int:
 CAM_STRAY_BELOW_FT = 700
 
 
+# The live chart's "Latest frame" dot: the newest EDGE reading only, and only
+# while it is fresh (Sam, 11-14: "latest frame is too low" -- 12:48 was the
+# grey-sky backup, 4,270 off a hazy pasture band under a ~5,000 base; the
+# backup scatters -1,500..+2,800 ft against the stations, fine inside the
+# 1-hour median, misleading alone). No dot when the last edge reading is older.
+LATEST_EDGE_MAX_MIN = 30
+
+
+def latest_edge(day: datetime, now: datetime, cam: list):
+    c = camera_rows(f"{day:%Y-%m-%d}")
+    edge = {int(t[:2]) * 60 + int(t[3:5]) for t, w, v in zip(c.time, c.why, c.camera_ft)
+            if v == v and v is not None and not (isinstance(w, str) and w)}
+    pts = [q for q in cam if q[0] in edge]
+    if not pts or now.hour * 60 + now.minute - pts[-1][0] > LATEST_EDGE_MAX_MIN:
+        return None
+    return pts[-1]
+
+
 def camera_points(day: datetime) -> list:
     c = camera_rows(f"{day:%Y-%m-%d}").reset_index(drop=True)
     has = c.camera_ft.notna().tolist()
@@ -4814,7 +4832,7 @@ def base_chart(obs, now, up, end, cid="basechart", title="Cloudbase, derived vs 
     return (chart_html(cid, derived, fc_draw, span, note, title=title, camera=cam_line, cam_sub=stand_in,
                        hidden=hid, nocall=noc, proj=proj["points"] if proj else None,
                        proj_label=(proj or {}).get("label", "Forecast (sounding)"), fc_label=fc_label,
-                       latest=cam[-1] if cam and end is None else None),
+                       latest=safely(latest_edge, day, now, cam) if end is None else None),
             derived, forecast)
 
 
