@@ -110,10 +110,18 @@
 -1170.0,
 650.0,
 400.0
-]
+],
+"obs_source": "camera",
+"obs_mid_ft": 5130.0,
+"obs_max_ft": 5240.0,
+"obs_12_ft": 5060.0,
+"obs_15_ft": 5210.0,
+"obs_first_cu": "09:18",
+"obs_low_vs_season": false,
+"p9_hit": true
 },
 "2026-11-14": {
-"made": "2026-11-13 17:22",
+"made": "2026-11-13 17:37",
 "season_ft": 5000.0,
 "rrfs_run": "2026-11-13 18Z",
 "rh_by_ft": {
