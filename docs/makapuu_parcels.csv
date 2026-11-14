@@ -4362,3 +4362,9 @@ date,time,station,obs_time,temp_f,dew_f,dew_from,lcl_ft,ti_c,word,camera,camera_
 2026-11-14,13:38,Nonokio,13:00,73.5,71.5,own,440.0,1.92,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",2620.0
 2026-11-14,13:38,Mokuhano,13:00,74.1,71.0,own,710.0,1.63,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",2620.0
 2026-11-14,13:38,Moku o Loe,13:30,75.0,,,,,,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",2620.0
+2026-11-14,13:53,Kaneohe runway,13:48,73.9,70.0,own,900.0,1.82,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2620.0
+2026-11-14,13:53,Heeia,13:30,73.5,73.5,own,10.0,1.67,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2620.0
+2026-11-14,13:53,Maunawili,13:30,75.3,71.1,own,970.0,0.92,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2620.0
+2026-11-14,13:53,Nonokio,13:00,73.5,71.5,own,440.0,1.92,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2620.0
+2026-11-14,13:53,Mokuhano,13:00,74.1,71.0,own,710.0,1.63,Flat,The ridge is hidden: cloud or rain over the Koʻolau.,2620.0
+2026-11-14,13:53,Moku o Loe,13:48,73.8,,,,,,The ridge is hidden: cloud or rain over the Koʻolau.,2620.0
