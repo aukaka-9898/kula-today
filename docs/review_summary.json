@@ -1,8 +1,8 @@
 {
- "made": "2026-11-14 11:52",
+ "made": "2026-11-14 12:06",
  "flags": [
   "Per-station forecast base: 50 days logged. On the later half, per-station corrections miss the derived base by 541 ft typically, the page's Kula Ag + 0 ft by 627 ft. Ready to decide whether to switch.",
-  "Accuracy: the thermal forecast ran 0.8 steps strong over 20 days (right on 5). Suggest: set apart the days the sun forecast missed (no air setting fixes those), then backtest the forecast-air warming (now +3 F) at +0/+1/+2 F on the rest before changing it.",
+  "Accuracy: the thermal forecast ran 0.6 steps strong over 25 days (right on 9). Suggest: set apart the days the sun forecast missed (no air setting fixes those), then backtest the forecast-air warming (now +3 F) at +0/+1/+2 F on the rest before changing it.",
   "Derived vs camera: 20 days with camera readings; derived ran -180 ft against the camera at midday. Suggest: fit a first derived correction (option 2), to be refitted each season.",
   "Monthly rule check (2026-10): 1 change(s) proposed -- see the monthly report."
  ],
@@ -25,10 +25,10 @@
    "base_within": 10,
    "base_typical": 500.0,
    "base_bias": 100.0,
-   "thermal_n": 20,
-   "thermal_right": 5,
-   "thermal_within_one": 19,
-   "thermal_bias": 0.8,
+   "thermal_n": 25,
+   "thermal_right": 9,
+   "thermal_within_one": 25,
+   "thermal_bias": 0.64,
    "rules": {
     "B2": [
      1,
