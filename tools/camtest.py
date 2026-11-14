@@ -102,9 +102,19 @@ TOP_FT, BOTTOM_FT = 4600, 3800
 TOP_GEOM_FT, BOTTOM_GEOM_FT = 4660, 4130
 
 
+# Above the pasture top (Sam, 11-14): the bottom of the clearing above Ferns,
+# 20.714615 -156.298445, 6,380 ft (Google Earth), seen at pixel ~763, 612 in
+# the 09:47 frame; the geometry reads it 6,630. Above the top the geometry is
+# mapped linearly onto 4,600 and 6,380 (it read 150-250 ft high up there; the
+# clearing's top, ~6,880 by Sam's ~500 ft span, reads ~7,030 -> ~6,750 now).
+UPPER_FT, UPPER_GEOM_FT = 6380, 6630
+
+
 def _anchor(h):
-    if h is None or h >= TOP_GEOM_FT:
+    if h is None:
         return h
+    if h >= TOP_GEOM_FT:
+        return TOP_FT + (h - TOP_GEOM_FT) * (UPPER_FT - TOP_FT) / (UPPER_GEOM_FT - TOP_GEOM_FT)
     return TOP_FT - (TOP_GEOM_FT - h) * (TOP_FT - BOTTOM_FT) / (TOP_GEOM_FT - BOTTOM_GEOM_FT)
 
 

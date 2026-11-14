@@ -21,10 +21,10 @@
 240.0
 ],
 "obs_source": "camera",
-"obs_mid_ft": 5560.0,
-"obs_max_ft": 6220.0,
-"obs_12_ft": 5640.0,
-"obs_15_ft": 6220.0,
+"obs_mid_ft": 5410.0,
+"obs_max_ft": 6010.0,
+"obs_12_ft": 5490.0,
+"obs_15_ft": 6010.0,
 "obs_first_cu": "09:02",
 "obs_low_vs_season": false
 },
@@ -66,9 +66,9 @@
 -20.0
 ],
 "obs_source": "camera",
-"obs_mid_ft": 4790.0,
-"obs_max_ft": 5520.0,
-"obs_12_ft": 4960.0,
+"obs_mid_ft": 4720.0,
+"obs_max_ft": 5380.0,
+"obs_12_ft": 4870.0,
 "obs_15_ft": 2960.0,
 "obs_first_cu": "09:19",
 "obs_low_vs_season": true,
@@ -112,10 +112,10 @@
 400.0
 ],
 "obs_source": "camera",
-"obs_mid_ft": 5130.0,
-"obs_max_ft": 5240.0,
-"obs_12_ft": 5060.0,
-"obs_15_ft": 5210.0,
+"obs_mid_ft": 5020.0,
+"obs_max_ft": 5120.0,
+"obs_12_ft": 4960.0,
+"obs_15_ft": 5100.0,
 "obs_first_cu": "09:18",
 "obs_low_vs_season": false,
 "p9_hit": true

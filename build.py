@@ -4813,7 +4813,8 @@ def base_chart(obs, now, up, end, cid="basechart", title="Cloudbase, derived vs 
         note += " " + proj["note"]
     return (chart_html(cid, derived, fc_draw, span, note, title=title, camera=cam_line, cam_sub=stand_in,
                        hidden=hid, nocall=noc, proj=proj["points"] if proj else None,
-                       proj_label=(proj or {}).get("label", "Forecast (sounding)"), fc_label=fc_label),
+                       proj_label=(proj or {}).get("label", "Forecast (sounding)"), fc_label=fc_label,
+                       latest=cam[-1] if cam and end is None else None),
             derived, forecast)
 
 
@@ -4844,7 +4845,7 @@ DERIVED_EXPLAINER = (
 
 
 def chart_html(cid, derived, forecast, span, note, nocu=None, title="", camera=None, hidden=None, nocall=None,
-               proj=None, proj_label="Forecast (sounding)", fc_label="Forecast", cam_sub=None) -> str:
+               proj=None, proj_label="Forecast (sounding)", fc_label="Forecast", cam_sub=None, latest=None) -> str:
     """Cloudbase line chart: derived (solid) and forecast (dashed) by minute of
     the day, the upslope shaded; derived and span may be empty for a forecast.
 
@@ -4855,6 +4856,9 @@ def chart_html(cid, derived, forecast, span, note, nocu=None, title="", camera=N
     clip = lambda pts: [q for q in pts if 540 <= q[0] <= 960]
     derived, forecast, camera, proj = clip(derived), clip(forecast), clip(camera or []), clip(proj or [])
     cam_sub = clip(cam_sub or [])
+    # The newest frame's own reading, a dot beside the 1-hour line (Sam, 11-14:
+    # the hour's median sat 400-500 ft above the 12:14 frame as the base fell).
+    latest = clip([latest] if latest else [])
     # Camera hidden (Sam, 10-29): a camera-sized dot in a caution colour on the
     # bottom axis for each frame with the slope lost in cloud or rain -- no height.
     hidden = [m for m in (hidden or []) if 540 <= m <= 960]
@@ -4864,13 +4868,15 @@ def chart_html(cid, derived, forecast, span, note, nocu=None, title="", camera=N
     if span:
         span = [max(span[0], 540), min(span[1], 960)]
     data = json.dumps({"derived": derived, "forecast": forecast, "camera": camera, "camsub": cam_sub, "hidden": hidden, "proj": proj,
-                       "nocall": nocall, "up": span, "nocu": nocu})
+                       "nocall": nocall, "up": span, "nocu": nocu, "latest": latest})
     legend = ("" if not derived else
               '<span><span style="display:inline-block;width:16px;height:2px;background:#2a78d6;vertical-align:middle"></span> Derived (stations)</span>'
               '') + ('<span><span style="display:inline-block;width:16px;height:2px;background:#3f9d5a;vertical-align:middle"></span> Kekoa camera (1-hour median)</span>'
                      if camera else "") + (
               '<span><span style="display:inline-block;width:16px;border-top:2px dashed #3f9d5a;vertical-align:middle"></span> Cumulus seen, no camera height yet (stations)</span>'
               if cam_sub else "") + (
+              '<span><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#3f9d5a;border:1.5px solid #fff;box-shadow:0 0 0 1px #3f9d5a;vertical-align:middle"></span> Latest frame</span>'
+              if latest else "") + (
               '<span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#e0a100;vertical-align:middle"></span> Camera hidden (cloud or rain)</span>'
               if hidden else "") + (
               '<span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;border:1.5px solid #898781;box-sizing:border-box;vertical-align:middle"></span> Camera, no call</span>'
@@ -4921,6 +4927,8 @@ def chart_html(cid, derived, forecast, span, note, nocu=None, title="", camera=N
       {{ label: 'Forecast (sounding)', data: d.proj.map(pt), borderColor: '#8a5cd6', borderWidth: 2, borderDash: [3, 4], pointRadius: 0, tension: 0.3 }},
       {{ label: 'Kekoa camera', data: d.camera.map(pt), borderColor: '#3f9d5a', borderWidth: 2, pointRadius: 0, tension: 0.3 }},
       {{ label: 'Cumulus seen, no camera height yet', data: d.camsub.map(pt), borderColor: '#3f9d5a', borderWidth: 2, borderDash: [5, 4], pointRadius: 0, tension: 0.3 }},
+      {{ label: 'Latest frame', data: d.latest.map(pt), showLine: false, pointRadius: 5, pointHoverRadius: 6,
+         pointBackgroundColor: '#3f9d5a', pointBorderColor: dark ? '#1a1a19' : '#ffffff', pointBorderWidth: 2 }},
       {{ label: 'Camera hidden', data: d.hidden.map(function (m) {{ return {{x: m, y: ymin}}; }}), showLine: false, clip: false,
          pointRadius: 3, pointBackgroundColor: '#e0a100', borderColor: '#e0a100' }},
       {{ label: 'Camera, no call', data: d.nocall.map(function (m) {{ return {{x: m, y: ymin}}; }}), showLine: false, clip: false,
