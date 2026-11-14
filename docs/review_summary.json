@@ -1,18 +1,18 @@
 {
- "made": "2026-11-13 17:37",
+ "made": "2026-11-13 17:52",
  "flags": [
-  "Per-station forecast base: 49 days logged. On the later half, per-station corrections miss the derived base by 551 ft typically, the page's Kula Ag + 0 ft by 639 ft. Ready to decide whether to switch.",
+  "Per-station forecast base: 50 days logged. On the later half, per-station corrections miss the derived base by 541 ft typically, the page's Kula Ag + 0 ft by 627 ft. Ready to decide whether to switch.",
   "Accuracy: the cloudbase number was within 500 ft on only 9 of 17 days (tested at 2 in 3). Suggest: look at the misses for a pattern.",
   "Accuracy: the thermal forecast ran 0.8 steps strong over 19 days (right on 5). Suggest: set apart the days the sun forecast missed (no air setting fixes those), then backtest the forecast-air warming (now +3 F) at +0/+1/+2 F on the rest before changing it.",
   "Derived vs camera: 19 days with camera readings; derived ran -170 ft against the camera at midday. Suggest: fit a first derived correction (option 2), to be refitted each season.",
   "Monthly rule check (2026-10): 1 change(s) proposed -- see the monthly report."
  ],
  "stats": {
-  "base_days": 19,
-  "base_mean": 356,
-  "base_raw_mean": 227,
-  "base_sd": 591,
-  "base_morning": 651,
+  "base_days": 20,
+  "base_mean": 340,
+  "base_raw_mean": 214,
+  "base_sd": 594,
+  "base_morning": 589,
   "base_afternoon": 149,
   "alert_days": 4,
   "alert_hits": 0,
@@ -20,7 +20,7 @@
   "line_dropped_share_7d": 0.0,
   "cam_puunianiau_cloud_min_days": 14,
   "cam_redhill_cloud_min_days": 14,
-  "station_days": 49,
+  "station_days": 50,
   "accuracy": {
    "base_n": 17,
    "base_within": 9,
