@@ -4482,15 +4482,22 @@ CAM_STRAY_BELOW_FT = 700
 # grey-sky backup, 4,270 off a hazy pasture band under a ~5,000 base; the
 # backup scatters -1,500..+2,800 ft against the stations, fine inside the
 # 1-hour median, misleading alone). No dot when the last edge reading is older.
+# And only when it is the newest point on the camera line (Sam, 11-14: "the dot
+# is stuck"; "should only be displayed when it's newer than the mean line") --
+# 13:56's edge reading sat there while backup frames ran the line on to 14:22.
 LATEST_EDGE_MAX_MIN = 30
 
 
 def latest_edge(day: datetime, now: datetime, cam: list):
+    if not cam:
+        return None
     c = camera_rows(f"{day:%Y-%m-%d}")
     edge = {int(t[:2]) * 60 + int(t[3:5]) for t, w, v in zip(c.time, c.why, c.camera_ft)
             if v == v and v is not None and not (isinstance(w, str) and w)}
-    pts = [q for q in cam if q[0] in edge]
-    if not pts or now.hour * 60 + now.minute - pts[-1][0] > LATEST_EDGE_MAX_MIN:
+    pts = sorted(q for q in cam if q[0] in edge)       # the log is not always in time order
+    if not pts or pts[-1][0] < max(q[0] for q in cam):
+        return None
+    if now.hour * 60 + now.minute - pts[-1][0] > LATEST_EDGE_MAX_MIN:
         return None
     return pts[-1]
 
