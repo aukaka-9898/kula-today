@@ -1,18 +1,17 @@
 {
- "made": "2026-11-14 20:45",
+ "made": "2026-11-15 02:39",
  "flags": [
-  "Per-station forecast base: 51 days logged. On the later half, per-station corrections miss the derived base by 537 ft typically, the page's Kula Ag + 0 ft by 637 ft. Ready to decide whether to switch.",
-  "Accuracy: the cloudbase number was within 500 ft on only 9 of 18 days (tested at 2 in 3). Suggest: look at the misses for a pattern.",
-  "Accuracy: the thermal forecast ran 0.6 steps strong over 25 days (right on 9). Suggest: set apart the days the sun forecast missed (no air setting fixes those), then backtest the forecast-air warming (now +3 F) at +0/+1/+2 F on the rest before changing it.",
-  "Derived vs camera: 20 days with camera readings; derived ran -120 ft against the camera at midday. Suggest: fit a first derived correction (option 2), to be refitted each season.",
-  "Monthly rule check (2026-10): 1 change(s) proposed -- see the monthly report."
+  "Per-station forecast base: 51 days logged. On the later half, per-station corrections miss the derived base by 537 ft typically, the page's Kula Ag + 0 ft by 638 ft. Ready to decide whether to switch.",
+  "Accuracy: the cloudbase number was within 500 ft on only 10 of 19 days (tested at 2 in 3). Suggest: look at the misses for a pattern.",
+  "Accuracy: the thermal forecast ran 0.7 steps strong over 26 days (right on 9). Suggest: set apart the days the sun forecast missed (no air setting fixes those), then backtest the forecast-air warming (now +3 F) at +0/+1/+2 F on the rest before changing it.",
+  "Derived vs camera: 21 days with camera readings; derived ran -130 ft against the camera at midday. Suggest: fit a first derived correction (option 2), to be refitted each season."
  ],
  "stats": {
   "base_days": 21,
   "base_mean": 290,
-  "base_raw_mean": 170,
-  "base_sd": 635,
-  "base_morning": 515,
+  "base_raw_mean": 169,
+  "base_sd": 636,
+  "base_morning": 514,
   "base_afternoon": 129,
   "alert_days": 4,
   "alert_hits": 0,
@@ -22,14 +21,14 @@
   "cam_redhill_cloud_min_days": 14,
   "station_days": 51,
   "accuracy": {
-   "base_n": 18,
-   "base_within": 9,
-   "base_typical": 460.0,
-   "base_bias": 160.0,
-   "thermal_n": 25,
+   "base_n": 19,
+   "base_within": 10,
+   "base_typical": 440.0,
+   "base_bias": 150.0,
+   "thermal_n": 26,
    "thermal_right": 9,
-   "thermal_within_one": 25,
-   "thermal_bias": 0.64,
+   "thermal_within_one": 26,
+   "thermal_bias": 0.65,
    "rules": {
     "B2": [
      1,
@@ -40,8 +39,8 @@
      5
     ]
    },
-   "camera_days": 20,
-   "derived_minus_camera": -120.0,
+   "camera_days": 21,
+   "derived_minus_camera": -130.0,
    "pilots": true
   }
  }
