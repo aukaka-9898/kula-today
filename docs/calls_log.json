@@ -229,13 +229,14 @@
 "thermal": "Moderate",
 "made": "2026-11-15 18:07",
 "ft": 5500.0,
-"ft_am": 5600.0
+"ft_am": 5600.0,
+"ft_9": 5800.0
 },
 "2026-11-17": {
 "base": "Normal",
 "rule": null,
 "thermal": "Light",
-"made": "2026-11-16 09:52",
+"made": "2026-11-16 10:00",
 "ft": null
 }
 }
