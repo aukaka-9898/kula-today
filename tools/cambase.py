@@ -17,7 +17,7 @@ ROWS = (590, 706)          # read window; extended down (Sam, 2026-10-19) to ~2,
 MAX_SPREAD_FT = 600        # wider = cloud in front of the slope
 MAX_SPREAD_PX = 8          # ...unless the columns agree within this many pixels (near the ridge; 11-11)
 CLOUD_TOP_MIN = 150         # box top this bright before an edge counts (was 135; 11-11)
-CLOUD_TOP_MIN_BLUE = 165    # ...under a blue sky (11-16: lens flare, see edge_base)
+BAND_ROWS = 10              # the cloud band: brightest run of this many rows (11-16)
 SKYLINE_PX = 4             # an edge this close under the skyline is the ridge, not a base
 OVERCAST_BLUE = 20         # sky blue-minus-red at or below this: a grey, overcast sky
 
@@ -42,26 +42,32 @@ def edge_base(rgb, heights: dict):
     columns whose only edge was the skyline (visible slope clear)."""
     a = rgb.mean(axis=2)
     hs, rows, top_edges = [], [], 0
-    # Lens flare (Sam, 11-16: "Looks more like it saw lens flare"): the camera
-    # faces south, so on sunny winter middays a flare streak and veil lift the
-    # box top to 149-156 with no cloud in it; 12:45-13:11 read 3,220-3,290 off
-    # the treeline while the first real deck (13:37) read 5,570 at 177-191.
-    # Flare needs sun, so the higher floor applies only under a blue sky.
-    # Risky (Sam: "sounds a little risky but try it"): real cloud started at
-    # 155 on 11-11; watch blue-sky days for edges lost to "bright".
-    floor = CLOUD_TOP_MIN_BLUE if sky_blue(rgb) > OVERCAST_BLUE else CLOUD_TOP_MIN
+    # The cloud is the BRIGHTEST band in the column, not the box's top rows
+    # (11-16). Two misreads that day: (1) lens flare -- the camera faces south,
+    # and on sunny winter middays the flare veil lifted the top rows to 149-156
+    # with no cloud, so 12:45-13:11 read 3,220-3,290 off the treeline (Sam:
+    # "Looks more like it saw lens flare"); the veil is even, so no band stands
+    # 40 over the slope. (2) First clouds as a band on the ridge with blue sky
+    # above (Sam: "Clouds should have been detected at 13:11"; 13:20 "may have
+    # been above the box"): the top rows were sky, so no reading. Emulated on
+    # the day's 36 frames: flare rejected, 13:11/13:20 read, the grey afternoon
+    # closer to the stations, dark bases (band < 150) still to the backup, the
+    # pale pasture strip (thin, ~25-30 over the pasture) never picked.
     for x in COLS:
         col = a[ROWS[0]:ROWS[1], x - 6:x + 6].mean(axis=1)
         sm = np.convolve(col, np.ones(3) / 3, mode="same")
-        top, bot = sm[:10].mean(), sm[-20:].mean()       # slope reference: the lowest rows
+        bot = sm[-20:].mean()                            # slope reference: the lowest rows
+        runs = np.convolve(sm, np.ones(BAND_ROWS) / BAND_ROWS, mode="valid")
+        j = int(np.argmax(runs[:len(sm) - 25]))          # the band starts at row j
+        top = float(runs[j])
         # Cloud-bright floor 150, was 135 (Sam, 11-11: "nothing in the box can be
         # interpreted as that low" -- 15:47/15:56 read 3,400-3,500 from a sunlit
         # pasture/haze step on the slope, box top 134-157; real cloud 155-187 that
         # day). Watch grey-base days: a dark base under 150 falls to the backup.
-        if top < floor or top - bot < 40:                  # blue sky above, or no clear edge
+        if top < CLOUD_TOP_MIN or top - bot < 40:          # no cloud band, or no clear edge
             continue
         thr = (top + bot) / 2
-        i = next((k for k in range(5, len(sm)) if sm[k] < thr <= sm[k - 1]), None)
+        i = next((k for k in range(j + 1, len(sm)) if sm[k] < thr <= sm[k - 1]), None)
         # The skyline (Sam, 2026-10-20: "there is no way it was 6,900" -- the
         # base was well below the ridge; with the visible slope clear the only
         # edge left was bright sky against the dark ridge).
