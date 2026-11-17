@@ -3737,7 +3737,7 @@ def accuracy_line(now: datetime) -> str:
         parts.append(f"thermals right on {a['thermal_right']} of {a['thermal_n']}, "
                      f"within one step on {a['thermal_within_one']}")
     src = "pilot reports where there are any, otherwise " if a["pilots"] else ""
-    return (f'<div class="sub">Accuracy, last {ACCURACY_DAYS} days, the evening call against the day: '
+    return (f'<div class="sub">Accuracy, last {ACCURACY_DAYS} days, the yesterday call against the day: '
             f"{'; '.join(parts)}. Scored against {src}the camera and stations.</div>")
 
 
@@ -4804,12 +4804,12 @@ def recent_variance_html(before) -> str:
     each = ", ".join(f"{x:+,.0f}" for _, x, _ in reversed(days))
     n = len(days)
     head = (f"Last {n} day{'s' if n > 1 else ''} the afternoon base ran about {abs(avg):,.0f} ft "
-            f"{'above' if avg > 0 else 'below'} the evening call ({each})" if abs(avg) >= 100 else
-            f"Last {n} day{'s' if n > 1 else ''} the afternoon base came in about on the evening call ({each})")
+            f"{'above' if avg > 0 else 'below'} the yesterday call ({each})" if abs(avg) >= 100 else
+            f"Last {n} day{'s' if n > 1 else ''} the afternoon base came in about on the yesterday call ({each})")
     data = json.dumps({"days": [{"label": f"{d:%a %d}", "points": pts} for d, _, pts in days], "mean": mean})
     return f"""<div class="sub" style="margin-top:6px">{esc(head)}.</div>
-<div style="position:relative;width:100%;min-width:0;height:120px;margin-top:4px"><canvas id="recentvar" role="img" aria-label="Recent days: camera cloudbase minus the evening call"></canvas></div>
-<div class="sub">Camera cloudbase minus the evening call, by time of day: the average (bold) and each day. Above the line: the base came in higher than called.</div>
+<div style="position:relative;width:100%;min-width:0;height:120px;margin-top:4px"><canvas id="recentvar" role="img" aria-label="Recent days: camera cloudbase minus the yesterday call"></canvas></div>
+<div class="sub">Camera cloudbase minus the yesterday call, by time of day: the average (bold) and each day. Above the line: the base came in higher than called.</div>
 <script>
 (function () {{
   var d = {data}, dark = matchMedia('(prefers-color-scheme: dark)').matches, muted = '#898781', grid = dark ? '#2c2c2a' : '#e1e0d9';
@@ -4927,11 +4927,11 @@ def base_chart(obs, now, up, end, cid="basechart", title="Cloudbase, derived vs 
         name = f"{now:%B}"
         proj = None
         if ev:
-            fc_draw, fc_label = ev, f"Evening call + usual {name} day"
+            fc_draw, fc_label = ev, f"Yesterday call + usual {name} day"
         if ten:
             proj = {"points": ten, "label": f"10:00 + usual {name} day", "note": ""}
         if ev or ten:
-            note += (f" Lines: the evening call's number and the 10:00 derived base, each carried along "
+            note += (f" Lines: the yesterday call's number and the 10:00 derived base, each carried along "
                      f"a usual {name} day (2024-26 history), drawn once and never redrawn.")
     if proj and proj.get("note"):
         note += " " + proj["note"]
