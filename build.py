@@ -5258,7 +5258,7 @@ def day_review(obs, now, up, evening, rnet, word, model, fc_today, fc_pair, entr
                 call = {}
             if cat and call.get("base"):
                 want = {"low": ("Low",), "high": ("May be high", "Leaning high")}.get(cat, ("Normal",))
-                said.append(f"The evening before, the page called it {call['base'].lower()}"
+                said.append(f"Yesterday evening, the page called it {call['base'].lower()}"
                             + (f", about {call['ft']:,.0f} ft" if call.get("ft") else "")
                             + (", a hit." if call["base"] in want else ", a miss."))
             # The numbers too, once the page gives one (Sam, 10-23: "Since a
@@ -5268,7 +5268,7 @@ def day_review(obs, now, up, evening, rnet, word, model, fc_today, fc_pair, entr
                 vs = lambda v: ("right on" if abs(m - v) < 100 else
                                 f"{abs(m - v):,.0f} ft {'higher' if m > v else 'lower'} than")
                 said.append(f"Midday the base averaged about {m:,.0f} ft" + (" by the Kekoa camera" if by_cam else "")
-                            + (f", {vs(call['ft'])} the evening's number" if call.get("ft") else "")
+                            + (f", {vs(call['ft'])} yesterday evening's number" if call.get("ft") else "")
                             + (f"; the morning update said about {call['ft_am']:,.0f} ft"
                                + (" and was right on" if abs(m - call["ft_am"]) < 100 else
                                   f", off by {abs(m - call['ft_am']):,.0f} ft")
