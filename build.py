@@ -5094,7 +5094,8 @@ FLAT_TREND_FT_H = 75
 # days). The fall from the late-morning high (10:00-12:30) to the lowest base
 # after it, to 16:00, against the same measure on the month's history days;
 # noted only when it is past the month's 90th percentile. Says what happened,
-# not why (the valley-flow theory waits for more cases; Sam: "leave it").
+# not why (the valley-flow theory waits for more cases; Sam: "leave it"),
+# beyond Sam's line (11-16): "We have ideas about why this happened."
 FALL_PCT = 90
 
 
@@ -5124,7 +5125,7 @@ def afternoon_fall_note(derived: list, month: int):
     name = datetime(2000, month, 1).strftime("%B")
     return (f"Base fell about {round(fall, -2):,.0f} ft from about {_hm(hm)} to {_hm(lm)} "
             f"({round(hv, -2):,.0f} to {round(lv, -2):,.0f} ft); a usual {name} afternoon falls about "
-            f"{round(float(np.median(hist)), -2):,.0f} ft.")
+            f"{round(float(np.median(hist)), -2):,.0f} ft. We have ideas about why this happened.")
 
 
 def day_notes(derived: list, forecast: list, inv, phase: dict, fired: dict, decay=None) -> list:
