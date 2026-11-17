@@ -5340,8 +5340,11 @@ def day_review(obs, now, up, evening, rnet, word, model, fc_today, fc_pair, entr
     decay = safely(decay_time, _day0, derived) if derived else None
     notes = (safely(day_notes, derived, forecast, inv, PHASE, _patterns_today(f"{now:%Y-%m-%d}"), decay) or []
              if up is not None and len(obs) and got and got[1] else [])
-    # Its own paragraph under the summary, not a bullet (Sam, 11-16).
+    # In "What the day did" (Sam, 11-16: tried as its own paragraph, "worked
+    # better in 'what the day did'").
     fall = safely(afternoon_fall_note, derived, now.month) if notes or (up is not None and derived) else None
+    if fall:
+        notes = notes + [fall]
     trend = safely(camera_trend, derived, safely(camera_points, now) or []) if derived else None
     if trend:
         notes = notes + [trend]
@@ -5352,7 +5355,7 @@ def day_review(obs, now, up, evening, rnet, word, model, fc_today, fc_pair, entr
         said.append(gaps)
     if now.hour >= 16:
         safely(log_fuzzy_outcome, now)
-    return {"date": f"{now:%Y-%m-%d}", "word": word, "summary": " ".join(said), "anomaly": fall or "",
+    return {"date": f"{now:%Y-%m-%d}", "word": word, "summary": " ".join(said),
             "therm": therm, "base": chart_html, "notes": notes,
             # The variance chart left the wrap-up for the Forecast panel's recent
             # average (Sam, 11-10: "Drop the variance chart from the daily wrap up.
@@ -5848,9 +5851,7 @@ def build() -> str:
         today_title = f"{'Today' if rd == now.date() else 'Yesterday'} · {rd:%a %d %b}"
         today_chip = rating_chip(review["word"])
         badge_html = ""                                   # the wrap-up lists the day's gaps
-        summary_html =(f'<p class="summary">{esc(review["summary"])}</p>'
-                        + (f'<p class="summary">{esc(review["anomaly"])}</p>' if review.get("anomaly") else "")
-                        + review.get("chart", ""))
+        summary_html =f'<p class="summary">{esc(review["summary"])}</p>' + review.get("chart", "")
         therm_html, line_html = review["therm"], review["line"]
         up_html, wind_html = review["up"], review["wind"]
         base_label, base_html, ceil_html = "Cloudbase", review.get("base", ""), ""
