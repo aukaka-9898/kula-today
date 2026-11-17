@@ -1268,6 +1268,105 @@ PUSH_RED_HILL_MPH = 8
 PUSH_KULA_AG_MPH = 5
 
 
+# The valley (isthmus) flow, logged for Sam's hypothesis (11-16): when the
+# isthmus trade flow is MARGINAL (light/variable, not north through to
+# Maalaea), hot moist valley air pools and the Kula upslope pulls it round the
+# Kealia corner -> afternoon base drop. 11-15 valley N 17-22 mph, base held;
+# 11-16 light/variable 3-7 mph to 11:00, then the flow arrived at Veterans Hwy
+# and Kihei from the WEST with dew 70-71 and the base fell 6,100 -> 4,000.
+# "If it holds there could have been a warning as early as 1100." Logging only;
+# nothing on the page. api.weather.gov keeps the MECO stations ~7 days, so each
+# run after 16:00 fills any missing day still in reach. Kihei (Mesonet "Lipoa",
+# Lipoa Pkwy) comes from HCDP.
+VALLEY_LOG = HERE / "docs" / "valley_log.csv"
+VALLEY_NWS = (("106HE", "Mokulele Hwy"), ("005HE", "Maalaea"), ("125HE", "Lower Maalaea Rd"),
+              ("053HE", "Veterans Hwy"), ("044HE", "MECO Naalaea Rd"))
+VALLEY_HCDP = (("0121", "Kihei Lipoa"),)
+VALLEY_HOURS = (8, 16)
+VALLEY_BACK_DAYS = 6
+
+
+def _hourly(rows: list) -> list:
+    """rows (hour, temp_f, dew_f, dir, mph) -> one row per hour: means, vector-mean direction."""
+    out = []
+    df = pd.DataFrame(rows, columns=["hour", "temp_f", "dew_f", "dir", "mph"])
+    for h, g in df.groupby("hour"):
+        w = g.dropna(subset=["dir", "mph"])
+        d = None
+        if len(w):
+            u = (w.mph * np.sin(np.radians(w.dir))).mean()
+            v = (w.mph * np.cos(np.radians(w.dir))).mean()
+            d = round(float(np.degrees(np.arctan2(u, v)) % 360)) if (u or v) else None
+        out.append((int(h), round(g.temp_f.mean(), 1) if g.temp_f.notna().any() else None,
+                    round(g.dew_f.mean(), 1) if g.dew_f.notna().any() else None,
+                    d, round(g.mph.mean(), 1) if g.mph.notna().any() else None, len(g)))
+    return out
+
+
+def _valley_nws(sid: str, day: str) -> list:
+    r = requests.get(f"https://api.weather.gov/stations/{sid}/observations", headers=cv.HEAD, timeout=45,
+                     params={"start": f"{day}T{VALLEY_HOURS[0]:02d}:00:00-10:00",
+                             "end": f"{day}T{VALLEY_HOURS[1]:02d}:59:00-10:00"})
+    r.raise_for_status()
+    rows = []
+    for f in r.json().get("features", []):
+        p = f["properties"]
+        g = lambda k: (p.get(k) or {}).get("value")
+        t, td, d, sp = g("temperature"), g("dewpoint"), g("windDirection"), g("windSpeed")
+        rows.append((pd.Timestamp(p["timestamp"]).tz_convert(HST).hour,
+                     None if t is None else t * 9 / 5 + 32, None if td is None else td * 9 / 5 + 32,
+                     d, None if sp is None else sp / 1.609344))
+    return rows
+
+
+def _valley_hcdp(hid: str, day: str) -> list:
+    got = mesonet.get("/mesonet/db/measurements", location="hawaii", station_ids=hid,
+                      var_ids="Tair_1_Avg,RH_1_Avg,WS_1_Avg,WDrs_1_Avg", row_mode="json", limit=100000,
+                      start_date=f"{day}T{VALLEY_HOURS[0]:02d}:00:00-10:00",
+                      end_date=f"{day}T{VALLEY_HOURS[1]:02d}:59:00-10:00")
+    by = {}
+    for r in got:
+        if r.get("value") is not None:
+            by.setdefault(r["timestamp"], {})[r["variable"]] = float(r["value"])
+    rows = []
+    for ts, v in by.items():
+        tc, rh = v.get("Tair_1_Avg"), v.get("RH_1_Avg")
+        rows.append((pd.Timestamp(ts).tz_convert(HST).hour,
+                     None if tc is None else tc * 9 / 5 + 32,
+                     dewpoint_c(tc, rh) * 9 / 5 + 32 if tc is not None and rh and 0 < rh <= 100 else None,
+                     v.get("WDrs_1_Avg"), None if v.get("WS_1_Avg") is None else v["WS_1_Avg"] * 2.23694))
+    return rows
+
+
+def log_valley(now: datetime) -> None:
+    if now.hour < 16:
+        return
+    have = set()
+    if VALLEY_LOG.exists():
+        have = set(pd.read_csv(VALLEY_LOG, dtype={"date": str}, usecols=["date"]).date)
+    days = [f"{now - timedelta(days=k):%Y-%m-%d}" for k in range(VALLEY_BACK_DAYS, -1, -1)]
+    new = []
+    for day in [d for d in days if d not in have]:
+        for sid, name in VALLEY_NWS:
+            try:
+                rows = _valley_nws(sid, day)
+            except Exception:
+                continue
+            new += [(day, h, name, *r) for h, *r in _hourly(rows)]
+        for hid, name in VALLEY_HCDP:
+            try:
+                rows = _valley_hcdp(hid, day)
+            except Exception:
+                continue
+            new += [(day, h, name, *r) for h, *r in _hourly(rows)]
+    if not new:
+        return
+    df = pd.DataFrame(new, columns=["date", "hour", "station", "temp_f", "dew_f", "dir", "mph", "n"])
+    if VALLEY_LOG.exists():
+        df = pd.concat([pd.read_csv(VALLEY_LOG, dtype={"date": str}), df])
+    df.sort_values(["date", "station", "hour"]).to_csv(VALLEY_LOG, index=False)
+
+
 def log_north_push(obs: pd.DataFrame, now: datetime) -> None:
     if now.hour < 15:
         return
@@ -5681,6 +5780,7 @@ def build() -> str:
     safely(log_soil, now)
     if len(obs):
         safely(log_north_push, obs, now)
+    safely(log_valley, now)
     safely(log_forecast_latest, now)
     safely(review_summary, now)
     review, today_kind, today_title = None, f"Measured today · {now:%H:%M} HST", "Today"
