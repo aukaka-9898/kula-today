@@ -4939,3 +4939,9 @@ date,time,station,obs_time,temp_f,dew_f,dew_from,lcl_ft,ti_c,word,camera,camera_
 2026-11-17,09:08,Nonokio,08:50,77.6,71.3,own,1440.0,-0.53,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",2480.0
 2026-11-17,09:08,Mokuhano,08:50,78.4,70.8,own,1740.0,-0.92,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",2480.0
 2026-11-17,09:08,Moku o Loe,09:00,78.3,,,,,,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",2480.0
+2026-11-17,09:22,Kaneohe runway,08:57,78.1,70.0,own,1850.0,-0.67,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",2750.0
+2026-11-17,09:22,Heeia,08:30,76.5,74.9,own,390.0,-0.33,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",2750.0
+2026-11-17,09:22,Maunawili,09:00,76.6,71.8,own,1100.0,0.28,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",2750.0
+2026-11-17,09:22,Nonokio,08:50,77.6,71.3,own,1440.0,-0.53,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",2750.0
+2026-11-17,09:22,Mokuhano,08:50,78.4,70.8,own,1740.0,-0.92,Flat,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",2750.0
+2026-11-17,09:22,Moku o Loe,09:18,78.3,,,,,,"Cloud base at or below about 2,200 ft. Greenwall and Konahuanui are in clouds.",2750.0
