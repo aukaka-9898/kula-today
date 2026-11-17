@@ -5086,6 +5086,44 @@ FLAT_RANGE_FT = 300
 FLAT_TREND_FT_H = 75
 
 
+# An unusual afternoon fall (Sam, 11-16: "does the recap cite the obvious
+# anomaly" -- the base fell ~2,300 ft after 12:00, bottom 3% of 60 November
+# days). The fall from the late-morning high (10:00-12:30) to the lowest base
+# after it, to 16:00, against the same measure on the month's history days;
+# noted only when it is past the month's 90th percentile. Says what happened,
+# not why (the valley-flow theory waits for more cases; Sam: "leave it").
+FALL_PCT = 90
+
+
+def _fall(vals: list):
+    """(high, its minute, low after it, its minute, fall) from [minute, ft] points."""
+    am = [(m, v) for m, v in vals if 600 <= m <= 750]
+    if not am:
+        return None
+    hm, hv = max(am, key=lambda q: q[1])
+    after = [(m, v) for m, v in vals if hm < m <= 960]
+    if not after:
+        return None
+    lm, lv = min(after, key=lambda q: q[1])
+    return hv, hm, lv, lm, hv - lv
+
+
+def afternoon_fall_note(derived: list, month: int):
+    got = _fall(sorted(derived))
+    if not got:
+        return None
+    hv, hm, lv, lm, fall = got
+    d = pd.read_csv(HERE / "history" / "days.csv", parse_dates=["date"])
+    d = d[d.date.dt.month == month].dropna(subset=[f"b{h}" for h in range(10, 17)])
+    hist = [f[4] for f in (_fall([[h * 60, r[f"b{h}"]] for h in range(10, 17)]) for _, r in d.iterrows()) if f]
+    if len(hist) < 20 or fall < np.percentile(hist, FALL_PCT):
+        return None
+    name = datetime(2000, month, 1).strftime("%B")
+    return (f"Base fell about {round(fall, -2):,.0f} ft from about {_hm(hm)} to {_hm(lm)} "
+            f"({round(hv, -2):,.0f} to {round(lv, -2):,.0f} ft); a usual {name} afternoon falls about "
+            f"{round(float(np.median(hist)), -2):,.0f} ft.")
+
+
 def day_notes(derived: list, forecast: list, inv, phase: dict, fired: dict, decay=None) -> list:
     """What the day did, for the review (Sam, 2026-10-17: "The daily recap can
     include such observations"). Fixed rules on the saved data, one per kind
@@ -5299,6 +5337,9 @@ def day_review(obs, now, up, evening, rnet, word, model, fc_today, fc_pair, entr
     decay = safely(decay_time, _day0, derived) if derived else None
     notes = (safely(day_notes, derived, forecast, inv, PHASE, _patterns_today(f"{now:%Y-%m-%d}"), decay) or []
              if up is not None and len(obs) and got and got[1] else [])
+    fall = safely(afternoon_fall_note, derived, now.month) if notes or (up is not None and derived) else None
+    if fall:
+        notes = notes + [fall]
     trend = safely(camera_trend, derived, safely(camera_points, now) or []) if derived else None
     if trend:
         notes = notes + [trend]
