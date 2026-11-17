@@ -3750,7 +3750,11 @@ def rules_line() -> str:
     off = [f"{rules.RULES[k]['name']}" for k, v in st.get("rules", {}).items()
            if not v.get("active", True) and k in rules.RULES]
     tail = "all holding" if not off else "switched off: " + ", ".join(off)
-    return f'<div class="sub">Forecast rules last checked {when:%B %Y}: {tail}.</div>'
+    # "checked" is the month scored; the run is early the next month (the 2nd),
+    # so the line dates the run (Sam, 11-16: "Should it not be dated November?").
+    ran = (when.replace(day=28) + timedelta(days=5)).replace(day=1)
+    return (f'<div class="sub">Forecast rules last checked {ran:%B %Y}, through {when:%B}: '
+            f'{tail}.</div>')
 
 
 def write_scorecard(obs, now, up, end, word, entries) -> None:
