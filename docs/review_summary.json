@@ -1,18 +1,19 @@
 {
- "made": "2026-11-17 17:37",
+ "made": "2026-11-17 17:52",
  "flags": [
+  "Summit-cloud alert so far: 0 of 5 alerted days had cloud come over; 0 intrusions came without an alert.",
   "Per-station forecast base: 53 days logged. On the later half, per-station corrections miss the derived base by 503 ft typically, the page's Kula Ag + 0 ft by 609 ft. Ready to decide whether to switch.",
   "Accuracy: the thermal forecast ran 0.7 steps strong over 28 days (right on 9). Suggest: set apart the days the sun forecast missed (no air setting fixes those), then backtest the forecast-air warming (now +3 F) at +0/+1/+2 F on the rest before changing it.",
   "Derived vs camera: 23 days with camera readings; derived ran -110 ft against the camera at midday. Suggest: fit a first derived correction (option 2), to be refitted each season."
  ],
  "stats": {
-  "base_days": 21,
-  "base_mean": 237,
-  "base_raw_mean": 165,
-  "base_sd": 611,
-  "base_morning": 374,
+  "base_days": 22,
+  "base_mean": 224,
+  "base_raw_mean": 153,
+  "base_sd": 613,
+  "base_morning": 334,
   "base_afternoon": 169,
-  "alert_days": 4,
+  "alert_days": 5,
   "alert_hits": 0,
   "intrusions_missed": 0,
   "line_dropped_share_7d": 0.0,
