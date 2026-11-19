@@ -626,7 +626,107 @@ def surface_hours() -> dict:
 def rrfs() -> dict:
     import sounding as sd
     path = sd.fetch("RRFS", station="phng")
-    return {"run": sd.run_time(path), "profiles": sd.profiles(path, "RRFS")}
+    return {"run": sd.run_time(path), "profiles": sd.profiles(path, "RRFS"), "path": path}
+
+
+# RRFS's own cloud forecast, logged to see how it tracks (Sam, 11-18: "Let's
+# just dive into RRFS and see how it tracks going forward"; the aim is the
+# exceptional high-base day). The "downrange base" on the page is Open-Meteo's
+# surface air, not RRFS; here RRFS speaks for itself. Per run, for 11:00-14:00
+# of the target day: CDBP, the model's cloud-base pressure (BUFKIT surface
+# section), as feet; the lowest saturated level of its profile (T - Td <= 1 C);
+# its 2 m air's condensation level; its strongest inversion base. Logged once
+# each evening (first build from 18:00, for tomorrow) and morning (first build
+# from 07:00, for today); the day's midday ceilometer (lowest layer, clear =
+# 12,000) is logged from 15:00 as the outcome. Logging only; nothing on the page.
+RRFS_LOG = HERE / "docs" / "makapuu_rrfs.csv"
+RRFS_HOURS = (11, 14)
+RRFS_FIELDS = ["logged", "kind", "day", "run", "hour", "cdb_ft", "sat_ft", "lcl2m_ft", "inv_ft", "ceil_ft", "clear_share"]
+
+
+def rrfs_surface(path) -> dict:
+    """{UTC time: {field: value}} from a BUFKIT file's surface section."""
+    import pandas as pd
+    text = Path(path).read_text(errors="replace")
+    i = text.find("STN YYMMDD/HHMM")
+    if i < 0:
+        return {}
+    toks = text[i:].split()
+    j = next(k for k, t in enumerate(toks) if re.fullmatch(r"-?\d+", t) and k > 2)
+    fields, out = toks[:j], {}
+    for k in range(j, len(toks) - len(fields) + 1, len(fields)):
+        rec = dict(zip(fields, toks[k:k + len(fields)]))
+        st = re.fullmatch(r"(\d{6})/(\d{4})", rec.get("YYMMDD/HHMM", ""))
+        if not st:
+            break
+        d, hm = st.groups()
+        t = pd.Timestamp(f"20{d[:2]}-{d[2:4]}-{d[4:]} {hm[:2]}:{hm[2:]}", tz="UTC")
+        out[t] = {f: float(v) for f, v in rec.items() if f not in ("STN", "YYMMDD/HHMM")}
+    return out
+
+
+def _rrfs_rows(now: datetime, air: dict, day, kind: str) -> list:
+    import numpy as np
+    import pandas as pd
+    import sounding as sd
+    sfc = rrfs_surface(air["path"])
+    rows = []
+    for h in range(RRFS_HOURS[0], RRFS_HOURS[1] + 1):
+        when = datetime.combine(day, datetime.min.time()).replace(hour=h, tzinfo=HST)
+        prof = _profile(air, when)
+        s = sfc.get(pd.Timestamp(when).tz_convert("UTC"))
+        if prof is None:
+            continue
+        pr = prof.sort_values("pres")
+        cdb = None
+        if s and 300 < s.get("CDBP", -1) < 1100 and s["CDBP"] != 999:
+            cdb = float(np.interp(-np.log(s["CDBP"]), -np.log(pr.pres), pr.height_ft))
+        up = prof[(prof.height_ft >= 300) & (prof.height_ft <= 12000)].sort_values("height_ft")
+        wet = up[(up.temp_c - up.dewpoint_c) <= 1.0]
+        sat = float(wet.height_ft.iloc[0]) if len(wet) else None
+        lcl = None
+        if s and s.get("T2MS", -9999) > -100 and s.get("TD2M", -9999) > -100:
+            lcl = (s["T2MS"] - s["TD2M"]) * 125 * 3.28084
+        inv = sd.inversion(prof, floor_ft=INVERSION_BAND[0], ceiling_ft=INVERSION_BAND[1])
+        r = lambda v: "" if v is None else round(float(v), -1)
+        # "none" = the model has no cloud / no saturated level / no inversion
+        # there (the high-day signal); blank = no data for that field.
+        rows.append([f"{now:%Y-%m-%d %H:%M}", kind, f"{day}", f"{air['run']:%Y-%m-%d %H}Z", h,
+                     r(cdb) if cdb is not None else ("none" if s else ""), r(sat) if sat is not None else "none",
+                     r(lcl), r(inv["base_ft"]) if inv else "none", "", ""])
+    return rows
+
+
+def log_rrfs(now: datetime, air: dict | None) -> None:
+    import csv
+    import pandas as pd
+    have = pd.read_csv(RRFS_LOG, dtype=str) if RRFS_LOG.exists() else pd.DataFrame(columns=RRFS_FIELDS)
+    done = set(zip(have.day, have.kind))
+    rows = []
+    if air and now.hour >= 18 and (f"{now.date() + timedelta(days=1)}", "evening") not in done:
+        rows += _rrfs_rows(now, air, now.date() + timedelta(days=1), "evening")
+    if air and 7 <= now.hour < 11 and (f"{now.date()}", "morning") not in done:
+        rows += _rrfs_rows(now, air, now.date(), "morning")
+    if now.hour >= 15 and (f"{now.date()}", "ceilometer") not in done:
+        ceil = [ft for m, ft in ceilometer_day(now.date()) if 660 <= m <= 900]
+        rows_all = requests.get(METAR.replace("hours=3", "hours=30"), timeout=30).json()
+        mid = [m for m in rows_all if 11 <= datetime.fromtimestamp(m["obsTime"], timezone.utc).astimezone(HST).hour <= 14
+               and datetime.fromtimestamp(m["obsTime"], timezone.utc).astimezone(HST).date() == now.date()]
+        clear = sum(1 for m in mid if (m.get("cover") or "").startswith(("CLR", "SKC")) and not any(
+            c.get("base") for c in m.get("clouds") or []))
+        lows = ceil + [12000] * clear
+        if lows:
+            import numpy as np
+            rows.append([f"{now:%Y-%m-%d %H:%M}", "ceilometer", f"{now.date()}", "", "", "", "", "", "",
+                         round(float(np.median(lows)), -1), round(clear / max(len(lows), 1), 2)])
+    if not rows:
+        return
+    new = not RRFS_LOG.exists()
+    with open(RRFS_LOG, "a", newline="", encoding="utf-8") as f:
+        w = csv.writer(f)
+        if new:
+            w.writerow(RRFS_FIELDS)
+        w.writerows(rows)
 
 
 def _profile(air: dict, when: datetime):
@@ -1166,6 +1266,7 @@ def write(now: datetime) -> None:
     obs, obs_t = got if got else (None, None)
     k = _try(kaneohe, problems=problems)
     air = _try(rrfs, problems=problems)
+    _try(log_rrfs, now, air, problems=problems)
     surf = _try(surface_hours, problems=problems) or {}
     hour_now = now.replace(minute=0, second=0, microsecond=0)
 
