@@ -806,13 +806,16 @@ def cam_state(text) -> str:
     return "bound"
 
 
-def wrap_chart(camera: list, lost: list | None = None) -> str:
+def wrap_chart(camera: list, lost: list | None = None, ceil: list | None = None) -> str:
     """The day's downrange base: camera ceilings over the camera's hours; frames
-    with the crest in cloud or hidden as amber dots on the axis (no height)."""
-    lost = lost or []
-    data = json.dumps({"camera": camera, "lost": lost})
+    with the crest in cloud at Kāneʻohe's lowest ceilometer layer (blue) where it
+    is under the crest; the rest of the crest-in-cloud or hidden frames as amber
+    dots on the axis (no height)."""
+    lost, ceil = lost or [], ceil or []
+    data = json.dumps({"camera": camera, "lost": lost, "ceil": ceil})
     return f"""<div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted);margin:2px 0 4px">
 <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#3f9d5a;vertical-align:middle"></span> Kāneʻohe Bay camera (base no higher than)</span>
+{'<span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#3b7dd8;vertical-align:middle"></span> Crest in cloud: Kāneʻohe ceilometer, lowest layer</span>' if ceil else ''}
 {'<span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#e0a100;vertical-align:middle"></span> Crest in cloud or hidden</span>' if lost else ''}</div>
 <div style="position:relative;width:100%;min-width:0;height:220px"><canvas id="wrapchart" role="img" aria-label="Downrange cloud base through the day"></canvas></div>
 <script>
@@ -820,12 +823,14 @@ def wrap_chart(camera: list, lost: list | None = None) -> str:
   var d = {data}, pt = function (a) {{ return {{x: a[0], y: a[1]}}; }};
   var dark = matchMedia('(prefers-color-scheme: dark)').matches, muted = '#898781', grid = dark ? '#2c2c2a' : '#e1e0d9';
   var hm = function (m) {{ return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); }};
-  var ys = d.camera.map(function (a) {{ return a[1]; }});
+  var ys = d.camera.concat(d.ceil).map(function (a) {{ return a[1]; }});
+  if (!ys.length) ys = [2000];
   var ymin = Math.min(1500, Math.floor(Math.min.apply(null, ys) / 500) * 500);
   new Chart(document.getElementById('wrapchart'), {{
     type: 'line',
     data: {{ datasets: [
       {{ label: 'Camera', data: d.camera.map(pt), showLine: false, pointRadius: 3, pointBackgroundColor: '#3f9d5a', borderColor: '#3f9d5a' }},
+      {{ label: 'Ceilometer', data: d.ceil.map(pt), showLine: false, pointRadius: 3, pointBackgroundColor: '#3b7dd8', borderColor: '#3b7dd8' }},
       {{ label: 'Lost', data: d.lost.map(function (a) {{ return {{x: a[0], y: ymin, t: a[1]}}; }}), showLine: false, clip: false,
          pointRadius: 3, pointBackgroundColor: '#e0a100', borderColor: '#e0a100' }}
     ] }},
@@ -833,6 +838,7 @@ def wrap_chart(camera: list, lost: list | None = None) -> str:
       plugins: {{ legend: {{ display: false }}, tooltip: {{ callbacks: {{
         title: function (i) {{ return hm(i[0].parsed.x); }},
         label: function (i) {{ return i.dataset.label === 'Lost' ? i.raw.t
+          : i.dataset.label === 'Ceilometer' ? 'Crest in cloud; ceilometer ' + Math.round(i.parsed.y).toLocaleString() + ' ft'
           : 'Base no higher than ' + Math.round(i.parsed.y).toLocaleString() + ' ft'; }} }} }} }},
       scales: {{
         x: {{ type: 'linear', min: {WRAP_SPAN[0]}, max: {WRAP_SPAN[1]}, ticks: {{ stepSize: 60, color: muted, callback: function (v) {{ return hm(v); }} }}, grid: {{ display: false }} }},
@@ -1070,8 +1076,22 @@ def day_wrap(now: datetime, forecast_word: str | None, problems: list) -> str:
         rows["state"] = rows.camera.map(cam_state)
         camera_pts = [[int(m), float(r.bound)] for m, r in rows.iterrows()
                       if r.state == "bound" and r.bound == r.bound]
+        # Capped frames at Kāneʻohe's lowest ceilometer layer when it is under
+        # the crest (Sam, 11-18: "add it to the chart"), as the page line does;
+        # the report at or before the frame, within an hour.
+        ceil = _try(ceilometer_day, now.date(), problems=problems) or []
+        ceil_pts = []
+        for m, r in rows.iterrows():
+            if r.state != "capped":
+                continue
+            got = [ft for cm, ft in ceil if int(m) - 60 <= cm <= int(m)]
+            top = re.search(r"at or below about ([\d,]+) ft", str(r.camera))
+            top = int(top.group(1).replace(",", "")) if top else None
+            if got and (top is None or got[-1] < top):
+                ceil_pts.append([int(m), float(got[-1])])
+        on_ceil = {m for m, _ in ceil_pts}
         lost = [[int(m), "Crest in cloud" if r.state == "capped" else "Hidden: cloud or rain"]
-                for m, r in rows.iterrows() if r.state != "bound"]
+                for m, r in rows.iterrows() if r.state != "bound" and int(m) not in on_ceil]
         mid = rows[(rows.index >= 660) & (rows.index <= 840)]
         air = runway[(runway.m >= 660) & (runway.m <= 840)].lcl_ft.dropna()
         air_txt = f" Kaneohe's air would condense at about {round(float(air.median()), -2):,.0f} ft." if len(air) else ""
@@ -1079,8 +1099,10 @@ def day_wrap(now: datetime, forecast_word: str | None, problems: list) -> str:
             share = mid.state.value_counts(normalize=True)
             if share.get("capped", 0) >= 0.5:
                 at = [int(x.replace(",", "")) for x in mid.camera.str.extract(r"at or below about ([\d,]+) ft")[0].dropna()]
+                cm = [ft for m, ft in ceil_pts if 660 <= m <= 840]
                 said.append("Midday cloud sat on the Koʻolau crest" +
-                            (f": base at or below about {round(float(np.median(at)), -2):,.0f} ft (Kāneʻohe Bay camera)." if at else ".")
+                            (f": base about {round(float(np.median(cm)), -2):,.0f} ft by Kāneʻohe's ceilometer." if cm else
+                             f": base at or below about {round(float(np.median(at)), -2):,.0f} ft (Kāneʻohe Bay camera)." if at else ".")
                             + air_txt)
             elif share.get("hidden", 0) >= 0.5:
                 said.append("Midday the Koʻolau was hidden by cloud or rain." + air_txt)
@@ -1111,8 +1133,8 @@ def day_wrap(now: datetime, forecast_word: str | None, problems: list) -> str:
             said.append(("Thermals", f"{word} (index {peak:.1f} °C, the Kaneohe runway's air against the RRFS profile, "
                          "10:00–14:00)" + (", as forecast." if forecast_word and forecast_word.lower() == word.lower()
                                            else f"; the forecast said {forecast_word.lower()}." if forecast_word else ".")))
-        if camera_pts or lost:
-            chart = wrap_chart(camera_pts, lost)
+        if camera_pts or lost or ceil_pts:
+            chart = wrap_chart(camera_pts, lost, ceil_pts)
     if not said and not chart:
         return None
     return "".join(f'<p class="summary"><strong>{esc(s[0])}.</strong> {esc(s[1])}</p>' if isinstance(s, tuple)
@@ -1406,6 +1428,18 @@ def lihue_raob(now: datetime):
                              "wind_dir": d.wind_dir.to_numpy()[idx], "wind_kt": d.wind_ms.to_numpy()[idx] * 1.94384})
         return t, _levels(prof)
     return None, []
+
+
+def ceilometer_day(day) -> list:
+    """Kāneʻohe's lowest ceilometer layer through a day: [(minute, ft)], any cover."""
+    rows = requests.get(METAR.replace("hours=3", "hours=30"), timeout=30).json()
+    out = []
+    for m in rows:
+        t = datetime.fromtimestamp(m["obsTime"], timezone.utc).astimezone(HST)
+        bases = [c["base"] for c in m.get("clouds") or [] if c.get("base") is not None]
+        if t.date() == day and bases:
+            out.append((t.hour * 60 + t.minute, min(bases)))
+    return sorted(out)
 
 
 def metar_hours(hours: int = 40) -> dict:
