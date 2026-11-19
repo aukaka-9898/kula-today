@@ -742,10 +742,11 @@ def best_note(ca: dict | None, fly_hours: int, day) -> str:
         return ""
     month = datetime(2000, day.month, 1).strftime("%B")
     why = f"the air at 4,000 ft about {-ca['anom']:.0f} °C colder than usual for {month} (RRFS)"
+    # Only flyable forecasts are flagged (Sam, 11-18: "skip the not flyable
+    # days. Just flag good flying forecasts"); the log keeps every cold day.
     if fly_hours >= 2:
         return f"Possible best day: {why}. Days like this usually bring a high base and good thermals."
-    return (f"Cold air low down: {why}, so a high base and good thermals are likely, "
-            "but the wind forecast isn't flyable.")
+    return ""
 
 
 def fly_hours(rows: list) -> int:
