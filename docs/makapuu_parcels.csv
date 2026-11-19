@@ -5318,3 +5318,9 @@ date,time,station,obs_time,temp_f,dew_f,dew_from,lcl_ft,ti_c,word,camera,camera_
 2026-11-18,17:52,Heeia,17:30,76.5,72.0,own,1030.0,-0.9,Flat,,
 2026-11-18,17:52,Maunawili,17:30,75.8,68.8,own,1610.0,-0.19,Flat,,
 2026-11-18,17:52,Moku o Loe,17:48,77.2,,,,,,,
+2026-11-19,08:08,Kaneohe runway,07:57,77.0,64.9,own,2750.0,-0.73,Flat,"Cloud base no higher than about 4,500 ft; the whole ridge is clear.",4490.0
+2026-11-19,08:08,Heeia,07:30,76.2,69.2,own,1590.0,-0.69,Flat,"Cloud base no higher than about 4,500 ft; the whole ridge is clear.",4490.0
+2026-11-19,08:08,Maunawili,07:45,75.5,67.8,own,1740.0,-0.12,Flat,"Cloud base no higher than about 4,500 ft; the whole ridge is clear.",4490.0
+2026-11-19,08:08,Nonokio,07:30,76.5,66.7,own,2230.0,-0.59,Flat,"Cloud base no higher than about 4,500 ft; the whole ridge is clear.",4490.0
+2026-11-19,08:08,Mokuhano,07:30,76.8,66.0,own,2440.0,-0.7,Flat,"Cloud base no higher than about 4,500 ft; the whole ridge is clear.",4490.0
+2026-11-19,08:08,Moku o Loe,08:00,77.4,,,,,,"Cloud base no higher than about 4,500 ft; the whole ridge is clear.",4490.0
