@@ -815,7 +815,7 @@ def wrap_chart(camera: list, lost: list | None = None, ceil: list | None = None)
     data = json.dumps({"camera": camera, "lost": lost, "ceil": ceil})
     return f"""<div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted);margin:2px 0 4px">
 <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#3f9d5a;vertical-align:middle"></span> Kāneʻohe Bay camera (base no higher than)</span>
-{'<span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#3b7dd8;vertical-align:middle"></span> Crest in cloud: Kāneʻohe ceilometer, lowest layer</span>' if ceil else ''}
+{'<span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#3b7dd8;vertical-align:middle"></span> Kāneʻohe ceilometer, lowest layer</span>' if ceil else ''}
 {'<span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#e0a100;vertical-align:middle"></span> Crest in cloud or hidden</span>' if lost else ''}</div>
 <div style="position:relative;width:100%;min-width:0;height:220px"><canvas id="wrapchart" role="img" aria-label="Downrange cloud base through the day"></canvas></div>
 <script>
@@ -838,7 +838,7 @@ def wrap_chart(camera: list, lost: list | None = None, ceil: list | None = None)
       plugins: {{ legend: {{ display: false }}, tooltip: {{ callbacks: {{
         title: function (i) {{ return hm(i[0].parsed.x); }},
         label: function (i) {{ return i.dataset.label === 'Lost' ? i.raw.t
-          : i.dataset.label === 'Ceilometer' ? 'Crest in cloud; ceilometer ' + Math.round(i.parsed.y).toLocaleString() + ' ft'
+          : i.dataset.label === 'Ceilometer' ? 'Ceilometer, lowest layer ' + Math.round(i.parsed.y).toLocaleString() + ' ft'
           : 'Base no higher than ' + Math.round(i.parsed.y).toLocaleString() + ' ft'; }} }} }} }},
       scales: {{
         x: {{ type: 'linear', min: {WRAP_SPAN[0]}, max: {WRAP_SPAN[1]}, ticks: {{ stepSize: 60, color: muted, callback: function (v) {{ return hm(v); }} }}, grid: {{ display: false }} }},
@@ -1133,8 +1133,16 @@ def day_wrap(now: datetime, forecast_word: str | None, problems: list) -> str:
             said.append(("Thermals", f"{word} (index {peak:.1f} °C, the Kaneohe runway's air against the RRFS profile, "
                          "10:00–14:00)" + (", as forecast." if forecast_word and forecast_word.lower() == word.lower()
                                            else f"; the forecast said {forecast_word.lower()}." if forecast_word else ".")))
+        # (A runway condensation-level line was tried on the chart and dropped,
+        # Sam 11-18: "ceilometer jibes with cam pretty well. LCL seems useless"
+        # -- trade cumulus arrive from the ocean; the runway's heated air
+        # swings by the hour and in 400 ft steps from whole-degree reports.)
         if camera_pts or lost or ceil_pts:
-            chart = wrap_chart(camera_pts, lost, ceil_pts)
+            # Every ceilometer report on the chart, at its own time (Sam, 11-18:
+            # "show all ceilometer points on the chart"); the matched ones still
+            # drive the midday line and leave the amber row.
+            all_ceil = [[m, float(ft)] for m, ft in ceil if WRAP_SPAN[0] <= m <= WRAP_SPAN[1]]
+            chart = wrap_chart(camera_pts, lost, all_ceil)
     if not said and not chart:
         return None
     return "".join(f'<p class="summary"><strong>{esc(s[0])}.</strong> {esc(s[1])}</p>' if isinstance(s, tuple)
