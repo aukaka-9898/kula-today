@@ -488,5 +488,75 @@
 "ti_c": -5.73,
 "word": "Moderate"
 }
+},
+"2026-11-18": {
+"made": "2026-11-18 16:52",
+"sounding": "2026-11-18 18Z",
+"stations": {
+"Kaonoulu 1": {
+"elev_ft": 1990.0,
+"ti_c": -4.32,
+"word": "Light",
+"hours": 5
+},
+"Keokea": {
+"elev_ft": 2849.0,
+"ti_c": -4.97,
+"word": "Light",
+"hours": 5
+},
+"Kula Ag": {
+"elev_ft": 3162.0,
+"ti_c": -3.96,
+"word": "Light",
+"hours": 5
+},
+"MECO Kaamana St": {
+"elev_ft": 2626.0,
+"ti_c": -2.92,
+"word": "Flat",
+"hours": 5
+},
+"MECO Kula": {
+"elev_ft": 2235.0,
+"ti_c": -3.31,
+"word": "Flat",
+"hours": 5
+},
+"MECO Lower Kimo Dr": {
+"elev_ft": 2716.0,
+"ti_c": -2.75,
+"word": "Flat",
+"hours": 5
+},
+"MECO Naalaea Rd": {
+"elev_ft": 1759.0,
+"ti_c": -3.32,
+"word": "Flat",
+"hours": 5
+},
+"Pulehu": {
+"elev_ft": 1402.0,
+"ti_c": -5.34,
+"word": "Light",
+"hours": 5
+}
+},
+"kula_ag": {
+"elev_ft": 3162.0,
+"ti_c": -3.96,
+"word": "Light",
+"hours": 5
+},
+"lower_mean": {
+"ti_c": -3.66,
+"word": "Light",
+"stations": 6
+},
+"strongest_below": {
+"station": "Pulehu",
+"ti_c": -5.34,
+"word": "Light"
+}
 }
 }
