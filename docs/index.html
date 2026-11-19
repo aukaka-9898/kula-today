@@ -101,12 +101,12 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><a class="homebtn" href="/">&larr; Home</a><div class="tag">Kula soaring briefing</div><h1>Kula Today</h1></div>
-    <div class="date">Updated Wed 18 Nov 2026 · 18:58 HST</div>
+    <div class="date">Updated Wed 18 Nov 2026 · 19:15 HST</div>
   </header>
 
   <div>
     <!-- The FAA viewer shows its station list before it opens the camera; the latest frame covers that until it has (Sam, 2026-10-25). -->
-    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" title="Red Hill webcam, live, looking south along the Kula slope" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="https://images.wcams-static.faa.gov/webimages/931/19/13417-1795064012652.jpg" alt="" onerror="this.remove()"></div>
+    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" title="Red Hill webcam, live, looking south along the Kula slope" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="https://images.wcams-static.faa.gov/webimages/931/19/13417-1795065047775.jpg" alt="" onerror="this.remove()"></div>
     <div class="camcap">Red Hill webcam, live. FAA WeatherCam (Kekoa). <a href="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" target="_blank" rel="noopener">Open full size</a></div>
   </div>
 
@@ -240,7 +240,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
   </div>
 
 </div>
-<!-- build problems: HCDP observations, using the last good fetch: MesonetDown: Mesonet out this build: ConnectTimeout: HTTPSConnectionPool(host='api.hcdp.ikewai.org', port=443): Max retries exceeded with url: /mesonet/db/measurements?location=hawaii&station_ids=0115%2C0118%2C0144%2C0116%2C0119%2C0145%2C0151%2C0152%2C0153%2C0143&var_ids=Tair_1_Avg%2CRH_1_Avg%2CWS_1_Avg%2CWDrs_1_Avg%2CWS_1_Max&start_date=2026-11-18T00%3A00%3A00-10%3A00&row_mode=json&limit=100000 (Caused by ConnectTimeoutError(<HTTPSConnection(host='api.hcdp.ikewai.org', port=443) at 0x7ae185548230), 'Connection to api.hcdp.ikewai.org timed out. (connect timeout=10)')); net_radiation: MesonetDown: Mesonet out this build (ConnectTimeout on /mesonet/db/measurements); Mesonet sun: MesonetDown: Mesonet out this build (ConnectTimeout on /mesonet/db/measurements); sun ladder from 17:15 reused; first_cumulus: MesonetDown: Mesonet out this build (ConnectTimeout on /mesonet/db/measurements); window_sun: MesonetDown: Mesonet out this build (ConnectTimeout on /mesonet/db/measurements); sun_trend: MesonetDown: Mesonet out this build (ConnectTimeout on /mesonet/db/measurements); sky_now: MesonetDown: Mesonet out this build (ConnectTimeout on /mesonet/db/measurements); summit_spill: MesonetDown: Mesonet out this build (ConnectTimeout on /mesonet/db/measurements); decay_time: MesonetDown: Mesonet out this build (ConnectTimeout on /mesonet/db/measurements); forecast_base_hours: ReadTimeout: HTTPSConnectionPool(host='api.open-meteo.com', port=443): Read timed out. (read timeout=60) -->
+<!-- build problems: HCDP observations, using the last good fetch: MesonetDown: Mesonet out this build: ConnectTimeout: HTTPSConnectionPool(host='api.hcdp.ikewai.org', port=443): Max retries exceeded with url: /mesonet/db/measurements?location=hawaii&station_ids=0115%2C0118%2C0144%2C0116%2C0119%2C0145%2C0151%2C0152%2C0153%2C0143&var_ids=Tair_1_Avg%2CRH_1_Avg%2CWS_1_Avg%2CWDrs_1_Avg%2CWS_1_Max&start_date=2026-11-18T00%3A00%3A00-10%3A00&row_mode=json&limit=100000 (Caused by ConnectTimeoutError(<HTTPSConnection(host='api.hcdp.ikewai.org', port=443) at 0x7021c69a1b50), 'Connection to api.hcdp.ikewai.org timed out. (connect timeout=10)')); net_radiation: MesonetDown: Mesonet out this build (ConnectTimeout on /mesonet/db/measurements); Mesonet sun: MesonetDown: Mesonet out this build (ConnectTimeout on /mesonet/db/measurements); first_cumulus: MesonetDown: Mesonet out this build (ConnectTimeout on /mesonet/db/measurements); window_sun: MesonetDown: Mesonet out this build (ConnectTimeout on /mesonet/db/measurements); sun_trend: MesonetDown: Mesonet out this build (ConnectTimeout on /mesonet/db/measurements); sky_now: MesonetDown: Mesonet out this build (ConnectTimeout on /mesonet/db/measurements); summit_spill: MesonetDown: Mesonet out this build (ConnectTimeout on /mesonet/db/measurements); decay_time: MesonetDown: Mesonet out this build (ConnectTimeout on /mesonet/db/measurements) -->
 <script>
 /* Catch up with a new build within ~2 minutes (Sam, 2026-10-17: "the page
    does not seem to autoupdate"). stations.json's "made" is the build time;
@@ -248,7 +248,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
    browser's 10-minute cached copy is bypassed. The 15-minute refresh stays
    as a backstop. */
 (function () {
-  var built = "2026-11-18T18:58";
+  var built = "2026-11-18T19:15";
   function check() {
     fetch("stations.json?" + Date.now(), {cache: "no-store"})
       .then(function (r) { return r.json(); })
