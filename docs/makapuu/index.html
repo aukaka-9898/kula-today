@@ -102,10 +102,10 @@ tr.wk td { border-bottom: 0; padding-bottom: 2px; } tr.wkh td { white-space: nor
 <div class="wrap">
   <header>
     <div><a class="homebtn" href="/">&larr; Home</a><div class="tag">Makapu&#8216;u soaring briefing</div><h1>Makapu&#8216;u Today</h1></div>
-    <div class="date">Updated Wed 18 Nov 2026 · 18:57 HST</div>
+    <div class="date">Updated Wed 18 Nov 2026 · 19:03 HST</div>
   </header>
   <div>
-    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/760/details/camera/12783/full" title="Kāne&#8216;ohe Bay webcam, live, looking southeast down the Ko&#8216;olau toward Makapu&#8216;u" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="https://images.wcams-static.faa.gov/webimages/760/19/12783-1795063685353.jpg" alt="" onerror="this.remove()"></div>
+    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/760/details/camera/12783/full" title="Kāne&#8216;ohe Bay webcam, live, looking southeast down the Ko&#8216;olau toward Makapu&#8216;u" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="https://images.wcams-static.faa.gov/webimages/760/19/12783-1795064192811.jpg" alt="" onerror="this.remove()"></div>
     <div class="camcap">Kāne&#8216;ohe Bay webcam, live, looking southeast down the Ko&#8216;olau to Makapu&#8216;u. FAA WeatherCam. <a href="https://weathercams.faa.gov/cameras/state/HI/cameraSite/760/details/camera/12783/full" target="_blank" rel="noopener">Open full size</a> · <a href="https://weathercams.faa.gov/cameras/state/HI/cameraSite/588/details/camera/12153/full" target="_blank" rel="noopener">Makapu&#8216;u camera, at the point</a></div>
   </div>
   <div class="cols">
@@ -167,14 +167,14 @@ tr.wk td { border-bottom: 0; padding-bottom: 2px; } tr.wkh td { white-space: nor
   </section>
   <a class="detailslink" href="details.html">Details: thermal profile and station map &rarr;</a>
   <div class="notes">
-    <p><strong>Where the numbers come from.</strong> Wind: Bellows (BELH1) via api.weather.gov, or the NWS forecast grid for the hour when Bellows is not reporting. Cloudbase at launch: HECO Mokuhano at Makapu&#8216;u Point (HECO Nonokio as backup) temperature and dew point via api.weather.gov. Cloudbase at Kāne&#8216;ohe: the Kāne&#8216;ohe Bay camera's view of the Ko&#8216;olau, and Kaneohe (PHNG) temperature and dew point via aviationweather.gov. Thermals, inversion and the forecast downrange base: RRFS forecast soundings at Kaneohe (BUFKIT, Penn State). Limits: the Makapu&#8216;u site table.</p>
+    <p><strong>Where the numbers come from.</strong> Wind: Bellows (BELH1) via api.weather.gov, or the NWS forecast grid for the hour when Bellows is not reporting. Cloudbase at launch: HECO Mokuhano at Makapu&#8216;u Point (HECO Nonokio as backup) temperature and dew point via api.weather.gov. Cloudbase at Kāne&#8216;ohe: the Kāne&#8216;ohe Bay camera's view of the Ko&#8216;olau, and the Kaneohe (PHNG) ceilometer's lowest cloud layer via aviationweather.gov. Thermals, inversion and the forecast downrange base: RRFS forecast soundings at Kaneohe (BUFKIT, Penn State). Limits: the Makapu&#8216;u site table.</p>
     <p><strong>Notice.</strong> Information only, provided as is, with no guarantee of accuracy or availability. This is not an official forecast. Every pilot is responsible for their own decision to fly.</p>
   </div>
 </div>
 <!-- build problems: none -->
 <script>
 (function () {
-  var built = "2026-11-18T18:57";
+  var built = "2026-11-18T19:03";
   function check() {
     fetch("summary.json?" + Date.now(), {cache: "no-store"}).then(function (r) { return r.json(); })
       .then(function (j) { if (j && j.built && j.built > built) location.replace(location.pathname + "?v=" + Date.now()); })
