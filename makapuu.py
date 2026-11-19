@@ -1192,69 +1192,49 @@ def write(now: datetime) -> None:
         wind_html += f'<div class="alert">{esc(bowl)}</div>'
     dir_html = esc(return_note(w["dir"])) if w and w.get("dir") is not None else ""
 
-    # The base on the range from the air: Kaneohe's METAR. Heʻeia's shore air
-    # read ~2,100 ft while the camera showed the crest clear with bases above
-    # 3,000 (10-25; Sam: "Maybe we should drop Heeia") -- dropped here and from
-    # the Details surface air; it stays on the station map.
-    airs = []
-    for code in ():
-        got = _try(hads_air, code, problems=problems) or []
-        if got and now - got[-1][0] <= OBS_MAX_AGE + timedelta(minutes=30):
-            t, tf, rh = got[-1]
-            airs.append((HADS_AIR[code][1], lcl_msl(tf, dew_f(tf, rh), HADS_AIR[code][2]), t))
-    # Moku o Loʻe led here with Kaneohe's dew point (Sam, 10-25) until 10-29:
-    # it measures no humidity, so the borrowed dew point is dropped ("drop them").
-    kb = crest_base(k)
-    if kb is not None:
-        airs.append(("Kaneohe (PHNG)", kb, k["at"]))
-    base = airs[0][1] if airs else None
-    gated = base is not None and base < BASE_FLOOR_FT
-    if gated:
-        base = None                                      # gated: see BASE_FLOOR_FT
+    # Kāneʻohe's ceilometer, lowest layer, for the number under the camera line
+    # and as the number when there is no camera (Sam, 11-18: "ceilometer jibes
+    # with cam pretty well. LCL seems useless" -> "switch both to the
+    # ceilometer"). Trade cumulus come in off the ocean; the runway's heated
+    # air swung 1,850-2,750 ft against a ceilometer steady at 2,500-2,900.
+    # (Earlier: the runway LCL led, 10-25..11-18; Heʻeia's shore air dropped
+    # 10-25; Moku o Loʻe's borrowed dew point dropped 10-29.)
+    lows = sorted((c for c in (k or {}).get("clouds") or [] if c.get("base") is not None), key=lambda c: c["base"])
+    low = lows[0] if lows else None
+    clear_sky = bool(k) and not low and (k.get("cover") or "").startswith(("CLR", "SKC"))
+    cover = {"FEW": "few", "SCT": "scattered", "BKN": "broken", "OVC": "overcast"}
+    ceil_txt = (f'Kāneʻohe ceilometer: lowest layer {cover.get(low["cover"], low["cover"].lower())} {low["base"]:,} ft ({k["at"]:%H:%M}).'
+                if low else f'Kāneʻohe ceilometer: clear below 12,000 ft ({k["at"]:%H:%M}).' if clear_sky else "")
     # Daylight only: from ~17:15 the low sun turns cloud and sky golden and the
     # colour test breaks (10-25: 5,200-8,400 ft at sunset); early frames have
-    # the same trouble. Outside CAMERA_HOURS the Kaneohe-air number stands alone.
+    # the same trouble. Outside CAMERA_HOURS the ceilometer stands alone.
     in_hours = CAMERA_HOURS[0] <= f"{now:%H:%M}" <= CAMERA_HOURS[1]
     cam = _try(crest_camera, now, problems=problems) if in_hours else None
-    layers = [c["base"] for c in (k or {}).get("clouds") or [] if c.get("base") is not None]
-    cam_line = cam_text(cam, min(layers) if layers else None) if cam else ""
+    cam_line = cam_text(cam, low["base"] if low else None) if cam else ""
     if cam:
         problems += [f"camera outlier left out: {n} {cam['segments'][n]['base_ft']:,.0f} ft"
                      for n in drop_outliers(cam) if n != "Pali gap"]
         if 8 <= now.hour <= 17:
             _try(log_gap, now, cam, problems=problems)
-    # Kāneʻohe's ceilometer as confirmation only (Sam, 10-27, the deck day: the
-    # profile "hints strongly for a deck at 2,600", PHNG had BKN 2,500 OVC 3,500;
-    # but it sees straight up, so clear air over the field says nothing about
-    # the ridge): shown only for a broken or overcast layer under CEIL_SHOW_FT.
-    low = [c for c in (k or {}).get("clouds") or [] if c.get("cover") in ("BKN", "OVC")
-           and c.get("base") is not None and c["base"] < CEIL_SHOW_FT]
-    ceil_sub = ('<div class="sub">Kāneʻohe ceilometer: '
-                + ", ".join(f'{"broken" if c["cover"] == "BKN" else "overcast"} {c["base"]:,}' for c in low)
-                + f' ft ({k["at"]:%H:%M}).</div>') if low else ""
     if cam_line:
         base_html = (f'{esc(cam_line)}'
                      f'<div class="sub">Kāneʻohe Bay camera, looking at the Koʻolau, the last 30 minutes to {cam["at"]:%H:%M}.'
-                     + (f" {airs[0][0]}'s air would condense at about {base:,} ft." if base is not None else "")
-                     + "</div>") + ceil_sub
-    elif base is not None:
-        if base < CREST_LOW_FT:
+                     + (f" {esc(ceil_txt)}" if ceil_txt else "") + "</div>")
+    elif low and low["base"] < BASE_FLOOR_FT:
+        base_html = f'<strong>Low</strong><div class="sub">{esc(ceil_txt)} Under launch height.</div>'
+    elif low:
+        ft = low["base"]
+        if ft < CREST_LOW_FT:
             cap = f"below the crest behind Waimānalo ({CREST_LOW_FT:,}–{CREST_HIGH_FT:,} ft): cloud on the Koʻolau likely"
-        elif base < CREST_HIGH_FT:
+        elif ft < CREST_HIGH_FT:
             cap = "cloud likely on the higher crest downrange"
         else:
             cap = "above the crest downrange"
-        layers = ", ".join(f'{c["cover"]} {c["base"]:,} ft' for c in k["clouds"] if c.get("base")) if k else ""
-        ceil = layers or ("clear below 12,000 ft" if k and (k.get("cover") or "").startswith(("CLR", "SKC")) else "")
-        each = "; ".join(f"{n} {b:,} ft ({t:%H:%M})" for n, b, t in airs)
-        base_html = (f'<span class="num">About {base:,} ft</span>, {esc(cap)}'
-                     f'<div class="sub">Condensation level of the air at {esc(each)}.'
-                     + (f" Kaneohe's ceilometer: {esc(ceil)}." if ceil else "") + "</div>")
-    elif gated:
-        base_html = ('<strong>Low</strong><div class="sub">Kaneohe\'s air would condense under launch height: '
-                     'wet air at the coast.</div>') + ceil_sub
+        base_html = f'<span class="num">About {ft:,} ft</span>, {esc(cap)}<div class="sub">{esc(ceil_txt)}</div>'
+    elif clear_sky:
+        base_html = f'<span class="num">Clear</span> over Kāneʻohe<div class="sub">{esc(ceil_txt)}</div>'
     else:
-        base_html = ("Unavailable" + ceil_sub) if ceil_sub else "Unavailable"
+        base_html = "Unavailable"
 
     lb = _try(launch_base, now, problems=problems)
     if lb is None:
@@ -1788,7 +1768,7 @@ tr.wk td {{ border-bottom: 0; padding-bottom: 2px; }} tr.wkh td {{ white-space: 
   </section>
   <a class="detailslink" href="details.html">Details: thermal profile and station map &rarr;</a>
   <div class="notes">
-    <p><strong>Where the numbers come from.</strong> Wind: Bellows (BELH1) via api.weather.gov, or the NWS forecast grid for the hour when Bellows is not reporting. Cloudbase at launch: HECO Mokuhano at Makapuʻu Point (HECO Nonokio as backup) temperature and dew point via api.weather.gov. Cloudbase at Kāneʻohe: the Kāneʻohe Bay camera's view of the Koʻolau, and Kaneohe (PHNG) temperature and dew point via aviationweather.gov. Thermals, inversion and the forecast downrange base: RRFS forecast soundings at Kaneohe (BUFKIT, Penn State). Limits: the Makapuʻu site table.</p>
+    <p><strong>Where the numbers come from.</strong> Wind: Bellows (BELH1) via api.weather.gov, or the NWS forecast grid for the hour when Bellows is not reporting. Cloudbase at launch: HECO Mokuhano at Makapuʻu Point (HECO Nonokio as backup) temperature and dew point via api.weather.gov. Cloudbase at Kāneʻohe: the Kāneʻohe Bay camera's view of the Koʻolau, and the Kaneohe (PHNG) ceilometer's lowest cloud layer via aviationweather.gov. Thermals, inversion and the forecast downrange base: RRFS forecast soundings at Kaneohe (BUFKIT, Penn State). Limits: the Makapuʻu site table.</p>
     <p><strong>Notice.</strong> Information only, provided as is, with no guarantee of accuracy or availability. This is not an official forecast. Every pilot is responsible for their own decision to fly.</p>
   </div>
 </div>
