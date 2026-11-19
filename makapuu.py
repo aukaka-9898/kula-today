@@ -641,7 +641,8 @@ def rrfs() -> dict:
 # 12,000) is logged from 15:00 as the outcome. Logging only; nothing on the page.
 RRFS_LOG = HERE / "docs" / "makapuu_rrfs.csv"
 RRFS_HOURS = (11, 14)
-RRFS_FIELDS = ["logged", "kind", "day", "run", "hour", "cdb_ft", "sat_ft", "lcl2m_ft", "inv_ft", "ceil_ft", "clear_share"]
+RRFS_FIELDS = ["logged", "kind", "day", "run", "hour", "cdb_ft", "sat_ft", "lcl2m_ft", "inv_ft", "ceil_ft", "clear_share",
+               "t4k_c", "t4k_anom", "cold", "fly_fc", "fly_obs"]
 
 
 def rrfs_surface(path) -> dict:
@@ -665,7 +666,7 @@ def rrfs_surface(path) -> dict:
     return out
 
 
-def _rrfs_rows(now: datetime, air: dict, day, kind: str) -> list:
+def _rrfs_rows(now: datetime, air: dict, day, kind: str, grid: dict | None = None) -> list:
     import numpy as np
     import pandas as pd
     import sounding as sd
@@ -694,19 +695,77 @@ def _rrfs_rows(now: datetime, air: dict, day, kind: str) -> list:
         rows.append([f"{now:%Y-%m-%d %H:%M}", kind, f"{day}", f"{air['run']:%Y-%m-%d %H}Z", h,
                      r(cdb) if cdb is not None else ("none" if s else ""), r(sat) if sat is not None else "none",
                      r(lcl), r(inv["base_ft"]) if inv else "none", "", ""])
+    ca = cold_air(air, day)
+    fc = fly_hours([(t, v) for t, v in (grid or {}).items() if t.date() == day])
+    for row in rows:
+        row += [ca["t4k"] if ca else "", ca["anom"] if ca else "", int(ca["cold"]) if ca else "", fc, ""]
     return rows
 
 
-def log_rrfs(now: datetime, air: dict | None) -> None:
+# Cold low-level air: the best-day signal (Sam, 11-18: "Let's go wild and use
+# it at the first opportunity. And track it."). History (Lihue 14:00 balloon,
+# Bellows, PHNG ceilometer, 2021-2026): Makapuʻu's best days -- flyable, good
+# thermals from the surface to 4,000 ft (Sam: "realistically we are looking at
+# surface to 4000"), high base -- are rare (14 in five years), mostly in winter
+# and ~10x likelier just after a front, when cool air sits low under a ~6,000 ft
+# inversion (Sam: "inversion base at 6000 is not a problem"). GFS's 4,000 ft
+# temperature tracked the balloon (corr 0.79): 2 C+ colder than usual -> high
+# base 79% (vs 24%), good thermals 50% (vs 15%); it says nothing about wind,
+# so flyability comes from the wind forecast. Usual = Lihue 14:00 4,000 ft
+# median by month, 2021-2026 (GFS ran 0.5 C cooler than the balloon; RRFS
+# untested -- refit from the log).
+T4K_USUAL_C = {1: 15.1, 2: 14.1, 3: 14.6, 4: 14.5, 5: 15.0, 6: 15.9, 7: 16.2, 8: 16.7,
+               9: 17.0, 10: 16.9, 11: 16.0, 12: 15.5}
+COLD_4K_C = -2.0
+
+
+def cold_air(air: dict | None, day) -> dict | None:
+    """{t4k, anom, cold} from RRFS's 4,000 ft temperature, 12:00-14:00, at Kaneohe."""
+    import numpy as np
+    if not air:
+        return None
+    ts = []
+    for h in (12, 13, 14):
+        prof = _profile(air, datetime.combine(day, datetime.min.time()).replace(hour=h, tzinfo=HST))
+        if prof is not None:
+            p = prof.sort_values("height_ft")
+            ts.append(float(np.interp(4000, p.height_ft, p.temp_c)))
+    if not ts:
+        return None
+    t = float(np.mean(ts))
+    a = t - T4K_USUAL_C[day.month]
+    return {"t4k": round(t, 1), "anom": round(a, 1), "cold": a <= COLD_4K_C}
+
+
+def best_note(ca: dict | None, fly_hours: int, day) -> str:
+    if not ca or not ca["cold"]:
+        return ""
+    month = datetime(2000, day.month, 1).strftime("%B")
+    why = f"the air at 4,000 ft about {-ca['anom']:.0f} °C colder than usual for {month} (RRFS)"
+    if fly_hours >= 2:
+        return f"Possible best day: {why}. Days like this usually bring a high base and good thermals."
+    return (f"Cold air low down: {why}, so a high base and good thermals are likely, "
+            "but the wind forecast isn't flyable.")
+
+
+def fly_hours(rows: list) -> int:
+    """Forecast hours 10:00-15:00 rated Flyable or Caution."""
+    return sum(1 for t, v in rows if 10 <= t.hour <= 15
+               and rate(v["dir"], v["mph"], v["gust"])[0] in ("Flyable", "Caution"))
+
+
+def log_rrfs(now: datetime, air: dict | None, grid: dict | None = None) -> None:
     import csv
     import pandas as pd
     have = pd.read_csv(RRFS_LOG, dtype=str) if RRFS_LOG.exists() else pd.DataFrame(columns=RRFS_FIELDS)
+    if RRFS_LOG.exists() and list(have.columns) != RRFS_FIELDS:            # new columns: pad the old rows
+        have.reindex(columns=RRFS_FIELDS).to_csv(RRFS_LOG, index=False)
     done = set(zip(have.day, have.kind))
     rows = []
     if air and now.hour >= 18 and (f"{now.date() + timedelta(days=1)}", "evening") not in done:
-        rows += _rrfs_rows(now, air, now.date() + timedelta(days=1), "evening")
+        rows += _rrfs_rows(now, air, now.date() + timedelta(days=1), "evening", grid)
     if air and 7 <= now.hour < 11 and (f"{now.date()}", "morning") not in done:
-        rows += _rrfs_rows(now, air, now.date(), "morning")
+        rows += _rrfs_rows(now, air, now.date(), "morning", grid)
     if now.hour >= 15 and (f"{now.date()}", "ceilometer") not in done:
         ceil = [ft for m, ft in ceilometer_day(now.date()) if 660 <= m <= 900]
         rows_all = requests.get(METAR.replace("hours=3", "hours=30"), timeout=30).json()
@@ -717,8 +776,11 @@ def log_rrfs(now: datetime, air: dict | None) -> None:
         lows = ceil + [12000] * clear
         if lows:
             import numpy as np
+            obs = bellows_day(now.date()) or []
+            flown = sum(1 for h, wv in obs if 10 <= h <= 15
+                        and rate(wv.get("dir"), wv.get("mph"), wv.get("gust"))[0] in ("Flyable", "Caution"))
             rows.append([f"{now:%Y-%m-%d %H:%M}", "ceilometer", f"{now.date()}", "", "", "", "", "", "",
-                         round(float(np.median(lows)), -1), round(clear / max(len(lows), 1), 2)])
+                         round(float(np.median(lows)), -1), round(clear / max(len(lows), 1), 2), "", "", "", "", flown])
     if not rows:
         return
     new = not RRFS_LOG.exists()
@@ -1266,7 +1328,6 @@ def write(now: datetime) -> None:
     obs, obs_t = got if got else (None, None)
     k = _try(kaneohe, problems=problems)
     air = _try(rrfs, problems=problems)
-    _try(log_rrfs, now, air, problems=problems)
     surf = _try(surface_hours, problems=problems) or {}
     hour_now = now.replace(minute=0, second=0, microsecond=0)
 
@@ -1364,9 +1425,15 @@ def write(now: datetime) -> None:
     note = thermal_day(word, today_air["word"] if today_air else None) if w else ""
     if note:
         wind_html += f'<div class="alert">{esc(note)}</div>'
+    if not night and now.hour < 15:
+        today_rows = [(t, v) for t, v in (grid or {}).items() if t.date() == now.date()]
+        bnote = best_note(_try(cold_air, air, now.date(), problems=problems), fly_hours(today_rows), now.date())
+        if bnote:
+            wind_html += f'<div class="alert">{esc(bnote)}</div>'
 
 
     # --- Forecast: tomorrow, then the week
+    _try(log_rrfs, now, air, grid, problems=problems)
     tom = now.date() + timedelta(days=1)
     trows = [(t, grid[t]) for t in sorted(grid) if t.date() == tom and t.hour in DAY_HOURS]
     tword, tline = day_line([(t, rate(v["dir"], v["mph"], v["gust"])[0]) for t, v in trows]) if trows else ("", "")
@@ -1380,6 +1447,8 @@ def write(now: datetime) -> None:
         _try(log_call, now, tom, trows, tword, ta["base_ft"] if ta else None, problems=problems)
     tnote = thermal_day(tword, ta["word"] if ta else None)
     tline = f"{tline} {tnote}" if tnote else tline
+    tbest = best_note(_try(cold_air, air, tom, problems=problems), fly_hours(trows), tom)
+    tline = f"{tline} {tbest}" if tbest else tline
     tom_html = (f'<p class="summary">{esc(tline)} Midday: {esc(wind_text(noon))}. '
                 f'{esc(return_note(noon["dir"]) if noon and noon.get("dir") is not None else "")}'
                 f'{esc(aloft)}</p>'
