@@ -351,7 +351,7 @@ def log_gap(now: datetime, cam: dict) -> None:
 HIDDEN_SHARE = 0.5     # a stretch whose crest is out of sight this much of the time
 
 
-def cam_text(cam: dict) -> str:
+def cam_text(cam: dict, ceil_ft=None) -> str:
     # The crest out of sight -- cloud on the ridge, or rain or cloud between it
     # and the camera (10-28) -- is said as such, never read as "clear".
     hidden = [n for n, s in cam["segments"].items() if s.get("hidden", 0) >= HIDDEN_SHARE and n != "Pali gap"]
@@ -369,6 +369,13 @@ def cam_text(cam: dict) -> str:
         tops = [cam["segments"][n]["crest_ft"] for n in capped if cam["segments"][n].get("crest_ft")]
         b = min([v for v in (cam.get("base_ft"), min(tops) if tops else None) if v] or [None])             if (cam.get("base_ft") or tops) else None
         lead = f"Cloud base at or below about {round(b, -2):,.0f} ft" if b else "Cloud on the Koʻolau"
+        # The camera can't see under a capped crest; Kāneʻohe's lowest
+        # ceilometer layer gives the number when it is under the crest (Sam,
+        # 11-18: "use the lower ceilometer readings"; on the 11-15..18 capped
+        # hours it read 1,900-2,600 ft, steadier than the runway's condensation
+        # level, which dropped to 1,100). Any cover counts, FEW included.
+        if ceil_ft is not None and (b is None or ceil_ft < b):
+            lead = f"Cloud base about {round(ceil_ft, -2):,.0f} ft by Kāneʻohe's ceilometer"
         named = [n for n in ("Greenwall", "Konahuanui") if n in capped]
         tail = (f"{_and(named)} {'is' if len(named) == 1 else 'are'} in clouds" if named
                 else "the crest is in clouds")
@@ -1179,7 +1186,8 @@ def write(now: datetime) -> None:
     # the same trouble. Outside CAMERA_HOURS the Kaneohe-air number stands alone.
     in_hours = CAMERA_HOURS[0] <= f"{now:%H:%M}" <= CAMERA_HOURS[1]
     cam = _try(crest_camera, now, problems=problems) if in_hours else None
-    cam_line = cam_text(cam) if cam else ""
+    layers = [c["base"] for c in (k or {}).get("clouds") or [] if c.get("base") is not None]
+    cam_line = cam_text(cam, min(layers) if layers else None) if cam else ""
     if cam:
         problems += [f"camera outlier left out: {n} {cam['segments'][n]['base_ft']:,.0f} ft"
                      for n in drop_outliers(cam) if n != "Pali gap"]
