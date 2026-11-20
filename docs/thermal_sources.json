@@ -560,7 +560,7 @@
 }
 },
 "2026-11-19": {
-"made": "2026-11-19 17:56",
+"made": "2026-11-19 18:07",
 "sounding": "2026-11-19 18Z",
 "stations": {
 "Kaonoulu 1": {
@@ -571,13 +571,13 @@
 },
 "Keokea": {
 "elev_ft": 2849.0,
-"ti_c": -4.92,
+"ti_c": -4.96,
 "word": "Light",
 "hours": 5
 },
 "Kula Ag": {
 "elev_ft": 3162.0,
-"ti_c": -3.99,
+"ti_c": -3.91,
 "word": "Light",
 "hours": 5
 },
@@ -607,26 +607,26 @@
 },
 "Pulehu": {
 "elev_ft": 1402.0,
-"ti_c": -5.53,
-"word": "Moderate",
+"ti_c": -5.47,
+"word": "Light",
 "hours": 5
 }
 },
 "kula_ag": {
 "elev_ft": 3162.0,
-"ti_c": -3.99,
+"ti_c": -3.91,
 "word": "Light",
 "hours": 5
 },
 "lower_mean": {
-"ti_c": -3.81,
+"ti_c": -3.8,
 "word": "Light",
 "stations": 6
 },
 "strongest_below": {
 "station": "Pulehu",
-"ti_c": -5.53,
-"word": "Moderate"
+"ti_c": -5.47,
+"word": "Light"
 }
 }
 }
