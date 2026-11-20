@@ -5553,3 +5553,7 @@ date,time,station,obs_time,temp_f,dew_f,dew_from,lcl_ft,ti_c,word,camera,camera_
 2026-11-20,08:37,Nonokio,07:40,75.5,66.4,own,2080.0,-0.18,Flat,"Cloud base no higher than about 3,100–3,400 ft along the ridge. Greenwall is clear; Konahuanui is in clouds.",3300.0
 2026-11-20,08:37,Mokuhano,07:40,76.9,65.8,own,2540.0,-0.9,Flat,"Cloud base no higher than about 3,100–3,400 ft along the ridge. Greenwall is clear; Konahuanui is in clouds.",3300.0
 2026-11-20,08:37,Moku o Loe,08:30,76.8,,,,,,"Cloud base no higher than about 3,100–3,400 ft along the ridge. Greenwall is clear; Konahuanui is in clouds.",3300.0
+2026-11-20,08:53,Kaneohe runway,07:57,75.9,64.0,own,2710.0,-0.19,Flat,"Cloud base no higher than about 2,900–3,200 ft along the ridge. Greenwall is clear; Konahuanui is in clouds.",2960.0
+2026-11-20,08:53,Heeia,08:30,76.7,69.9,own,1560.0,-1.16,Flat,"Cloud base no higher than about 2,900–3,200 ft along the ridge. Greenwall is clear; Konahuanui is in clouds.",2960.0
+2026-11-20,08:53,Maunawili,08:30,75.7,66.9,own,2010.0,-0.34,Flat,"Cloud base no higher than about 2,900–3,200 ft along the ridge. Greenwall is clear; Konahuanui is in clouds.",2960.0
+2026-11-20,08:53,Moku o Loe,08:48,75.9,,,,,,"Cloud base no higher than about 2,900–3,200 ft along the ridge. Greenwall is clear; Konahuanui is in clouds.",2960.0
