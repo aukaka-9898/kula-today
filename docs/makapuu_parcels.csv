@@ -5492,3 +5492,6 @@ date,time,station,obs_time,temp_f,dew_f,dew_from,lcl_ft,ti_c,word,camera,camera_
 2026-11-19,15:22,Heeia,14:30,78.5,71.8,own,1530.0,-2.04,Flat,"Cloud base at or below about 2,400 ft. The crest is in clouds.",2430.0
 2026-11-19,15:22,Maunawili,15:00,77.6,68.7,own,2030.0,-1.19,Flat,"Cloud base at or below about 2,400 ft. The crest is in clouds.",2430.0
 2026-11-19,15:22,Moku o Loe,15:18,77.9,,,,,,"Cloud base at or below about 2,400 ft. The crest is in clouds.",2430.0
+2026-11-19,15:38,Kaneohe runway,14:57,78.1,68.0,own,2300.0,-1.41,Flat,"Cloud base at or below about 2,400 ft. The crest is in clouds.",2690.0
+2026-11-19,15:38,Heeia,14:30,78.5,71.8,own,1530.0,-2.04,Flat,"Cloud base at or below about 2,400 ft. The crest is in clouds.",2690.0
+2026-11-19,15:38,Moku o Loe,15:30,78.1,,,,,,"Cloud base at or below about 2,400 ft. The crest is in clouds.",2690.0
