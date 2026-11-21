@@ -5770,3 +5770,7 @@ date,time,station,obs_time,temp_f,dew_f,dew_from,lcl_ft,ti_c,word,camera,camera_
 2026-11-20,17:54,Nonokio,16:50,77.0,65.7,own,2590.0,-0.43,Flat,,
 2026-11-20,17:54,Mokuhano,16:50,77.3,65.0,own,2810.0,-0.51,Flat,,
 2026-11-20,17:54,Moku o Loe,17:48,77.4,,,,,,,
+2026-11-21,08:08,Heeia,07:30,75.6,71.2,own,980.0,-3.0,Flat,"Cloud base at or below about 2,400 ft. Konahuanui is in clouds.",3790.0
+2026-11-21,08:08,Nonokio,07:30,75.6,67.8,own,1770.0,-2.69,Flat,"Cloud base at or below about 2,400 ft. Konahuanui is in clouds.",3790.0
+2026-11-21,08:08,Mokuhano,07:30,76.4,67.9,own,1950.0,-3.16,Flat,"Cloud base at or below about 2,400 ft. Konahuanui is in clouds.",3790.0
+2026-11-21,08:08,Moku o Loe,08:00,76.5,,,,,,"Cloud base at or below about 2,400 ft. Konahuanui is in clouds.",3790.0
