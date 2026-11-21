@@ -3159,8 +3159,7 @@ def sounding_forecast(day) -> dict | None:
 # 'predictions'. Kula's microclimate"; "A is fine"; thermal accuracy unknown,
 # "solicit data"; contact flyhiwx@gmail.com from 11-10).
 FORECAST_CAVEAT = ('<p class="sub">A guide, not a promise: Kula makes its own weather, and no model sees it. '
-                   'The cloudbase number is the last three days at midday, camera first, with a warning when '
-                   'the weather pattern is changing. It typically misses by '
+                   'The cloudbase number is the last three days at midday, camera first. It typically misses by '
                    'about 500 ft. How well the thermal call holds up we don’t yet know: the only checks so far '
                    'are the stations, not pilots. If you fly Kula, your report or flight log (altitude and time '
                    'only) is what will tell us: <a href="mailto:flyhiwx@gmail.com">flyhiwx@gmail.com</a>.</p>')
@@ -3216,12 +3215,9 @@ def shape_text(month: int) -> str:
 THREE_DAY_N = 3
 BUT_RH700_JUMP = 15
 BUT_OVERCAST_SUN = 0.40
-BUT_SAY = {
-    "front": "but a front is due, and the recent days won't tell us much about {day}.",
-    "moist": ("holding through the afternoon. But moister air is moving in aloft, and on days like that "
-              "the base usually comes in lower than the recent days suggest."),
-    "overcast": "but expect the base to drop after about 13:00.",
-}
+# The "but" stays out of the words (Sam, 11-20: "Remove the caveats about
+# synoptic conditions from the narrative, just add them to the predicted
+# shapes"): it only bends the lines.
 
 
 def midday_base(d):
@@ -3278,8 +3274,7 @@ def synoptic_but(day, sun):
 
 
 def three_day_text(ft, but, day_word: str) -> str:
-    head = f"The past three days say about {ft:,.0f} ft, "
-    return head + (BUT_SAY[but].format(day=day_word) if but else "holding level through the afternoon.")
+    return f"The past three days say about {ft:,.0f} ft."
 
 
 @functools.cache
