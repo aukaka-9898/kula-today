@@ -277,6 +277,9 @@
 "but": "moist",
 "ft_blend": 4600.0,
 "three_day": true,
-"rh_jump": 18
+"rh_jump": 18,
+"ft_am": 5200.0,
+"but_am": "moist",
+"ft_am_blend": 4400.0
 }
 }
