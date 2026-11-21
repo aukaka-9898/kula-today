@@ -101,18 +101,18 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><a class="homebtn" href="/">&larr; Home</a><div class="tag">Kula soaring briefing</div><h1>Kula Today</h1></div>
-    <div class="date">Updated Sat 21 Nov 2026 · 09:37 HST</div>
+    <div class="date">Updated Sat 21 Nov 2026 · 09:52 HST</div>
   </header>
 
   <div>
     <!-- The FAA viewer shows its station list before it opens the camera; the latest frame covers that until it has (Sam, 2026-10-25). -->
-    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" title="Red Hill webcam, live, looking south along the Kula slope" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="https://images.wcams-static.faa.gov/webimages/931/21/13417-1795289695490.jpg" alt="" onerror="this.remove()"></div>
+    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" title="Red Hill webcam, live, looking south along the Kula slope" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="https://images.wcams-static.faa.gov/webimages/931/21/13417-1795290716296.jpg" alt="" onerror="this.remove()"></div>
     <div class="camcap">Red Hill webcam, live. FAA WeatherCam (Kekoa). <a href="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" target="_blank" rel="noopener">Open full size</a></div>
   </div>
 
   <div class="cols">
     <section class="panel today" aria-labelledby="t-today">
-      <div class="kind">Measured today · 09:37 HST</div>
+      <div class="kind">Measured today · 09:52 HST</div>
       <div class="head"><h2 id="t-today">Today</h2><span class="chip good">Moderate</span></div>
       <div class="sub" style="display:flex;align-items:center;gap:6px;margin:2px 0 6px"><img src="https://api.weather.gov/icons/land/day/sct/rain_showers,20?size=small" width="34" height="34" alt="Mostly Sunny then Isolated Rain Showers (23%)" title="NWS: Mostly Sunny then Isolated Rain Showers (23%)" loading="lazy" style="vertical-align:middle;border-radius:4px;margin-left:6px"><span>NWS today: Mostly Sunny then Isolated Rain Showers (23%)</span></div>
       <p class="summary">No trade air on the lower west slope.</p>
@@ -120,7 +120,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
         <dt><a href="details.html#t-thermal">Thermals</a></dt><dd>Probably <strong>moderate</strong> (forecast)<div class="sub">thermal.py on the forecast air; measured rating just after 10:00</div></dd>
         <dt><a href="details.html#t-thermal">Cloudbase</a></dt><dd>Not yet<div class="sub">Derived once the upslope sets in, usually about 08:45. Today's call is in the Forecast panel</div></dd>
         <dt><a href="details.html#t-ladder">Sun</a></dt><dd><span class="num">68%</span> of clear sky forecast, 10:00–14:00 (GFS)<div class="sub">Measured from about 09:30; Kula is in Haleakala's shadow until about 08:15</div></dd>
-        <dt><a href="details.html#stationmap">Shear line</a></dt><dd>Crossing Kula Highway near Omaopio<div class="sub">Fitted to the station map: flow from the north at MECO Olinda Rd, upslope at Waihou Springs 1 nearest the line (before the upslope)</div><div class="sub">At the coast: Paia 081° at 16 mph</div></dd>
+        <dt><a href="details.html#stationmap">Shear line</a></dt><dd>Crossing Kula Highway near Kamehameha Schools<div class="sub">Fitted to the station map: flow from the north at MECO Kula 2, upslope at Waihou Springs 1 nearest the line (before the upslope)</div><div class="sub">At the coast: Paia 080° at 19 mph</div></dd>
         
         <dt><a href="details.html#stationmap">Upslope</a></dt><dd>No clear upslope today</dd>
         <dt><a href="details.html#stationmap">Wind</a></dt><dd><span class="num">2 mph</span>, gusts to 5<div class="sub">Lower elevations, 10 stations, last hour</div></dd>
@@ -189,7 +189,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
    browser's 10-minute cached copy is bypassed. The 15-minute refresh stays
    as a backstop. */
 (function () {
-  var built = "2026-11-21T09:37";
+  var built = "2026-11-21T09:52";
   function check() {
     fetch("stations.json?" + Date.now(), {cache: "no-store"})
       .then(function (r) { return r.json(); })
