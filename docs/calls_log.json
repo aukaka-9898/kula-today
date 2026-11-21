@@ -272,10 +272,11 @@
 "base": "Normal",
 "rule": null,
 "thermal": "Moderate",
-"made": "2026-11-20 17:37",
+"made": "2026-11-20 17:40",
 "ft": 5200.0,
 "but": "moist",
 "ft_blend": 4700.0,
-"three_day": true
+"three_day": true,
+"rh_jump": 18
 }
 }
