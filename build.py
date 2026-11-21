@@ -3159,7 +3159,8 @@ def sounding_forecast(day) -> dict | None:
 # 'predictions'. Kula's microclimate"; "A is fine"; thermal accuracy unknown,
 # "solicit data"; contact flyhiwx@gmail.com from 11-10).
 FORECAST_CAVEAT = ('<p class="sub">A guide, not a promise: Kula makes its own weather, and no model sees it. '
-                   'The cloudbase number is the season, yesterday and the air aloft. It typically misses by '
+                   'The cloudbase number is the last three days at midday, camera first, with a warning when '
+                   'the weather pattern is changing. It typically misses by '
                    'about 500 ft. How well the thermal call holds up we don’t yet know: the only checks so far '
                    'are the stations, not pilots. If you fly Kula, your report or flight log (altitude and time '
                    'only) is what will tell us: <a href="mailto:flyhiwx@gmail.com">flyhiwx@gmail.com</a>.</p>')
@@ -3197,10 +3198,124 @@ def shape_text(month: int) -> str:
             if fall >= 100 else f"A usual {name} day: the base holds about level through the afternoon.")
 
 
+# The three-day call (Sam, 11-20: "a short term adjustment to the seasonal
+# shape based on the past three days. What needs to be considered however is
+# any synoptic patterns"; "The past three days seem to say today will do this
+# but..."; then "build it"). The number is the mean midday base (11:00-14:59)
+# of the three days before, the camera first, derived where the camera has no
+# reading. The lines rise along a usual sunny-afternoon day of the month (days
+# with Kula Ag 13-15 sun >= 40%) to the peak and then hold level -- the camera
+# and derived held or rose after noon on most days while every month curve
+# fell (11-18..11-20; a flat line after noon beat the month curve on this
+# month's camera days, 425 vs 514 ft). The line slopes down (the month's
+# all-days curve) only when a "but" fires: a front (850 mb wind from the west
+# through north), moister air aloft (700 mb humidity >= 15 points above the
+# last three days), or an overcast afternoon (GFS sun < 40%). History
+# (2024-26): a 700 mb jump >20 points or a W-N 850 wind cut day-to-day
+# persistence from 0.68 to 0.37. The Kihei feed can't be forecast yet.
+THREE_DAY_N = 3
+BUT_RH700_JUMP = 15
+BUT_OVERCAST_SUN = 0.40
+BUT_SAY = {
+    "front": "but a front is due, and the recent days won't tell us much about {day}.",
+    "moist": ("holding through the afternoon. But moister air is moving in aloft, and on days like that "
+              "the base usually comes in lower than the recent days suggest."),
+    "overcast": "but expect the base to drop after about 13:00.",
+}
+
+
+def midday_base(d):
+    """(ft, 'camera'|'derived') for day d's 11:00-14:59 base, or None."""
+    cam = [v for m, v in (camera_points(datetime.combine(d, datetime.min.time())) or [])
+           if 11 * 60 <= m < 15 * 60]
+    if len(cam) >= CAMERA_BASE_DAYS:
+        return sum(cam) / len(cam), "camera"
+    try:
+        s = pd.read_csv(SCORE_HOURS, dtype={"date": str})
+        v = s[(s.date == f"{d}") & s.hour.between(11, 14)].derived.dropna()
+    except Exception:
+        return None
+    if f"{d}" == f"{datetime.now(HST).date()}":
+        lv = today_level(datetime.now(HST))
+        return (lv, "derived") if lv else None
+    return (float(v.mean()), "derived") if len(v) else None
+
+
+def three_day_level(day):
+    """The mean midday base of the three days before `day` (2 needed), to 100 ft."""
+    vals = [safely(midday_base, day - timedelta(days=k)) for k in range(1, THREE_DAY_N + 1)]
+    vals = [v[0] for v in vals if v]
+    return round(sum(vals) / len(vals), -2) if len(vals) >= 2 else None
+
+
+@functools.cache
+def _synoptic_noon(today: str) -> dict:
+    """{date: (rh700 %, dir850 deg)} at noon over Maui, three days back and ahead."""
+    r = requests.get("https://api.open-meteo.com/v1/forecast", timeout=30, params={
+        "latitude": 20.8, "longitude": -156.3, "timezone": "Pacific/Honolulu",
+        "past_days": 3, "forecast_days": 4,
+        "hourly": "relative_humidity_700hPa,wind_direction_850hPa"}).json()["hourly"]
+    out = {}
+    for t, rh, wd in zip(r["time"], r["relative_humidity_700hPa"], r["wind_direction_850hPa"]):
+        if t.endswith("T12:00") and rh is not None and wd is not None:
+            out[t[:10]] = (float(rh), float(wd))
+    return out
+
+
+def synoptic_but(day, sun):
+    """'front', 'moist', 'overcast' or None for `day`; sun = GFS clear-sky share."""
+    noon = _synoptic_noon(f"{datetime.now(HST).date()}")
+    if f"{day}" in noon:
+        rh, wd = noon[f"{day}"]
+        if wd >= 250 or wd <= 20:
+            return "front"
+        before = [noon[k][0] for k in (f"{day - timedelta(days=i)}" for i in (1, 2, 3)) if k in noon]
+        if before and rh - sum(before) / len(before) >= BUT_RH700_JUMP:
+            return "moist"
+    if sun is not None and sun == sun and sun < BUT_OVERCAST_SUN:
+        return "overcast"
+    return None
+
+
+def three_day_text(ft, but, day_word: str) -> str:
+    head = f"The past three days say about {ft:,.0f} ft, "
+    return head + (BUT_SAY[but].format(day=day_word) if but else "holding level through the afternoon.")
+
+
+@functools.cache
+def sunny_shape(month: int):
+    """month_shape from the days with Kula Ag 13-15 sun >= 40% only."""
+    d = pd.read_csv(HERE / "history" / "days.csv", parse_dates=["date"])
+    d = d[(d.date.dt.month == month) & (d.sun_pm >= BUT_OVERCAST_SUN)].dropna(
+        subset=[f"b{h}" for h in range(9, 17)] + ["level"])
+    vs_level = {h: float((d[f"b{h}"] - d["level"]).mean()) for h in range(9, 17)}
+    vs_ten = {h: float((d[f"b{h}"] - d["b10"]).mean()) for h in range(10, 17)}
+    return vs_level, vs_ten
+
+
+def _held(shape: dict) -> dict:
+    """The shape up to its peak (11:00-13:00), level after."""
+    peak = max((h for h in (11, 12, 13) if h in shape), key=lambda h: shape[h])
+    return {h: (shape[h] if h <= peak else shape[peak]) for h in shape}
+
+
+def day_shape(d):
+    """(vs_level, vs_ten) the lines use on day d: held level after the peak,
+    or the month's falling curve when the call carried a 'but'."""
+    try:
+        but = (json.loads(CALLS_LOG.read_text(encoding="utf-8")).get(f"{d:%Y-%m-%d}") or {}).get("but")
+    except Exception:
+        but = None
+    if but:
+        return month_shape(d.month)
+    vs_level, vs_ten = sunny_shape(d.month)
+    return _held(vs_level), _held(vs_ten)
+
+
 def shape_lines(now: datetime, derived: list):
     """(evening line, 10:00 line) as [minute, ft] chart points; either may be None.
     Each is drawn from its own number once and never redrawn."""
-    vs_level, vs_ten = month_shape(now.month)
+    vs_level, vs_ten = day_shape(now)
     try:
         ft = (json.loads(CALLS_LOG.read_text(encoding="utf-8")).get(f"{now:%Y-%m-%d}") or {}).get("ft")
     except Exception:
@@ -3562,7 +3677,7 @@ def log_fuzzy_outcome(now: datetime) -> None:
     FUZZY_LOG.write_text(json.dumps(log, indent=0), encoding="utf-8")
 
 
-def log_call(day, base: str, thermal: str, now: datetime, base_ft=None) -> None:
+def log_call(day, base: str, thermal: str, now: datetime, base_ft=None, extra=None) -> None:
     try:
         log = json.loads(CALLS_LOG.read_text(encoding="utf-8"))
     except Exception:
@@ -3575,7 +3690,7 @@ def log_call(day, base: str, thermal: str, now: datetime, base_ft=None) -> None:
     if str(old.get("made", "")) >= f"{day - timedelta(days=1)} 18:00":
         return
     log[f"{day}"] = {**old, "base": base, "rule": CALL_RULE.get(f"{day}"), "thermal": thermal,
-                     "made": f"{now:%Y-%m-%d %H:%M}", "ft": base_ft}
+                     "made": f"{now:%Y-%m-%d %H:%M}", "ft": base_ft, **(extra or {})}
     keep = sorted(log)[-120:]
     CALLS_LOG.write_text(json.dumps({k: log[k] for k in keep}, indent=0), encoding="utf-8")
 
@@ -3714,7 +3829,7 @@ def trend_score(now: datetime):
                 at[target] = min(near, key=lambda q: abs(q[0] - target))[1]
         if len(at) < 2:
             continue
-        vs_level, _ = month_shape(int(d[5:7]))
+        vs_level, _ = day_shape(datetime.strptime(d, "%Y-%m-%d"))
         n += 1
         right += _trend_word(at[900] - at[720]) == _trend_word(vs_level[15] - vs_level[12])
     return (right, n) if n else None
@@ -4778,7 +4893,7 @@ def recent_evening_variance(before) -> dict | None:
         cam = camera_points(datetime.combine(d, datetime.min.time())) if ft else []
         if not ft or len(cam) < VAR_MIN_FRAMES:
             continue
-        vs_level, _ = month_shape(d.month)
+        vs_level, _ = day_shape(d)
         ev = [[h * 60, ft + vs_level[h]] for h in range(9, 17)]
         var = camera_variance(camera_short(cam), ev)
         pts = [[m, v] for m, v in var if 720 <= m <= 960]
@@ -4930,12 +5045,13 @@ def base_chart(obs, now, up, end, cid="basechart", title="Cloudbase, derived vs 
         name = f"{now:%B}"
         proj = None
         if ev:
-            fc_draw, fc_label = ev, f"Yesterday call + usual {name} day"
+            fc_draw, fc_label = ev, "Yesterday call"
         if ten:
-            proj = {"points": ten, "label": f"10:00 + usual {name} day", "note": ""}
+            proj = {"points": ten, "label": "10:00 line", "note": ""}
         if ev or ten:
-            note += (f" Lines: the yesterday call's number and the 10:00 derived base, each carried along "
-                     f"a usual {name} day (2024-26 history), drawn once and never redrawn.")
+            note += (f" Lines: the yesterday call's number and the 10:00 derived base, each carried to the "
+                     f"usual {name} midday peak and held level after it; sloping down when the call warned "
+                     f"of a front, moist air aloft or an overcast afternoon. Drawn once, never redrawn.")
     if proj and proj.get("note"):
         note += " " + proj["note"]
     return (chart_html(cid, derived, fc_draw, span, note, title=title, camera=cam_line, cam_sub=stand_in,
@@ -5912,15 +6028,26 @@ def build() -> str:
         # I want. I want the number."); the rule, when one fires, becomes the
         # chance of a low or high day under it. The category is still settled
         # and logged for the week table and the scorecard.
-        if blend:
-            if morning:
-                safely(log_call_ft, tom, "ft_am", blend[0])
+        # The three-day call leads (Sam, 11-20, "build it"); the blend is kept
+        # in the log (ft_blend) to compare.
+        three = safely(three_day_level, tom)
+        but = safely(synoptic_but, tom, r["sun"])
+        call_ft = three or (blend[0] if blend else None)
+        if morning and call_ft:
+            safely(log_call_ft, tom, "ft_am", call_ft)
+            safely(log_call_ft, tom, "but_am", but)
+            if blend:
+                safely(log_call_ft, tom, "ft_am_blend", blend[0])
+        if call_ft:
             lo_m, hi_m = MONTH_BASE_RANGE[tom.month]
             cb_sub = CALL_CHANCE.get(CALL_RULE.get(f"{tom}")) or f"Normal for {tom:%B} is {lo_m:,}–{hi_m:,} ft."
-            cb_sub += " " + (safely(shape_text, tom.month) or "")
             if CALL_RULE.get(f"{tom}") == "B4" and (tom - now.date()).days > 1:
                 cb_sub = cb_sub.replace("About 45%", "About 40%")
-            cb_head = f"About {blend[0]:,.0f} ft"
+            if three:
+                cb_sub = three_day_text(three, but, "today" if morning else "tomorrow") + " " + cb_sub
+            else:
+                cb_sub += " " + (safely(shape_text, tom.month) or "")
+            cb_head = f"About {call_ft:,.0f} ft"
         # No summary paragraph (Sam, 2026-10-17: "the whole summary paragraph
         # is unnecessary"): the rows below say it. said_t is still worked out
         # but not shown.
@@ -5935,7 +6062,8 @@ def build() -> str:
             safely(log_call, tom, ("Low" if cat_head.startswith("Probably a low") else
                                    "May be high" if cat_head.startswith("May be a high") else
                                    "Leaning high" if cat_head == "Leaning high" else "Normal"),
-                   strength_word(r["thermal"]), now, blend[0] if blend else None)
+                   strength_word(r["thermal"]), now, call_ft,
+                   {"but": but, "ft_blend": blend[0] if blend else None, "three_day": bool(three)})
             safely(log_fuzzy_inputs, now, tom, cap, blend[0] if blend else None)
         for day, w in week.iterrows():
             if day < tom:
