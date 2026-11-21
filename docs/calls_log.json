@@ -287,10 +287,10 @@
 "base": "Normal",
 "rule": null,
 "thermal": "Moderate",
-"made": "2026-11-21 11:35",
+"made": "2026-11-21 11:37",
 "ft": 5200.0,
 "but": null,
-"rh_jump": -16,
+"rh_jump": -25,
 "ft_blend": null,
 "three_day": true
 }
