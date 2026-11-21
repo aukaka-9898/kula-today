@@ -3258,19 +3258,45 @@ def _synoptic_noon(today: str) -> dict:
     return out
 
 
-def synoptic_but(day, sun):
-    """'front', 'moist', 'overcast' or None for `day`; sun = GFS clear-sky share."""
+# What each "but" does to the line (Sam, 11-20: "check the history for moist
+# days. The history and synoptic should have some sort of merge"; then "build
+# it"). From history/days.csv joined to history/synoptic.csv, 1,036 days
+# 2024-26, flags as here: moist days (183) came in BELOW the last three days'
+# midday mean by a median 200 ft for a 700 mb jump of 15-25 points, 325 for
+# 25-40, 540 for 40+, and fell after noon only ~100 ft more than plain days
+# by 15:00 -> lowered, still held level. Fronts (60) came in 280 ft low and
+# fell after noon (vs plain, from 12:00: 13 -30, 14 -230, 15 -270, 16 -130)
+# -> lowered and bent. A GFS overcast forecast (107) changed neither the level
+# (-90) nor the afternoon, so it is no longer a "but". Amounts fixed for now;
+# refitting them monthly from a merged history table is the next step.
+MOIST_LOWER = ((40, -540), (25, -325), (BUT_RH700_JUMP, -200))   # (jump >=, ft)
+FRONT_LOWER = -280
+FRONT_BEND = {13: -30, 14: -230, 15: -270, 16: -130}
+
+
+def synoptic_but(day, sun=None):
+    """('front'|'moist'|None, 700 mb jump in points or None) for `day`."""
     noon = _synoptic_noon(f"{datetime.now(HST).date()}")
-    if f"{day}" in noon:
-        rh, wd = noon[f"{day}"]
-        if wd >= 250 or wd <= 20:
-            return "front"
-        before = [noon[k][0] for k in (f"{day - timedelta(days=i)}" for i in (1, 2, 3)) if k in noon]
-        if before and rh - sum(before) / len(before) >= BUT_RH700_JUMP:
-            return "moist"
-    if sun is not None and sun == sun and sun < BUT_OVERCAST_SUN:
-        return "overcast"
-    return None
+    if f"{day}" not in noon:
+        return None, None
+    rh, wd = noon[f"{day}"]
+    before = [noon[k][0] for k in (f"{day - timedelta(days=i)}" for i in (1, 2, 3)) if k in noon]
+    jump = round(rh - sum(before) / len(before)) if before else None
+    if wd >= 250 or wd <= 20:
+        return "front", jump
+    if jump is not None and jump >= BUT_RH700_JUMP:
+        return "moist", jump
+    return None, jump
+
+
+def but_lower(call: dict) -> float:
+    """How far the lines sit below the call's number on a 'but' day."""
+    if call.get("but") == "front":
+        return FRONT_LOWER
+    if call.get("but") == "moist":
+        j = call.get("rh_jump") or BUT_RH700_JUMP
+        return next(ft for lo, ft in MOIST_LOWER if j >= lo)
+    return 0
 
 
 def three_day_text(ft, but, day_word: str) -> str:
@@ -3294,27 +3320,32 @@ def _held(shape: dict) -> dict:
     return {h: (shape[h] if h <= peak else shape[peak]) for h in shape}
 
 
-def day_shape(d):
-    """(vs_level, vs_ten) the lines use on day d: held level after the peak,
-    or the month's falling curve when the call carried a 'but'."""
+def _call(d) -> dict:
     try:
-        but = (json.loads(CALLS_LOG.read_text(encoding="utf-8")).get(f"{d:%Y-%m-%d}") or {}).get("but")
+        return json.loads(CALLS_LOG.read_text(encoding="utf-8")).get(f"{d:%Y-%m-%d}") or {}
     except Exception:
-        but = None
-    if but:
-        return month_shape(d.month)
-    vs_level, vs_ten = sunny_shape(d.month)
-    return _held(vs_level), _held(vs_ten)
+        return {}
+
+
+def day_shape(d):
+    """(vs_level, vs_ten) the lines use on day d: the month's sunny-afternoon
+    day to its peak, held level after; bent down after noon on a front."""
+    vs_level, vs_ten = (_held(s) for s in sunny_shape(d.month))
+    if _call(d).get("but") == "front":
+        vs_level = {h: v + FRONT_BEND.get(h, 0) for h, v in vs_level.items()}
+        vs_ten = {h: v + FRONT_BEND.get(h, 0) for h, v in vs_ten.items()}
+    return vs_level, vs_ten
 
 
 def shape_lines(now: datetime, derived: list):
     """(evening line, 10:00 line) as [minute, ft] chart points; either may be None.
-    Each is drawn from its own number once and never redrawn."""
+    Each is drawn from its own number once and never redrawn. The evening line
+    sits lower on a 'but' day; the 10:00 line starts from the measured base,
+    which already carries it."""
     vs_level, vs_ten = day_shape(now)
-    try:
-        ft = (json.loads(CALLS_LOG.read_text(encoding="utf-8")).get(f"{now:%Y-%m-%d}") or {}).get("ft")
-    except Exception:
-        ft = None
+    call = _call(now)
+    ft = call.get("ft")
+    ft = ft + but_lower(call) if ft else None
     evening = [[h * 60, round(ft + vs_level[h], -1)] for h in range(9, 17)] if ft else None
     near = [v for m, v in derived if 590 <= m <= 610]
     ten = [[h * 60, round(near[0] + vs_ten[h], -1)] for h in range(10, 17)] if near else None
@@ -4889,7 +4920,8 @@ def recent_evening_variance(before) -> dict | None:
         if not ft or len(cam) < VAR_MIN_FRAMES:
             continue
         vs_level, _ = day_shape(d)
-        ev = [[h * 60, ft + vs_level[h]] for h in range(9, 17)]
+        low = but_lower(calls.get(f"{d}") or {})
+        ev = [[h * 60, ft + low + vs_level[h]] for h in range(9, 17)]
         var = camera_variance(camera_short(cam), ev)
         pts = [[m, v] for m, v in var if 720 <= m <= 960]
         if len(pts) < 4:
@@ -5045,8 +5077,9 @@ def base_chart(obs, now, up, end, cid="basechart", title="Cloudbase, derived vs 
             proj = {"points": ten, "label": "10:00 line", "note": ""}
         if ev or ten:
             note += (f" Lines: the yesterday call's number and the 10:00 derived base, each carried to the "
-                     f"usual {name} midday peak and held level after it; sloping down when the call warned "
-                     f"of a front, moist air aloft or an overcast afternoon. Drawn once, never redrawn.")
+                     f"usual {name} midday peak and held level after it. Moister air aloft draws the "
+                     f"yesterday line lower; a front lowers it and bends both down after noon. "
+                     f"Drawn once, never redrawn.")
     if proj and proj.get("note"):
         note += " " + proj["note"]
     return (chart_html(cid, derived, fc_draw, span, note, title=title, camera=cam_line, cam_sub=stand_in,
@@ -6026,7 +6059,7 @@ def build() -> str:
         # The three-day call leads (Sam, 11-20, "build it"); the blend is kept
         # in the log (ft_blend) to compare.
         three = safely(three_day_level, tom)
-        but = safely(synoptic_but, tom, r["sun"])
+        but, rh_jump = safely(synoptic_but, tom) or (None, None)
         call_ft = three or (blend[0] if blend else None)
         if morning and call_ft:
             safely(log_call_ft, tom, "ft_am", call_ft)
@@ -6058,7 +6091,8 @@ def build() -> str:
                                    "May be high" if cat_head.startswith("May be a high") else
                                    "Leaning high" if cat_head == "Leaning high" else "Normal"),
                    strength_word(r["thermal"]), now, call_ft,
-                   {"but": but, "ft_blend": blend[0] if blend else None, "three_day": bool(three)})
+                   {"but": but, "rh_jump": rh_jump, "ft_blend": blend[0] if blend else None,
+                    "three_day": bool(three)})
             safely(log_fuzzy_inputs, now, tom, cap, blend[0] if blend else None)
         for day, w in week.iterrows():
             if day < tom:
