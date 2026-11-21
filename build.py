@@ -3267,8 +3267,8 @@ def _synoptic_noon(today: str) -> dict:
 # by 15:00 -> lowered, still held level. Fronts (60) came in 280 ft low and
 # fell after noon (vs plain, from 12:00: 13 -30, 14 -230, 15 -270, 16 -130)
 # -> lowered and bent. A GFS overcast forecast (107) changed neither the level
-# (-90) nor the afternoon, so it is no longer a "but". Amounts fixed for now;
-# refitting them monthly from a merged history table is the next step.
+# (-90) nor the afternoon, so it is no longer a "but". These are the fallback
+# amounts; but_amounts() refits them from the history on every build.
 MOIST_LOWER = ((40, -540), (25, -325), (BUT_RH700_JUMP, -200))   # (jump >=, ft)
 FRONT_LOWER = -280
 FRONT_BEND = {13: -30, 14: -230, 15: -270, 16: -130}
@@ -3289,13 +3289,50 @@ def synoptic_but(day, sun=None):
     return None, jump
 
 
+# The amounts refit from the history (Sam, 11-20: "build the merge"):
+# history/days.csv joined to history/synoptic.csv by date -- the monthly job
+# adds a month to both -- flagged as synoptic_but does, refit on each build.
+# A band or the front needs BUT_FIT_MIN days, else the fixed amounts above.
+BUT_FIT_MIN = 20
+
+
+@functools.cache
+def but_amounts():
+    """{'moist': ((jump >=, ft), ...), 'front': ft, 'bend': {hour: ft}, 'n': {...}}."""
+    d = pd.read_csv(HERE / "history" / "days.csv", parse_dates=["date"]).set_index("date")
+    s = pd.read_csv(HERE / "history" / "synoptic.csv", parse_dates=["date"]).set_index("date")
+    m = d.join(s[["rh700", "dir850"]], how="inner").asfreq("D")
+    prev3 = lambda x: x.shift(1).rolling(THREE_DAY_N, min_periods=2).mean()
+    m["jump"] = m.rh700 - prev3(m.rh700)
+    m["low"] = m.level - prev3(m.level)
+    front = (m.dir850 >= 250) | (m.dir850 <= 20)
+    moist = ~front & (m.jump >= BUT_RH700_JUMP)
+    plain = ~front & ~moist & m.jump.notna()
+    out = {"moist": MOIST_LOWER, "front": FRONT_LOWER, "bend": FRONT_BEND, "n": {}}
+    bands = []
+    for (lo, fixed), hi in zip(MOIST_LOWER, [None] + [lo for lo, _ in MOIST_LOWER[:-1]]):
+        g = m[moist & (m.jump >= lo) & ((m.jump < hi) if hi else True)].low.dropna()
+        out["n"][f"moist {lo}+"] = len(g)
+        bands.append((lo, round(float(g.median()), -1) if len(g) >= BUT_FIT_MIN else fixed))
+    out["moist"] = tuple(bands)
+    g = m[front].dropna(subset=["low", "b12"])
+    out["n"]["front"] = len(g)
+    if len(g) >= BUT_FIT_MIN:
+        out["front"] = round(float(g.low.median()), -1)
+        p = m[plain].dropna(subset=["b12"])
+        out["bend"] = {h: round(float((g[f"b{h}"] - g.b12).median() - (p[f"b{h}"] - p.b12).median()), -1)
+                       for h in (13, 14, 15, 16)}
+    return out
+
+
 def but_lower(call: dict) -> float:
     """How far the lines sit below the call's number on a 'but' day."""
+    a = safely(but_amounts) or {"moist": MOIST_LOWER, "front": FRONT_LOWER}
     if call.get("but") == "front":
-        return FRONT_LOWER
+        return a["front"]
     if call.get("but") == "moist":
         j = call.get("rh_jump") or BUT_RH700_JUMP
-        return next(ft for lo, ft in MOIST_LOWER if j >= lo)
+        return next(ft for lo, ft in a["moist"] if j >= lo)
     return 0
 
 
@@ -3332,8 +3369,9 @@ def day_shape(d):
     day to its peak, held level after; bent down after noon on a front."""
     vs_level, vs_ten = (_held(s) for s in sunny_shape(d.month))
     if _call(d).get("but") == "front":
-        vs_level = {h: v + FRONT_BEND.get(h, 0) for h, v in vs_level.items()}
-        vs_ten = {h: v + FRONT_BEND.get(h, 0) for h, v in vs_ten.items()}
+        bend = (safely(but_amounts) or {}).get("bend") or FRONT_BEND
+        vs_level = {h: v + bend.get(h, 0) for h, v in vs_level.items()}
+        vs_ten = {h: v + bend.get(h, 0) for h, v in vs_ten.items()}
     return vs_level, vs_ten
 
 
