@@ -284,13 +284,13 @@
 "ft_9": 5000.0
 },
 "2026-11-22": {
-"base": "Normal",
-"rule": null,
+"base": "May be high",
+"rule": "B2",
 "thermal": "Moderate",
-"made": "2026-11-21 12:22",
-"ft": 5300.0,
+"made": "2026-11-21 12:37",
+"ft": 5100.0,
 "but": null,
-"rh_jump": -25,
+"rh_jump": null,
 "ft_blend": 5500.0,
 "three_day": true
 }
