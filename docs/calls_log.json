@@ -286,8 +286,8 @@
 "2026-11-22": {
 "base": "Normal",
 "rule": null,
-"thermal": "Moderate",
-"made": "2026-11-21 15:52",
+"thermal": "Light",
+"made": "2026-11-21 16:07",
 "ft": 5000.0,
 "but": null,
 "rh_jump": -25,
