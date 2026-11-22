@@ -101,7 +101,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><a class="homebtn" href="/">&larr; Home</a><div class="tag">Kula soaring briefing</div><h1>Kula Today</h1></div>
-    <div class="date">Updated Sun 22 Nov 2026 · 10:37 HST</div>
+    <div class="date">Updated Sun 22 Nov 2026 · 10:41 HST</div>
   </header>
 
   <div>
@@ -112,7 +112,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 
   <div class="cols">
     <section class="panel today" aria-labelledby="t-today">
-      <div class="kind">Measured today · 10:37 HST</div>
+      <div class="kind">Measured today · 10:41 HST</div>
       <div class="head"><h2 id="t-today">Today</h2><span class="chip warn">Flat</span></div>
       <div class="sub" style="display:flex;align-items:center;gap:6px;margin:2px 0 6px"><img src="https://api.weather.gov/icons/land/day/few?size=small" width="34" height="34" alt="Sunny (4%)" title="NWS: Sunny (4%)" loading="lazy" style="vertical-align:middle;border-radius:4px;margin-left:6px"><span>NWS today: Sunny (4%)</span></div>
       <p class="summary">Cloudbase is at its highest of the day and still edging up. The whole slope is in sun. Trade air is reaching the lower west slope at Pulehu.</p><div style="font-weight:600;font-size:.9rem;margin:10px 0 2px">Cloudbase so far</div><div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted,#6b6b66);margin:2px 0 4px">
@@ -177,7 +177,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 </script>
       <dl>
         <dt><a href="details.html#t-thermal">Thermals</a></dt><dd>Seem <strong>flat</strong> as of 10:15<div class="sub">Kula Ag's last hour of air through the RRFS sounding (thermal.py)</div></dd>
-        <dt><a href="details.html#t-thermal">Cloudbase</a></dt><dd><span class="num">About 5,300 ft</span><div class="sub">Cumulus in view since 07:53, not yet over the camera's slope: the stations' estimate (11 stations, 10:15) until the Kekoa camera reads a base.</div><div class="sub">Midday (11:00–14:00): probably about 4,900 ft, from the 09:00 base</div></dd>
+        <dt><a href="details.html#t-thermal">Cloudbase</a></dt><dd><span class="num">About 5,300 ft</span><div class="sub">Cumulus in view since 07:53, not yet over the camera's slope: the stations' estimate (11 stations, 10:15) until the Kekoa camera reads a base.</div></dd>
         <dt><a href="details.html#t-ladder">Sun</a></dt><dd><span class="num">100%</span> of clear sky, lower Kula slope<div class="sub">Last hour, as of 10:15; average of Kula Ag 100%, Keokea 100%; Pulehu left out, in trade air</div></dd>
         <dt><a href="details.html#stationmap">Shear line</a></dt><dd>Crossing Kula Highway near Omaopio<div class="sub">Fitted to the station map: flow from the north at Pulehu, upslope at MECO Lower Kimo Dr nearest the line</div><div class="sub">At the coast: Paia 066° at 28 mph</div><div class="alert">Trade air reaching the lower west slope: Pulehu NNE at 14 mph; the line may be further south than shown</div></dd>
         
@@ -240,7 +240,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
   </div>
 
 </div>
-<!-- build problems: none -->
+<!-- build problems: HCDP observations, using the last good fetch: MesonetDown: Mesonet out this build: ReadTimeout: HTTPSConnectionPool(host='api.hcdp.ikewai.org', port=443): Read timed out. (read timeout=10); Mesonet sun: MesonetDown: Mesonet out this build (ReadTimeout on /mesonet/db/measurements); sun ladder from 09:15 reused; first_cumulus: MesonetDown: Mesonet out this build (ReadTimeout on /mesonet/db/measurements); midday_from_nine: MesonetDown: Mesonet out this build (ReadTimeout on /mesonet/db/measurements); sun_trend: MesonetDown: Mesonet out this build (ReadTimeout on /mesonet/db/measurements); overnight_line: MesonetDown: Mesonet out this build (ReadTimeout on /mesonet/db/measurements); summit_spill: MesonetDown: Mesonet out this build (ReadTimeout on /mesonet/db/measurements) -->
 <script>
 /* Catch up with a new build within ~2 minutes (Sam, 2026-10-17: "the page
    does not seem to autoupdate"). stations.json's "made" is the build time;
@@ -248,7 +248,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
    browser's 10-minute cached copy is bypassed. The 15-minute refresh stays
    as a backstop. */
 (function () {
-  var built = "2026-11-22T10:37";
+  var built = "2026-11-22T10:41";
   function check() {
     fetch("stations.json?" + Date.now(), {cache: "no-store"})
       .then(function (r) { return r.json(); })
