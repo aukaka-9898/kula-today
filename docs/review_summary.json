@@ -1,18 +1,18 @@
 {
- "made": "2026-11-21 22:43",
+ "made": "2026-11-22 03:15",
  "flags": [
   "Summit-cloud alert so far: 0 of 6 alerted days had cloud come over; 0 intrusions came without an alert.",
   "Per-station forecast base: 57 days logged. On the later half, per-station corrections miss the derived base by 430 ft typically, the page's Kula Ag + 0 ft by 546 ft. Ready to decide whether to switch.",
-  "Accuracy: the thermal forecast ran 0.7 steps strong over 28 days (right on 10). Suggest: set apart the days the sun forecast missed (no air setting fixes those), then backtest the forecast-air warming (now +3 F) at +0/+1/+2 F on the rest before changing it.",
-  "Derived vs camera: 27 days with camera readings; derived ran -140 ft against the camera at midday. Suggest: fit a first derived correction (option 2), to be refitted each season."
+  "Accuracy: the thermal forecast ran 0.7 steps strong over 28 days (right on 9). Suggest: set apart the days the sun forecast missed (no air setting fixes those), then backtest the forecast-air warming (now +3 F) at +0/+1/+2 F on the rest before changing it.",
+  "Derived vs camera: 28 days with camera readings; derived ran -120 ft against the camera at midday. Suggest: fit a first derived correction (option 2), to be refitted each season."
  ],
  "stats": {
-  "base_days": 22,
-  "base_mean": 101,
-  "base_raw_mean": 101,
-  "base_sd": 612,
+  "base_days": 21,
+  "base_mean": 89,
+  "base_raw_mean": 89,
+  "base_sd": 602,
   "base_morning": 142,
-  "base_afternoon": 45,
+  "base_afternoon": 15,
   "alert_days": 6,
   "alert_hits": 0,
   "intrusions_missed": 0,
@@ -21,14 +21,14 @@
   "cam_redhill_cloud_min_days": 14,
   "station_days": 57,
   "accuracy": {
-   "base_n": 25,
+   "base_n": 26,
    "base_within": 15,
    "base_typical": 390.0,
-   "base_bias": 80.0,
+   "base_bias": 100.0,
    "thermal_n": 28,
-   "thermal_right": 10,
+   "thermal_right": 9,
    "thermal_within_one": 27,
-   "thermal_bias": 0.68,
+   "thermal_bias": 0.71,
    "rules": {
     "B1": [
      3,
@@ -39,8 +39,8 @@
      1
     ]
    },
-   "camera_days": 27,
-   "derived_minus_camera": -140.0,
+   "camera_days": 28,
+   "derived_minus_camera": -120.0,
    "pilots": true
   }
  }
