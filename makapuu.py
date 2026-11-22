@@ -410,11 +410,20 @@ def cam_text(cam: dict, ceil_ft=None) -> str:
         dn = [n for n in named if n in down]
         if clear and not down:
             return text + "; the whole ridge is clear."
+        # "In clouds" only when the camera sees cloud ON the crest (the capped
+        # branch above); a bottom within 200 ft of the top here is cloud just
+        # above it (Sam, 11-22: "konhuanui is not in the clouds" -- a deck sat
+        # just above and behind the peak, read at 2,850-3,000 against 3,046,
+        # ceilometer FEW 3,900). Cloud beyond the crest is placed at the crest's
+        # distance and reads LOW (Sam: "it may be reading clouds behind the
+        # ridge resulting in a lower call. I don't know what can be done about
+        # that") -- so these bounds lean low; not corrected.
         parts = []
         if cl:
             parts.append(f"{_and(cl)} {'is' if len(cl) == 1 else 'are'} clear")
         if dn:
-            parts.append(f"{_and(dn)} {'is' if len(dn) == 1 else 'are'} in clouds")
+            parts.append(f"{_and(dn)} {'is' if len(dn) == 1 else 'are'} clear, with cloud just above "
+                         + ("it" if len(dn) == 1 else "them"))
         return text + (". " + _cap("; ".join(parts)) + "." if parts else ".")
     return "The ridge is clear, with no cloud base in view above it."
 
