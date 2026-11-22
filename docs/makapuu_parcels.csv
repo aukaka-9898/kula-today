@@ -6003,3 +6003,6 @@ date,time,station,obs_time,temp_f,dew_f,dew_from,lcl_ft,ti_c,word,camera,camera_
 2026-11-22,09:53,Kaneohe runway,08:57,77.0,66.0,own,2500.0,-1.2,Flat,"Cloud base no higher than about 3,100–3,700 ft along the ridge. Konahuanui is in clouds.",3420.0
 2026-11-22,09:53,Heeia,09:30,77.5,70.4,own,1640.0,-1.9,Flat,"Cloud base no higher than about 3,100–3,700 ft along the ridge. Konahuanui is in clouds.",3420.0
 2026-11-22,09:53,Moku o Loe,09:48,76.6,,,,,,"Cloud base no higher than about 3,100–3,700 ft along the ridge. Konahuanui is in clouds.",3420.0
+2026-11-22,10:08,Kaneohe runway,09:57,77.0,64.9,own,2750.0,-1.19,Flat,"Cloud base no higher than about 3,400–3,800 ft along the ridge. Konahuanui is clear.",3430.0
+2026-11-22,10:08,Heeia,09:30,77.5,70.4,own,1640.0,-1.99,Flat,"Cloud base no higher than about 3,400–3,800 ft along the ridge. Konahuanui is clear.",3430.0
+2026-11-22,10:08,Moku o Loe,10:00,77.2,,,,,,"Cloud base no higher than about 3,400–3,800 ft along the ridge. Konahuanui is clear.",3430.0
