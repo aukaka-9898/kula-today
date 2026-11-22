@@ -351,7 +351,7 @@ def log_gap(now: datetime, cam: dict) -> None:
 HIDDEN_SHARE = 0.5     # a stretch whose crest is out of sight this much of the time
 
 
-def cam_text(cam: dict, ceil_ft=None) -> str:
+def cam_text(cam: dict, ceil_ft=None, ceil_clear=False) -> str:
     # The crest out of sight -- cloud on the ridge, or rain or cloud between it
     # and the camera (10-28) -- is said as such, never read as "clear".
     hidden = [n for n, s in cam["segments"].items() if s.get("hidden", 0) >= HIDDEN_SHARE and n != "Pali gap"]
@@ -360,7 +360,7 @@ def cam_text(cam: dict, ceil_ft=None) -> str:
         return "The ridge is hidden: cloud or rain over the Koʻolau."
     if hidden:
         cam = {**cam, "segments": {n: s for n, s in cam["segments"].items() if n not in hidden}}
-        rest = cam_text(cam)
+        rest = cam_text(cam, ceil_ft, ceil_clear)
         return rest + " " + _cap(f"{_and(hidden)} {'is' if len(hidden) == 1 else 'are'} hidden by cloud or rain.")
     capped = [n for n, s in cam["segments"].items() if s["capped"] >= CAP_SHARE and n != "Pali gap"]
     if capped:
@@ -380,6 +380,16 @@ def cam_text(cam: dict, ceil_ft=None) -> str:
         tail = (f"{_and(named)} {'is' if len(named) == 1 else 'are'} in clouds" if named
                 else "the crest is in clouds")
         return f"{lead}. {_cap(tail)}."
+    # No cloud on the crest: the camera can't tell how far above it the base
+    # is (cloud beyond the ridge reads low), so the number is the ceilometer's
+    # (Sam, 11-22: "Trying to call 3900 from the cam would be very difficult.
+    # If contact with the ridge cannot be determined use the ceilometer").
+    # The camera-only wording below stays for the logs and when the
+    # ceilometer has nothing.
+    if ceil_ft is not None:
+        return f"Cloud base about {round(ceil_ft, -2):,.0f} ft by Kāneʻohe's ceilometer; the ridge is clear."
+    if ceil_clear:
+        return "No cloud below 12,000 ft over Kāneʻohe (ceilometer); the ridge is clear."
     if cam["base_ft"]:
         # Each stretch's own cloud bottoms against its own tops (terrain model)
         # -- Sam, 10-25: "Above the ridge in places ... Use the DEM to provide a
@@ -1382,7 +1392,7 @@ def write(now: datetime) -> None:
     # the same trouble. Outside CAMERA_HOURS the ceilometer stands alone.
     in_hours = CAMERA_HOURS[0] <= f"{now:%H:%M}" <= CAMERA_HOURS[1]
     cam = _try(crest_camera, now, problems=problems) if in_hours else None
-    cam_line = cam_text(cam, low["base"] if low else None) if cam else ""
+    cam_line = cam_text(cam, low["base"] if low else None, clear_sky) if cam else ""
     if cam:
         problems += [f"camera outlier left out: {n} {cam['segments'][n]['base_ft']:,.0f} ft"
                      for n in drop_outliers(cam) if n != "Pali gap"]
