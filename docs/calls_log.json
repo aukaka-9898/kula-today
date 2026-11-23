@@ -311,5 +311,16 @@
 "ft_am": 5200.0,
 "but_am": null,
 "ft_am_blend": 5600.0
+},
+"2026-11-24": {
+"base": "Normal",
+"rule": null,
+"thermal": "Light",
+"made": "2026-11-23 10:07",
+"ft": 5100.0,
+"but": null,
+"rh_jump": -22,
+"ft_blend": null,
+"three_day": true
 }
 }
