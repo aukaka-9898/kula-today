@@ -1,18 +1,19 @@
 {
- "made": "2026-11-22 18:52",
+ "made": "2026-11-23 00:38",
  "flags": [
   "Summit-cloud alert so far: 0 of 6 alerted days had cloud come over; 0 intrusions came without an alert.",
   "Per-station forecast base: 58 days logged. On the later half, per-station corrections miss the derived base by 431 ft typically, the page's Kula Ag + 0 ft by 520 ft. Ready to decide whether to switch.",
   "Accuracy: the thermal forecast ran 0.7 steps strong over 28 days (right on 9). Suggest: set apart the days the sun forecast missed (no air setting fixes those), then backtest the forecast-air warming (now +3 F) at +0/+1/+2 F on the rest before changing it.",
-  "Derived vs camera: 28 days with camera readings; derived ran -120 ft against the camera at midday. Suggest: fit a first derived correction (option 2), to be refitted each season."
+  "Derived vs camera: 28 days with camera readings; derived ran -110 ft against the camera at midday. Suggest: fit a first derived correction (option 2), to be refitted each season.",
+  "Weekly accuracy, last 30 days: cloudbase within 500 ft on 15 of 27 days, typical miss 400 ft; thermals right on 9 of 28, within one step on 27."
  ],
  "stats": {
-  "base_days": 22,
-  "base_mean": 58,
-  "base_raw_mean": 58,
-  "base_sd": 603,
-  "base_morning": 106,
-  "base_afternoon": -16,
+  "base_days": 21,
+  "base_mean": 33,
+  "base_raw_mean": 33,
+  "base_sd": 604,
+  "base_morning": 67,
+  "base_afternoon": -25,
   "alert_days": 6,
   "alert_hits": 0,
   "intrusions_missed": 0,
@@ -21,10 +22,10 @@
   "cam_redhill_cloud_min_days": 14,
   "station_days": 58,
   "accuracy": {
-   "base_n": 26,
+   "base_n": 27,
    "base_within": 15,
-   "base_typical": 390.0,
-   "base_bias": 100.0,
+   "base_typical": 400.0,
+   "base_bias": 70.0,
    "thermal_n": 28,
    "thermal_right": 9,
    "thermal_within_one": 27,
@@ -40,8 +41,8 @@
     ]
    },
    "camera_days": 28,
-   "derived_minus_camera": -120.0,
-   "pilots": true
+   "derived_minus_camera": -110.0,
+   "pilots": false
   }
  }
 }
