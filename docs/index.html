@@ -101,18 +101,18 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><a class="homebtn" href="/">&larr; Home</a><div class="tag">Kula soaring briefing</div><h1>Kula Today</h1></div>
-    <div class="date">Updated Sun 22 Nov 2026 · 16:37 HST</div>
+    <div class="date">Updated Sun 22 Nov 2026 · 16:52 HST</div>
   </header>
 
   <div>
     <!-- The FAA viewer shows its station list before it opens the camera; the latest frame covers that until it has (Sam, 2026-10-25). -->
-    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" title="Red Hill webcam, live, looking south along the Kula slope" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="https://images.wcams-static.faa.gov/webimages/931/23/13417-1795400872487.jpg" alt="" onerror="this.remove()"></div>
+    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" title="Red Hill webcam, live, looking south along the Kula slope" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="https://images.wcams-static.faa.gov/webimages/931/23/13417-1795401907761.jpg" alt="" onerror="this.remove()"></div>
     <div class="camcap">Red Hill webcam, live. FAA WeatherCam (Kekoa). <a href="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" target="_blank" rel="noopener">Open full size</a></div>
   </div>
 
   <div class="cols">
     <section class="panel today" aria-labelledby="t-today">
-      <div class="kind">Measured today · 16:37 HST</div>
+      <div class="kind">Measured today · 16:52 HST</div>
       <div class="head"><h2 id="t-today">Today</h2><span class="chip good">Moderate</span></div>
       <div class="sub" style="display:flex;align-items:center;gap:6px;margin:2px 0 6px"><img src="https://api.weather.gov/icons/land/day/few?size=small" width="34" height="34" alt="Sunny (3%)" title="NWS: Sunny (3%)" loading="lazy" style="vertical-align:middle;border-radius:4px;margin-left:6px"><span>NWS today: Sunny (3%)</span></div>
       <p class="summary">Cloudbase is lowering. Trade air is reaching the lower west slope at Pulehu.</p><div style="font-weight:600;font-size:.9rem;margin:10px 0 2px">Cloudbase so far</div><div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted,#6b6b66);margin:2px 0 4px">
@@ -177,9 +177,9 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 </script>
       <dl>
         <dt><a href="details.html#t-thermal">Thermals</a></dt><dd>Seem <strong>moderate</strong> as of 15:45<div class="sub">Kula Ag's last hour of air through the RRFS sounding (thermal.py)</div></dd>
-        <dt><a href="details.html#t-thermal">Cloudbase</a></dt><dd><span class="num">About 4,800 ft</span><div class="sub">Kekoa camera, median of the last hour to 16:28. Stations: about 4,800 ft (11 stations, 16:10).</div></dd>
+        <dt><a href="details.html#t-thermal">Cloudbase</a></dt><dd><span class="num">About 4,800 ft</span><div class="sub">Kekoa camera, median of the last hour to 16:45. Stations: about 4,800 ft (11 stations, 16:10).</div></dd>
         <dt><a href="details.html#t-ladder">Sun</a></dt><dd>Unavailable</dd>
-        <dt><a href="details.html#stationmap">Shear line</a></dt><dd>Crossing Kula Highway near Omaopio<div class="sub">Fitted to the station map: flow from the north at Waihou Springs 1, upslope at Red Hill nearest the line</div><div class="sub">At the coast: Paia 077° at 24 mph</div><div class="alert">Trade air reaching the lower west slope: Pulehu N at 6 mph; the line may be further south than shown</div></dd>
+        <dt><a href="details.html#stationmap">Shear line</a></dt><dd>Crossing Kula Highway near Omaopio<div class="sub">Fitted to the station map: flow from the north at Pulehu, upslope at MECO Lower Kimo Dr nearest the line</div><div class="sub">At the coast: Paia 077° at 24 mph</div><div class="alert">Trade air reaching the lower west slope: Pulehu N at 6 mph; the line may be further south than shown</div></dd>
         
         <dt><a href="details.html#stationmap">Upslope</a></dt><dd>On since about <span class="num">09:15</span><div class="sub">Drainage ended about 08:30</div></dd>
         <dt><a href="details.html#stationmap">Wind</a></dt><dd><span class="num">6 mph</span>, gusts to 14<div class="sub">Lower elevations, 10 stations, last hour</div><div class="alert">Gustier than usual</div></dd>
@@ -240,7 +240,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
   </div>
 
 </div>
-<!-- build problems: HCDP observations, using api.weather.gov: MesonetDown: Mesonet out this build: ConnectTimeout: HTTPSConnectionPool(host='api.hcdp.ikewai.org', port=443): Max retries exceeded with url: /mesonet/db/measurements?location=hawaii&station_ids=0115%2C0118%2C0144%2C0116%2C0119%2C0145%2C0151%2C0152%2C0153%2C0143&var_ids=Tair_1_Avg%2CRH_1_Avg%2CWS_1_Avg%2CWDrs_1_Avg%2CWS_1_Max&start_date=2026-11-22T00%3A00%3A00-10%3A00&row_mode=json&limit=100000 (Caused by ConnectTimeoutError(<HTTPSConnection(host='api.hcdp.ikewai.org', port=443) at 0x74bba7267170), 'Connection to api.hcdp.ikewai.org timed out. (connect timeout=10)')); net_radiation: MesonetDown: Mesonet out this build (ConnectTimeout on /mesonet/db/measurements); Mesonet sun: MesonetDown: Mesonet out this build (ConnectTimeout on /mesonet/db/measurements); first_cumulus: MesonetDown: Mesonet out this build (ConnectTimeout on /mesonet/db/measurements); window_sun: MesonetDown: Mesonet out this build (ConnectTimeout on /mesonet/db/measurements); sun_trend: MesonetDown: Mesonet out this build (ConnectTimeout on /mesonet/db/measurements); sky_now: MesonetDown: Mesonet out this build (ConnectTimeout on /mesonet/db/measurements); summit_spill: MesonetDown: Mesonet out this build (ConnectTimeout on /mesonet/db/measurements); details yesterday: MesonetDown -->
+<!-- build problems: HCDP observations, using api.weather.gov: MesonetDown: Mesonet out this build: ReadTimeout: HTTPSConnectionPool(host='api.hcdp.ikewai.org', port=443): Read timed out. (read timeout=10); net_radiation: MesonetDown: Mesonet out this build (ReadTimeout on /mesonet/db/measurements); Mesonet sun: MesonetDown: Mesonet out this build (ReadTimeout on /mesonet/db/measurements); first_cumulus: MesonetDown: Mesonet out this build (ReadTimeout on /mesonet/db/measurements); window_sun: MesonetDown: Mesonet out this build (ReadTimeout on /mesonet/db/measurements); sun_trend: MesonetDown: Mesonet out this build (ReadTimeout on /mesonet/db/measurements); sky_now: MesonetDown: Mesonet out this build (ReadTimeout on /mesonet/db/measurements); summit_spill: MesonetDown: Mesonet out this build (ReadTimeout on /mesonet/db/measurements) -->
 <script>
 /* Catch up with a new build within ~2 minutes (Sam, 2026-10-17: "the page
    does not seem to autoupdate"). stations.json's "made" is the build time;
@@ -248,7 +248,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
    browser's 10-minute cached copy is bypassed. The 15-minute refresh stays
    as a backstop. */
 (function () {
-  var built = "2026-11-22T16:37";
+  var built = "2026-11-22T16:52";
   function check() {
     fetch("stations.json?" + Date.now(), {cache: "no-store"})
       .then(function (r) { return r.json(); })
