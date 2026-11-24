@@ -6380,3 +6380,8 @@ date,time,station,obs_time,temp_f,dew_f,dew_from,lcl_ft,ti_c,word,camera,camera_
 2026-11-23,17:55,Nonokio,17:30,74.8,64.7,own,2320.0,0.21,Flat,,
 2026-11-23,17:55,Mokuhano,17:30,75.6,64.3,own,2590.0,-0.31,Flat,,
 2026-11-23,17:55,Moku o Loe,17:48,75.7,,,,,,,
+2026-11-24,08:08,Kaneohe runway,07:57,73.0,64.0,own,2050.0,1.11,Flat,"Cloud base no higher than about 3,600 ft; the whole ridge is clear.",3630.0
+2026-11-24,08:08,Heeia,07:30,64.6,64.6,own,10.0,5.78,Flat,"Cloud base no higher than about 3,600 ft; the whole ridge is clear.",3630.0
+2026-11-24,08:08,Nonokio,07:10,66.1,62.5,own,800.0,5.14,Flat,"Cloud base no higher than about 3,600 ft; the whole ridge is clear.",3630.0
+2026-11-24,08:08,Mokuhano,07:10,74.6,61.1,own,3090.0,0.46,Flat,"Cloud base no higher than about 3,600 ft; the whole ridge is clear.",3630.0
+2026-11-24,08:08,Moku o Loe,08:00,72.0,,,,,,"Cloud base no higher than about 3,600 ft; the whole ridge is clear.",3630.0
