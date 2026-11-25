@@ -59,6 +59,10 @@ def _capture(site: int, cam_id: int, archive: Path) -> int:
 # than this go; so do the pictures in old test folders -- their keys and
 # answers stay, and the scores are in docs/camera_tests.csv.
 KEEP_DAYS = 4
+# Case days kept past KEEP_DAYS (Sam, 11-24: "pay close attention to the next
+# 4 days" -- the 11-25/26 front, Friday's first "Possible best day" test).
+# Delete by hand when done with them.
+KEEP_ALWAYS = {"2026-11-25", "2026-11-26", "2026-11-27", "2026-11-28"}
 
 
 def prune(today=None) -> int:
@@ -67,7 +71,7 @@ def prune(today=None) -> int:
     gone = 0
     for _, _, folder in CAMS:
         for d in (ARCHIVE.parent / folder).glob("????-??-??"):
-            if d.is_dir() and re.fullmatch(r"\d{4}-\d\d-\d\d", d.name) and d.name < cut:
+            if d.is_dir() and re.fullmatch(r"\d{4}-\d\d-\d\d", d.name) and d.name < cut and d.name not in KEEP_ALWAYS:
                 shutil.rmtree(d)
                 gone += 1
     for d in ARCHIVE.parent.glob("????-??-??_*"):
