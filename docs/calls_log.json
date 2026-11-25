@@ -346,11 +346,11 @@
 "base": "Normal",
 "rule": null,
 "thermal": "Light",
-"made": "2026-11-25 12:37",
+"made": "2026-11-25 12:52",
 "ft": 5600.0,
 "but": "front",
 "rh_jump": 50,
-"ft_blend": 4600.0,
+"ft_blend": 4700.0,
 "three_day": true
 }
 }
