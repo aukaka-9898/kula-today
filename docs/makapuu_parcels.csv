@@ -6575,3 +6575,7 @@ date,time,station,obs_time,temp_f,dew_f,dew_from,lcl_ft,ti_c,word,camera,camera_
 2026-11-25,08:23,Kaneohe runway,07:57,69.1,66.0,own,700.0,1.41,Flat,"Cloud base no higher than about 2,800–3,400 ft along the ridge; the whole ridge is clear.",3240.0
 2026-11-25,08:23,Heeia,07:30,62.4,62.3,own,10.0,5.48,Flat,"Cloud base no higher than about 2,800–3,400 ft along the ridge; the whole ridge is clear.",3240.0
 2026-11-25,08:23,Moku o Loe,08:18,70.7,,,,,,"Cloud base no higher than about 2,800–3,400 ft along the ridge; the whole ridge is clear.",3240.0
+2026-11-25,08:38,Kaneohe runway,07:57,69.1,66.0,own,700.0,0.87,Flat,"Cloud base no higher than about 3,100–3,400 ft along the ridge. Konahuanui is clear, with cloud just above it.",2880.0
+2026-11-25,08:38,Heeia,07:30,62.4,62.3,own,10.0,4.94,Flat,"Cloud base no higher than about 3,100–3,400 ft along the ridge. Konahuanui is clear, with cloud just above it.",2880.0
+2026-11-25,08:38,Nonokio,08:20,68.7,67.6,own,250.0,0.97,Flat,"Cloud base no higher than about 3,100–3,400 ft along the ridge. Konahuanui is clear, with cloud just above it.",2880.0
+2026-11-25,08:38,Moku o Loe,08:30,72.0,,,,,,"Cloud base no higher than about 3,100–3,400 ft along the ridge. Konahuanui is clear, with cloud just above it.",2880.0
