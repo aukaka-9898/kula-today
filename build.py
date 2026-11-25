@@ -2268,6 +2268,53 @@ def line_sane(got: dict, lat: float, lad: pd.DataFrame) -> dict:
 
 # -- forecast ------------------------------------------------------------------
 
+# Front outlook (Sam, 11-24: "both sites, front days only"). The front day
+# comes from the NWS hourly grid off Paia (HFO 215,127), by the same rule as
+# Makapuʻu's page: the midday wind swings into the north sector (290-030) at
+# 15 mph+ after a day that wasn't, within 4 days. (The week's daily offshore
+# direction can't tell the pre-frontal westerly from the post-frontal
+# northwesterly: 292 vs 297 deg on 11-25/26.)
+MAUI_GRID = "https://api.weather.gov/gridpoints/HFO/215,127"
+# Past fronts (history, 7 clear ones Oct-Apr 2024-26): the front day's midday
+# base ran about 850 ft under the month's usual with ~40% sun; the day after
+# about 150 ft under; by the third day back to normal.
+FRONT_SECTOR = (290, 30)
+
+
+def maui_front(now: datetime):
+    """(front date, swing hour, compass) from the Maui grid, or (None, None, None)."""
+    import makapuu
+    grid = makapuu.grid_hours(MAUI_GRID)
+    front, swing = makapuu.front_day(grid, now)
+    return front, swing, (cv.compass(grid[swing]["dir"]) if swing else None)
+
+
+def front_outlook(week: pd.DataFrame | None, now: datetime, mf=None) -> str:
+    if week is None or not len(week) or not mf or mf[0] is None:
+        return ""
+    front, swing, comp = mf
+    days = [now.date() + timedelta(days=k) for k in range(0, 5)]
+    out = [f"A cold front: the wind swings to the {comp} from about {swing:%a} {swing:%H}:00 (NWS grid off Paia)."
+           if swing else "A cold front in the forecast."]
+    d, last = now.date() + timedelta(days=1), min(front + timedelta(days=2), days[-1])
+    while d <= last:
+        if d in week.index:
+            r = week.loc[d]
+            lt = r["shear_location"]
+            line = ("no shear line" if lt is None or pd.isna(lt) else
+                    line_at(dict(cv.LANDMARKS)[lt]) if lt in dict(cv.LANDMARKS) else f"near {lt}")
+            th_w = strength_word(r["thermal"]).lower()
+            if d == front:
+                bit = f"{d:%a} (front day): base usually well under the usual and cloudier; thermals {th_w}"
+            elif d == front + timedelta(days=1):
+                bit = f"{d:%a} (day after): base usually back near the usual; {line}; thermals {th_w}"
+            else:
+                bit = f"{d:%a}: {line}; thermals {th_w}"
+            out.append(bit + ".")
+        d += timedelta(days=1)
+    return " ".join(out)
+
+
 def outlook() -> pd.DataFrame:
     return cv.soaring()
 
@@ -6117,7 +6164,9 @@ def build() -> str:
         # No summary paragraph (Sam, 2026-10-17: "the whole summary paragraph
         # is unnecessary"): the rows below say it. said_t is still worked out
         # but not shown.
-        t_html = push_html + f"""<dl>
+        mf = safely(maui_front, now)
+        fo = safely(front_outlook, week, now, mf) or ""
+        t_html = push_html + (f'<p class="summary"><strong>Outlook.</strong> {esc(fo)}</p>' if fo else "") + f"""<dl>
         <dt><a href="details.html#t-thermal">Thermals</a></dt><dd>Probably {esc(strength_word(r['thermal']).lower())}<div class="sub">thermal.py on the forecast air (+3 F, it runs cool); within one category of the measured rating on every test day</div></dd>
         <dt><a href="details.html#t-thermal">Cloudbase</a></dt><dd>{esc(cb_head)}<div class="sub">{esc(cb_sub)}</div>{safely(recent_variance_html, tom) or ""}</dd>
         <dt>Sun</dt><dd><span class="num">{pct(r['sun'])}</span> of clear sky, 10:00–14:00 (GFS)<div class="sub">The model can't see the slope's own cumulus: when it says 90% or more, Kula has measured about 80%. Good flying days measure about 80%, overcast about 50%, socked in 20%.</div></dd>
@@ -6149,7 +6198,15 @@ def build() -> str:
                    "May be high" if cat and cat[0].startswith("May be a high") else
                    "Leaning high" if cat and cat[0] == "Leaning high" else
                    "Normal" if cat else "--")
-            rows_html += (f"<tr><td>{day:%a %d}</td><td class=\"n\">{pct(w['sun'])}</td>"
+            # The front in the week too (Sam, 11-24): its day's base is Low
+            # (past fronts ~850 ft under the usual), and both days are marked.
+            fday = mf[0] if mf else None
+            tag = ""
+            if fday and day == fday:
+                cat, tag = "Low", " · front"
+            elif fday and day == fday + timedelta(days=1):
+                tag = " · after front"
+            rows_html += (f"<tr><td>{day:%a %d}{tag}</td><td class=\"n\">{pct(w['sun'])}</td>"
                           f"<td>{cat}</td>"
                           f"<td>{esc(strength_word(w['thermal']))}</td><td>{lt}</td></tr>")
 

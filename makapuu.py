@@ -132,8 +132,8 @@ def _intervals(series: dict, conv) -> dict:
     return out
 
 
-def grid_hours() -> dict:
-    p = requests.get(GRID, headers=HEAD, timeout=60).json()["properties"]
+def grid_hours(url: str = None) -> dict:
+    p = requests.get(url or GRID, headers=HEAD, timeout=60).json()["properties"]
     kmh = lambda v: v * 0.621371
     d, s, g, sky = (_intervals(p["windDirection"], float), _intervals(p["windSpeed"], kmh),
                     _intervals(p["windGust"], kmh), _intervals(p["skyCover"], float))
@@ -547,6 +547,69 @@ def day_line(rows: list) -> tuple[str, str]:
     if light:
         return "Light", f"Light {spans(light)}: run-off launch only."
     return "Not flyable", "Not flyable in daylight."
+
+
+# Front outlook (Sam, 11-24: "With frontal conditions, I wonder if 'tomorrow'
+# might include longer term notes"; "both sites, front days only"). A front
+# day = the NWS grid's midday wind swings into the north sector (290-030) at
+# 15 mph or more after a day that wasn't; looked for over the next 4 days.
+# Each day's words come from the same ratings as the week; the cold-air note
+# from RRFS where it reaches.
+FRONT_SECTOR = (290, 30)
+FRONT_MPH = 15
+
+
+def _north(d) -> bool:
+    return d is not None and (d % 360 >= FRONT_SECTOR[0] or d % 360 <= FRONT_SECTOR[1])
+
+
+def _midday(grid: dict, days: list) -> dict:
+    mid = {}
+    for d in days:
+        rows = [v for t, v in grid.items() if t.date() == d and 10 <= t.hour <= 15 and v.get("mph") is not None]
+        if rows:
+            mid[d] = (_mean_dir([v.get("dir") for v in rows]), sum(v["mph"] for v in rows) / len(rows),
+                      max((v.get("gust") or v["mph"]) for v in rows))
+    return mid
+
+
+def front_day(grid: dict, now: datetime):
+    """(front date, first hour the wind swings north) over the next 4 days, or (None, None).
+    Also used by Kula's page with the Maui grid."""
+    days = [now.date() + timedelta(days=k) for k in range(0, 5)]
+    mid = _midday(grid, days)
+    front = next((d for d in days[1:] if d in mid and _north(mid[d][0]) and mid[d][1] >= FRONT_MPH
+                  and not (d - timedelta(days=1) in mid and _north(mid[d - timedelta(days=1)][0]))), None)
+    if front is None:
+        return None, None
+    start = datetime.combine(front - timedelta(days=1), datetime.min.time()).replace(tzinfo=HST)
+    swing = next((t for t in sorted(grid) if t >= start and _north(grid[t].get("dir")) and (grid[t].get("mph") or 0) >= 12), None)
+    return front, swing
+
+
+def front_outlook(now: datetime, grid: dict, air: dict | None) -> str:
+    days = [now.date() + timedelta(days=k) for k in range(0, 5)]
+    mid = _midday(grid, days)
+    front, swing = front_day(grid, now)
+    if front is None:
+        return ""
+    out = [f"A cold front: the wind swings to the {compass(grid[swing]['dir'])} from about "
+           f"{swing:%a} {swing:%H}:00 (NWS grid)." if swing else "A cold front in the forecast."]
+    last = min(front + timedelta(days=2), days[-1])
+    d = now.date() + timedelta(days=1)
+    while d <= last:
+        if d in mid:
+            rows = [(t, grid[t]) for t in sorted(grid) if t.date() == d and t.hour in DAY_HOURS]
+            word, _ = day_line([(t, rate(v["dir"], v["mph"], v["gust"])[0]) for t, v in rows])
+            dd, mph, gust = mid[d]
+            tag = " (front day)" if d == front else " (day after)" if d == front + timedelta(days=1) else ""
+            bit = f"{d:%a}{tag}: {compass(dd) if dd is not None else 'variable'} {mph:.0f}, gusts {gust:.0f}, {word.lower()}"
+            ca = cold_air(air, d) if air else None
+            if ca and ca["cold"] and word in ("Flyable", "Caution"):
+                bit += "; cold air low down: possible best day"
+            out.append(bit + ".")
+        d += timedelta(days=1)
+    return " ".join(out)
 
 
 def short_wind(w) -> str:
@@ -1469,15 +1532,18 @@ def write(now: datetime) -> None:
     tline = f"{tline} {tnote}" if tnote else tline
     tbest = best_note(_try(cold_air, air, tom, problems=problems), fly_hours(trows), tom)
     tline = f"{tline} {tbest}" if tbest else tline
+    outlook = _try(front_outlook, now, grid, air, problems=problems) or ""
     tom_html = (f'<p class="summary">{esc(tline)} Midday: {esc(wind_text(noon))}. '
                 f'{esc(return_note(noon["dir"]) if noon and noon.get("dir") is not None else "")}'
                 f'{esc(aloft)}</p>'
+                + (f'<p class="summary"><strong>Outlook.</strong> {esc(outlook)}</p>' if outlook else "")
                 + hour_table(trows)) if trows else "<p>No forecast available.</p>"
 
     import nwsalerts                                            # NWS alerts for launch's area (Sam, 10-27)
     alerts = _try(nwsalerts.line_html, 21.3204, -157.6788, problems=problems) or ""
     icons = _try(nwsalerts.day_icons, "makapuu", problems=problems) or {}   # every day
     week = ""
+    wk_front = (_try(front_day, grid, now, problems=problems) or (None, None))[0]
     for k_day in range(1, 7):
         d = now.date() + timedelta(days=k_day)
         rows = [(t, grid[t]) for t in sorted(grid) if t.date() == d and t.hour in DAY_HOURS]
@@ -1488,6 +1554,14 @@ def write(now: datetime) -> None:
         da = _try(air_day, air, surf, d, problems=problems) if air else None
         dnote = thermal_day(bw, da["word"] if da else None)
         line = f"{line} {dnote}" if dnote else line
+        # The front in the week too (Sam, 11-24: '"Week" should also be adjusted').
+        if wk_front and d == wk_front:
+            line += " Front day."
+        elif wk_front and d == wk_front + timedelta(days=1):
+            line += " Day after the front."
+        wb = best_note(_try(cold_air, air, d, problems=problems), fly_hours(rows), d) if air else ""
+        if wb:
+            line += " Possible best day: cold air low down."
         # Phone width (Sam, 10-25: "the Week requires side scroll"): compact
         # midday wind, the hours on their own full-width line under the day.
         aloft_d = ""
