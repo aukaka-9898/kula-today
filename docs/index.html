@@ -101,18 +101,18 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><a class="homebtn" href="/">&larr; Home</a><div class="tag">Kula soaring briefing</div><h1>Kula Today</h1></div>
-    <div class="date">Updated Wed 25 Nov 2026 · 16:37 HST</div>
+    <div class="date">Updated Wed 25 Nov 2026 · 16:52 HST</div>
   </header>
 
   <div>
     <!-- The FAA viewer shows its station list before it opens the camera; the latest frame covers that until it has (Sam, 2026-10-25). -->
-    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" title="Red Hill webcam, live, looking south along the Kula slope" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="https://images.wcams-static.faa.gov/webimages/931/26/13417-1795660321311.jpg" alt="" onerror="this.remove()"></div>
+    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" title="Red Hill webcam, live, looking south along the Kula slope" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="https://images.wcams-static.faa.gov/webimages/931/26/13417-1795661341463.jpg" alt="" onerror="this.remove()"></div>
     <div class="camcap">Red Hill webcam, live. FAA WeatherCam (Kekoa). <a href="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" target="_blank" rel="noopener">Open full size</a></div>
   </div>
 
   <div class="cols">
     <section class="panel today" aria-labelledby="t-today">
-      <div class="kind">Measured today · 16:37 HST</div>
+      <div class="kind">Measured today · 16:52 HST</div>
       <div class="head"><h2 id="t-today">Today</h2><span class="chip warn">Flat</span></div>
       <div class="alert" style="font-size:.95rem;margin:4px 0 6px">Coastal Flood Statement until Thu 08:00 <a href="https://forecast.weather.gov/MapClick.php?lat=20.7579&lon=-156.3200" target="_blank" rel="noopener" style="font-weight:500">NWS details</a></div><div class="sub" style="display:flex;align-items:center;gap:6px;margin:2px 0 6px"><img src="https://api.weather.gov/icons/land/day/few?size=small" width="34" height="34" alt="Sunny (2%)" title="NWS: Sunny (2%)" loading="lazy" style="vertical-align:middle;border-radius:4px;margin-left:6px"><span>NWS today: Sunny (2%)</span></div>
       <p class="summary">Cloudbase is edging down.</p><div style="font-weight:600;font-size:.9rem;margin:10px 0 2px">Cloudbase so far</div><div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted,#6b6b66);margin:2px 0 4px">
@@ -177,7 +177,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 </script>
       <dl>
         <dt><a href="details.html#t-thermal">Thermals</a></dt><dd>Seem <strong>flat</strong> as of 15:45<div class="sub">Kula Ag's last hour of air through the RRFS sounding (thermal.py)</div></dd>
-        <dt><a href="details.html#t-thermal">Cloudbase</a></dt><dd><span class="num">About 2,900 ft</span><div class="sub">Kekoa camera, median of the last hour to 16:32. Stations: about 5,000 ft (10 stations, 16:05).</div></dd>
+        <dt><a href="details.html#t-thermal">Cloudbase</a></dt><dd><span class="num">About 3,000 ft</span><div class="sub">Kekoa camera, median of the last hour to 16:49. Stations: about 5,000 ft (10 stations, 16:05).</div></dd>
         <dt><a href="details.html#t-ladder">Sun</a></dt><dd>Unavailable</dd>
         <dt><a href="details.html#stationmap">Shear line</a></dt><dd>No call<div class="sub">No flow from the north: SW 4 kt off the north coast (NWS marine forecast). Sea breezes and upslope rule; no shear line.</div></dd>
         
@@ -187,7 +187,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
     </section>
     <section class="panel tomorrow" aria-labelledby="t-tomorrow">
       <div class="kind">Forecast</div>
-      <div class="head"><h2 id="t-tomorrow">Tomorrow · Thu 26 Nov</h2><span class="chip fair">Light</span><img src="https://api.weather.gov/icons/land/day/rain_showers,50/sct?size=small" width="30" height="30" alt="Scattered Rain Showers then Mostly Sunny (47%)" title="NWS: Scattered Rain Showers then Mostly Sunny (47%)" loading="lazy" style="vertical-align:middle;border-radius:4px;margin-left:6px"></div>
+      <div class="head"><h2 id="t-tomorrow">Tomorrow · Thu 26 Nov</h2><span class="chip fair">Light</span><img src="https://api.weather.gov/icons/land/day/rain_showers,30/bkn?size=small" width="30" height="30" alt="Scattered Rain Showers then Partly Sunny (32%)" title="NWS: Scattered Rain Showers then Partly Sunny (32%)" loading="lazy" style="vertical-align:middle;border-radius:4px;margin-left:6px"></div>
       <p class="summary"><strong>Outlook.</strong> A cold front: the wind swings to the WNW from about Thu 08:00 (NWS grid off Paia). Thu (front day): base usually well under the usual and cloudier; thermals light. Fri (day after): base usually back near the usual; crossing Kula Highway at the middle Lower Kula Road junction; thermals light. Sat: at Pukalani; thermals light.</p><dl>
         <dt><a href="details.html#t-thermal">Thermals</a></dt><dd>Probably light<div class="sub">thermal.py on the forecast air (+3 F, it runs cool); within one category of the measured rating on every test day</div></dd>
         <dt><a href="details.html#t-thermal">Cloudbase</a></dt><dd>About 5,200 ft<div class="sub">The past three days say about 5,200 ft. About 50% chance of a high day: a high base today and a high forecast.</div><div class="sub" style="margin-top:6px">Last 3 days the afternoon base ran about 600 ft below the yesterday call (+510, -320, -1,840).</div>
@@ -248,7 +248,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
    browser's 10-minute cached copy is bypassed. The 15-minute refresh stays
    as a backstop. */
 (function () {
-  var built = "2026-11-25T16:37";
+  var built = "2026-11-25T16:52";
   function check() {
     fetch("stations.json?" + Date.now(), {cache: "no-store"})
       .then(function (r) { return r.json(); })
