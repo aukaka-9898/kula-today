@@ -980,7 +980,7 @@
 }
 },
 "2026-11-25": {
-"made": "2026-11-25 18:52",
+"made": "2026-11-25 22:32",
 "sounding": "2026-11-25 18Z",
 "stations": {
 "Kaonoulu 1": {
@@ -991,7 +991,7 @@
 },
 "Keokea": {
 "elev_ft": 2849.0,
-"ti_c": -5.21,
+"ti_c": -5.2,
 "word": "Light",
 "hours": 5
 },
@@ -1027,7 +1027,7 @@
 },
 "Pulehu": {
 "elev_ft": 1402.0,
-"ti_c": -3.57,
+"ti_c": -3.54,
 "word": "Light",
 "hours": 5
 }
@@ -1045,7 +1045,7 @@
 },
 "strongest_below": {
 "station": "Keokea",
-"ti_c": -5.21,
+"ti_c": -5.2,
 "word": "Light"
 }
 }
