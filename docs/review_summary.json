@@ -1,17 +1,17 @@
 {
- "made": "2026-11-25 22:32",
+ "made": "2026-11-26 05:01",
  "flags": [
   "Summit-cloud alert so far: 0 of 6 alerted days had cloud come over; 0 intrusions came without an alert.",
-  "Per-station forecast base: 61 days logged. On the later half, per-station corrections miss the derived base by 427 ft typically, the page's Kula Ag + 0 ft by 523 ft. Ready to decide whether to switch.",
+  "Per-station forecast base: 61 days logged. On the later half, per-station corrections miss the derived base by 426 ft typically, the page's Kula Ag + 0 ft by 522 ft. Ready to decide whether to switch.",
   "Accuracy: the thermal forecast ran 0.7 steps strong over 30 days (right on 10). Suggest: set apart the days the sun forecast missed (no air setting fixes those), then backtest the forecast-air warming (now +3 F) at +0/+1/+2 F on the rest before changing it.",
-  "Derived vs camera: 30 days with camera readings; derived ran -120 ft against the camera at midday. Suggest: fit a first derived correction (option 2), to be refitted each season."
+  "Derived vs camera: 30 days with camera readings; derived ran -100 ft against the camera at midday. Suggest: fit a first derived correction (option 2), to be refitted each season."
  ],
  "stats": {
-  "base_days": 24,
-  "base_mean": 30,
-  "base_raw_mean": 30,
-  "base_sd": 593,
-  "base_morning": 86,
+  "base_days": 23,
+  "base_mean": 27,
+  "base_raw_mean": 27,
+  "base_sd": 607,
+  "base_morning": 79,
   "base_afternoon": -28,
   "alert_days": 6,
   "alert_hits": 0,
@@ -21,10 +21,10 @@
   "cam_redhill_cloud_min_days": 14,
   "station_days": 61,
   "accuracy": {
-   "base_n": 28,
+   "base_n": 29,
    "base_within": 16,
-   "base_typical": 390.0,
-   "base_bias": 60.0,
+   "base_typical": 400.0,
+   "base_bias": 80.0,
    "thermal_n": 30,
    "thermal_right": 10,
    "thermal_within_one": 29,
@@ -40,7 +40,7 @@
     ]
    },
    "camera_days": 30,
-   "derived_minus_camera": -120.0,
+   "derived_minus_camera": -100.0,
    "pilots": false
   }
  }
