@@ -101,24 +101,24 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><a class="homebtn" href="/">&larr; Home</a><div class="tag">Kula soaring briefing</div><h1>Kula Today</h1></div>
-    <div class="date">Updated Thu 26 Nov 2026 · 17:22 HST</div>
+    <div class="date">Updated Thu 26 Nov 2026 · 17:37 HST</div>
   </header>
 
   <div>
     <!-- The FAA viewer shows its station list before it opens the camera; the latest frame covers that until it has (Sam, 2026-10-25). -->
-    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" title="Red Hill webcam, live, looking south along the Kula slope" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="https://images.wcams-static.faa.gov/webimages/931/27/13417-1795749275829.jpg" alt="" onerror="this.remove()"></div>
+    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" title="Red Hill webcam, live, looking south along the Kula slope" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="https://images.wcams-static.faa.gov/webimages/931/27/13417-1795750326173.jpg" alt="" onerror="this.remove()"></div>
     <div class="camcap">Red Hill webcam, live. FAA WeatherCam (Kekoa). <a href="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" target="_blank" rel="noopener">Open full size</a></div>
   </div>
 
   <div class="cols">
     <section class="panel today" aria-labelledby="t-today">
-      <div class="kind">Measured today · 17:22 HST</div>
-      <div class="head"><h2 id="t-today">Today</h2><span class="chip warn">Flat</span></div>
-      <div class="sub" style="display:flex;align-items:center;gap:6px;margin:2px 0 6px"><img src="https://api.weather.gov/icons/land/day/rain_showers,20?size=small" width="34" height="34" alt="Isolated Rain Showers (17%)" title="NWS: Isolated Rain Showers (17%)" loading="lazy" style="vertical-align:middle;border-radius:4px;margin-left:6px"><span>NWS today: Isolated Rain Showers (17%)</span></div>
-      <p class="summary">Cloudbase has come down from its late-morning high and is steady now. Trade air is reaching the lower west slope at Pulehu.</p><div style="font-weight:600;font-size:.9rem;margin:10px 0 2px">Cloudbase so far</div><div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted,#6b6b66);margin:2px 0 4px">
+      <div class="kind">The day in review</div>
+      <div class="head"><h2 id="t-today">Today · Thu 26 Nov</h2><span class="chip warn">Flat</span></div>
+      
+      <p class="summary">A flat day (forecast light). Thermals stayed flat all day. The upslope ran from about 11:00 to about 17:35. A low day for November: the base stayed down near 3,100 ft (normal 4,500–5,500 ft). Yesterday evening, the page called it may be high, about 5,200 ft, a miss. Midday the base averaged about 3,100 ft by the Kekoa camera, 2,100 ft lower than yesterday evening&#x27;s number; the morning update said about 5,200 ft, off by 2,100 ft. Most of the day the shear line was north of Makawao. Data gaps: no readings all day from 3 stations (Kahikinui, Nakula, Upper Kahikinui); the Mesonet could not be reached on 47 of 49 updates.</p><div class="watch"><div class="kind">What the day did</div><ul><li>Saturated, dew-fed morning: low cloud until about 11:40.</li><li>Base fell about 2,400 ft from about 11:00 to 13:15 (5,800 to 3,400 ft); a usual November afternoon falls about 800 ft. We have ideas about why this happened.</li><li>Camera against derived: midday about 800 ft lower, afternoon within 200 ft.</li></ul></div><div style="font-weight:600;font-size:.9rem;margin:10px 0 2px">Cloudbase</div><div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted,#6b6b66);margin:2px 0 4px">
 <span><span style="display:inline-block;width:16px;border-top:2px dashed #eb6834;vertical-align:middle"></span> Yesterday call</span>
 <span><span style="display:inline-block;width:16px;height:2px;background:#2a78d6;vertical-align:middle"></span> Derived (stations)</span><span><span style="display:inline-block;width:16px;height:2px;background:#3f9d5a;vertical-align:middle"></span> Kekoa camera (1-hour median)</span><span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#e0a100;vertical-align:middle"></span> Camera hidden (cloud or rain)</span><span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;border:1.5px solid #898781;box-sizing:border-box;vertical-align:middle"></span> Camera, no call</span></div>
-<div style="position:relative;width:100%;min-width:0;height:220px"><canvas id="livechart" role="img" aria-label="Derived cloudbase against the forecast through the day"></canvas></div>
+<div style="position:relative;width:100%;min-width:0;height:220px"><canvas id="basechart" role="img" aria-label="Derived cloudbase against the forecast through the day"></canvas></div>
 <div class="sub">Derived from the stations every 15 minutes during the upslope. Lines: the yesterday call&#x27;s number and the 10:00 derived base, each carried to the usual November midday peak and held level after it. Moister air aloft draws the yesterday line lower; a front lowers it and bends both down after noon. Drawn once, never redrawn.</div><details class="sub" style="margin-top:6px"><summary style="cursor:pointer">How is the derived base worked out?</summary><div style="margin-top:6px;padding:8px 10px;border-left:3px solid var(--rule,#ddd)"><p style="margin:0 0 6px">Rising air cools about 5.4 &deg;F for every 1,000 ft it climbs, while its dew point drops only about 1 &deg;F. Where the two meet, the moisture condenses: that&rsquo;s the cloudbase. So a station&rsquo;s temperature and dew point tell how high its air would have to rise to make cloud: about 230 ft for every degree between them, added to the station&rsquo;s own height. 70 &deg;F with a 60 &deg;F dew point at Kula Ag (3,162 ft) gives about 5,400 ft.</p><p style="margin:0 0 6px">The page does this for about a dozen slope stations every 15 minutes once the upslope has started, and shows the middle value.</p><p style="margin:0">It can differ from the camera because the stations measure the air at the ground. Late in the day, or under cloud shade, that layer cools and moistens and no longer matches the air the thermals carry up, so the derived base reads low. Wet ground after dew or rain does the same in the morning. Before the upslope starts, the stations sit in the night&rsquo;s drainage air, so nothing is shown. When the camera has a reading, it leads.</p></div></details>
 <script>
 (function () {
@@ -144,7 +144,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
   var ys = d.derived.map(function (a) { return a[1]; }).concat(d.forecast.map(function (a) { return a[1]; })).concat(d.camera.map(function (a) { return a[1]; })).concat(d.camsub.map(function (a) { return a[1]; })).concat(d.proj.map(function (a) { return a[1]; })).filter(function (v) { return v !== null; });
   var xs = [540, 960];
   var ymin = Math.min(3500, Math.floor(Math.min.apply(null, ys) / 500) * 500);
-  new Chart(document.getElementById('livechart'), {
+  new Chart(document.getElementById('basechart'), {
     type: 'line',
     data: { datasets: [
       { label: 'Derived', data: d.derived.map(pt), borderColor: '#2a78d6', borderWidth: 2, pointRadius: 0, tension: 0.3 },
@@ -176,13 +176,13 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 })();
 </script>
       <dl>
-        <dt><a href="details.html#t-thermal">Thermals</a></dt><dd>Seem <strong>flat</strong> as of 16:45<div class="sub">Kula Ag's last hour of air through the RRFS sounding (thermal.py)</div></dd>
-        <dt><a href="details.html#t-thermal">Cloudbase</a></dt><dd><span class="num">About 4,300 ft</span><div class="sub">Kekoa camera, median of the last hour to 17:15. Stations: about 4,100 ft (11 stations, 17:00).</div></dd>
-        <dt><a href="details.html#t-ladder">Sun</a></dt><dd>Unavailable</dd>
-        <dt><a href="details.html#stationmap">Shear line</a></dt><dd>No call<div class="sub">No flow from the north: NW 19 kt off the north coast (NWS marine forecast). Sea breezes and upslope rule; no shear line.</div><div class="alert">Trade air reaching the lower west slope: Pulehu N at 8 mph</div></dd>
+        <dt><a href="details.html#t-thermal">Thermals</a></dt><dd><strong>Flat</strong> for the day, 10:00–14:00<div class="sub">Kula Ag's measured air through the RRFS sounding (thermal.py); forecast was Light</div></dd>
         
-        <dt><a href="details.html#stationmap">Upslope</a></dt><dd>On since about <span class="num">11:00</span><div class="sub">Drainage ended about 10:30</div></dd>
-        <dt><a href="details.html#stationmap">Wind</a></dt><dd><span class="num">6 mph</span>, gusts to 17<div class="sub">Lower elevations, 10 stations, last hour</div><div class="alert">Gustier than usual</div></dd>
+        
+        <dt><a href="details.html#stationmap">Shear line</a></dt><dd>North of Makawao<div class="sub">Most of the day, 1 updates</div></dd>
+        
+        <dt><a href="details.html#stationmap">Upslope</a></dt><dd><span class="num">11:00</span> to about <span class="num">17:35</span></dd>
+        <dt><a href="details.html#stationmap">Wind</a></dt><dd><span class="num">7 mph</span>, gusts to 18<div class="sub">Lower elevations, during the upslope</div></dd>
       </dl>
     </section>
     <section class="panel tomorrow" aria-labelledby="t-tomorrow">
@@ -218,7 +218,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
         <dt>Sun</dt><dd><span class="num">76%</span> of clear sky, 10:00–14:00 (GFS)<div class="sub">The model can't see the slope's own cumulus: when it says 90% or more, Kula has measured about 80%. Good flying days measure about 80%, overcast about 50%, socked in 20%.</div></dd>
         <dt>Shear line</dt><dd>Crossing Kula Highway at the middle Lower Kula Road junction<div class="sub">Offshore wind NE (043°)</div><div class="alert">The line is at Naalae Road or further south, where Kula is usually not flyable.</div></dd>
       </dl>
-      <div class="sub">Forecast as of 16:37 HST</div><div class="sub">Forecast rules last checked November 2026: all holding.</div><div class="sub">Accuracy, last 30 days, the yesterday call against the day: cloudbase within 500 ft on 16 of 29 days (typical miss 400 ft); afternoon trend (rising, holding or falling, 12:00 to 15:00) right on 7 of 24; thermals right on 10 of 30, within one step on 29. Scored against the camera and stations.</div><p class="sub">A guide, not a promise: Kula makes its own weather, and no model sees it. The cloudbase number is the last three days at midday, camera first. It typically misses by about 500 ft. How well the thermal call holds up we don’t yet know: the only checks so far are the stations, not pilots. If you fly Kula, your report or flight log (altitude and time only) is what will tell us: <a href="mailto:flyhiwx@gmail.com">flyhiwx@gmail.com</a>.</p>
+      <div class="sub">Forecast as of 17:37 HST</div><div class="sub">Forecast rules last checked November 2026: all holding.</div><div class="sub">Accuracy, last 30 days, the yesterday call against the day: cloudbase within 500 ft on 16 of 29 days (typical miss 400 ft); afternoon trend (rising, holding or falling, 12:00 to 15:00) right on 7 of 24; thermals right on 10 of 30, within one step on 29. Scored against the camera and stations.</div><p class="sub">A guide, not a promise: Kula makes its own weather, and no model sees it. The cloudbase number is the last three days at midday, camera first. It typically misses by about 500 ft. How well the thermal call holds up we don’t yet know: the only checks so far are the stations, not pilots. If you fly Kula, your report or flight log (altitude and time only) is what will tell us: <a href="mailto:flyhiwx@gmail.com">flyhiwx@gmail.com</a>.</p>
     </section>
   </div>
 
@@ -240,7 +240,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
   </div>
 
 </div>
-<!-- build problems: HCDP observations, using api.weather.gov: MesonetDown: Mesonet out this build: ReadTimeout: HTTPSConnectionPool(host='api.hcdp.ikewai.org', port=443): Read timed out. (read timeout=10); net_radiation: MesonetDown: Mesonet out this build (ReadTimeout on /mesonet/db/measurements); Mesonet sun: MesonetDown: Mesonet out this build (ReadTimeout on /mesonet/db/measurements); first_cumulus: MesonetDown: Mesonet out this build (ReadTimeout on /mesonet/db/measurements); window_sun: MesonetDown: Mesonet out this build (ReadTimeout on /mesonet/db/measurements); sun_trend: MesonetDown: Mesonet out this build (ReadTimeout on /mesonet/db/measurements); sky_now: MesonetDown: Mesonet out this build (ReadTimeout on /mesonet/db/measurements); summit_spill: MesonetDown: Mesonet out this build (ReadTimeout on /mesonet/db/measurements) -->
+<!-- build problems: HCDP observations, using api.weather.gov: MesonetDown: Mesonet out this build: ReadTimeout: HTTPSConnectionPool(host='api.hcdp.ikewai.org', port=443): Read timed out. (read timeout=10); net_radiation: MesonetDown: Mesonet out this build (ReadTimeout on /mesonet/db/measurements); Mesonet sun: MesonetDown: Mesonet out this build (ReadTimeout on /mesonet/db/measurements); first_cumulus: MesonetDown: Mesonet out this build (ReadTimeout on /mesonet/db/measurements); window_sun: MesonetDown: Mesonet out this build (ReadTimeout on /mesonet/db/measurements); sun_trend: MesonetDown: Mesonet out this build (ReadTimeout on /mesonet/db/measurements); sky_now: MesonetDown: Mesonet out this build (ReadTimeout on /mesonet/db/measurements); summit_spill: MesonetDown: Mesonet out this build (ReadTimeout on /mesonet/db/measurements); details yesterday: MesonetDown; decay_time: MesonetDown: Mesonet out this build (ReadTimeout on /mesonet/db/measurements) -->
 <script>
 /* Catch up with a new build within ~2 minutes (Sam, 2026-10-17: "the page
    does not seem to autoupdate"). stations.json's "made" is the build time;
@@ -248,7 +248,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
    browser's 10-minute cached copy is bypassed. The 15-minute refresh stays
    as a backstop. */
 (function () {
-  var built = "2026-11-26T17:22";
+  var built = "2026-11-26T17:37";
   function check() {
     fetch("stations.json?" + Date.now(), {cache: "no-store"})
       .then(function (r) { return r.json(); })
