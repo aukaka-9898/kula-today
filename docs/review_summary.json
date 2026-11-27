@@ -1,10 +1,11 @@
 {
- "made": "2026-11-26 22:59",
+ "made": "2026-11-27 04:56",
  "flags": [
   "Summit-cloud alert so far: 0 of 6 alerted days had cloud come over; 0 intrusions came without an alert.",
   "Per-station forecast base: 62 days logged. On the later half, per-station corrections miss the derived base by 475 ft typically, the page's Kula Ag + 0 ft by 558 ft. Ready to decide whether to switch.",
+  "Accuracy: the cloudbase number was within 500 ft on only 16 of 30 days (tested at 2 in 3). Suggest: look at the misses for a pattern.",
   "Accuracy: the thermal forecast ran 0.7 steps strong over 30 days (right on 10). Suggest: set apart the days the sun forecast missed (no air setting fixes those), then backtest the forecast-air warming (now +3 F) at +0/+1/+2 F on the rest before changing it.",
-  "Derived vs camera: 30 days with camera readings; derived ran -100 ft against the camera at midday. Suggest: fit a first derived correction (option 2), to be refitted each season."
+  "Derived vs camera: 30 days with camera readings; derived ran -70 ft against the camera at midday. Suggest: fit a first derived correction (option 2), to be refitted each season."
  ],
  "stats": {
   "base_days": 24,
@@ -21,26 +22,30 @@
   "cam_redhill_cloud_min_days": 14,
   "station_days": 62,
   "accuracy": {
-   "base_n": 29,
+   "base_n": 30,
    "base_within": 16,
-   "base_typical": 400.0,
-   "base_bias": 80.0,
+   "base_typical": 460.0,
+   "base_bias": 150.0,
    "thermal_n": 30,
    "thermal_right": 10,
    "thermal_within_one": 29,
    "thermal_bias": 0.7,
    "rules": {
     "B1": [
-     3,
-     4
+     2,
+     3
     ],
     "B2": [
+     0,
+     1
+    ],
+    "B3": [
      0,
      1
     ]
    },
    "camera_days": 30,
-   "derived_minus_camera": -100.0,
+   "derived_minus_camera": -70.0,
    "pilots": false
   }
  }
