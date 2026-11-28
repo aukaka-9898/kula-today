@@ -101,21 +101,21 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 <div class="wrap">
   <header>
     <div><a class="homebtn" href="/">&larr; Home</a><div class="tag">Kula soaring briefing</div><h1>Kula Today</h1></div>
-    <div class="date">Updated Fri 27 Nov 2026 · 17:07 HST</div>
+    <div class="date">Updated Fri 27 Nov 2026 · 17:22 HST</div>
   </header>
 
   <div>
     <!-- The FAA viewer shows its station list before it opens the camera; the latest frame covers that until it has (Sam, 2026-10-25). -->
-    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" title="Red Hill webcam, live, looking south along the Kula slope" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="https://images.wcams-static.faa.gov/webimages/931/28/13417-1795835247530.jpg" alt="" onerror="this.remove()"></div>
+    <div class="cam"><iframe src="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" title="Red Hill webcam, live, looking south along the Kula slope" onload="setTimeout(function(){var c=document.getElementById('camcover');if(c){c.style.opacity=0;setTimeout(function(){c.remove()},700)}},3500)"></iframe><img id="camcover" src="https://images.wcams-static.faa.gov/webimages/931/28/13417-1795835759564.jpg" alt="" onerror="this.remove()"></div>
     <div class="camcap">Red Hill webcam, live. FAA WeatherCam (Kekoa). <a href="https://weathercams.faa.gov/cameras/state/HI/cameraSite/931/details/camera/13417/full" target="_blank" rel="noopener">Open full size</a></div>
   </div>
 
   <div class="cols">
     <section class="panel today" aria-labelledby="t-today">
-      <div class="kind">Measured today · 17:07 HST</div>
+      <div class="kind">Measured today · 17:22 HST</div>
       <div class="head"><h2 id="t-today">Today</h2><span class="chip warn">Flat</span></div>
       <div class="sub" style="display:flex;align-items:center;gap:6px;margin:2px 0 6px"><img src="https://api.weather.gov/icons/land/day/sct?size=small" width="34" height="34" alt="Mostly Sunny (2%)" title="NWS: Mostly Sunny (2%)" loading="lazy" style="vertical-align:middle;border-radius:4px;margin-left:6px"><span>NWS today: Mostly Sunny (2%)</span></div>
-      <p class="summary">Cloudbase is steady. Trade air is reaching the lower west slope at Pulehu.</p><div style="font-weight:600;font-size:.9rem;margin:10px 0 2px">Cloudbase so far</div><div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted,#6b6b66);margin:2px 0 4px">
+      <p class="summary">Cloudbase is rising. Trade air is reaching the lower west slope at Pulehu.</p><div style="font-weight:600;font-size:.9rem;margin:10px 0 2px">Cloudbase so far</div><div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted,#6b6b66);margin:2px 0 4px">
 <span><span style="display:inline-block;width:16px;border-top:2px dashed #eb6834;vertical-align:middle"></span> Yesterday call</span>
 <span><span style="display:inline-block;width:16px;height:2px;background:#2a78d6;vertical-align:middle"></span> Derived (stations)</span><span><span style="display:inline-block;width:16px;height:2px;background:#3f9d5a;vertical-align:middle"></span> Kekoa camera (1-hour median)</span><span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;border:1.5px solid #898781;box-sizing:border-box;vertical-align:middle"></span> Camera, no call</span></div>
 <div style="position:relative;width:100%;min-width:0;height:220px"><canvas id="livechart" role="img" aria-label="Derived cloudbase against the forecast through the day"></canvas></div>
@@ -176,13 +176,13 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
 })();
 </script>
       <dl>
-        <dt><a href="details.html#t-thermal">Thermals</a></dt><dd>Seem <strong>flat</strong> as of 16:15<div class="sub">Kula Ag's last hour of air through the RRFS sounding (thermal.py)</div></dd>
-        <dt><a href="details.html#t-thermal">Cloudbase</a></dt><dd><span class="num">About 4,700 ft</span><div class="sub">Kekoa camera, median of the last hour to 16:59. Stations: about 3,600 ft (11 stations, 16:40).</div></dd>
-        <dt><a href="details.html#t-ladder">Sun</a></dt><dd><span class="num">51%</span> of clear sky, lower Kula slope<div class="sub">Last hour, as of 16:15; average of Kula Ag 57%, Keokea 46%; Pulehu left out, in trade air</div></dd>
-        <dt><a href="details.html#stationmap">Shear line</a></dt><dd>Not found<div class="sub">no upslope south of the north-side flow</div><div class="alert">Trade air reaching the lower west slope: Pulehu NNE at 11 mph</div></dd>
+        <dt><a href="details.html#t-thermal">Thermals</a></dt><dd>Seem <strong>flat</strong> as of 16:45<div class="sub">Kula Ag's last hour of air through the RRFS sounding (thermal.py)</div></dd>
+        <dt><a href="details.html#t-thermal">Derived<br>Cloudbase</a></dt><dd><span class="num">3,100–4,400 ft</span><div class="sub">Stations disagree; middle about 3,800 ft (10 stations, 17:00)</div></dd>
+        <dt><a href="details.html#t-ladder">Sun</a></dt><dd>Unavailable</dd>
+        <dt><a href="details.html#stationmap">Shear line</a></dt><dd>Not found<div class="sub">no upslope south of the north-side flow</div><div class="alert">Trade air reaching the lower west slope: Pulehu NNE at 10 mph</div></dd>
         
         <dt><a href="details.html#stationmap">Upslope</a></dt><dd>On since about <span class="num">10:45</span></dd>
-        <dt><a href="details.html#stationmap">Wind</a></dt><dd><span class="num">7 mph</span>, gusts to 23<div class="sub">Lower elevations, 9 stations, last hour</div><div class="alert">Gustier than usual</div></dd>
+        <dt><a href="details.html#stationmap">Wind</a></dt><dd><span class="num">7 mph</span>, gusts to 22<div class="sub">Lower elevations, 9 stations, last hour</div><div class="alert">Gustier than usual</div></dd>
       </dl>
     </section>
     <section class="panel tomorrow" aria-labelledby="t-tomorrow">
@@ -240,7 +240,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
   </div>
 
 </div>
-<!-- build problems: HCDP observations, using the last good fetch: MesonetDown: Mesonet out this build: ReadTimeout: HTTPSConnectionPool(host='api.hcdp.ikewai.org', port=443): Read timed out. (read timeout=10); net_radiation: MesonetDown: Mesonet out this build (ReadTimeout on /mesonet/db/measurements); Mesonet sun: MesonetDown: Mesonet out this build (ReadTimeout on /mesonet/db/measurements); sun ladder from 15:15 reused; first_cumulus: MesonetDown: Mesonet out this build (ReadTimeout on /mesonet/db/measurements); window_sun: MesonetDown: Mesonet out this build (ReadTimeout on /mesonet/db/measurements); sun_trend: MesonetDown: Mesonet out this build (ReadTimeout on /mesonet/db/measurements); sky_now: MesonetDown: Mesonet out this build (ReadTimeout on /mesonet/db/measurements); summit_spill: MesonetDown: Mesonet out this build (ReadTimeout on /mesonet/db/measurements) -->
+<!-- build problems: HCDP observations, using api.weather.gov: MesonetDown: Mesonet out this build: ReadTimeout: HTTPSConnectionPool(host='api.hcdp.ikewai.org', port=443): Read timed out. (read timeout=10); net_radiation: MesonetDown: Mesonet out this build (ReadTimeout on /mesonet/db/measurements); Mesonet sun: MesonetDown: Mesonet out this build (ReadTimeout on /mesonet/db/measurements); first_cumulus: MesonetDown: Mesonet out this build (ReadTimeout on /mesonet/db/measurements); window_sun: MesonetDown: Mesonet out this build (ReadTimeout on /mesonet/db/measurements); sun_trend: MesonetDown: Mesonet out this build (ReadTimeout on /mesonet/db/measurements); sky_now: MesonetDown: Mesonet out this build (ReadTimeout on /mesonet/db/measurements); summit_spill: MesonetDown: Mesonet out this build (ReadTimeout on /mesonet/db/measurements) -->
 <script>
 /* Catch up with a new build within ~2 minutes (Sam, 2026-10-17: "the page
    does not seem to autoupdate"). stations.json's "made" is the build time;
@@ -248,7 +248,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: 
    browser's 10-minute cached copy is bypassed. The 15-minute refresh stays
    as a backstop. */
 (function () {
-  var built = "2026-11-27T17:07";
+  var built = "2026-11-27T17:22";
   function check() {
     fetch("stations.json?" + Date.now(), {cache: "no-store"})
       .then(function (r) { return r.json(); })
