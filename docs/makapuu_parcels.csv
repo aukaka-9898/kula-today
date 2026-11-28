@@ -7114,3 +7114,6 @@ date,time,station,obs_time,temp_f,dew_f,dew_from,lcl_ft,ti_c,word,camera,camera_
 2026-11-27,16:38,Heeia,15:30,72.6,63.8,own,2000.0,-0.67,Flat,"Cloud base no higher than about 2,700 ft.",2680.0
 2026-11-27,16:38,Maunawili,16:15,72.3,60.3,own,2720.0,0.21,Flat,"Cloud base no higher than about 2,700 ft.",2680.0
 2026-11-27,16:38,Moku o Loe,16:30,73.8,,,,,,"Cloud base no higher than about 2,700 ft.",2680.0
+2026-11-27,16:53,Kaneohe runway,15:57,73.9,59.0,own,3400.0,-1.08,Flat,,
+2026-11-27,16:53,Heeia,16:30,72.8,62.0,own,2450.0,-0.67,Flat,,
+2026-11-27,16:53,Moku o Loe,16:48,73.8,,,,,,,
