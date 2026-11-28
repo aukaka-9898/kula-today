@@ -380,6 +380,9 @@
 "but": null,
 "rh_jump": -6,
 "ft_blend": 4700.0,
-"three_day": true
+"three_day": true,
+"ft_am": 4000.0,
+"but_am": null,
+"ft_am_blend": 4600.0
 }
 }
